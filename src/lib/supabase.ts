@@ -16,15 +16,25 @@ export type AuthUser = {
   createdAt?: string;
 };
 
-// Updated Property type to match database schema
+// This interface is for frontend display purposes
 export interface Property {
   id: string;
   title: string;
   address: string;
   description: string;
+  type?: string; // Frontend display property
+  price?: number; // Frontend display property
+  price_unit?: string; // Frontend display property
+  status?: string; // Frontend display property
+  occupancy?: string; // Frontend display property
+  distance_to_campus?: string;
+  house_rules?: string[];
+  image_url?: string;
+  
+  // Database properties
   owner_id: string;
-  property_type: string; // matches DB column
-  rent: number; // matches DB column instead of price
+  property_type?: string; // Database property
+  rent?: number; // Database property
   city: string;
   state: string;
   zip: string;
@@ -39,15 +49,6 @@ export interface Property {
   updated_at: string;
   images?: string[];
   amenities?: string[];
-  // Additional fields used in frontend but not in DB
-  type?: string;
-  price?: number;
-  price_unit?: string;
-  status?: string;
-  occupancy?: string;
-  distance_to_campus?: string;
-  house_rules?: string[];
-  image_url?: string;
 }
 
 export type PropertyFormValues = {

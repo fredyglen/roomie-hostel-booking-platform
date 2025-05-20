@@ -42,7 +42,7 @@ const PropertyNew: React.FC = () => {
 
       const { data, error } = await supabase
         .from('properties')
-        .insert([propertyData])
+        .insert(propertyData)
         .select();
 
       if (error) throw error;

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase, Property } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from "@/components/ui/use-toast";
 import OwnerLayout from '@/components/layout/OwnerLayout';
@@ -9,9 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2, Eye } from 'lucide-react';
-import { Property } from '@/lib/supabase';
 
-interface Property {
+// Define a local PropertyDisplay type that matches what we'll display in the UI
+interface PropertyDisplay {
   id: string;
   title: string;
   type: string;
@@ -44,15 +44,20 @@ const Properties: React.FC = () => {
 
       if (error) throw error;
       
-      // Map DB properties to our Property type
+      // Map DB properties to our display type
       return (data || []).map(prop => ({
-        ...prop,
+        id: prop.id,
+        title: prop.title,
         type: prop.property_type,
+        address: prop.address,
         price: prop.rent,
         price_unit: 'month', // Default to month if not specified
         status: prop.is_available ? 'Available' : 'Not Available',
         occupancy: '0/1', // Default occupancy
-      })) as Property[];
+        image_url: prop.images && prop.images.length > 0 ? prop.images[0] : '',
+        created_at: prop.created_at,
+        owner_id: prop.owner_id,
+      })) as PropertyDisplay[];
     },
     enabled: !!user?.id,
   });
@@ -177,7 +182,7 @@ const Properties: React.FC = () => {
               <Card key={property.id} className="overflow-hidden">
                 <div className="h-48 relative">
                   <img 
-                    src={property.image_url || (property.images && property.images[0])} 
+                    src={property.image_url} 
                     alt={property.title} 
                     className="w-full h-full object-cover"
                   />
@@ -196,12 +201,12 @@ const Properties: React.FC = () => {
                     <h3 className="font-semibold truncate">{property.title}</h3>
                     <p className="text-sm text-gray-500 truncate">{property.address}</p>
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-lg">${property.price || property.rent}</span>
-                      <span className="text-sm text-gray-500">per {property.price_unit || 'month'}</span>
+                      <span className="font-bold text-lg">${property.price}</span>
+                      <span className="text-sm text-gray-500">per {property.price_unit}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Type: {property.type || property.property_type}</span>
-                      <span>Occupancy: {property.occupancy || '0/1'}</span>
+                      <span>Type: {property.type}</span>
+                      <span>Occupancy: {property.occupancy}</span>
                     </div>
                   </div>
                 </CardContent>
