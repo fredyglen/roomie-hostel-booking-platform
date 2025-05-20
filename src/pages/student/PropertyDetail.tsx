@@ -59,7 +59,7 @@ const sampleProperties = [
       'No smoking',
       'No pets',
       'Clean common areas after use',
-      'Respect roommates' space and belongings'
+      "Respect roommates' space and belongings"
     ],
     availableUnits: 1,
     owner: {
