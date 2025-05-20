@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
@@ -41,14 +40,6 @@ const BookingStepsContainer: React.FC = () => {
     handleRoommateChange(index, field, value);
   };
   
-  // Create an adapter for RoomTypeSelection
-  const handleRoomTypeSelectionAdapter = (name: string, value: string) => {
-    const syntheticEvent = {
-      target: { name, value }
-    } as React.ChangeEvent<HTMLInputElement>;
-    handleInputChange(syntheticEvent);
-  };
-  
   if (!property) {
     return (
       <div className="text-center">
@@ -70,7 +61,7 @@ const BookingStepsContainer: React.FC = () => {
             <RoomTypeSelection 
               roomTypes={property.roomTypes || []}
               selectedRoomType={formData.roomType}
-              onSelectRoomType={handleRoomTypeSelectionAdapter}
+              onSelectRoomType={handleInputChange}
             />
           </div>
         );
