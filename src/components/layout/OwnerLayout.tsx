@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Building, 
@@ -12,6 +12,7 @@ import {
   X
 } from "lucide-react";
 import Logo from '../common/Logo';
+import { useAuth } from '@/context/AuthContext';
 
 interface OwnerLayoutProps {
   children: React.ReactNode;
@@ -20,6 +21,8 @@ interface OwnerLayoutProps {
 
 const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
   
@@ -35,6 +38,15 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
     return location.pathname === path || location.pathname.startsWith(`${path}/`);
   };
 
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      navigate('/login');
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar for desktop */}
@@ -42,7 +54,10 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
         <div className="flex flex-col h-full">
           <div className={`p-4 flex items-center ${!isSidebarOpen && 'justify-center'}`}>
             {isSidebarOpen ? (
-              <Logo variant="default" />
+              <div className="flex items-center">
+                <Logo variant="default" />
+                <span className="ml-2 text-xl font-bold text-[#7E69AB]">Owner</span>
+              </div>
             ) : (
               <Logo variant="default" withText={false} />
             )}
@@ -71,8 +86,8 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
                   className={`
                     flex items-center px-4 py-3 text-sm rounded-md transition-colors
                     ${isActiveLink(item.path) 
-                      ? 'bg-roomi-blue bg-opacity-10 text-roomi-blue' 
-                      : 'text-gray-600 hover:bg-gray-100'
+                      ? 'bg-[#9b87f5] text-white' 
+                      : 'text-gray-600 hover:bg-[#9b87f5]/10'
                     }
                   `}
                 >
@@ -84,13 +99,13 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
           </div>
 
           <div className="p-4 border-t border-gray-200">
-            <Link
-              to="/logout"
-              className="flex items-center px-4 py-3 text-sm text-gray-600 rounded-md hover:bg-gray-100"
+            <button
+              onClick={handleLogout}
+              className="flex items-center w-full px-4 py-3 text-sm text-gray-600 rounded-md hover:bg-[#9b87f5]/10"
             >
               <LogOut className="w-5 h-5 mr-3" />
               {isSidebarOpen && <span>Logout</span>}
-            </Link>
+            </button>
           </div>
         </div>
       </div>
@@ -126,8 +141,8 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
                     className={`
                       flex items-center px-4 py-3 text-sm rounded-md
                       ${isActiveLink(item.path) 
-                        ? 'bg-roomi-blue bg-opacity-10 text-roomi-blue' 
-                        : 'text-gray-600 hover:bg-gray-100'
+                        ? 'bg-[#9b87f5] text-white' 
+                        : 'text-gray-600 hover:bg-[#9b87f5]/10'
                       }
                     `}
                   >
@@ -138,14 +153,13 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
               </nav>
             </div>
             <div className="p-4 border-t">
-              <Link
-                to="/logout"
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="flex items-center px-4 py-3 text-sm text-gray-600 rounded-md hover:bg-gray-100"
+              <button
+                onClick={handleLogout}
+                className="flex items-center w-full px-4 py-3 text-sm text-gray-600 rounded-md hover:bg-[#9b87f5]/10"
               >
                 <LogOut className="w-5 h-5 mr-3" />
                 <span>Logout</span>
-              </Link>
+              </button>
             </div>
           </div>
         </div>
@@ -168,9 +182,9 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
                   <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                 </div>
 
-                <button className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-roomi-blue">
+                <button className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9b87f5]">
                   <span className="sr-only">Open user menu</span>
-                  <div className="h-8 w-8 rounded-full bg-roomi-blue text-white flex items-center justify-center">
+                  <div className="h-8 w-8 rounded-full bg-[#9b87f5] text-white flex items-center justify-center">
                     <UserCircle className="h-6 w-6" />
                   </div>
                 </button>

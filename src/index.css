@@ -13,19 +13,19 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
+    --primary: 260 67% 75%; /* Updated to the purple color */
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    --secondary: 260 53% 54%; /* Secondary purple */
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
+    --accent: 260 53% 54%; /* Accent purple */
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
+    --ring: 260 67% 75%; /* Updated to match primary */
     --radius: 0.5rem;
   }
 
@@ -36,27 +36,29 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 217.2 91.2% 59.8%;
+    --primary: 260 67% 75%; /* Updated to the purple color */
     --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 260 53% 54%; /* Secondary purple */
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 260 53% 54%; /* Accent purple */
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 224.3 76.5% 48%;
+    --ring: 260 67% 75%; /* Updated to match primary */
   }
 
-  /* ROOMi custom colors */
+  /* ROOMi custom colors - Updated with new purple palette */
   :root {
-    --roomi-blue: 217 91% 60%;
+    --roomi-blue: 260 67% 75%; /* Changed to purple */
     --roomi-teal: 167 68% 55%;
     --roomi-dark: 218 41% 25%;
     --roomi-light: 220 14% 96%;
+    --roomi-purple: 260 67% 75%; /* Added main purple */
+    --roomi-purple-dark: 260 53% 54%; /* Added darker purple */
   }
 
   body {
@@ -93,6 +95,22 @@
   background-color: hsl(var(--roomi-light));
 }
 
+.text-roomi-purple {
+  color: hsl(var(--roomi-purple));
+}
+
+.bg-roomi-purple {
+  background-color: hsl(var(--roomi-purple));
+}
+
+.text-roomi-purple-dark {
+  color: hsl(var(--roomi-purple-dark));
+}
+
+.bg-roomi-purple-dark {
+  background-color: hsl(var(--roomi-purple-dark));
+}
+
 .font-space-grotesk {
   font-family: 'Space Grotesk', sans-serif;
 }
@@ -111,6 +129,11 @@
   background-color: white;
   border-radius: 2px;
   transition: width 0.1s linear;
+}
+
+/* Property details sheet (limit height for swipe up) */
+.property-details-sheet {
+  max-height: 75vh; /* Only cover 75% of the screen height */
 }
 
 /* Booking Steps Animation */
@@ -143,4 +166,28 @@
 .splash-slide {
   @apply absolute inset-0 bg-cover bg-center transition-opacity duration-1000;
   animation: fade-zoom 5s infinite;
+}
+
+/* Desktop media enhancement for story images */
+@media (min-width: 1024px) {
+  .story-backdrop {
+    position: absolute;
+    inset: 0;
+    background-size: cover;
+    background-position: center;
+    filter: blur(15px);
+    transform: scale(1.1);
+    opacity: 0.7;
+  }
+  
+  .story-content {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    max-height: 100vh;
+    max-width: 90%;
+    object-fit: contain;
+    z-index: 1;
+  }
 }

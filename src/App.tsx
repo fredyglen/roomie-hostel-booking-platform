@@ -17,7 +17,7 @@ import Welcome from "./pages/Welcome";
 import StudentDashboard from "./pages/student/Dashboard";
 import Properties from "./pages/student/Properties";
 import PropertyDetail from "./pages/student/PropertyDetail";
-import StoryViewEnhanced from "./pages/student/StoryViewEnhanced";
+import StoryView from "./pages/student/StoryView"; // Using StoryView instead of StoryViewEnhanced
 import BookProperty from "./pages/student/BookProperty";
 
 // Owner/Agent Portal Pages
@@ -61,7 +61,7 @@ const App = () => (
               } />
               <Route path="properties" element={<Properties />} />
               <Route path="property/:id" element={<PropertyDetail />} />
-              <Route path="property/:id/story" element={<StoryViewEnhanced />} />
+              <Route path="property/:id/story" element={<StoryView />} /> {/* Changed back to StoryView */}
               <Route path="property/:id/book" element={<BookProperty />} />
             </Route>
             

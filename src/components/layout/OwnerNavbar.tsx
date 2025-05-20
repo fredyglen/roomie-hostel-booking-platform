@@ -42,19 +42,19 @@ const OwnerNavbar: React.FC = () => {
             <nav className="hidden md:ml-10 md:flex space-x-8">
               <Link 
                 to="/owner/dashboard" 
-                className={`${location.pathname === '/owner/dashboard' ? 'text-roomi-blue' : 'text-gray-500'} hover:text-roomi-blue text-sm font-medium`}
+                className={`${location.pathname === '/owner/dashboard' ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium`}
               >
                 Dashboard
               </Link>
               <Link 
                 to="/owner/properties" 
-                className={`${location.pathname === '/owner/properties' ? 'text-roomi-blue' : 'text-gray-500'} hover:text-roomi-blue text-sm font-medium`}
+                className={`${location.pathname === '/owner/properties' ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium`}
               >
                 Properties
               </Link>
               <Link 
                 to="/owner/bookings" 
-                className={`${location.pathname === '/owner/bookings' ? 'text-roomi-blue' : 'text-gray-500'} hover:text-roomi-blue text-sm font-medium`}
+                className={`${location.pathname === '/owner/bookings' ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium`}
               >
                 Bookings
               </Link>
@@ -68,7 +68,7 @@ const OwnerNavbar: React.FC = () => {
                 <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                   <Avatar className="h-8 w-8">
                     <AvatarImage src={user?.avatarUrl} alt={`${user?.firstName} ${user?.lastName}`} />
-                    <AvatarFallback>{getInitials()}</AvatarFallback>
+                    <AvatarFallback className="bg-[#9b87f5]">{getInitials()}</AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>

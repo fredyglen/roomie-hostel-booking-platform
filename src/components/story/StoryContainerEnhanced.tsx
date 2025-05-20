@@ -48,10 +48,13 @@ const StoryContainerEnhanced: React.FC = () => {
   if (!isMounted || !property || !currentStory) {
     return (
       <div className="flex justify-center items-center h-screen bg-black">
-        <div className="animate-pulse">Loading...</div>
+        <div className="animate-pulse text-white">Loading...</div>
       </div>
     );
   }
+
+  const stories = property.stories || [];
+  const storiesCount = stories.length;
 
   return (
     <div className="fixed inset-0 bg-black flex flex-col z-50">
@@ -67,16 +70,16 @@ const StoryContainerEnhanced: React.FC = () => {
       {/* Header with progress bars */}
       <div className="z-40">
         <StoryHeader 
-          title={property.title} 
-          distanceToCampus={property.distanceToCampus} 
-          imageUrl={property.stories?.[0]?.url || ''} 
+          title={property.title || ''}
+          distanceToCampus={property.distanceToCampus || ''}
+          imageUrl={(property.stories && property.stories[0] && property.stories[0].url) || ''}
           onClose={handleClose} 
         />
         <div className="px-4 flex gap-1">
-          {property.stories && property.stories.map((_, index) => (
+          {stories.map((_, index) => (
             <StoryProgressBar
               key={index}
-              storiesCount={property.stories?.length || 0}
+              storiesCount={storiesCount}
               activeIndex={activeIndex}
               progressPercentage={index === activeIndex ? progressPercentage : index < activeIndex ? 100 : 0}
             />
@@ -92,7 +95,7 @@ const StoryContainerEnhanced: React.FC = () => {
         onNext={handleNext}
         onPrevious={handlePrevious}
         showPrevButton={activeIndex > 0}
-        showNextButton={activeIndex < (property.stories?.length ?? 0) - 1}
+        showNextButton={activeIndex < storiesCount - 1}
         onSwipeUp={handleSwipeUp}
         showDetails={showDetails}
         isMobile={isMobile}
@@ -103,16 +106,16 @@ const StoryContainerEnhanced: React.FC = () => {
         showDetails={showDetails}
         propertyDetails={{
           id: property.id,
-          title: property.title,
-          type: property.type,
-          price: property.price,
-          priceUnit: property.priceUnit,
-          address: property.address,
-          distanceToCampus: property.distanceToCampus,
+          title: property.title || '',
+          type: property.type || '',
+          price: property.price || 0,
+          priceUnit: property.priceUnit || '',
+          address: property.address || '',
+          distanceToCampus: property.distanceToCampus || '',
           amenities: property.amenities || [],
           description: property.description || '',
-          rating: property.rating,
-          reviewCount: property.reviewCount
+          rating: property.rating || 0,
+          reviewCount: property.reviewCount || 0
         }}
         onBookNow={handleBookNow}
       />

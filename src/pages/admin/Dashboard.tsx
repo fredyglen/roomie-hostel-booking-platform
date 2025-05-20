@@ -1,5 +1,6 @@
 
 import React from 'react';
+import AdminLayout from '@/components/layout/AdminLayout';
 import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend, PieChart, Pie, Cell } from 'recharts';
@@ -28,7 +29,7 @@ const AdminDashboard: React.FC = () => {
     { name: 'Legon', value: 32 },
   ];
 
-  const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
+  const COLORS = ['#7E69AB', '#6E59A5', '#9b87f5', '#8B5CF6'];
 
   // Sample KPI data
   const kpiData = [
@@ -67,9 +68,7 @@ const AdminDashboard: React.FC = () => {
   ];
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-6">Admin Dashboard</h1>
-      
+    <AdminLayout pageTitle="Admin Dashboard">
       {/* KPIs */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {kpiData.map((kpi, index) => (
@@ -87,10 +86,10 @@ const AdminDashboard: React.FC = () => {
       
       {/* Tabs for different charts */}
       <Tabs defaultValue="bookings" className="mb-8">
-        <TabsList>
-          <TabsTrigger value="bookings">Bookings</TabsTrigger>
-          <TabsTrigger value="properties">Properties</TabsTrigger>
-          <TabsTrigger value="locations">Locations</TabsTrigger>
+        <TabsList className="bg-[#9b87f5]/10">
+          <TabsTrigger value="bookings" className="data-[state=active]:bg-[#9b87f5] data-[state=active]:text-white">Bookings</TabsTrigger>
+          <TabsTrigger value="properties" className="data-[state=active]:bg-[#9b87f5] data-[state=active]:text-white">Properties</TabsTrigger>
+          <TabsTrigger value="locations" className="data-[state=active]:bg-[#9b87f5] data-[state=active]:text-white">Locations</TabsTrigger>
         </TabsList>
         
         <TabsContent value="bookings" className="pt-4">
@@ -102,7 +101,7 @@ const AdminDashboard: React.FC = () => {
                 <YAxis />
                 <Tooltip />
                 <Legend />
-                <Bar dataKey="bookings" fill="#3b82f6" name="Bookings" />
+                <Bar dataKey="bookings" fill="#9b87f5" name="Bookings" />
               </BarChart>
             </ResponsiveContainer>
           </Card>
@@ -197,7 +196,7 @@ const AdminDashboard: React.FC = () => {
           </table>
         </div>
       </Card>
-    </div>
+    </AdminLayout>
   );
 };
 
