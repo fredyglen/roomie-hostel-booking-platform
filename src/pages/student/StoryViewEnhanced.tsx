@@ -7,6 +7,7 @@ import StoryViewerEnhanced from '@/components/story/StoryViewerEnhanced';
 import StoryDetailsSheetEnhanced from '@/components/story/StoryDetailsSheetEnhanced';
 import { useStoryViewModel } from '@/components/story/StoryViewModel';
 import { useMobile } from '@/hooks/use-mobile';
+import { Property } from '@/lib/supabase';
 
 const StoryViewEnhanced: React.FC = () => {
   const { 
@@ -70,7 +71,10 @@ const StoryViewEnhanced: React.FC = () => {
       {/* Story viewer */}
       <StoryViewerEnhanced
         story={currentStory}
-        property={property}
+        property={{
+          ...property,
+          description: property.description || '' // Add default empty string for description
+        }}
         isPaused={isPaused}
         onPause={setIsPaused}
         onNext={handleNext}

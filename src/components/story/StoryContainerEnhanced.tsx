@@ -8,7 +8,7 @@ import StoryViewerEnhanced from '@/components/story/StoryViewerEnhanced';
 import StoryDetailsSheetEnhanced from '@/components/story/StoryDetailsSheetEnhanced';
 import { useStoryViewModel } from '@/components/story/StoryViewModel';
 import { useMobile } from '@/hooks/use-mobile';
-import { Property } from '@/types/property';
+import { Property } from '@/lib/supabase';
 
 const StoryContainerEnhanced: React.FC = () => {
   const {
@@ -59,6 +59,7 @@ const StoryContainerEnhanced: React.FC = () => {
   const propertyWithDefaults: Property = {
     ...property,
     type: property.type || property.property_type || 'Hostel',
+    description: property.description || '', // Add default empty string for description
     stories: property.stories || []
   };
 

@@ -1,10 +1,9 @@
-
 import React from 'react';
 import Header from '@/components/layout/Header';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import PropertyList from '@/components/properties/PropertyList';
 import PropertiesFiltersPanel from '@/components/properties/PropertiesFiltersPanel';
-import { Property } from '@/types/property';
+import { Property } from '@/lib/supabase';
 import { usePropertiesFilter } from '@/hooks/usePropertiesFilter';
 
 // Sample properties data (in a real app, this would come from an API)
@@ -21,7 +20,17 @@ const sampleProperties: Property[] = [
     rating: 4.5,
     reviewCount: 23,
     propertyCategory: 'Hostel',
-    genderType: 'Girls'
+    genderType: 'Girls',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   },
   {
     id: '2',
@@ -35,7 +44,17 @@ const sampleProperties: Property[] = [
     rating: 4.7,
     reviewCount: 42,
     propertyCategory: 'Hostel',
-    genderType: 'Mixed'
+    genderType: 'Mixed',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   },
   {
     id: '3',
@@ -49,7 +68,17 @@ const sampleProperties: Property[] = [
     rating: 4.2,
     reviewCount: 18,
     propertyCategory: 'Hostel',
-    genderType: 'Mixed'
+    genderType: 'Mixed',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   },
   {
     id: '4',
@@ -63,7 +92,17 @@ const sampleProperties: Property[] = [
     rating: 4.6,
     reviewCount: 31,
     propertyCategory: 'Hostel',
-    genderType: 'Mixed'
+    genderType: 'Mixed',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   },
   {
     id: '5',
@@ -77,7 +116,17 @@ const sampleProperties: Property[] = [
     rating: 4.0,
     reviewCount: 15,
     propertyCategory: 'Hostel',
-    genderType: 'Mixed'
+    genderType: 'Mixed',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   },
   {
     id: '6',
@@ -91,7 +140,17 @@ const sampleProperties: Property[] = [
     rating: 4.4,
     reviewCount: 27,
     propertyCategory: 'Hostel',
-    genderType: 'Mixed'
+    genderType: 'Mixed',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   },
   {
     id: '7',
@@ -105,7 +164,17 @@ const sampleProperties: Property[] = [
     rating: 4.3,
     reviewCount: 19,
     propertyCategory: 'Hostel',
-    genderType: 'Mixed'
+    genderType: 'Mixed',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   },
   {
     id: '8',
@@ -119,7 +188,17 @@ const sampleProperties: Property[] = [
     rating: 4.1,
     reviewCount: 23,
     propertyCategory: 'Hostel',
-    genderType: 'Mixed'
+    genderType: 'Mixed',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   },
   {
     id: '9',
@@ -133,7 +212,17 @@ const sampleProperties: Property[] = [
     rating: 4.2,
     reviewCount: 16,
     propertyCategory: 'Hostel',
-    genderType: 'Mixed'
+    genderType: 'Mixed',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   },
   {
     id: '10',
@@ -147,7 +236,17 @@ const sampleProperties: Property[] = [
     rating: 4.0,
     reviewCount: 12,
     propertyCategory: 'Hostel',
-    genderType: 'Mixed'
+    genderType: 'Mixed',
+    description: '', // Add empty description to satisfy the type
+    owner_id: '', // Add required fields
+    city: 'Accra',
+    state: 'Greater Accra',
+    zip: '00000',
+    bedrooms: 1,
+    bathrooms: 1,
+    available_from: '2025-01-01',
+    created_at: '2025-01-01',
+    updated_at: '2025-01-01'
   }
 ];
 

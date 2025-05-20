@@ -1,10 +1,9 @@
-
 import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
-import { Property } from '@/types/property';
+import { Property } from '@/lib/supabase';
 import { usePropertyLoader } from '@/hooks/usePropertyLoader';
 import PropertyDetailView from '@/components/property/PropertyDetailView';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
@@ -83,7 +82,8 @@ const PropertyDetail: React.FC = () => {
     priceUnit: (property.priceUnit || property.price_unit || 'semester') as 'month' | 'semester' | 'year' | 'week',
     distanceToCampus: property.distanceToCampus || property.distance_to_campus || '10 min walk',
     images: property.images || [],
-    stories: property.stories || []
+    stories: property.stories || [],
+    description: property.description || '' // Add default empty string for description
   };
   
   return (

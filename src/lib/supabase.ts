@@ -22,7 +22,7 @@ export interface Property {
   id: string;
   title: string;
   address: string;
-  description: string;
+  description?: string; // Changed to optional to match src/types/property.ts
   type?: string; // Frontend display property
   price?: number; // Frontend display property
   price_unit?: string; // Frontend display property
