@@ -71,6 +71,7 @@ const BookingStepsContainer: React.FC = () => {
               durationType={formData.durationType}
               checkInDate={formData.checkInDate}
               onInputChange={handleInputChange}
+              property={property}
             />
           </div>
         );
