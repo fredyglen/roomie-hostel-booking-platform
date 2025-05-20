@@ -111,7 +111,7 @@ const PropertyEdit: React.FC = () => {
   // Prepare form initial data
   const initialData = property ? {
     ...property,
-    propertyCategory: property.propertyCategory || 'Hostel',
+    propertyCategory: property.propertyCategory || property.property_category || 'Hostel',
     amenities: property.amenities?.join('\n') || '',
     house_rules: property.house_rules?.join('\n') || '',
     utilities: property.utilities?.join('\n') || '',
@@ -154,7 +154,7 @@ const PropertyEdit: React.FC = () => {
   }
 
   return (
-    <OwnerLayout pageTitle={`Edit Property: ${property.title}`}>
+    <OwnerLayout pageTitle={`Edit Property: ${property?.title}`}>
       <div className="space-y-6">
         <div>
           <h2 className="text-lg font-semibold">Edit Property Details</h2>

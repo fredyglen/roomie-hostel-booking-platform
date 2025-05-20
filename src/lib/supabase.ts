@@ -36,6 +36,7 @@ export interface Property {
   owner_id: string;
   property_type?: string; // Database property
   property_category?: PropertyCategory; // Database property
+  propertyCategory?: PropertyCategory; // Frontend display property
   rent?: number; // Database property
   city: string;
   state: string;
@@ -51,7 +52,8 @@ export interface Property {
   updated_at: string;
   images?: string[];
   amenities?: string[];
-  all_inclusive?: boolean;
+  all_inclusive?: boolean; // Database property
+  allInclusive?: boolean; // Frontend display property
   utilities?: string[];
   location?: string;
 }

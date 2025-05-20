@@ -43,7 +43,9 @@ export type Property = {
   roomTypes?: RoomType[];
   occupancy?: string;
   propertyCategory?: PropertyCategory;
+  property_category?: PropertyCategory; // Added for database compatibility
   allInclusive?: boolean;
+  all_inclusive?: boolean; // Added for database compatibility
   utilities?: string[];
   location?: string;
 };
