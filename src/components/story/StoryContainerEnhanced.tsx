@@ -8,6 +8,7 @@ import StoryViewerEnhanced from '@/components/story/StoryViewerEnhanced';
 import StoryDetailsSheetEnhanced from '@/components/story/StoryDetailsSheetEnhanced';
 import { useStoryViewModel } from '@/components/story/StoryViewModel';
 import { useMobile } from '@/hooks/use-mobile';
+import { Property } from '@/types/property';
 
 const StoryContainerEnhanced: React.FC = () => {
   const {
@@ -54,6 +55,13 @@ const StoryContainerEnhanced: React.FC = () => {
     );
   }
 
+  // Ensure property has all required fields
+  const propertyWithDefaults: Property = {
+    ...property,
+    type: property.type || property.property_type || 'Hostel',
+    stories: property.stories || []
+  };
+
   const storiesCount = stories.length;
 
   return (
@@ -70,9 +78,9 @@ const StoryContainerEnhanced: React.FC = () => {
       {/* Header with progress bars */}
       <div className="z-40 fixed top-0 left-0 right-0">
         <StoryHeader 
-          title={property.title || ''}
-          distanceToCampus={property.distanceToCampus || ''}
-          imageUrl={(property.stories && property.stories[0] && property.stories[0].url) || ''}
+          title={propertyWithDefaults.title || ''}
+          distanceToCampus={propertyWithDefaults.distanceToCampus || ''}
+          imageUrl={(propertyWithDefaults.stories && propertyWithDefaults.stories[0] && propertyWithDefaults.stories[0].url) || ''}
           onClose={handleClose} 
         />
         <div className="px-4 flex gap-1">
@@ -91,7 +99,7 @@ const StoryContainerEnhanced: React.FC = () => {
       <div className="flex-grow flex items-center justify-center">
         <StoryViewerEnhanced
           story={currentStory}
-          property={property}
+          property={propertyWithDefaults}
           isPaused={isPaused}
           onPause={setIsPaused}
           onNext={handleNext}
@@ -107,7 +115,7 @@ const StoryContainerEnhanced: React.FC = () => {
       
       {/* Property details sheet */}
       <StoryDetailsSheetEnhanced
-        property={property}
+        property={propertyWithDefaults}
         onClose={handleSwipeDown}
         onBookNow={handleBookNow}
       />

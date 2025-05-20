@@ -22,12 +22,13 @@ export type PropertyCategory = 'Hostel' | 'Homestel' | 'Apartment';
 export type Property = {
   id: string;
   title: string;
-  type: string;
-  price: number;
-  priceUnit: string;
+  type?: string;
+  property_type?: string; // Making this optional but available
+  price?: number;
+  priceUnit?: string;
   address: string;
-  distanceToCampus: string;
-  stories: Story[];
+  distanceToCampus?: string;
+  stories?: Story[];
   amenities?: string[];
   description?: string;
   rating?: number;
@@ -76,6 +77,13 @@ export type Property = {
   images?: string[];
   house_rules?: string[];
   image_url?: string;
+  
+  // Database required fields
+  owner_id?: string;
+  created_at?: string;
+  updated_at?: string;
+  available_from?: string;
+  available_to?: string;
 };
 
 // This interface is for the PropertyForm component

@@ -1,7 +1,8 @@
+
 import { useQuery } from '@tanstack/react-query';
-import { supabase, Property } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Story } from '@/types/property';
+import { Property, PropertyCategory, Story } from '@/types/property';
 
 interface UsePropertyLoaderOptions {
   propertyId: string;
@@ -57,12 +58,14 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
         available_from: data.available_from || '',
         created_at: data.created_at || '',
         updated_at: data.updated_at || '',
-        type: data.property_type,
-        price: data.rent,
+        type: data.property_type || '',
+        property_type: data.property_type || '',
+        price: data.rent || 0,
         priceUnit: 'semester', // Default to semester
         status: data.is_available ? 'Available' : 'Not Available',
         occupancy: '0/1', // Default occupancy
-        propertyCategory: propertyData.property_category || 'Hostel',
+        propertyCategory: (propertyData.property_category || 'Hostel') as PropertyCategory,
+        property_category: (propertyData.property_category || 'Hostel') as PropertyCategory,
         allInclusive: propertyData.all_inclusive || false,
         all_inclusive: propertyData.all_inclusive || false,
         total_rooms: propertyData.total_rooms || 1,
@@ -77,6 +80,7 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
         advance_payment_months: propertyData.advance_payment_months || 12,
         allow_bill_sharing: propertyData.allow_bill_sharing || false,
         landmark: propertyData.landmark || '',
+        distanceToCampus: propertyData.distance_to_campus || '',
         // Add stories from images if they exist
         stories: propertyData.stories || convertImagesToStories(data.images || [])
       } as Property;
@@ -95,12 +99,13 @@ function convertImagesToStories(images: string[]): Story[] {
 }
 
 // Sample property data for fallback
-function getSampleProperties() {
+function getSampleProperties(): Property[] {
   return [
     {
       id: '1',
       title: 'Kitatsu Hostel (All Girls Hostel)',
       type: 'Hostel',
+      property_type: 'Hostel',
       price: 8500,
       priceUnit: 'semester',
       address: 'Near UPSA, Madina, Accra',
@@ -125,6 +130,7 @@ function getSampleProperties() {
       },
       location: 'Madina',
       propertyCategory: 'Hostel',
+      property_category: 'Hostel',
       genderType: 'Girls',
       // Required properties for the Property type
       owner_id: '',

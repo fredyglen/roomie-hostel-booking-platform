@@ -7,6 +7,7 @@ import StoryHeader from '@/components/story/StoryHeader';
 import StoryMediaViewer from '@/components/story/StoryMediaViewer';
 import StoryDetailsSheet from '@/components/story/StoryDetailsSheet';
 import { useStoryViewModel } from '@/components/story/StoryViewModel';
+import { Property } from '@/types/property';
 
 const StoryContainer: React.FC = () => {
   const navigate = useNavigate();
@@ -39,6 +40,13 @@ const StoryContainer: React.FC = () => {
     );
   }
 
+  // Ensure property has all required fields
+  const propertyWithDefaults: Property = {
+    ...property,
+    type: property.type || property.property_type || 'Hostel',
+    stories: property.stories || []
+  };
+
   return (
     <div className="story-viewer h-screen bg-black flex flex-col items-center">
       <div 
@@ -57,8 +65,8 @@ const StoryContainer: React.FC = () => {
         
         {/* Header */}
         <StoryHeader 
-          title={property.title}
-          distanceToCampus={property.distanceToCampus}
+          title={propertyWithDefaults.title}
+          distanceToCampus={propertyWithDefaults.distanceToCampus || ''}
           imageUrl={(stories[0] && stories[0].url) || ''}
           onClose={handleClose}
         />
@@ -80,9 +88,9 @@ const StoryContainer: React.FC = () => {
       {/* Details Sheet */}
       {showDetails && (
         <StoryDetailsSheet 
-          property={property}
+          property={propertyWithDefaults}
           onSwipeDown={handleSwipeDown}
-          onBookNow={() => navigate(`/student/property/${property.id}/book`)}
+          onBookNow={() => navigate(`/student/property/${propertyWithDefaults.id}/book`)}
         />
       )}
     </div>

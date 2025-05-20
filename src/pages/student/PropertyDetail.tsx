@@ -64,11 +64,18 @@ const PropertyDetail: React.FC = () => {
     );
   }
   
+  // Ensure property has all required fields
+  const propertyWithDefaults: Property = {
+    ...property,
+    type: property.type || property.property_type || 'Hostel',
+    stories: property.stories || []
+  };
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       <PropertyDetailView 
-        property={property} 
+        property={propertyWithDefaults} 
         onViewStory={handleViewStory}
         onBookNow={handleBookNow}
       />

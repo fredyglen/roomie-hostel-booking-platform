@@ -29,7 +29,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
           id={property.id}
           title={property.title}
           address={property.address}
-          distanceToCampus={property.distanceToCampus}
+          distanceToCampus={property.distanceToCampus || ''}
           rating={property.rating}
           reviewCount={property.reviewCount}
           onViewStory={onViewStory}
@@ -49,7 +49,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
               <PropertyTabs
                 description={property.description || ''}
                 address={property.address}
-                distanceToCampus={property.distanceToCampus}
+                distanceToCampus={property.distanceToCampus || ''}
                 houseRules={property.house_rules || []}
                 amenities={property.amenities || []}
                 type={property.type || property.property_type || ''}
