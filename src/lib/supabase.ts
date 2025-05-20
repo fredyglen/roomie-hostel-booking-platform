@@ -77,7 +77,7 @@ export interface Property {
   advance_payment_months?: number;
   allow_bill_sharing?: boolean;
   
-  // UI properties
+  // UI properties - these aren't in the database but are added in frontend
   rating?: number;
   reviewCount?: number;
   verified?: boolean;
@@ -85,16 +85,20 @@ export interface Property {
   // Story related properties
   stories?: Story[];
   
-  // Gender type property
+  // Gender type property - from database (gender_type)
+  gender_type?: string;
   genderType?: 'Girls' | 'Boys' | 'Mixed';
   
-  // Owner information
+  // Owner information - added in frontend
   owner?: {
     name: string;
     phone: string;
     responseRate: string;
     verified: boolean;
   };
+  
+  // UI properties
+  availableUnits?: number;
 }
 
 export type { PropertyFormValues, PropertyInsert } from '@/types/property';

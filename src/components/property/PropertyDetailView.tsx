@@ -6,7 +6,7 @@ import PropertyImageGallery from '@/components/property/PropertyImageGallery';
 import PropertyTabs from '@/components/property/PropertyTabs';
 import PropertyOwnerCard from '@/components/property/PropertyOwnerCard';
 import PropertyBookingCard from '@/components/property/PropertyBookingCard';
-import { Property } from '@/types/property';
+import { Property } from '@/lib/supabase';
 import { toast } from 'sonner';
 
 interface PropertyDetailViewProps {
@@ -39,7 +39,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
           id={property.id}
           title={property.title}
           address={property.address}
-          distanceToCampus={property.distanceToCampus || ''}
+          distanceToCampus={property.distanceToCampus || property.distance_to_campus || ''}
           rating={property.rating}
           reviewCount={property.reviewCount}
           onViewStory={onViewStory}
@@ -60,7 +60,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
               <PropertyTabs
                 description={property.description || ''}
                 address={property.address}
-                distanceToCampus={property.distanceToCampus || ''}
+                distanceToCampus={property.distanceToCampus || property.distance_to_campus || ''}
                 houseRules={property.house_rules || []}
                 amenities={property.amenities || []}
                 type={property.type || property.property_type || ''}
@@ -84,8 +84,8 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
           <div className="md:col-span-1">
             <PropertyBookingCard
               id={property.id}
-              price={property.price || 0}
-              priceUnit={property.priceUnit || 'semester'}
+              price={property.price || property.rent || 0}
+              priceUnit={property.priceUnit || property.price_unit || 'semester'}
               verified={property.verified}
               availableUnits={property.availableUnits}
               onBookNow={onBookNow}

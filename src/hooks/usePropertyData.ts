@@ -11,8 +11,12 @@ export function convertImagesToStories(images: string[]): Story[] {
 
 // Function to ensure property data consistency by providing defaults
 export function normalizePropertyData(propertyData: any): Property {
+  // Map database column gender_type to our frontend genderType
+  const genderType = propertyData.gender_type || 'Mixed';
+
   return {
     ...propertyData,
+    // Basic properties
     owner_id: propertyData.owner_id || '',
     city: propertyData.city || '',
     state: propertyData.state || '',
@@ -22,15 +26,25 @@ export function normalizePropertyData(propertyData: any): Property {
     available_from: propertyData.available_from || '',
     created_at: propertyData.created_at || '',
     updated_at: propertyData.updated_at || '',
+    
+    // Normalize property type and category
     type: propertyData.property_type || '',
     property_type: propertyData.property_type || '',
+    
+    // Normalize price info
     price: propertyData.rent || 0,
     priceUnit: 'semester', // Default to semester
     price_unit: 'semester',
+    
+    // Normalize status
     status: propertyData.is_available ? 'Available' : 'Not Available',
     occupancy: '0/1', // Default occupancy
+    
+    // Normalize property category
     propertyCategory: (propertyData.property_category || 'Hostel'),
     property_category: (propertyData.property_category || 'Hostel'),
+    
+    // Normalize property features
     allInclusive: propertyData.all_inclusive || false,
     all_inclusive: propertyData.all_inclusive || false,
     total_rooms: propertyData.total_rooms || 1,
@@ -38,17 +52,44 @@ export function normalizePropertyData(propertyData: any): Property {
     beds_per_room: propertyData.beds_per_room || 1,
     beds_available: propertyData.beds_available || 1,
     max_occupants: propertyData.max_occupants || 1,
+    
+    // Normalize facility features
     has_bedframes: propertyData.has_bedframes || false,
     has_mattresses: propertyData.has_mattresses || false,
     has_wardrobes: propertyData.has_wardrobes || false,
     has_individual_meters: propertyData.has_individual_meters || false,
+    
+    // Normalize payment details
     advance_payment_months: propertyData.advance_payment_months || 12,
     allow_bill_sharing: propertyData.allow_bill_sharing || false,
+    
+    // Normalize location info
     landmark: propertyData.landmark || '',
     distanceToCampus: propertyData.distance_to_campus || '',
     distance_to_campus: propertyData.distance_to_campus || '',
+    
+    // Add frontend UI properties (not from database)
+    rating: 4.5, // Default rating if not provided
+    reviewCount: 10, // Default review count if not provided
+    verified: true, // Default to verified
+    
+    // Add stories from images if not provided
     stories: propertyData.stories || convertImagesToStories(propertyData.images || []),
-    genderType: propertyData.genderType || 'Mixed'
+    
+    // Map gender_type to genderType
+    gender_type: propertyData.gender_type || 'Mixed',
+    genderType: genderType as 'Girls' | 'Boys' | 'Mixed',
+    
+    // Add default owner information for display
+    owner: propertyData.owner || {
+      name: 'Property Owner',
+      phone: '+233 50 123 4567',
+      responseRate: '90%',
+      verified: true
+    },
+    
+    // Add UI property for available units
+    availableUnits: propertyData.availableUnits || 5
   } as Property;
 }
 

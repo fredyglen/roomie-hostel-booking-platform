@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import PropertyTabs from '@/components/property/PropertyTabs';
 import { Icon } from '@iconify/react';
 import { useNavigate } from 'react-router-dom';
-import { Property } from '@/types/property';
+import { Property } from '@/lib/supabase';
 
 interface StoryDetailsSheetEnhancedProps {
   property: Property;

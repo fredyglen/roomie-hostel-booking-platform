@@ -2,7 +2,7 @@
 import React from 'react';
 import PropertyCard from './PropertyCard';
 import { useNavigate } from 'react-router-dom';
-import { Property } from '@/types/property';
+import { Property } from '@/lib/supabase';
 
 interface PropertyListProps {
   properties: Property[];
@@ -80,7 +80,7 @@ const PropertyList: React.FC<PropertyListProps> = ({
             reviewCount: property.reviewCount,
             verified: property.verified,
             propertyCategory: property.propertyCategory || property.property_category,
-            genderType: property.genderType,
+            genderType: property.genderType || (property.gender_type as any),
             onViewStory: () => handleViewStory(property.id),
             onViewDetails: () => handleViewProperty(property.id)
           }}
