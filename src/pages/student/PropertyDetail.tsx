@@ -20,7 +20,6 @@ const PropertyDetail: React.FC = () => {
   const { data: property, isLoading, error } = usePropertyLoader({ 
     propertyId: id || '', 
     forOwner: false,
-    // Enable optimistic loading
     enabled: !!id
   });
 
@@ -91,8 +90,9 @@ const PropertyDetail: React.FC = () => {
     distanceToCampus: property.distanceToCampus || property.distance_to_campus || '10 min walk',
     images: property.images || [],
     stories: property.stories || [],
-    description: property.description || '', // Add default empty string for description
-    owner_id: property.owner_id || '' // Ensure owner_id has a default value
+    description: property.description || '',
+    owner_id: property.owner_id || '',
+    amenities: property.amenities || []
   };
   
   return (

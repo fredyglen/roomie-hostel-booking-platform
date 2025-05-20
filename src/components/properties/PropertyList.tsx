@@ -83,7 +83,6 @@ const PropertyList: React.FC<PropertyListProps> = ({
             genderType: property.genderType || (property.gender_type as any),
             onViewStory: () => handleViewStory(property.id),
             onViewDetails: () => handleViewProperty(property.id)
-            // Removed owner_id and other properties not needed in PropertyCard interface
           }}
         />
       ))}

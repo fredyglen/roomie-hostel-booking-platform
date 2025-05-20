@@ -9,7 +9,7 @@ import { Property } from '@/lib/supabase';
 interface StoryDetailsSheetEnhancedProps {
   property: Property;
   onClose: () => void;
-  onBookNow?: () => void; // Made this prop optional
+  onBookNow?: () => void;
 }
 
 const StoryDetailsSheetEnhanced: React.FC<StoryDetailsSheetEnhancedProps> = ({ 
