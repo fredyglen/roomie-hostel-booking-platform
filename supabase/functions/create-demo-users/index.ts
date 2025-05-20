@@ -49,16 +49,34 @@ serve(async (req) => {
     const results = [];
     for (const user of demoUsers) {
       // Check if user already exists
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', user.email)
-        .maybeSingle();
-
+      const { data: existingUsers, error: queryError } = await supabase.auth.admin
+        .listUsers({ 
+          filter: { 
+            email: user.email 
+          }
+        });
+      
+      const existingUser = existingUsers?.users?.length > 0 ? existingUsers.users[0] : null;
+      
       if (existingUser) {
+        console.log(`User ${user.email} already exists with ID ${existingUser.id}`);
+        
+        // Update the profile to ensure correct role
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .upsert({ 
+            id: existingUser.id,
+            email: user.email,
+            role: user.role,
+            first_name: user.first_name,
+            last_name: user.last_name,
+            phone: user.phone
+          });
+          
         results.push({
           email: user.email,
-          status: 'Already exists',
+          status: 'Already exists, profile updated',
+          error: profileError ? profileError.message : null
         });
         continue;
       }
@@ -89,13 +107,14 @@ serve(async (req) => {
       if (authData.user) {
         const { error: profileError } = await supabase
           .from('profiles')
-          .update({ 
+          .upsert({ 
+            id: authData.user.id,
+            email: user.email,
             role: user.role,
             first_name: user.first_name,
             last_name: user.last_name,
             phone: user.phone
-          })
-          .eq('id', authData.user.id);
+          });
 
         if (profileError) {
           results.push({

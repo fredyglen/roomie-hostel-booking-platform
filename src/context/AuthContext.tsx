@@ -31,6 +31,7 @@ type AuthContextType = {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, userData: Partial<AuthUser>) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   updateProfile: (data: Partial<AuthUser>) => Promise<void>;
 };
 
@@ -45,8 +46,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      async (_event, session) => {
-        console.log("Auth state changed:", _event);
+      async (event, session) => {
+        console.log("Auth state changed:", event);
         setSession(session);
         if (session?.user) {
           // Defer data fetching to prevent deadlocks
@@ -102,6 +103,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           createdAt: data.created_at,
         };
         setUser(authUser);
+      } else {
+        // Handle case when profile isn't found - could be a new Google sign-in
+        const newUser = session?.user;
+        if (newUser) {
+          // Default to student role for new users
+          const defaultRole = 'student';
+          
+          // Try to create a new profile
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert({
+              id: newUser.id,
+              email: newUser.email,
+              role: defaultRole,
+              first_name: newUser.user_metadata?.full_name?.split(' ')[0] || '',
+              last_name: newUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+              avatar_url: newUser.user_metadata?.avatar_url,
+            });
+            
+          if (insertError) {
+            console.error('Error creating user profile:', insertError);
+          } else {
+            // Set user with available data
+            const authUser: AuthUser = {
+              id: newUser.id,
+              email: newUser.email || '',
+              role: defaultRole,
+              firstName: newUser.user_metadata?.full_name?.split(' ')[0] || '',
+              lastName: newUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+              avatarUrl: newUser.user_metadata?.avatar_url,
+              createdAt: new Date().toISOString(),
+            };
+            setUser(authUser);
+          }
+        }
       }
     } catch (error) {
       console.error('Error processing user profile:', error);
@@ -192,6 +228,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      // Clean up existing auth state
+      cleanupAuthState();
+      
+      // Attempt global sign out first
+      try {
+        await supabase.auth.signOut({ scope: 'global' });
+      } catch (err) {
+        // Continue even if this fails
+        console.log("Sign out before Google signin failed:", err);
+      }
+      
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/login'
+        }
+      });
+      
+      if (error) {
+        throw error;
+      }
+    } catch (error: any) {
+      toast({
+        title: "Google Sign in failed",
+        description: error.message || "Failed to sign in with Google",
+        variant: "destructive",
+      });
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       // Clean up auth state
@@ -265,6 +334,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signIn,
     signUp,
     signOut,
+    signInWithGoogle,
     updateProfile,
   };
 
