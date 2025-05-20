@@ -1,14 +1,11 @@
 
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
 import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import PropertyList from '@/components/properties/PropertyList';
-import SearchBar from '@/components/properties/SearchBar';
-import ResultsCount from '@/components/properties/ResultsCount';
-import PropertyFilters from '@/components/properties/PropertyFilters';
-import { Property, PropertyCategory } from '@/types/property';
+import PropertiesFiltersPanel from '@/components/properties/PropertiesFiltersPanel';
+import { Property } from '@/types/property';
+import { usePropertiesFilter } from '@/hooks/usePropertiesFilter';
 
 // Sample properties data (in a real app, this would come from an API)
 const sampleProperties: Property[] = [
@@ -155,81 +152,24 @@ const sampleProperties: Property[] = [
 ];
 
 const Properties: React.FC = () => {
-  const navigate = useNavigate();
-  const [properties, setProperties] = useState<Property[]>(sampleProperties);
-  const [filteredProperties, setFilteredProperties] = useState<Property[]>(sampleProperties);
-  const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [showFilters, setShowFilters] = useState(false);
-  
-  // Filter states
-  const [selectedPropertyType, setSelectedPropertyType] = useState<string>('');
-  const [selectedGenderType, setSelectedGenderType] = useState<string>('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 20000]);
-  const [maxDistance, setMaxDistance] = useState<number>(15);
-  
-  // Apply filters when any filter changes
-  useEffect(() => {
-    setIsLoading(true);
-    
-    setTimeout(() => {
-      let results = properties;
-      
-      // Apply search filter
-      if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        results = results.filter(
-          property => 
-            property.title.toLowerCase().includes(query) ||
-            property.address.toLowerCase().includes(query) ||
-            property.type.toLowerCase().includes(query) ||
-            (property.propertyCategory && property.propertyCategory.toLowerCase().includes(query))
-        );
-      }
-      
-      // Apply property type filter
-      if (selectedPropertyType) {
-        results = results.filter(property => 
-          property.propertyCategory?.toLowerCase() === selectedPropertyType.toLowerCase()
-        );
-      }
-      
-      // Apply gender type filter
-      if (selectedGenderType) {
-        results = results.filter(property => 
-          property.genderType?.toLowerCase() === selectedGenderType.toLowerCase()
-        );
-      }
-      
-      // Apply price range filter
-      results = results.filter(
-        property => property.price >= priceRange[0] && property.price <= priceRange[1]
-      );
-      
-      // Apply distance filter - parse the string like "5 min walk" to get the number
-      results = results.filter(property => {
-        const distanceMatch = property.distanceToCampus.match(/(\d+)/);
-        if (distanceMatch && distanceMatch[1]) {
-          const distance = parseInt(distanceMatch[1]);
-          return distance <= maxDistance;
-        }
-        return true;
-      });
-      
-      setFilteredProperties(results);
-      setIsLoading(false);
-    }, 300); // Small delay to show loading state
-  }, [searchQuery, selectedPropertyType, selectedGenderType, priceRange, maxDistance, properties]);
-  
-  // Reset all filters
-  const resetFilters = () => {
-    setSearchQuery('');
-    setSelectedPropertyType('');
-    setSelectedGenderType('');
-    setPriceRange([0, 20000]);
-    setMaxDistance(15);
-    setShowFilters(false);
-  };
+  // Use the custom hook for handling property filtering
+  const {
+    searchQuery,
+    setSearchQuery,
+    selectedPropertyType,
+    setSelectedPropertyType,
+    selectedGenderType,
+    setSelectedGenderType,
+    priceRange,
+    setPriceRange,
+    maxDistance,
+    setMaxDistance,
+    showFilters,
+    setShowFilters,
+    filteredProperties,
+    isLoading,
+    resetFilters
+  } = usePropertiesFilter({ properties: sampleProperties });
   
   return (
     <div className="min-h-screen flex flex-col font-space-grotesk pb-16">
@@ -239,31 +179,22 @@ const Properties: React.FC = () => {
           <h1 className="text-2xl md:text-3xl font-bold mb-6 px-1">Find Your Perfect Student Accommodation</h1>
           
           {/* Search and Filter Controls */}
-          <div className="mb-6 px-1">
-            <SearchBar 
-              value={searchQuery}
-              onChange={setSearchQuery}
-              onToggleFilters={() => setShowFilters(!showFilters)}
-              showFilters={showFilters}
-            />
-            
-            {/* Filter Panel */}
-            {showFilters && (
-              <PropertyFilters 
-                propertyType={selectedPropertyType}
-                onPropertyTypeChange={setSelectedPropertyType}
-                genderType={selectedGenderType}
-                onGenderTypeChange={setSelectedGenderType}
-                priceRange={priceRange}
-                onPriceRangeChange={setPriceRange}
-                maxDistance={maxDistance}
-                onMaxDistanceChange={setMaxDistance}
-                onResetFilters={resetFilters}
-              />
-            )}
-            
-            <ResultsCount count={filteredProperties.length} />
-          </div>
+          <PropertiesFiltersPanel
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            showFilters={showFilters}
+            setShowFilters={setShowFilters}
+            selectedPropertyType={selectedPropertyType}
+            setSelectedPropertyType={setSelectedPropertyType}
+            selectedGenderType={selectedGenderType}
+            setSelectedGenderType={setSelectedGenderType}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            maxDistance={maxDistance}
+            setMaxDistance={setMaxDistance}
+            resetFilters={resetFilters}
+            filteredPropertiesCount={filteredProperties.length}
+          />
           
           {/* Property List */}
           <PropertyList 
