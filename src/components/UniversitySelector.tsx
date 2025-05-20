@@ -48,7 +48,8 @@ const UniversitySelector: React.FC = () => {
   const handleSelect = (universityId: string) => {
     // In a real app, we would store this selection
     console.log(`Selected university: ${universityId}`);
-    navigate('/auth/signup');
+    // For now, just navigate to the student properties page
+    navigate('/student/properties');
   };
 
   return (
@@ -56,7 +57,7 @@ const UniversitySelector: React.FC = () => {
       <h2 className="text-3xl font-bold text-center mb-2">Select Your University</h2>
       <p className="text-center text-gray-600 mb-8">We'll show you accommodations near your campus</p>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
         {universities.map((university) => (
           <div 
             key={university.id} 
