@@ -8,9 +8,10 @@ import PropertyList from '@/components/properties/PropertyList';
 import SearchBar from '@/components/properties/SearchBar';
 import ResultsCount from '@/components/properties/ResultsCount';
 import PropertyFilters from '@/components/properties/PropertyFilters';
+import { Property, PropertyCategory } from '@/types/property';
 
 // Sample properties data (in a real app, this would come from an API)
-const sampleProperties = [
+const sampleProperties: Property[] = [
   {
     id: '1',
     title: 'Kitatsu Hostel (All Girls Hostel)',
@@ -155,8 +156,8 @@ const sampleProperties = [
 
 const Properties: React.FC = () => {
   const navigate = useNavigate();
-  const [properties, setProperties] = useState(sampleProperties);
-  const [filteredProperties, setFilteredProperties] = useState(sampleProperties);
+  const [properties, setProperties] = useState<Property[]>(sampleProperties);
+  const [filteredProperties, setFilteredProperties] = useState<Property[]>(sampleProperties);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);

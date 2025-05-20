@@ -1,22 +1,22 @@
-
 import React from 'react';
 import { Icon } from '@iconify/react';
 import { Badge } from '@/components/ui/badge';
+import { PropertyCategory } from '@/types/property';
 
 interface PropertyCardProps {
   property: {
     id: string;
     title: string;
-    type: string;
-    price: number;
-    priceUnit: 'month' | 'semester' | 'year' | 'week';
+    type?: string;
+    price?: number;
+    priceUnit?: 'month' | 'semester' | 'year' | 'week';
     address: string;
-    distanceToCampus: string;
-    images: string[];
+    distanceToCampus?: string;
+    images?: string[];
     rating?: number;
     reviewCount?: number;
     verified?: boolean;
-    propertyCategory?: 'Hostel' | 'Homestel' | 'Apartment';
+    propertyCategory?: PropertyCategory;
     genderType?: 'Girls' | 'Boys' | 'Mixed';
     onViewStory?: () => void;
     onViewDetails?: () => void;
@@ -54,7 +54,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       {/* Property Image */}
       <div className="relative">
         <img 
-          src={property.images[0]} 
+          src={property.images && property.images[0] ? property.images[0] : '/placeholder.svg'} 
           alt={property.title} 
           className="w-full h-48 object-cover"
         />
@@ -90,13 +90,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         
         <div className="flex items-center text-sm mb-3">
           <Icon icon="solar:map-point-linear" className="h-4 w-4 text-roomi-teal mr-1" />
-          <span>{property.distanceToCampus} to campus</span>
+          <span>{property.distanceToCampus || '10 min'} to campus</span>
         </div>
         
         <div className="flex items-center justify-between mt-auto">
           <div>
-            <span className="font-bold text-roomi-blue">₵{property.price.toLocaleString()}</span>
-            <span className="text-gray-600">/{property.priceUnit}</span>
+            <span className="font-bold text-roomi-blue">₵{(property.price || 0).toLocaleString()}</span>
+            <span className="text-gray-600">/{property.priceUnit || 'semester'}</span>
           </div>
           {property.rating && (
             <div className="flex items-center">
