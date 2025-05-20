@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -23,9 +23,23 @@ interface AdminLayoutProps {
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  
+  // Check if user is authenticated and has admin role
+  useEffect(() => {
+    if (!user) {
+      navigate('/login');
+    } else if (user.role !== 'admin') {
+      // Redirect based on role
+      if (user.role === 'student') {
+        navigate('/student/dashboard');
+      } else if (user.role === 'owner') {
+        navigate('/owner/dashboard');
+      }
+    }
+  }, [user, navigate]);
   
   const navigationItems = [
     { title: 'Dashboard', path: '/admin/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
@@ -47,6 +61,11 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle }) => {
       console.error('Error signing out:', error);
     }
   };
+
+  // If still loading or not authenticated, show nothing or loading state
+  if (!user || user.role !== 'admin') {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -185,7 +204,7 @@ const AdminLayout: React.FC<AdminLayoutProps> = ({ children, pageTitle }) => {
                 <button className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9b87f5]">
                   <span className="sr-only">Open user menu</span>
                   <div className="h-8 w-8 rounded-full bg-[#9b87f5] text-white flex items-center justify-center">
-                    <span className="font-medium">A</span>
+                    <span className="font-medium">{user?.firstName?.[0] || 'A'}</span>
                   </div>
                 </button>
               </div>

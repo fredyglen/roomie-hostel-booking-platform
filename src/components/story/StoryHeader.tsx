@@ -16,20 +16,21 @@ const StoryHeader: React.FC<StoryHeaderProps> = ({
   onClose 
 }) => {
   return (
-    <div className="pt-10 pb-2 px-4">
+    <div className="pt-10 pb-2 px-4 z-10">
       <div className="flex justify-between items-center">
         <div className="flex items-center">
-          <div className="w-10 h-10 bg-gray-300 rounded-full mr-3 overflow-hidden border-2 border-white">
+          <div className="w-10 h-10 bg-gray-300 rounded-full mr-3 overflow-hidden border-2 border-white shadow-md">
             <img src={imageUrl} alt="" className="w-full h-full object-cover" />
           </div>
           <div>
-            <p className="text-white font-medium text-sm">{title}</p>
-            <p className="text-white/80 text-xs">{distanceToCampus} to campus</p>
+            <p className="text-white font-medium text-sm drop-shadow-md">{title}</p>
+            <p className="text-white/80 text-xs drop-shadow-md">{distanceToCampus} to campus</p>
           </div>
         </div>
         <button 
           onClick={onClose} 
-          className="text-white bg-black/30 rounded-full p-1"
+          className="text-white bg-black/30 rounded-full p-1 hover:bg-black/50 transition-colors"
+          aria-label="Close"
         >
           <X className="h-6 w-6" />
         </button>

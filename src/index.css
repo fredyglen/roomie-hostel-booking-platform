@@ -27,6 +27,14 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 260 67% 75%; /* Updated to match primary */
     --radius: 0.5rem;
+    
+    /* ROOMi custom colors - Updated with purple palette */
+    --roomi-blue: 260 67% 75%; /* Changed to purple */
+    --roomi-teal: 167 68% 55%;
+    --roomi-dark: 218 41% 25%;
+    --roomi-light: 220 14% 96%;
+    --roomi-purple: 260 67% 75%; /* Added main purple */
+    --roomi-purple-dark: 260 53% 54%; /* Added darker purple */
   }
 
   .dark {
@@ -49,16 +57,6 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 260 67% 75%; /* Updated to match primary */
-  }
-
-  /* ROOMi custom colors - Updated with new purple palette */
-  :root {
-    --roomi-blue: 260 67% 75%; /* Changed to purple */
-    --roomi-teal: 167 68% 55%;
-    --roomi-dark: 218 41% 25%;
-    --roomi-light: 220 14% 96%;
-    --roomi-purple: 260 67% 75%; /* Added main purple */
-    --roomi-purple-dark: 260 53% 54%; /* Added darker purple */
   }
 
   body {
@@ -117,23 +115,23 @@
 
 /* Story Viewer Styles */
 .story-progress {
-  height: 2px;
+  height: 3px;
   background-color: rgba(255, 255, 255, 0.3);
-  margin: 0 1px;
-  border-radius: 2px;
+  margin: 0 2px;
+  border-radius: 3px;
   overflow: hidden;
 }
 
 .story-progress-bar {
   height: 100%;
   background-color: white;
-  border-radius: 2px;
+  border-radius: 3px;
   transition: width 0.1s linear;
 }
 
 /* Property details sheet (limit height for swipe up) */
 .property-details-sheet {
-  max-height: 75vh; /* Only cover 75% of the screen height */
+  max-height: 85vh; /* Increased from 75% to 85% of the screen height */
 }
 
 /* Booking Steps Animation */
@@ -174,9 +172,9 @@
   inset: 0;
   background-size: cover;
   background-position: center;
-  filter: blur(15px);
-  transform: scale(1.1);
-  opacity: 0.7;
+  filter: blur(20px) brightness(0.7);
+  transform: scale(1.2);
+  opacity: 0.8;
   z-index: 0;
 }
 
@@ -186,18 +184,13 @@
   justify-content: center;
   align-items: center;
   height: 100%;
+  position: relative;
 }
 
 /* Desktop media enhancement for story images */
 @media (min-width: 1024px) {
   .story-backdrop {
-    position: absolute;
-    inset: 0;
-    background-size: cover;
-    background-position: center;
-    filter: blur(15px);
-    transform: scale(1.1);
-    opacity: 0.7;
+    filter: blur(25px) brightness(0.6);
   }
   
   .story-content {
@@ -205,10 +198,13 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
-    max-height: 100vh;
+    max-height: 85vh;
     max-width: 90%;
     object-fit: contain;
     z-index: 1;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
   }
 }
 
@@ -240,5 +236,35 @@
   to {
     opacity: 0;
     transform: scale(0.9);
+  }
+}
+
+/* Admin portal styles */
+.admin-sidebar {
+  @apply bg-white shadow-md z-20 fixed inset-y-0 left-0 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0;
+}
+
+.admin-link {
+  @apply flex items-center px-4 py-3 text-sm rounded-md transition-colors;
+}
+
+.admin-link-active {
+  @apply bg-[#9b87f5] text-white;
+}
+
+.admin-link-inactive {
+  @apply text-gray-600 hover:bg-[#9b87f5]/10;
+}
+
+/* Responsive utilities */
+@media (max-width: 640px) {
+  .hide-on-mobile {
+    display: none !important;
+  }
+}
+
+@media (min-width: 641px) {
+  .hide-on-desktop {
+    display: none !important;
   }
 }
