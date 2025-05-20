@@ -2,37 +2,32 @@
 import React, { useCallback } from 'react';
 import { ArrowLeft, ArrowRight, ChevronUp } from 'lucide-react';
 import { Story } from '@/types/property';
-import StoryProgressBar from './StoryProgressBar';
 
 interface StoryViewerEnhancedProps {
-  stories: Story[];
-  activeStoryIndex: number;
+  story: Story;
   isPaused: boolean;
-  progressPercentage: number;
   onPause: (paused: boolean) => void;
   onNext: () => void;
   onPrevious: () => void;
+  showPrevButton: boolean;
+  showNextButton: boolean;
   onSwipeUp?: () => void;
   showDetails?: boolean;
   isMobile?: boolean;
 }
 
 const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
-  stories,
-  activeStoryIndex,
-  progressPercentage,
+  story,
   isPaused,
   onPause,
   onNext,
   onPrevious,
+  showPrevButton,
+  showNextButton,
   onSwipeUp,
   showDetails,
   isMobile = true
 }) => {
-  const currentStory = stories[activeStoryIndex];
-  const showPrevButton = activeStoryIndex > 0;
-  const showNextButton = activeStoryIndex < stories.length - 1;
-  
   const handleTouchStart = useCallback(() => {
     onPause(true);
   }, [onPause]);
@@ -43,40 +38,34 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
     }
   }, [onPause, showDetails]);
 
-  if (!currentStory) return null;
+  if (!story) return null;
 
   return (
     <div className="relative w-full h-full overflow-hidden">
       {/* Background blur effect */}
-      <div className="story-backdrop" style={{ backgroundImage: `url(${currentStory.url})` }}></div>
-      
-      {/* Progress bars at top */}
-      <div className="absolute top-2 left-0 right-0 z-10 px-4">
-        <StoryProgressBar 
-          storiesCount={stories.length} 
-          activeIndex={activeStoryIndex} 
-          progressPercentage={progressPercentage} 
-        />
-      </div>
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-50 blur-xl scale-110"
+        style={{ backgroundImage: `url(${story.url})` }}
+      ></div>
       
       {/* Main content */}
       <div 
-        className="w-full h-full touch-none"
+        className="w-full h-full touch-none relative z-10 flex items-center justify-center"
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
         onMouseDown={handleTouchStart}
         onMouseUp={handleTouchEnd}
       >
         <div className="story-content">
-          {currentStory.type === 'image' ? (
+          {story.type === 'image' ? (
             <img
-              src={currentStory.url}
+              src={story.url}
               alt="Story content"
               className={`${isMobile ? 'h-full w-full object-cover' : 'max-h-[85vh] max-w-full rounded-lg shadow-xl'}`}
             />
           ) : (
             <video
-              src={currentStory.url}
+              src={story.url}
               autoPlay
               playsInline
               muted={isPaused}
@@ -88,10 +77,10 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
       </div>
       
       {/* Caption */}
-      {currentStory.caption && (
+      {story.caption && (
         <div className="absolute bottom-24 left-0 right-0 px-4 z-10">
           <p className="text-white text-center bg-black/30 py-2 px-4 rounded-lg shadow-md">
-            {currentStory.caption}
+            {story.caption}
           </p>
         </div>
       )}
