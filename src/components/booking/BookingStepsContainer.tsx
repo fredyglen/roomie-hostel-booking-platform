@@ -1,5 +1,4 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import BookingSteps from '@/components/booking/BookingSteps';
@@ -11,9 +10,13 @@ import StudentVerification from '@/components/booking/StudentVerification';
 import BookingSummary from '@/components/booking/BookingSummary';
 import PaymentOptions from '@/components/booking/PaymentOptions';
 import { useBookingViewModel, STEP_LABELS } from '@/components/booking/BookingViewModel';
+import { toast } from 'sonner';
 
 const BookingStepsContainer: React.FC = () => {
   const navigate = useNavigate();
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  
   const {
     property,
     currentStep,
@@ -46,17 +49,32 @@ const BookingStepsContainer: React.FC = () => {
     handleInputChange({ target: { name, value } } as React.ChangeEvent<HTMLInputElement>);
   };
   
-  // Mock function for file upload
+  // Handle file upload
   const handleFileUpload = (file: File) => {
-    console.log('File uploaded:', file);
-    // In a real app, you'd handle the file upload here
+    console.log('File uploaded:', file.name);
+    setUploadedFile(file);
   };
   
-  // Mock function for verification
+  // Handle verification process
   const handleVerify = () => {
-    console.log('Verifying student status');
-    // In a real app, you'd handle verification here
-    handleNext();
+    if (!uploadedFile) {
+      toast.error('Please upload your ID document');
+      return;
+    }
+    
+    if (!formData.studentId) {
+      toast.error('Please enter your Student ID');
+      return;
+    }
+    
+    setIsVerifying(true);
+    
+    // Simulate verification process with a delay
+    setTimeout(() => {
+      setIsVerifying(false);
+      toast.success('Student verification successful!');
+      handleNext();
+    }, 2000);
   };
   
   if (!property) {
@@ -137,13 +155,14 @@ const BookingStepsContainer: React.FC = () => {
           <div>
             <h2 className="text-xl font-bold mb-4">Student Verification</h2>
             <StudentVerification 
-              idType={formData.idType}
+              idType={formData.idType || 'studentId'}
               studentId={formData.studentId}
               university={formData.university}
               program={formData.program}
               onInputChange={handleStudentVerificationInputChange}
               onFileUpload={handleFileUpload}
               onVerify={handleVerify}
+              isVerifying={isVerifying}
             />
           </div>
         );
@@ -212,13 +231,19 @@ const BookingStepsContainer: React.FC = () => {
           <Button variant="outline" onClick={handleBack}>
             Back
           </Button>
-          <Button 
-            variant="primary" 
-            onClick={handleNext}
-            disabled={currentStep === 6 && !formData.termsAgreed}
-          >
-            {currentStep === 7 ? 'Make Payment' : 'Next'}
-          </Button>
+          {currentStep === 5 ? (
+            // Don't show the "Next" button on verification screen,
+            // as it will be handled by the verification component
+            null
+          ) : (
+            <Button 
+              variant="primary" 
+              onClick={handleNext}
+              disabled={currentStep === 6 && !formData.termsAgreed}
+            >
+              {currentStep === 7 ? 'Make Payment' : 'Next'}
+            </Button>
+          )}
         </div>
       </div>
     </div>

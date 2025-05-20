@@ -29,14 +29,26 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
 }) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [idNumber, setIdNumber] = useState<string>(studentId || '');
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
   
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     onInputChange(name, value);
+    
+    // Clear errors when user types
+    if (errors[name]) {
+      setErrors(prev => ({...prev, [name]: ''}));
+    }
   };
 
   const handleSelectChange = (name: string, value: string) => {
     onInputChange(name, value);
+    
+    // Clear errors when user selects
+    if (errors[name]) {
+      setErrors(prev => ({...prev, [name]: ''}));
+    }
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,23 +62,60 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
       
       // Pass the file to parent component
       onFileUpload(selectedFile);
+      
+      // Clear file error if exists
+      if (errors.file) {
+        setErrors(prev => ({...prev, file: ''}));
+      }
     }
+  };
+  
+  const validateForm = () => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!university) {
+      newErrors.university = "Please select your university";
+    }
+    
+    if (!program) {
+      newErrors.program = "Please enter your program of study";
+    }
+    
+    if (!studentId) {
+      newErrors.studentId = "Please enter your Student ID number";
+    }
+    
+    if (!file) {
+      newErrors.file = "Please upload your ID document";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!file) {
-      toast.error("Please upload your ID document");
-      return;
+    if (validateForm()) {
+      onVerify();
+    } else {
+      // Show first error as toast
+      const firstError = Object.values(errors)[0];
+      if (firstError) {
+        toast.error(firstError);
+      }
     }
+  };
+
+  const handleIdNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { value } = e.target;
+    setIdNumber(value);
+    onInputChange('studentId', value);
     
-    if (!studentId) {
-      toast.error("Please enter your Student ID");
-      return;
+    // Clear error when user types
+    if (errors.studentId) {
+      setErrors(prev => ({...prev, studentId: ''}));
     }
-    
-    onVerify();
   };
 
   return (
@@ -78,7 +127,7 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
             value={university} 
             onValueChange={(value) => handleSelectChange('university', value)}
           >
-            <SelectTrigger id="university" className="mt-1">
+            <SelectTrigger id="university" className={`mt-1 ${errors.university ? 'border-red-500' : ''}`}>
               <SelectValue placeholder="Select your university" />
             </SelectTrigger>
             <SelectContent>
@@ -90,6 +139,7 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
               <SelectItem value="ashesi">Ashesi University</SelectItem>
             </SelectContent>
           </Select>
+          {errors.university && <p className="text-sm text-red-500 mt-1">{errors.university}</p>}
         </div>
         
         <div>
@@ -100,8 +150,9 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
             value={program}
             onChange={handleChange}
             placeholder="e.g. Computer Science"
-            className="mt-1"
+            className={`mt-1 ${errors.program ? 'border-red-500' : ''}`}
           />
+          {errors.program && <p className="text-sm text-red-500 mt-1">{errors.program}</p>}
         </div>
         
         <div>
@@ -109,11 +160,13 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
           <Input
             id="studentId"
             name="studentId"
-            value={studentId}
-            onChange={handleChange}
+            value={idNumber}
+            onChange={handleIdNumberChange}
             placeholder="e.g. 10012345"
-            className="mt-1"
+            className={`mt-1 ${errors.studentId ? 'border-red-500' : ''}`}
           />
+          {errors.studentId && <p className="text-sm text-red-500 mt-1">{errors.studentId}</p>}
+          <p className="text-xs text-gray-500 mt-1">Enter your student ID number as shown on your ID card</p>
         </div>
       
         <div>
@@ -136,7 +189,7 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
       
         <div className="mt-4">
           <Label htmlFor="idUpload" className="block mb-2">Upload ID Document</Label>
-          <div className="mt-1 border-2 border-dashed border-gray-300 rounded-md p-6 flex flex-col items-center">
+          <div className={`mt-1 border-2 border-dashed ${errors.file ? 'border-red-500' : 'border-gray-300'} rounded-md p-6 flex flex-col items-center`}>
             <div className="flex flex-col items-center space-y-2 text-center">
               {previewUrl ? (
                 <div className="relative">
@@ -150,6 +203,9 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
                     onClick={() => {
                       setPreviewUrl(null);
                       setFile(null);
+                      if (errors.file) {
+                        setErrors(prev => ({...prev, file: 'Please upload your ID document'}));
+                      }
                     }}
                     className="absolute top-0 right-0 bg-red-500 text-white rounded-full p-1"
                   >
@@ -182,16 +238,25 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
               )}
             </div>
           </div>
+          {errors.file && <p className="text-sm text-red-500 mt-1">{errors.file}</p>}
         </div>
       </div>
       
       <div className="flex justify-end">
         <Button 
           type="submit" 
-          className="bg-blue-600 hover:bg-blue-700 text-white"
+          className={`${isVerifying ? 'bg-gray-500' : 'bg-blue-600 hover:bg-blue-700'} text-white`}
           disabled={isVerifying}
         >
-          {isVerifying ? 'Verifying...' : 'Verify Student Status'}
+          {isVerifying ? (
+            <span className="flex items-center">
+              <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Verifying...
+            </span>
+          ) : 'Verify Student Status'}
         </Button>
       </div>
     </form>

@@ -88,8 +88,10 @@ export const useBookingViewModel = () => {
       email: '',
       emergencyContact: '',
       emergencyPhone: '',
-      idType: 'student_id',
-      idNumber: '',
+      idType: 'studentId',
+      studentId: '',
+      university: '',
+      program: '',
       idImage: null,
       termsAgreed: false
     };
@@ -252,10 +254,7 @@ export const useBookingViewModel = () => {
         return true;
         
       case 5: // Verification
-        if (!formData.idNumber) {
-          toast.error('Please enter your ID number');
-          return false;
-        }
+        // Skip validation here as it's handled in the StudentVerification component
         return true;
         
       case 6: // Summary

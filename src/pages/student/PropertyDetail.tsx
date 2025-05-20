@@ -1,6 +1,6 @@
 
 import React, { useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Use the property loader hook to fetch property data
   const { data: property, isLoading, error } = usePropertyLoader({ 
@@ -24,11 +25,17 @@ const PropertyDetail: React.FC = () => {
   });
 
   const handleViewStory = () => {
-    navigate(`/student/property/${id}/story`);
+    navigate(`/student/property/${id}/story`, { state: { from: location.pathname } });
   };
   
   const handleBookNow = () => {
-    navigate(`/student/property/${id}/book`);
+    navigate(`/student/property/${id}/book`, { state: { from: location.pathname } });
+  };
+  
+  const handleBack = () => {
+    // Check if there's a stored previous location
+    const previousPath = location.state?.from || '/student/properties';
+    navigate(previousPath);
   };
   
   useEffect(() => {
@@ -91,6 +98,15 @@ const PropertyDetail: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
+      <div className="container mx-auto px-4 py-2">
+        <button 
+          onClick={handleBack}
+          className="flex items-center text-gray-600 hover:text-blue-600 mb-4"
+        >
+          <Icon icon="solar:arrow-left-linear" className="mr-1" />
+          Back to properties
+        </button>
+      </div>
       <PropertyDetailView 
         property={propertyWithDefaults} 
         onViewStory={handleViewStory}

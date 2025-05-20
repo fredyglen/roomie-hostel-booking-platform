@@ -1,5 +1,6 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@iconify/react';
@@ -28,6 +29,15 @@ const StoryViewEnhanced: React.FC = () => {
   } = useStoryViewModel();
 
   const isMobile = useMobile();
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Custom close handler to respect navigation history
+  const customHandleClose = () => {
+    // Check if we have a stored previous path
+    const previousPath = location.state?.from || `/student/property/${property?.id || ''}`;
+    navigate(previousPath);
+  };
   
   if (isLoading || !property || !currentStory) {
     return (
@@ -51,7 +61,7 @@ const StoryViewEnhanced: React.FC = () => {
     <div className="fixed inset-0 bg-black">
       {/* Close button */}
       <button
-        onClick={handleClose}
+        onClick={customHandleClose}
         className="absolute top-4 right-4 z-30 bg-black/40 text-white rounded-full p-2"
         aria-label="Close story"
       >
@@ -103,6 +113,14 @@ const StoryViewEnhanced: React.FC = () => {
           <StoryDetailsSheetEnhanced 
             property={propertyWithDefaults} 
             onClose={handleSwipeDown} 
+            onBook={() => {
+              handleSwipeDown();
+              setTimeout(() => {
+                navigate(`/student/property/${property.id}/book`, { 
+                  state: { from: `/student/property/${property.id}` } 
+                });
+              }, 300);
+            }}
           />
         </SheetContent>
       </Sheet>
