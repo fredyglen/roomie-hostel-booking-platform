@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -33,6 +32,9 @@ const PropertyEdit: React.FC = () => {
       if (!data) throw new Error('Property not found');
 
       // Convert database property to our frontend property format
+      // Add type assertion to include our custom properties
+      const propertyData = data as any;
+      
       return {
         ...data,
         type: data.property_type,
@@ -40,8 +42,9 @@ const PropertyEdit: React.FC = () => {
         price_unit: 'month', // Default to month
         status: data.is_available ? 'Available' : 'Not Available',
         occupancy: '0/1', // Default occupancy
-        propertyCategory: (data.property_category as any) || 'Hostel',
-        all_inclusive: data.all_inclusive || false,
+        propertyCategory: propertyData.property_category || 'Hostel',
+        all_inclusive: propertyData.all_inclusive || false,
+        allInclusive: propertyData.all_inclusive || false,
       } as Property;
     },
     enabled: !!id && !!user?.id,
