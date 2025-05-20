@@ -46,7 +46,13 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
         if (!data) {
           console.log("Property not found in database, checking sample data for ID:", propertyId);
           const sampleProperties = getSampleProperties();
-          const sampleProperty = sampleProperties.find(p => p.id === propertyId);
+          
+          // FIXED: Handle numeric IDs in string format
+          const sampleProperty = sampleProperties.find(p => 
+            p.id === propertyId || // Check exact match
+            p.id === String(propertyId) || // Check string conversion
+            String(p.id) === propertyId // Handle case where ID might be stored as number but passed as string
+          );
           
           if (!sampleProperty) {
             console.error("Property not found in sample data either");
