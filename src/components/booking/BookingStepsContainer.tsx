@@ -28,6 +28,14 @@ const BookingStepsContainer: React.FC = () => {
     setSelectedPaymentMethod
   } = useBookingViewModel();
   
+  // Create an adapter function to convert between signatures
+  const handleInputChangeAdapter = (name: string, value: string) => {
+    const syntheticEvent = {
+      target: { name, value }
+    } as React.ChangeEvent<HTMLInputElement>;
+    handleInputChange(syntheticEvent);
+  };
+  
   if (!property) {
     return (
       <div className="text-center">
@@ -49,7 +57,7 @@ const BookingStepsContainer: React.FC = () => {
             <RoomTypeSelection 
               roomTypes={property.roomTypes || []}
               selectedRoomType={formData.roomType}
-              onSelectRoomType={handleInputChange}
+              onSelectRoomType={handleInputChangeAdapter}
             />
           </div>
         );
