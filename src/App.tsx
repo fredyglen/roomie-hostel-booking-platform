@@ -3,10 +3,16 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "@/context/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
+import Login from "./pages/auth/Login";
+import Register from "./pages/auth/Register";
+
+// Student Portal Pages
 import StudentDashboard from "./pages/student/Dashboard";
 import Properties from "./pages/student/Properties";
 import PropertyDetail from "./pages/student/PropertyDetail";
@@ -19,42 +25,78 @@ import OwnerProperties from "./pages/owner/Properties";
 import OwnerPropertyNew from "./pages/owner/PropertyNew";
 import OwnerPropertyEdit from "./pages/owner/PropertyEdit";
 import OwnerBookings from "./pages/owner/Bookings";
+import OwnerProfile from "./pages/owner/Profile";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          <Route path="/landing" element={<Landing />} />
-          
-          {/* Student Routes */}
-          <Route path="/student">
-            <Route path="dashboard" element={<StudentDashboard />} />
-            <Route path="properties" element={<Properties />} />
-            <Route path="property/:id" element={<PropertyDetail />} />
-            <Route path="property/:id/story" element={<StoryView />} />
-            <Route path="property/:id/book" element={<BookProperty />} />
-          </Route>
-          
-          {/* Owner/Agent Routes */}
-          <Route path="/owner">
-            <Route path="dashboard" element={<OwnerDashboard />} />
-            <Route path="properties" element={<OwnerProperties />} />
-            <Route path="property/new" element={<OwnerPropertyNew />} />
-            <Route path="property/:id/edit" element={<OwnerPropertyEdit />} />
-            <Route path="bookings" element={<OwnerBookings />} />
-          </Route>
-          
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/landing" element={<Landing />} />
+            
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+            
+            {/* Student Routes */}
+            <Route path="/student">
+              <Route path="dashboard" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="properties" element={<Properties />} />
+              <Route path="property/:id" element={<PropertyDetail />} />
+              <Route path="property/:id/story" element={<StoryView />} />
+              <Route path="property/:id/book" element={<BookProperty />} />
+            </Route>
+            
+            {/* Owner/Agent Routes */}
+            <Route path="/owner">
+              <Route path="dashboard" element={
+                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                  <OwnerDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="properties" element={
+                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                  <OwnerProperties />
+                </ProtectedRoute>
+              } />
+              <Route path="property/new" element={
+                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                  <OwnerPropertyNew />
+                </ProtectedRoute>
+              } />
+              <Route path="property/:id/edit" element={
+                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                  <OwnerPropertyEdit />
+                </ProtectedRoute>
+              } />
+              <Route path="bookings" element={
+                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                  <OwnerBookings />
+                </ProtectedRoute>
+              } />
+              <Route path="profile" element={
+                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                  <OwnerProfile />
+                </ProtectedRoute>
+              } />
+            </Route>
+            
+            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
