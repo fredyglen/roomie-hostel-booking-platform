@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
@@ -50,9 +49,12 @@ const BookingStepsContainer: React.FC = () => {
             <RoomTypeSelection 
               roomTypes={property.roomTypes || []}
               selectedRoomType={formData.roomType}
-              onSelectRoomType={(roomType) => handleInputChange({
-                target: { name: 'roomType', value: roomType }
-              } as React.ChangeEvent<HTMLInputElement>)}
+              onSelectRoomType={(roomType) => {
+                // Create a proper adapter function that matches what RoomTypeSelection expects
+                handleInputChange({
+                  target: { name: 'roomType', value: roomType }
+                } as React.ChangeEvent<HTMLInputElement>)
+              }}
             />
           </div>
         );
