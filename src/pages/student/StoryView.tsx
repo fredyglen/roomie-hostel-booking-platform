@@ -1,7 +1,7 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
+import { ArrowLeft, ArrowRight, ChevronUp, X } from 'lucide-react';
 
 // Sample property data matching other pages
 const sampleProperties = [
@@ -17,14 +17,24 @@ const sampleProperties = [
       {
         type: 'image',
         url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
+        caption: 'Modern living room with natural light',
         duration: 5000
       },
       {
         type: 'image',
         url: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80',
+        caption: 'Well-equipped kitchen space',
         duration: 5000
+      },
+      {
+        type: 'video',
+        url: 'https://assets.mixkit.co/videos/preview/mixkit-living-room-with-a-modern-tv-4047-large.mp4',
+        caption: 'Virtual tour of the apartment',
+        duration: 15000
       }
-    ]
+    ],
+    amenities: ['Wi-Fi', 'Air Conditioning', 'Kitchen', 'Security'],
+    description: 'This cozy studio apartment is perfect for students looking for a comfortable and convenient living space near UPSA. The apartment features a modern design, fully furnished with all the essential amenities to make your stay as comfortable as possible.'
   },
   {
     id: '2',
@@ -75,6 +85,8 @@ const StoryView: React.FC = () => {
   const navigate = useNavigate();
   const [activeIndex, setActiveIndex] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+  const [progress, setProgress] = useState(0);
   
   // Find the property with the matching ID
   const property = sampleProperties.find(p => p.id === id);
@@ -82,22 +94,37 @@ const StoryView: React.FC = () => {
   useEffect(() => {
     if (!property) return;
     
-    // Auto-advance to the next story
-    const timer = setTimeout(() => {
-      if (activeIndex < property.stories.length - 1) {
-        setActiveIndex(activeIndex + 1);
-      } else {
-        // Navigate back to the property detail page when all stories are viewed
-        navigate(`/student/property/${id}`);
-      }
-    }, property.stories[activeIndex].duration);
+    // Don't progress if paused or showing details
+    if (isPaused || showDetails) return;
     
-    return () => clearTimeout(timer);
-  }, [activeIndex, property, id, navigate]);
+    // Auto-advance to the next story
+    const currentStory = property.stories[activeIndex];
+    const duration = currentStory.duration;
+    
+    const timer = setInterval(() => {
+      setProgress(prev => {
+        const newProgress = prev + 1000;
+        if (newProgress >= duration) {
+          clearInterval(timer);
+          
+          if (activeIndex < property.stories.length - 1) {
+            setActiveIndex(activeIndex + 1);
+            setProgress(0);
+          } else {
+            // Navigate back to the property detail page when all stories are viewed
+            navigate(`/student/property/${id}`);
+          }
+        }
+        return newProgress;
+      });
+    }, 1000);
+    
+    return () => clearInterval(timer);
+  }, [activeIndex, property, id, navigate, isPaused, showDetails]);
   
   if (!property) {
     return (
-      <div className="story-viewer">
+      <div className="story-viewer flex items-center justify-center h-screen bg-black">
         <div className="text-center text-white">
           <h2 className="text-2xl font-bold mb-4">Property Not Found</h2>
           <Button variant="primary" onClick={() => navigate('/student/properties')}>
@@ -111,6 +138,7 @@ const StoryView: React.FC = () => {
   const handleNext = () => {
     if (activeIndex < property.stories.length - 1) {
       setActiveIndex(activeIndex + 1);
+      setProgress(0);
     } else {
       navigate(`/student/property/${id}`);
     }
@@ -119,6 +147,7 @@ const StoryView: React.FC = () => {
   const handlePrevious = () => {
     if (activeIndex > 0) {
       setActiveIndex(activeIndex - 1);
+      setProgress(0);
     }
   };
   
@@ -128,15 +157,19 @@ const StoryView: React.FC = () => {
   
   const handleSwipeUp = () => {
     setShowDetails(true);
+    setIsPaused(true);
   };
   
   const handleSwipeDown = () => {
     setShowDetails(false);
+    setIsPaused(false);
   };
 
+  const currentStory = property.stories[activeIndex];
+  const progressPercentage = (progress / currentStory.duration) * 100;
+
   return (
-    <div className="story-viewer">
-      {/* Story Content */}
+    <div className="story-viewer h-screen bg-black flex flex-col items-center">
       <div 
         className="relative h-full w-full max-w-md mx-auto flex flex-col"
         style={{
@@ -148,12 +181,16 @@ const StoryView: React.FC = () => {
         <div className="absolute top-4 left-0 right-0 z-20 px-4">
           <div className="flex space-x-1">
             {property.stories.map((_, index) => (
-              <div key={index} className="story-progress flex-grow">
+              <div 
+                key={index} 
+                className="h-1 bg-gray-600 rounded-full flex-grow overflow-hidden"
+              >
                 <div 
-                  className="story-progress-bar" 
+                  className="h-full bg-white" 
                   style={{ 
-                    width: index < activeIndex ? '100%' : index === activeIndex ? '0%' : '0%',
-                    animation: index === activeIndex ? 'progress-animation 5s linear forwards' : 'none'
+                    width: index < activeIndex ? '100%' : 
+                           index === activeIndex ? `${progressPercentage}%` : '0%',
+                    transition: index === activeIndex ? 'width 0.3s linear' : 'none'
                   }} 
                 />
               </div>
@@ -165,44 +202,105 @@ const StoryView: React.FC = () => {
         <div className="absolute top-12 left-0 right-0 z-20 px-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-300 rounded-full mr-2"></div>
+              <div className="w-8 h-8 bg-gray-300 rounded-full mr-2 overflow-hidden">
+                <img src={property.stories[0].url} alt="" className="w-full h-full object-cover" />
+              </div>
               <div>
                 <p className="text-white font-medium">{property.title}</p>
                 <p className="text-white/80 text-xs">{property.distanceToCampus} to campus</p>
               </div>
             </div>
-            <button onClick={handleClose} className="text-white">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+            <button 
+              onClick={handleClose} 
+              className="text-white bg-black/30 rounded-full p-1"
+            >
+              <X className="h-6 w-6" />
             </button>
           </div>
         </div>
         
-        {/* Story Image */}
-        <div className="flex-grow relative">
-          <img
-            src={property.stories[activeIndex].url}
-            alt={property.title}
-            className="h-full w-full object-cover"
-          />
+        {/* Story Media */}
+        <div 
+          className="flex-grow relative"
+          onTouchStart={() => setIsPaused(true)}
+          onTouchEnd={() => !showDetails && setIsPaused(false)}
+          onMouseDown={() => setIsPaused(true)}
+          onMouseUp={() => !showDetails && setIsPaused(false)}
+        >
+          {currentStory.type === 'image' ? (
+            <img
+              src={currentStory.url}
+              alt={property.title}
+              className="h-full w-full object-cover"
+            />
+          ) : (
+            <video
+              src={currentStory.url}
+              autoPlay
+              playsInline
+              muted={isPaused}
+              className="h-full w-full object-cover"
+              onEnded={handleNext}
+            />
+          )}
+          
+          {/* Caption */}
+          {currentStory.caption && (
+            <div className="absolute bottom-24 left-0 right-0 px-4">
+              <p className="text-white text-center bg-black/30 py-2 px-4 rounded-lg">
+                {currentStory.caption}
+              </p>
+            </div>
+          )}
           
           {/* Navigation Controls */}
-          <div className="absolute inset-0 flex">
-            <div className="w-1/2 h-full" onClick={handlePrevious}></div>
-            <div className="w-1/2 h-full" onClick={handleNext}></div>
+          <div className="absolute inset-0 flex z-10">
+            <button 
+              className="w-1/4 h-full focus:outline-none"
+              onClick={handlePrevious}
+              aria-label="Previous"
+            />
+            <div className="w-1/2 h-full" onClick={() => setIsPaused(!isPaused)} />
+            <button 
+              className="w-1/4 h-full focus:outline-none"
+              onClick={handleNext}
+              aria-label="Next"
+            />
+          </div>
+          
+          {/* Navigation Buttons (Visual) */}
+          <div className="absolute top-1/2 left-4 transform -translate-y-1/2">
+            {activeIndex > 0 && (
+              <button 
+                className="text-white bg-black/30 rounded-full p-2"
+                onClick={handlePrevious}
+                aria-label="Previous"
+              >
+                <ArrowLeft className="h-6 w-6" />
+              </button>
+            )}
+          </div>
+          
+          <div className="absolute top-1/2 right-4 transform -translate-y-1/2">
+            {activeIndex < property.stories.length - 1 && (
+              <button 
+                className="text-white bg-black/30 rounded-full p-2"
+                onClick={handleNext}
+                aria-label="Next"
+              >
+                <ArrowRight className="h-6 w-6" />
+              </button>
+            )}
           </div>
           
           {/* Swipe Up Indicator */}
           {!showDetails && (
             <div 
-              className="absolute bottom-8 left-0 right-0 flex flex-col items-center animate-bounce"
+              className="absolute bottom-8 left-0 right-0 flex flex-col items-center animate-bounce cursor-pointer"
               onClick={handleSwipeUp}
             >
               <p className="text-white text-sm font-medium mb-1">Swipe up for details</p>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
-              </svg>
+              <ChevronUp className="h-6 w-6 text-white" />
             </div>
           )}
         </div>
@@ -210,9 +308,9 @@ const StoryView: React.FC = () => {
       
       {/* Details Sheet */}
       {showDetails && (
-        <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 animate-slide-up h-3/4 overflow-y-auto">
+        <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 animate-slide-up h-[70%] overflow-y-auto">
           <div 
-            className="w-16 h-1 bg-gray-300 rounded-full mx-auto mb-6"
+            className="w-16 h-1 bg-gray-300 rounded-full mx-auto mb-6 cursor-pointer"
             onClick={handleSwipeDown}
           ></div>
           
@@ -223,40 +321,28 @@ const StoryView: React.FC = () => {
             <span className="text-gray-600">/{property.priceUnit}</span>
           </div>
           
+          <p className="text-gray-700 mb-6">{property.description}</p>
+          
           <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-2">Property Details</h3>
-            <div className="grid grid-cols-2 gap-y-2">
-              <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-roomi-blue mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-                </svg>
-                <span>Type: {property.type}</span>
-              </div>
-              <div className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-roomi-blue mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                <span>Distance: {property.distanceToCampus}</span>
-              </div>
+            <h3 className="text-lg font-semibold mb-2">Amenities</h3>
+            <div className="flex flex-wrap gap-2">
+              {property.amenities.map((amenity, index) => (
+                <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
+                  {amenity}
+                </span>
+              ))}
             </div>
           </div>
           
-          <Button 
-            variant="primary" 
-            fullWidth
-            onClick={() => navigate(`/student/property/${id}/book`)}
-          >
-            Book Now
-          </Button>
-          
-          <Button 
-            variant="outline" 
-            fullWidth
-            className="mt-2"
-            onClick={() => navigate(`/student/property/${id}`)}
-          >
-            View Full Details
-          </Button>
+          <div className="sticky bottom-0 pt-4 bg-white">
+            <Button 
+              variant="primary" 
+              fullWidth
+              onClick={() => navigate(`/student/property/${id}/book`)}
+            >
+              Book Now
+            </Button>
+          </div>
         </div>
       )}
     </div>
