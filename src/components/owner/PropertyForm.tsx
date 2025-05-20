@@ -9,16 +9,30 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { PropertyCategory } from '@/types/property';
 
 const propertyFormSchema = z.object({
   title: z.string().min(3, {
     message: "Title must be at least 3 characters.",
+  }),
+  propertyCategory: z.enum(['Hostel', 'Homestel', 'Apartment'] as const, {
+    message: "Please select a property category.",
   }),
   type: z.string().min(1, {
     message: "Please select a property type.",
   }),
   address: z.string().min(5, {
     message: "Address must be at least 5 characters.",
+  }),
+  city: z.string().min(1, {
+    message: "City is required",
+  }),
+  state: z.string().min(1, {
+    message: "State is required",
+  }),
+  zip: z.string().min(1, {
+    message: "Zip code is required",
   }),
   price: z.number().positive({
     message: "Price must be a positive number.",
@@ -37,6 +51,15 @@ const propertyFormSchema = z.object({
   }),
   occupancy: z.string().optional(),
   image_url: z.string().optional(),
+  all_inclusive: z.boolean().default(false),
+  utilities: z.string().optional(),
+  location: z.string().optional(),
+  bedrooms: z.number().positive({
+    message: "Bedrooms must be a positive number.",
+  }),
+  bathrooms: z.number().positive({
+    message: "Bathrooms must be a positive number.",
+  }),
 });
 
 export type PropertyFormValues = z.infer<typeof propertyFormSchema>;
@@ -56,10 +79,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
       title: initialData?.title || "",
+      propertyCategory: initialData?.propertyCategory || "Hostel",
       type: initialData?.type || "",
       address: initialData?.address || "",
+      city: initialData?.city || "Accra",
+      state: initialData?.state || "Greater Accra",
+      zip: initialData?.zip || "00000",
       price: initialData?.price || 0,
-      price_unit: initialData?.price_unit || "",
+      price_unit: initialData?.price_unit || "semester",
       description: initialData?.description || "",
       distance_to_campus: initialData?.distance_to_campus || "",
       amenities: initialData?.amenities || "",
@@ -67,8 +94,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       status: initialData?.status || "Available",
       occupancy: initialData?.occupancy || "0/1",
       image_url: initialData?.image_url || "",
+      all_inclusive: initialData?.all_inclusive || false,
+      utilities: initialData?.utilities || "",
+      location: initialData?.location || "",
+      bedrooms: initialData?.bedrooms || 1,
+      bathrooms: initialData?.bathrooms || 1,
     },
   });
+
+  const propertyCategory = form.watch("propertyCategory");
 
   return (
     <Card className="p-6">
@@ -91,22 +125,66 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
             <FormField
               control={form.control}
-              name="type"
+              name="propertyCategory"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Property Type</FormLabel>
+                  <FormLabel>Property Category</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select property type" />
+                        <SelectValue placeholder="Select property category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Studio">Studio</SelectItem>
-                      <SelectItem value="Shared">Shared</SelectItem>
                       <SelectItem value="Hostel">Hostel</SelectItem>
+                      <SelectItem value="Homestel">Homestel</SelectItem>
                       <SelectItem value="Apartment">Apartment</SelectItem>
-                      <SelectItem value="Room">Room</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>
+                    Determines the pricing and booking model
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Room Type</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select room type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {propertyCategory === "Hostel" && (
+                        <>
+                          <SelectItem value="1 in a room">1 in a room</SelectItem>
+                          <SelectItem value="2 in a room">2 in a room</SelectItem>
+                          <SelectItem value="3 in a room">3 in a room</SelectItem>
+                          <SelectItem value="4 in a room">4 in a room</SelectItem>
+                        </>
+                      )}
+                      {propertyCategory === "Homestel" && (
+                        <>
+                          <SelectItem value="Single room">Single room</SelectItem>
+                          <SelectItem value="Chamber and hall">Chamber and hall</SelectItem>
+                          <SelectItem value="Shared room">Shared room</SelectItem>
+                        </>
+                      )}
+                      {propertyCategory === "Apartment" && (
+                        <>
+                          <SelectItem value="Studio">Studio</SelectItem>
+                          <SelectItem value="1 bedroom">1 bedroom</SelectItem>
+                          <SelectItem value="2 bedroom">2 bedroom</SelectItem>
+                          <SelectItem value="3 bedroom">3 bedroom</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -146,12 +224,56 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="month">Per Month</SelectItem>
-                      <SelectItem value="semester">Per Semester</SelectItem>
-                      <SelectItem value="year">Per Year</SelectItem>
-                      <SelectItem value="week">Per Week</SelectItem>
+                      {propertyCategory === "Hostel" ? (
+                        <SelectItem value="semester">Per Semester</SelectItem>
+                      ) : (
+                        <>
+                          <SelectItem value="month">Per Month</SelectItem>
+                          <SelectItem value="semester">Per Semester</SelectItem>
+                          <SelectItem value="year">Per Year</SelectItem>
+                          <SelectItem value="week">Per Week</SelectItem>
+                        </>
+                      )}
                     </SelectContent>
                   </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="bedrooms"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bedrooms</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g. 1" 
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)} 
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="bathrooms"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Bathrooms</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="e.g. 1" 
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber)} 
+                    />
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
@@ -166,6 +288,51 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <FormControl>
                     <Input placeholder="e.g. 123 University Road, East Legon, Accra" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="city"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>City</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Accra" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="state"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>State/Region</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. Greater Accra" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="location"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Location/Area</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g. East Legon, Madina, Atomic" {...field} />
+                  </FormControl>
+                  <FormDescription>
+                    Specific area name for searching
+                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -227,6 +394,27 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
             <FormField
               control={form.control}
+              name="all_inclusive"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>All-Inclusive</FormLabel>
+                    <FormDescription>
+                      Check if all utilities are included in the price
+                    </FormDescription>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="image_url"
               render={({ field }) => (
                 <FormItem>
@@ -275,6 +463,27 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   </FormControl>
                   <FormDescription>
                     Enter each amenity on a new line
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="utilities"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Utilities Included</FormLabel>
+                  <FormControl>
+                    <Textarea 
+                      placeholder="e.g. Water, Electricity, Gas (one per line)" 
+                      className="min-h-20" 
+                      {...field} 
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Enter each utility included on a new line
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

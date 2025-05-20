@@ -27,7 +27,8 @@ const sampleProperties = [
       { name: '1 in a room', price: 1700, unit: 'month' },
       { name: '2 in a room', price: 1200, unit: 'month' }
     ],
-    occupancy: '1-2 students'
+    occupancy: '1-2 students',
+    propertyCategory: 'Homestel'
   },
   {
     id: '2',
@@ -42,7 +43,9 @@ const sampleProperties = [
       { name: '2 in a room', price: 4000, unit: 'semester' },
       { name: '3 in a room', price: 3600, unit: 'semester' }
     ],
-    occupancy: '2-3 students'
+    occupancy: '2-3 students',
+    propertyCategory: 'Hostel',
+    allInclusive: true
   },
   {
     id: '3',
@@ -57,7 +60,8 @@ const sampleProperties = [
       { name: 'Entire apartment', price: 2600, unit: 'month' },
       { name: 'Shared apartment (per student)', price: 950, unit: 'month' }
     ],
-    occupancy: '2-4 students'
+    occupancy: '2-4 students',
+    propertyCategory: 'Apartment'
   }
 ];
 
@@ -66,6 +70,9 @@ export const useBookingViewModel = () => {
   const navigate = useNavigate();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+  const [splitPayment, setSplitPayment] = useState(false);
+  const [numberOfRoommates, setNumberOfRoommates] = useState(1);
+  const [roommatesInfo, setRoommatesInfo] = useState<Array<{name: string, email: string, phone: string}>>([]);
   
   const [formData, setFormData] = useState(() => {
     // Try to load from localStorage
@@ -98,6 +105,32 @@ export const useBookingViewModel = () => {
   // Calculate total price based on duration
   const totalPrice = calculateTotalPrice(selectedPrice, formData.duration, formData.durationType, selectedUnit);
   
+  // Calculate individual price if split payment
+  const individualPrice = splitPayment && numberOfRoommates > 1 
+    ? totalPrice / numberOfRoommates 
+    : totalPrice;
+  
+  // Initialize roommate info when numberOfRoommates changes
+  useEffect(() => {
+    if (splitPayment && numberOfRoommates > 1) {
+      // Always keep roommate at index 0 as the current user
+      const currentUser = roommatesInfo[0] || {
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone
+      };
+      
+      const newRoommatesInfo = [currentUser];
+      
+      // Add/remove additional roommates as needed
+      for (let i = 1; i < numberOfRoommates; i++) {
+        newRoommatesInfo[i] = roommatesInfo[i] || { name: '', email: '', phone: '' };
+      }
+      
+      setRoommatesInfo(newRoommatesInfo);
+    }
+  }, [numberOfRoommates, splitPayment]);
+  
   // Save form data to localStorage whenever it changes
   useEffect(() => {
     localStorage.setItem(`booking_form_${id}`, JSON.stringify(formData));
@@ -111,6 +144,25 @@ export const useBookingViewModel = () => {
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData(prev => ({ ...prev, [name]: checked }));
+  };
+  
+  const handleRoommateChange = (index: number, field: string, value: string) => {
+    const updatedRoommates = [...roommatesInfo];
+    updatedRoommates[index] = { ...updatedRoommates[index], [field]: value };
+    setRoommatesInfo(updatedRoommates);
+  };
+  
+  const handleSplitPaymentChange = (checked: boolean) => {
+    setSplitPayment(checked);
+    
+    // Initialize with current user info if enabling split payment
+    if (checked && !roommatesInfo.length) {
+      setRoommatesInfo([{
+        name: formData.fullName,
+        email: formData.email,
+        phone: formData.phone
+      }]);
+    }
   };
   
   const handleNext = () => {
@@ -153,6 +205,27 @@ export const useBookingViewModel = () => {
           toast.error('Please select check-in date');
           return false;
         }
+        
+        // Validate split payment info if it's an apartment and split payment is enabled
+        if (property?.propertyCategory === 'Apartment' && splitPayment) {
+          if (numberOfRoommates < 2) {
+            toast.error('Please specify at least 2 roommates for split payment');
+            return false;
+          }
+          
+          // Check if all roommates have complete info
+          const incompleteRoommate = roommatesInfo.find((r, idx) => {
+            // Skip first roommate validation here (it's validated in personal info step)
+            if (idx === 0) return false;
+            return !r.name || !r.email || !r.phone;
+          });
+          
+          if (incompleteRoommate) {
+            toast.error('Please provide complete information for all roommates');
+            return false;
+          }
+        }
+        
         return true;
         
       case 3: // Personal Info
@@ -160,6 +233,14 @@ export const useBookingViewModel = () => {
           toast.error('Please fill in all personal information');
           return false;
         }
+        
+        // Update first roommate info if using split payment
+        if (splitPayment && roommatesInfo.length) {
+          handleRoommateChange(0, 'name', formData.fullName);
+          handleRoommateChange(0, 'email', formData.email);
+          handleRoommateChange(0, 'phone', formData.phone);
+        }
+        
         return true;
         
       case 4: // Emergency Contact
@@ -219,6 +300,13 @@ export const useBookingViewModel = () => {
     selectedPrice,
     selectedUnit,
     totalPrice,
+    splitPayment,
+    setSplitPayment: handleSplitPaymentChange,
+    numberOfRoommates,
+    setNumberOfRoommates,
+    roommatesInfo,
+    handleRoommateChange,
+    individualPrice,
     handleInputChange,
     handleCheckboxChange,
     handleNext,
@@ -264,6 +352,12 @@ function calculateTotalPrice(
   } else if (propertyPriceUnit === 'year' && durationType === 'semester') {
     // Convert yearly price to semester
     return (basePrice / 2) * durationNum;
+  } else if (propertyPriceUnit === 'week' && durationType === 'month') {
+    // Month is typically 4 weeks
+    return basePrice * 4 * durationNum;
+  } else if (propertyPriceUnit === 'month' && durationType === 'week') {
+    // Convert monthly price to weekly
+    return (basePrice / 4) * durationNum;
   }
   
   // Default fallback

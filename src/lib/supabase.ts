@@ -1,6 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
+import { PropertyCategory, PropertyFormValues, PropertyInsert } from '@/types/property';
 
 // Export the supabase client 
 export const supabase = supabaseClient;
@@ -34,6 +35,7 @@ export interface Property {
   // Database properties
   owner_id: string;
   property_type?: string; // Database property
+  property_category?: PropertyCategory; // Database property
   rent?: number; // Database property
   city: string;
   state: string;
@@ -49,40 +51,9 @@ export interface Property {
   updated_at: string;
   images?: string[];
   amenities?: string[];
+  all_inclusive?: boolean;
+  utilities?: string[];
+  location?: string;
 }
 
-export type PropertyFormValues = {
-  title: string;
-  type: string;
-  address: string;
-  price: number;
-  price_unit: string;
-  description: string;
-  distance_to_campus?: string;
-  amenities?: string;
-  house_rules?: string;
-  status: string;
-  occupancy?: string;
-  image_url?: string;
-};
-
-export type PropertyInsert = {
-  title: string;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-  property_type: string;
-  rent: number;
-  bedrooms: number;
-  bathrooms: number;
-  size?: number;
-  available_from: string;
-  available_to?: string;
-  is_furnished?: boolean;
-  is_available?: boolean;
-  description: string;
-  owner_id: string;
-  amenities?: string[];
-  images?: string[];
-};
+export type { PropertyFormValues, PropertyInsert } from '@/types/property';

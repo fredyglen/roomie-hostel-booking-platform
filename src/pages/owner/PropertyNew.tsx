@@ -20,24 +20,31 @@ const PropertyNew: React.FC = () => {
       // Convert string arrays to arrays for database
       const amenitiesArray = formData.amenities ? formData.amenities.split('\n').filter(Boolean) : [];
       const houseRulesArray = formData.house_rules ? formData.house_rules.split('\n').filter(Boolean) : [];
+      const utilitiesArray = formData.utilities ? formData.utilities.split('\n').filter(Boolean) : [];
 
       // Map from form data to database schema
       const propertyData: PropertyInsert = {
         owner_id: user.id,
         title: formData.title,
         property_type: formData.type,
+        property_category: formData.propertyCategory,
         rent: formData.price,
         address: formData.address,
-        city: 'Accra', // Default city - should be in form
-        state: 'Greater Accra', // Default state - should be in form
-        zip: '00000', // Default zip - should be in form
-        bedrooms: 1, // Default - should be in form
-        bathrooms: 1, // Default - should be in form
+        city: formData.city,
+        state: formData.state,
+        zip: formData.zip,
+        bedrooms: formData.bedrooms,
+        bathrooms: formData.bathrooms,
         available_from: new Date().toISOString().split('T')[0],
         description: formData.description,
         amenities: amenitiesArray,
+        house_rules: houseRulesArray,
         images: formData.image_url ? [formData.image_url] : [],
         is_available: formData.status === 'Available',
+        distance_to_campus: formData.distance_to_campus,
+        all_inclusive: formData.all_inclusive,
+        utilities: utilitiesArray,
+        location: formData.location,
       };
 
       const { data, error } = await supabase

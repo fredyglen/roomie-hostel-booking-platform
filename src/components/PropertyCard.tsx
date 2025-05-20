@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Button from '@/components/common/Button';
+import { Building, Home, Wallet2 } from 'lucide-react';
 
 interface PropertyCardProps {
   property: {
@@ -9,19 +10,31 @@ interface PropertyCardProps {
     title: string;
     type: string;
     price: number;
-    priceUnit: 'month' | 'semester' | 'year';
+    priceUnit: 'month' | 'semester' | 'year' | 'week';
     address: string;
     distanceToCampus: string;
     images: string[];
-    rating: number;
-    reviewCount: number;
-    verified: boolean;
+    rating?: number;
+    reviewCount?: number;
+    verified?: boolean;
+    propertyCategory?: 'Hostel' | 'Homestel' | 'Apartment';
     onViewStory?: () => void;
     onViewDetails?: () => void;
   };
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
+  const getCategoryIcon = () => {
+    switch (property.propertyCategory) {
+      case 'Apartment':
+        return <Building className="h-4 w-4 mr-1 text-roomi-blue" />;
+      case 'Homestel':
+        return <Home className="h-4 w-4 mr-1 text-roomi-blue" />;
+      default: // Hostel
+        return <Wallet2 className="h-4 w-4 mr-1 text-roomi-blue" />;
+    }
+  };
+  
   return (
     <div className="bg-white rounded-lg overflow-hidden shadow-md">
       {/* Property Image */}
@@ -53,7 +66,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         )}
         
         {/* Property Type Badge */}
-        <div className="absolute bottom-3 left-3 bg-white/80 backdrop-blur-sm text-roomi-dark text-xs px-2 py-1 rounded">
+        <div className="absolute bottom-3 left-3 bg-white/80 backdrop-blur-sm text-roomi-dark text-xs px-2 py-1 rounded flex items-center">
+          {getCategoryIcon()}
+          <span>{property.propertyCategory || 'Hostel'}</span>
+        </div>
+        
+        {/* Room Type Badge */}
+        <div className="absolute bottom-3 right-3 bg-white/80 backdrop-blur-sm text-roomi-dark text-xs px-2 py-1 rounded">
           {property.type}
         </div>
       </div>
@@ -76,13 +95,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
             <span className="font-bold text-roomi-blue">${property.price}</span>
             <span className="text-gray-600">/{property.priceUnit}</span>
           </div>
-          <div className="flex items-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span className="text-sm ml-1">{property.rating}</span>
-            <span className="text-xs text-gray-500 ml-1">({property.reviewCount})</span>
-          </div>
+          {property.rating && (
+            <div className="flex items-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+              </svg>
+              <span className="text-sm ml-1">{property.rating}</span>
+              <span className="text-xs text-gray-500 ml-1">({property.reviewCount || 0})</span>
+            </div>
+          )}
         </div>
         
         <div className="mt-4">

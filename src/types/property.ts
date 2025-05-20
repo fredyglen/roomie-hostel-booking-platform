@@ -12,9 +12,13 @@ export type RoomType = {
   name: string;
   price: number;
   unit: string;
+  bedsAvailable?: number;
+  totalBeds?: number;
 };
 
 // Property types
+export type PropertyCategory = 'Hostel' | 'Homestel' | 'Apartment';
+
 export type Property = {
   id: string;
   title: string;
@@ -38,5 +42,58 @@ export type Property = {
   };
   roomTypes?: RoomType[];
   occupancy?: string;
-  propertyCategory?: 'Hostel' | 'Homestel' | 'Apartment';
+  propertyCategory?: PropertyCategory;
+  allInclusive?: boolean;
+  utilities?: string[];
+  location?: string;
 };
+
+// This interface is for the PropertyForm component
+export interface PropertyFormValues {
+  title: string;
+  type: string;
+  propertyCategory: PropertyCategory;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  price: number;
+  price_unit: string;
+  description: string;
+  distance_to_campus?: string;
+  amenities?: string;
+  house_rules?: string;
+  status: string;
+  occupancy?: string;
+  image_url?: string;
+  all_inclusive: boolean;
+  utilities?: string;
+  location?: string;
+  bedrooms: number;
+  bathrooms: number;
+}
+
+// This interface is for inserting into the database
+export interface PropertyInsert {
+  owner_id: string;
+  title: string;
+  property_type: string;
+  property_category?: string;
+  rent: number;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  bedrooms: number;
+  bathrooms: number;
+  available_from: string;
+  description: string;
+  amenities?: string[];
+  images?: string[];
+  is_available?: boolean;
+  distance_to_campus?: string;
+  house_rules?: string[];
+  all_inclusive?: boolean;
+  utilities?: string[];
+  location?: string;
+}
