@@ -52,7 +52,7 @@ const BookingStepsContainer: React.FC = () => {
               onSelectRoomType={(roomTypeName) => {
                 handleInputChange({
                   target: { name: 'roomType', value: roomTypeName }
-                } as React.ChangeEvent<HTMLInputElement>)
+                } as React.ChangeEvent<HTMLInputElement>);
               }}
             />
           </div>
