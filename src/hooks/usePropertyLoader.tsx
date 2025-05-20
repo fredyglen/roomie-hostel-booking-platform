@@ -32,18 +32,27 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
 
       const { data, error } = await query.maybeSingle();
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching property:", error);
+        throw error;
+      }
+      
+      // If no data found in database, check the sample properties
       if (!data) {
-        // For now, return sample data if property not found in DB
-        // This is a temporary solution until all properties are in the DB
+        console.log("Property not found in database, checking sample data for ID:", propertyId);
         const sampleProperties = getSampleProperties();
         const sampleProperty = sampleProperties.find(p => p.id === propertyId);
-        if (!sampleProperty) throw new Error('Property not found');
+        
+        if (!sampleProperty) {
+          console.error("Property not found in sample data either");
+          throw new Error('Property not found');
+        }
+        
+        console.log("Found property in sample data:", sampleProperty.title);
         return sampleProperty;
       }
 
       // Convert database property to our frontend property format
-      // Add type assertion to include our custom properties
       const propertyData = data as any;
       
       return {
@@ -61,6 +70,7 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
         property_type: data.property_type || '',
         price: data.rent || 0,
         priceUnit: 'semester', // Default to semester
+        price_unit: 'semester',
         status: data.is_available ? 'Available' : 'Not Available',
         occupancy: '0/1', // Default occupancy
         propertyCategory: (propertyData.property_category || 'Hostel') as PropertyCategory,
@@ -80,8 +90,10 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
         allow_bill_sharing: propertyData.allow_bill_sharing || false,
         landmark: propertyData.landmark || '',
         distanceToCampus: propertyData.distance_to_campus || '',
+        distance_to_campus: propertyData.distance_to_campus || '',
         // Add stories from images if they exist
-        stories: propertyData.stories || convertImagesToStories(data.images || [])
+        stories: propertyData.stories || convertImagesToStories(data.images || []),
+        genderType: propertyData.genderType || 'Mixed'
       } as Property;
     },
     enabled: !!propertyId && (!!user?.id || !forOwner) && enabled,
@@ -106,9 +118,11 @@ function getSampleProperties(): Property[] {
       type: 'Hostel',
       property_type: 'Hostel',
       price: 8500,
+      price_unit: 'semester',
       priceUnit: 'semester',
       address: 'Near UPSA, Madina, Accra',
       distanceToCampus: '5 min walk',
+      distance_to_campus: '5 min walk',
       images: ['/lovable-uploads/kitatsu_hostel.jpg', '/lovable-uploads/kitatsu_hostel_2.jpg'],
       rating: 4.5,
       reviewCount: 23,
@@ -162,8 +176,10 @@ function getSampleProperties(): Property[] {
       type: 'Hostel',
       price: 12000,
       priceUnit: 'semester',
+      price_unit: 'semester',
       address: 'Opposite UPSA, East Legon, Accra',
       distanceToCampus: '2 min walk',
+      distance_to_campus: '2 min walk',
       images: ['/lovable-uploads/prestige_hostel.jpg', '/lovable-uploads/prestige_hostel_2.jpg'],
       rating: 4.7,
       reviewCount: 42,
@@ -216,8 +232,10 @@ function getSampleProperties(): Property[] {
       type: 'Hostel',
       price: 7500,
       priceUnit: 'semester',
+      price_unit: 'semester',
       address: 'Near UPSA, Accra',
       distanceToCampus: '5 min walk',
+      distance_to_campus: '5 min walk',
       images: ['/lovable-uploads/makasella_hostel.jpg', '/lovable-uploads/makasella_hostel_2.jpg'],
       rating: 4.2,
       reviewCount: 18,
@@ -270,8 +288,10 @@ function getSampleProperties(): Property[] {
       type: 'Hostel',
       price: 9000,
       priceUnit: 'semester',
+      price_unit: 'semester',
       address: 'Madina, Accra',
       distanceToCampus: '7 min walk',
+      distance_to_campus: '7 min walk',
       images: ['/lovable-uploads/mb3_hostel.jpg', '/lovable-uploads/mb3_hostel_2.jpg'],
       rating: 4.6,
       reviewCount: 31,
@@ -324,8 +344,10 @@ function getSampleProperties(): Property[] {
       type: 'Hostel',
       price: 7800,
       priceUnit: 'semester',
+      price_unit: 'semester',
       address: 'East Legon, Accra',
       distanceToCampus: '10 min walk',
+      distance_to_campus: '10 min walk',
       images: ['/lovable-uploads/joy_hostel.jpg', '/lovable-uploads/joy_hostel_2.jpg'],
       rating: 4.0,
       reviewCount: 15,
@@ -378,8 +400,10 @@ function getSampleProperties(): Property[] {
       type: 'Hostel',
       price: 10500,
       priceUnit: 'semester',
+      price_unit: 'semester',
       address: 'East Legon, Accra',
       distanceToCampus: '8 min walk',
+      distance_to_campus: '8 min walk',
       images: ['/lovable-uploads/heavens_gate_hostel.jpg', '/lovable-uploads/heavens_gate_hostel_2.jpg'],
       rating: 4.4,
       reviewCount: 27,

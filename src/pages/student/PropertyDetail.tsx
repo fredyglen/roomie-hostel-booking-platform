@@ -8,6 +8,7 @@ import { Property } from '@/types/property';
 import { usePropertyLoader } from '@/hooks/usePropertyLoader';
 import PropertyDetailView from '@/components/property/PropertyDetailView';
 import { Icon } from '@iconify/react';
+import { toast } from 'sonner';
 
 const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -16,7 +17,9 @@ const PropertyDetail: React.FC = () => {
   // Use the property loader hook to fetch property data
   const { data: property, isLoading, error } = usePropertyLoader({ 
     propertyId: id || '', 
-    forOwner: false 
+    forOwner: false,
+    // Enable optimistic loading
+    enabled: !!id
   });
 
   const handleViewStory = () => {
@@ -27,6 +30,13 @@ const PropertyDetail: React.FC = () => {
     navigate(`/student/property/${id}/book`);
   };
   
+  React.useEffect(() => {
+    if (error) {
+      console.error("Error loading property:", error);
+      toast.error("Could not load property details");
+    }
+  }, [error]);
+
   if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -55,7 +65,7 @@ const PropertyDetail: React.FC = () => {
             <h2 className="text-2xl font-bold mb-4">Property Not Found</h2>
             <p className="mb-6">The property you're looking for doesn't exist or has been removed.</p>
             <Link to="/student/properties">
-              <Button variant="default">Browse Properties</Button>
+              <Button variant="default" className="bg-blue-500 hover:bg-blue-600">Browse Properties</Button>
             </Link>
           </div>
         </div>
@@ -64,7 +74,7 @@ const PropertyDetail: React.FC = () => {
     );
   }
   
-  // Ensure property has all required fields
+  // Ensure property has all required fields with defaults
   const propertyWithDefaults: Property = {
     ...property,
     type: property.type || property.property_type || 'Hostel',
