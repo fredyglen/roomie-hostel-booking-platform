@@ -35,6 +35,11 @@ const BookingStepsContainer: React.FC = () => {
     individualPrice
   } = useBookingViewModel();
   
+  // Create an adapter function for components that expect a different signature
+  const handleRoommateChangeAdapter = (index: number, field: string, value: string) => {
+    handleRoommateChange(index, field, value);
+  };
+  
   if (!property) {
     return (
       <div className="text-center">
@@ -76,7 +81,7 @@ const BookingStepsContainer: React.FC = () => {
               numberOfRoommates={numberOfRoommates}
               setNumberOfRoommates={setNumberOfRoommates}
               roommatesInfo={roommatesInfo}
-              handleRoommateChange={handleRoommateChange}
+              handleRoommateChange={handleRoommateChangeAdapter}
               individualPrice={individualPrice}
               selectedUnit={selectedUnit}
             />

@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
+import { Property } from '@/types/property';
 
 export const STEP_LABELS = [
   'Room Type',
@@ -12,8 +13,8 @@ export const STEP_LABELS = [
   'Payment'
 ];
 
-// Sample property data
-const sampleProperties = [
+// Sample property data with properly typed priceUnit
+const sampleProperties: Property[] = [
   {
     id: '1',
     title: 'Cozy Studio Apartment Near UPSA',
