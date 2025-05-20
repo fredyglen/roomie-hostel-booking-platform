@@ -3,8 +3,30 @@ import { useParams, useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
 import { ArrowLeft, ArrowRight, ChevronUp, X } from 'lucide-react';
 
+// Update the story type to make caption optional
+type Story = {
+  type: string;
+  url: string;
+  duration: number;
+  caption?: string; // Make caption optional
+};
+
+// Update the property type to include the updated Story type
+type Property = {
+  id: string;
+  title: string;
+  type: string;
+  price: number;
+  priceUnit: string;
+  address: string;
+  distanceToCampus: string;
+  stories: Story[];
+  amenities?: string[];
+  description?: string;
+};
+
 // Sample property data matching other pages
-const sampleProperties = [
+const sampleProperties: Property[] = [
   {
     id: '1',
     title: 'Cozy Studio Apartment Near UPSA',
@@ -244,7 +266,7 @@ const StoryView: React.FC = () => {
             />
           )}
           
-          {/* Caption */}
+          {/* Caption - Fixed: Check if caption exists before rendering */}
           {currentStory.caption && (
             <div className="absolute bottom-24 left-0 right-0 px-4">
               <p className="text-white text-center bg-black/30 py-2 px-4 rounded-lg">
@@ -321,18 +343,22 @@ const StoryView: React.FC = () => {
             <span className="text-gray-600">/{property.priceUnit}</span>
           </div>
           
-          <p className="text-gray-700 mb-6">{property.description}</p>
+          {property.description && (
+            <p className="text-gray-700 mb-6">{property.description}</p>
+          )}
           
-          <div className="mb-6">
-            <h3 className="text-lg font-semibold mb-2">Amenities</h3>
-            <div className="flex flex-wrap gap-2">
-              {property.amenities.map((amenity, index) => (
-                <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                  {amenity}
-                </span>
-              ))}
+          {property.amenities && property.amenities.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-lg font-semibold mb-2">Amenities</h3>
+              <div className="flex flex-wrap gap-2">
+                {property.amenities.map((amenity, index) => (
+                  <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
+                    {amenity}
+                  </span>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
           
           <div className="sticky bottom-0 pt-4 bg-white">
             <Button 
