@@ -68,7 +68,7 @@ const StoryContainerEnhanced: React.FC = () => {
       </button>
 
       {/* Header with progress bars */}
-      <div className="z-40">
+      <div className="z-40 fixed top-0 left-0 right-0">
         <StoryHeader 
           title={property.title || ''}
           distanceToCampus={property.distanceToCampus || ''}
@@ -88,18 +88,20 @@ const StoryContainerEnhanced: React.FC = () => {
       </div>
       
       {/* Main content */}
-      <StoryViewerEnhanced
-        story={currentStory}
-        isPaused={isPaused}
-        onPause={setIsPaused}
-        onNext={handleNext}
-        onPrevious={handlePrevious}
-        showPrevButton={activeIndex > 0}
-        showNextButton={activeIndex < storiesCount - 1}
-        onSwipeUp={handleSwipeUp}
-        showDetails={showDetails}
-        isMobile={isMobile}
-      />
+      <div className="flex-grow flex items-center justify-center">
+        <StoryViewerEnhanced
+          story={currentStory}
+          isPaused={isPaused}
+          onPause={setIsPaused}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          showPrevButton={activeIndex > 0}
+          showNextButton={activeIndex < storiesCount - 1}
+          onSwipeUp={handleSwipeUp}
+          showDetails={showDetails}
+          isMobile={isMobile}
+        />
+      </div>
       
       {/* Property details sheet */}
       <StoryDetailsSheetEnhanced

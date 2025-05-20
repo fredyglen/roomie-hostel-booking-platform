@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { ArrowLeft, ArrowRight, ChevronUp } from 'lucide-react';
 import { Story } from '@/types/property';
 
@@ -30,7 +30,7 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
 }) => {
   return (
     <div 
-      className="flex-grow relative"
+      className="w-full h-full max-w-md mx-auto relative"
       onTouchStart={() => onPause(true)}
       onTouchEnd={() => !showDetails && onPause(false)}
       onMouseDown={() => onPause(true)}
@@ -38,23 +38,16 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
     >
       {/* Background blur effect for desktop */}
       {!isMobile && (
-        <div className="hidden md:block absolute inset-0">
-          <img
-            src={story.url}
-            alt="Background"
-            className="h-full w-full object-cover blur-md"
-          />
-          <div className="absolute inset-0 bg-black/30"></div>
-        </div>
+        <div className="story-backdrop" style={{ backgroundImage: `url(${story.url})` }}></div>
       )}
 
       {/* Main Media Content */}
-      <div className={`relative ${!isMobile && 'md:absolute md:top-1/2 md:left-1/2 md:transform md:-translate-x-1/2 md:-translate-y-1/2 md:max-h-[90vh] md:max-w-md md:shadow-2xl md:rounded-lg md:overflow-hidden'}`}>
+      <div className={`relative h-full ${!isMobile ? 'story-content' : ''}`}>
         {story.type === 'image' ? (
           <img
             src={story.url}
             alt="Story content"
-            className="h-full w-full object-cover"
+            className={`${isMobile ? 'h-full w-full object-cover' : 'max-h-[80vh] max-w-full rounded-lg shadow-xl'}`}
           />
         ) : (
           <video
@@ -62,7 +55,7 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
             autoPlay
             playsInline
             muted={isPaused}
-            className="h-full w-full object-cover"
+            className={`${isMobile ? 'h-full w-full object-cover' : 'max-h-[80vh] max-w-full rounded-lg shadow-xl'}`}
             onEnded={onNext}
           />
         )}
@@ -80,13 +73,13 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
       {/* Navigation Controls */}
       <div className="absolute inset-0 flex z-10">
         <button 
-          className="w-1/4 h-full focus:outline-none"
+          className="w-1/3 h-full focus:outline-none"
           onClick={onPrevious}
           aria-label="Previous"
         />
-        <div className="w-1/2 h-full" onClick={() => onPause(!isPaused)} />
+        <div className="w-1/3 h-full" onClick={() => onPause(!isPaused)} />
         <button 
-          className="w-1/4 h-full focus:outline-none"
+          className="w-1/3 h-full focus:outline-none"
           onClick={onNext}
           aria-label="Next"
         />

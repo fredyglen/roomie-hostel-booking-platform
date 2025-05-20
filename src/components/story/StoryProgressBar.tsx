@@ -15,12 +15,12 @@ const StoryProgressBar: React.FC<StoryProgressBarProps> = ({
   // This component renders a single progress bar
   // The parent component should render multiple of these for each story
   return (
-    <div className="h-1 bg-gray-600 rounded-full flex-grow overflow-hidden">
+    <div className="h-1 bg-white/30 rounded-full flex-grow overflow-hidden">
       <div 
         className="h-full bg-white" 
         style={{ 
           width: `${progressPercentage}%`,
-          transition: 'width 0.3s linear'
+          transition: 'width 0.1s linear'
         }} 
       />
     </div>
