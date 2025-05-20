@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
+import Welcome from "./pages/Welcome";
 
 // Student Portal Pages
 import StudentDashboard from "./pages/student/Dashboard";
@@ -44,7 +44,7 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Index />} />
+            <Route path="/" element={<Welcome />} />
             <Route path="/landing" element={<Landing />} />
             
             {/* Auth Routes */}
@@ -60,7 +60,7 @@ const App = () => (
               } />
               <Route path="properties" element={<Properties />} />
               <Route path="property/:id" element={<PropertyDetail />} />
-              <Route path="property/:id/story" element={<StoryView />} />
+              <Route path="property/:id/story" element={<StoryViewEnhanced />} />
               <Route path="property/:id/book" element={<BookProperty />} />
             </Route>
             
