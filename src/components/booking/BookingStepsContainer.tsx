@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
@@ -38,6 +39,24 @@ const BookingStepsContainer: React.FC = () => {
   // Create adapter functions for components that expect a different signature
   const handleRoommateChangeAdapter = (index: number, field: string, value: string) => {
     handleRoommateChange(index, field, value);
+  };
+  
+  // Create adapter function for StudentVerification
+  const handleStudentVerificationInputChange = (name: string, value: string) => {
+    handleInputChange({ target: { name, value } } as React.ChangeEvent<HTMLInputElement>);
+  };
+  
+  // Mock function for file upload
+  const handleFileUpload = (file: File) => {
+    console.log('File uploaded:', file);
+    // In a real app, you'd handle the file upload here
+  };
+  
+  // Mock function for verification
+  const handleVerify = () => {
+    console.log('Verifying student status');
+    // In a real app, you'd handle verification here
+    handleNext();
   };
   
   if (!property) {
@@ -119,7 +138,12 @@ const BookingStepsContainer: React.FC = () => {
             <h2 className="text-xl font-bold mb-4">Student Verification</h2>
             <StudentVerification 
               idType={formData.idType}
-              onInputChange={handleInputChange}
+              studentId={formData.studentId}
+              university={formData.university}
+              program={formData.program}
+              onInputChange={handleStudentVerificationInputChange}
+              onFileUpload={handleFileUpload}
+              onVerify={handleVerify}
             />
           </div>
         );
