@@ -1,29 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
-import { ArrowLeft, ArrowRight, ChevronUp, X } from 'lucide-react';
-
-// Update the story type to make caption optional
-type Story = {
-  type: string;
-  url: string;
-  duration: number;
-  caption?: string; // Make caption optional
-};
-
-// Update the property type to include the updated Story type
-type Property = {
-  id: string;
-  title: string;
-  type: string;
-  price: number;
-  priceUnit: string;
-  address: string;
-  distanceToCampus: string;
-  stories: Story[];
-  amenities?: string[];
-  description?: string;
-};
+import StoryProgressBar from '@/components/story/StoryProgressBar';
+import StoryHeader from '@/components/story/StoryHeader';
+import StoryMediaViewer from '@/components/story/StoryMediaViewer';
+import StoryDetailsSheet from '@/components/story/StoryDetailsSheet';
+import { Property, Story } from '@/types/property';
 
 // Sample property data matching other pages
 const sampleProperties: Property[] = [
@@ -200,176 +182,41 @@ const StoryView: React.FC = () => {
         }}
       >
         {/* Progress Bars */}
-        <div className="absolute top-4 left-0 right-0 z-20 px-4">
-          <div className="flex space-x-1">
-            {property.stories.map((_, index) => (
-              <div 
-                key={index} 
-                className="h-1 bg-gray-600 rounded-full flex-grow overflow-hidden"
-              >
-                <div 
-                  className="h-full bg-white" 
-                  style={{ 
-                    width: index < activeIndex ? '100%' : 
-                           index === activeIndex ? `${progressPercentage}%` : '0%',
-                    transition: index === activeIndex ? 'width 0.3s linear' : 'none'
-                  }} 
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+        <StoryProgressBar 
+          storiesCount={property.stories.length}
+          activeIndex={activeIndex}
+          progressPercentage={progressPercentage}
+        />
         
         {/* Header */}
-        <div className="absolute top-12 left-0 right-0 z-20 px-4">
-          <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gray-300 rounded-full mr-2 overflow-hidden">
-                <img src={property.stories[0].url} alt="" className="w-full h-full object-cover" />
-              </div>
-              <div>
-                <p className="text-white font-medium">{property.title}</p>
-                <p className="text-white/80 text-xs">{property.distanceToCampus} to campus</p>
-              </div>
-            </div>
-            <button 
-              onClick={handleClose} 
-              className="text-white bg-black/30 rounded-full p-1"
-            >
-              <X className="h-6 w-6" />
-            </button>
-          </div>
-        </div>
+        <StoryHeader 
+          title={property.title}
+          distanceToCampus={property.distanceToCampus}
+          imageUrl={property.stories[0].url}
+          onClose={handleClose}
+        />
         
         {/* Story Media */}
-        <div 
-          className="flex-grow relative"
-          onTouchStart={() => setIsPaused(true)}
-          onTouchEnd={() => !showDetails && setIsPaused(false)}
-          onMouseDown={() => setIsPaused(true)}
-          onMouseUp={() => !showDetails && setIsPaused(false)}
-        >
-          {currentStory.type === 'image' ? (
-            <img
-              src={currentStory.url}
-              alt={property.title}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <video
-              src={currentStory.url}
-              autoPlay
-              playsInline
-              muted={isPaused}
-              className="h-full w-full object-cover"
-              onEnded={handleNext}
-            />
-          )}
-          
-          {/* Caption - Fixed: Check if caption exists before rendering */}
-          {currentStory.caption && (
-            <div className="absolute bottom-24 left-0 right-0 px-4">
-              <p className="text-white text-center bg-black/30 py-2 px-4 rounded-lg">
-                {currentStory.caption}
-              </p>
-            </div>
-          )}
-          
-          {/* Navigation Controls */}
-          <div className="absolute inset-0 flex z-10">
-            <button 
-              className="w-1/4 h-full focus:outline-none"
-              onClick={handlePrevious}
-              aria-label="Previous"
-            />
-            <div className="w-1/2 h-full" onClick={() => setIsPaused(!isPaused)} />
-            <button 
-              className="w-1/4 h-full focus:outline-none"
-              onClick={handleNext}
-              aria-label="Next"
-            />
-          </div>
-          
-          {/* Navigation Buttons (Visual) */}
-          <div className="absolute top-1/2 left-4 transform -translate-y-1/2">
-            {activeIndex > 0 && (
-              <button 
-                className="text-white bg-black/30 rounded-full p-2"
-                onClick={handlePrevious}
-                aria-label="Previous"
-              >
-                <ArrowLeft className="h-6 w-6" />
-              </button>
-            )}
-          </div>
-          
-          <div className="absolute top-1/2 right-4 transform -translate-y-1/2">
-            {activeIndex < property.stories.length - 1 && (
-              <button 
-                className="text-white bg-black/30 rounded-full p-2"
-                onClick={handleNext}
-                aria-label="Next"
-              >
-                <ArrowRight className="h-6 w-6" />
-              </button>
-            )}
-          </div>
-          
-          {/* Swipe Up Indicator */}
-          {!showDetails && (
-            <div 
-              className="absolute bottom-8 left-0 right-0 flex flex-col items-center animate-bounce cursor-pointer"
-              onClick={handleSwipeUp}
-            >
-              <p className="text-white text-sm font-medium mb-1">Swipe up for details</p>
-              <ChevronUp className="h-6 w-6 text-white" />
-            </div>
-          )}
-        </div>
+        <StoryMediaViewer 
+          story={currentStory}
+          isPaused={isPaused}
+          onPause={setIsPaused}
+          onNext={handleNext}
+          onPrevious={handlePrevious}
+          showPrevButton={activeIndex > 0}
+          showNextButton={activeIndex < property.stories.length - 1}
+          onSwipeUp={handleSwipeUp}
+          showDetails={showDetails}
+        />
       </div>
       
       {/* Details Sheet */}
       {showDetails && (
-        <div className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6 animate-slide-up h-[70%] overflow-y-auto">
-          <div 
-            className="w-16 h-1 bg-gray-300 rounded-full mx-auto mb-6 cursor-pointer"
-            onClick={handleSwipeDown}
-          ></div>
-          
-          <h2 className="text-2xl font-bold mb-2">{property.title}</h2>
-          <p className="text-gray-600 mb-2">{property.address}</p>
-          <div className="flex items-center mb-4">
-            <span className="text-xl font-bold text-roomi-blue mr-1">${property.price}</span>
-            <span className="text-gray-600">/{property.priceUnit}</span>
-          </div>
-          
-          {property.description && (
-            <p className="text-gray-700 mb-6">{property.description}</p>
-          )}
-          
-          {property.amenities && property.amenities.length > 0 && (
-            <div className="mb-6">
-              <h3 className="text-lg font-semibold mb-2">Amenities</h3>
-              <div className="flex flex-wrap gap-2">
-                {property.amenities.map((amenity, index) => (
-                  <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
-                    {amenity}
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-          
-          <div className="sticky bottom-0 pt-4 bg-white">
-            <Button 
-              variant="primary" 
-              fullWidth
-              onClick={() => navigate(`/student/property/${id}/book`)}
-            >
-              Book Now
-            </Button>
-          </div>
-        </div>
+        <StoryDetailsSheet 
+          property={property}
+          onSwipeDown={handleSwipeDown}
+          onBookNow={() => navigate(`/student/property/${id}/book`)}
+        />
       )}
     </div>
   );

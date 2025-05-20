@@ -27,6 +27,13 @@ import OwnerPropertyEdit from "./pages/owner/PropertyEdit";
 import OwnerBookings from "./pages/owner/Bookings";
 import OwnerProfile from "./pages/owner/Profile";
 
+// Admin Portal Pages
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminUsers from "./pages/admin/Users";
+import AdminProperties from "./pages/admin/Properties";
+import AdminBookings from "./pages/admin/Bookings";
+import AdminSettings from "./pages/admin/Settings";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -60,33 +67,62 @@ const App = () => (
             {/* Owner/Agent Routes */}
             <Route path="/owner">
               <Route path="dashboard" element={
-                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                <ProtectedRoute allowedRoles={['owner']}>
                   <OwnerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="properties" element={
-                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                <ProtectedRoute allowedRoles={['owner']}>
                   <OwnerProperties />
                 </ProtectedRoute>
               } />
               <Route path="property/new" element={
-                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                <ProtectedRoute allowedRoles={['owner']}>
                   <OwnerPropertyNew />
                 </ProtectedRoute>
               } />
               <Route path="property/:id/edit" element={
-                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                <ProtectedRoute allowedRoles={['owner']}>
                   <OwnerPropertyEdit />
                 </ProtectedRoute>
               } />
               <Route path="bookings" element={
-                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                <ProtectedRoute allowedRoles={['owner']}>
                   <OwnerBookings />
                 </ProtectedRoute>
               } />
               <Route path="profile" element={
-                <ProtectedRoute allowedRoles={['owner', 'admin']}>
+                <ProtectedRoute allowedRoles={['owner']}>
                   <OwnerProfile />
+                </ProtectedRoute>
+              } />
+            </Route>
+            
+            {/* Admin Routes */}
+            <Route path="/admin">
+              <Route path="dashboard" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="users" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminUsers />
+                </ProtectedRoute>
+              } />
+              <Route path="properties" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminProperties />
+                </ProtectedRoute>
+              } />
+              <Route path="bookings" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminBookings />
+                </ProtectedRoute>
+              } />
+              <Route path="settings" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminSettings />
                 </ProtectedRoute>
               } />
             </Route>
