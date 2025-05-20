@@ -1,31 +1,12 @@
-
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase, Property, PropertyFormValues } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from "@/components/ui/use-toast";
 import OwnerLayout from '@/components/layout/OwnerLayout';
-import PropertyForm, { PropertyFormValues } from '@/components/owner/PropertyForm';
+import PropertyForm from '@/components/owner/PropertyForm';
 import { Loader } from 'lucide-react';
-
-interface Property {
-  id: string;
-  title: string;
-  type: string;
-  address: string;
-  price: number;
-  price_unit: string;
-  status: string;
-  occupancy: string;
-  image_url: string;
-  description: string;
-  distance_to_campus: string;
-  amenities: string[];
-  house_rules: string[];
-  created_at: string;
-  owner_id: string;
-}
 
 const PropertyEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -50,7 +31,15 @@ const PropertyEdit: React.FC = () => {
       if (error) throw error;
       if (!data) throw new Error('Property not found');
 
-      return data as Property;
+      // Convert database property to our frontend property format
+      return {
+        ...data,
+        type: data.property_type,
+        price: data.rent,
+        price_unit: 'month', // Default to month
+        status: data.is_available ? 'Available' : 'Not Available',
+        occupancy: '0/1', // Default occupancy
+      } as Property;
     },
     enabled: !!id && !!user?.id,
   });
@@ -69,18 +58,15 @@ const PropertyEdit: React.FC = () => {
         .from('properties')
         .update({
           title: formData.title,
-          type: formData.type,
-          price: formData.price,
-          price_unit: formData.price_unit,
+          property_type: formData.type,
+          rent: formData.price,
           address: formData.address,
-          distance_to_campus: formData.distance_to_campus,
           description: formData.description,
           amenities: amenitiesArray,
-          house_rules: houseRulesArray,
-          status: formData.status,
-          occupancy: formData.occupancy,
-          image_url: formData.image_url || property?.image_url,
+          images: formData.image_url ? [formData.image_url] : undefined,
+          is_available: formData.status === 'Available',
           updated_at: new Date().toISOString(),
+          // Keep existing values for other fields
         })
         .eq('id', id)
         .eq('owner_id', user.id);

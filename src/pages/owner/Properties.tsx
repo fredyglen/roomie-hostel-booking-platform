@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import { Property } from '@/lib/supabase';
 
 interface Property {
   id: string;
@@ -43,7 +43,16 @@ const Properties: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as Property[];
+      
+      // Map DB properties to our Property type
+      return (data || []).map(prop => ({
+        ...prop,
+        type: prop.property_type,
+        price: prop.rent,
+        price_unit: 'month', // Default to month if not specified
+        status: prop.is_available ? 'Available' : 'Not Available',
+        occupancy: '0/1', // Default occupancy
+      })) as Property[];
     },
     enabled: !!user?.id,
   });
@@ -168,7 +177,7 @@ const Properties: React.FC = () => {
               <Card key={property.id} className="overflow-hidden">
                 <div className="h-48 relative">
                   <img 
-                    src={property.image_url} 
+                    src={property.image_url || (property.images && property.images[0])} 
                     alt={property.title} 
                     className="w-full h-full object-cover"
                   />
@@ -187,12 +196,12 @@ const Properties: React.FC = () => {
                     <h3 className="font-semibold truncate">{property.title}</h3>
                     <p className="text-sm text-gray-500 truncate">{property.address}</p>
                     <div className="flex justify-between items-center">
-                      <span className="font-bold text-lg">${property.price}</span>
-                      <span className="text-sm text-gray-500">per {property.price_unit}</span>
+                      <span className="font-bold text-lg">${property.price || property.rent}</span>
+                      <span className="text-sm text-gray-500">per {property.price_unit || 'month'}</span>
                     </div>
                     <div className="flex justify-between text-sm">
-                      <span>Type: {property.type}</span>
-                      <span>Occupancy: {property.occupancy}</span>
+                      <span>Type: {property.type || property.property_type}</span>
+                      <span>Occupancy: {property.occupancy || '0/1'}</span>
                     </div>
                   </div>
                 </CardContent>

@@ -2,11 +2,11 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase, PropertyFormValues, PropertyInsert } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from "@/components/ui/use-toast";
 import OwnerLayout from '@/components/layout/OwnerLayout';
-import PropertyForm, { PropertyFormValues } from '@/components/owner/PropertyForm';
+import PropertyForm from '@/components/owner/PropertyForm';
 
 const PropertyNew: React.FC = () => {
   const navigate = useNavigate();
@@ -21,26 +21,28 @@ const PropertyNew: React.FC = () => {
       const amenitiesArray = formData.amenities ? formData.amenities.split('\n').filter(Boolean) : [];
       const houseRulesArray = formData.house_rules ? formData.house_rules.split('\n').filter(Boolean) : [];
 
+      // Map from form data to database schema
+      const propertyData: PropertyInsert = {
+        owner_id: user.id,
+        title: formData.title,
+        property_type: formData.type,
+        rent: formData.price,
+        address: formData.address,
+        city: 'Accra', // Default city - should be in form
+        state: 'Greater Accra', // Default state - should be in form
+        zip: '00000', // Default zip - should be in form
+        bedrooms: 1, // Default - should be in form
+        bathrooms: 1, // Default - should be in form
+        available_from: new Date().toISOString().split('T')[0],
+        description: formData.description,
+        amenities: amenitiesArray,
+        images: formData.image_url ? [formData.image_url] : [],
+        is_available: formData.status === 'Available',
+      };
+
       const { data, error } = await supabase
         .from('properties')
-        .insert([
-          {
-            owner_id: user.id,
-            title: formData.title,
-            type: formData.type,
-            price: formData.price,
-            price_unit: formData.price_unit,
-            address: formData.address,
-            distance_to_campus: formData.distance_to_campus,
-            description: formData.description,
-            amenities: amenitiesArray,
-            house_rules: houseRulesArray,
-            status: formData.status,
-            occupancy: formData.occupancy,
-            image_url: formData.image_url || 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-            created_at: new Date().toISOString(),
-          }
-        ])
+        .insert([propertyData])
         .select();
 
       if (error) throw error;
