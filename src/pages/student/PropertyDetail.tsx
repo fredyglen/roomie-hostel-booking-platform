@@ -3,8 +3,11 @@ import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Button from '@/components/common/Button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { MapPin, Star, CheckCircle, Info, Home } from 'lucide-react';
+import PropertyHeader from '@/components/property/PropertyHeader';
+import PropertyImageGallery from '@/components/property/PropertyImageGallery';
+import PropertyTabs from '@/components/property/PropertyTabs';
+import PropertyOwnerCard from '@/components/property/PropertyOwnerCard';
+import PropertyBookingCard from '@/components/property/PropertyBookingCard';
 
 // Sample property data matching the data structure from the Properties page
 const sampleProperties = [
@@ -135,159 +138,56 @@ const PropertyDetail: React.FC = () => {
       <main className="flex-grow py-8 px-4">
         <div className="container mx-auto max-w-5xl">
           {/* Property Header */}
-          <div className="mb-6">
-            <div className="flex justify-between items-start mb-2">
-              <h1 className="text-2xl md:text-3xl font-bold">{property.title}</h1>
-              <div className="flex space-x-2">
-                <Link to={`/student/property/${id}/story`}>
-                  <Button variant="outline" size="sm">View Story</Button>
-                </Link>
-              </div>
-            </div>
-            <p className="text-gray-600 mb-2">{property.address}</p>
-            <div className="flex items-center text-sm text-gray-500">
-              <span className="mr-4">{property.distanceToCampus} to campus</span>
-              <span className="flex items-center">
-                <Star className="h-4 w-4 text-yellow-400 fill-yellow-400 mr-1" />
-                {property.rating} ({property.reviewCount} reviews)
-              </span>
-            </div>
-          </div>
+          <PropertyHeader 
+            id={property.id}
+            title={property.title}
+            address={property.address}
+            distanceToCampus={property.distanceToCampus}
+            rating={property.rating}
+            reviewCount={property.reviewCount}
+          />
           
           {/* Property Images */}
-          <div className="mb-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {property.images.map((image, index) => (
-                <div key={index} className="rounded-lg overflow-hidden h-64">
-                  <img 
-                    src={image} 
-                    alt={`${property.title} - Image ${index + 1}`} 
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
+          <PropertyImageGallery 
+            images={property.images} 
+            title={property.title} 
+          />
           
           {/* Property Details and Booking Section */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {/* Main Details */}
             <div className="md:col-span-2">
               <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <Tabs defaultValue="about" onValueChange={setActiveTab} className="w-full">
-                  <TabsList className="grid grid-cols-4 mb-4">
-                    <TabsTrigger value="about">About</TabsTrigger>
-                    <TabsTrigger value="location">Location</TabsTrigger>
-                    <TabsTrigger value="rules">Rules</TabsTrigger>
-                    <TabsTrigger value="amenities">Amenities</TabsTrigger>
-                  </TabsList>
-                  
-                  <TabsContent value="about" className="space-y-4">
-                    <h2 className="text-xl font-bold mb-2">About this property</h2>
-                    <p className="text-gray-700">{property.description}</p>
-                    
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <div className="text-sm text-gray-500">Type</div>
-                        <div className="font-medium">{property.type}</div>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <div className="text-sm text-gray-500">Location</div>
-                        <div className="font-medium">{property.location}</div>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <div className="text-sm text-gray-500">Available Units</div>
-                        <div className="font-medium">{property.availableUnits}</div>
-                      </div>
-                      <div className="bg-gray-50 p-3 rounded-md">
-                        <div className="text-sm text-gray-500">Distance</div>
-                        <div className="font-medium">{property.distanceToCampus}</div>
-                      </div>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="location">
-                    <div className="flex items-start mb-4">
-                      <MapPin className="h-5 w-5 text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
-                      <div>
-                        <h3 className="font-medium mb-1">Address</h3>
-                        <p className="text-gray-700">{property.address}</p>
-                        <p className="text-gray-600 text-sm mt-1">{property.distanceToCampus} to campus</p>
-                      </div>
-                    </div>
-                    <div className="bg-gray-100 h-48 rounded-md flex items-center justify-center mt-4">
-                      <p className="text-gray-500">Map view coming soon</p>
-                    </div>
-                  </TabsContent>
-                  
-                  <TabsContent value="rules">
-                    <h3 className="text-lg font-semibold mb-3">House Rules</h3>
-                    <ul className="space-y-2">
-                      {property.houseRules.map((rule, index) => (
-                        <li key={index} className="flex items-start">
-                          <Info className="h-5 w-5 text-roomi-blue mr-2 flex-shrink-0 mt-0.5" />
-                          <span>{rule}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </TabsContent>
-                  
-                  <TabsContent value="amenities">
-                    <h3 className="text-lg font-semibold mb-3">Amenities</h3>
-                    <div className="grid grid-cols-2 gap-y-3">
-                      {property.amenities.map((amenity, index) => (
-                        <div key={index} className="flex items-center">
-                          <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
-                          <span>{amenity}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </TabsContent>
-                </Tabs>
+                <PropertyTabs
+                  description={property.description}
+                  address={property.address}
+                  distanceToCampus={property.distanceToCampus}
+                  houseRules={property.houseRules}
+                  amenities={property.amenities}
+                  type={property.type}
+                  location={property.location}
+                  availableUnits={property.availableUnits}
+                  onTabChange={setActiveTab}
+                />
               </div>
               
               {/* Owner/Agent Info */}
-              <div className="bg-white rounded-lg shadow-md p-6">
-                <h2 className="text-xl font-bold mb-4">Hosted by {property.owner.name}</h2>
-                <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full mr-4 flex items-center justify-center">
-                    <Home className="h-6 w-6 text-gray-500" />
-                  </div>
-                  <div>
-                    {property.owner.verified && (
-                      <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Verified</span>
-                    )}
-                    <p className="mt-1">Response rate: {property.owner.responseRate}</p>
-                  </div>
-                </div>
-              </div>
+              <PropertyOwnerCard 
+                name={property.owner.name}
+                verified={property.owner.verified}
+                responseRate={property.owner.responseRate}
+              />
             </div>
             
             {/* Booking Card */}
             <div className="md:col-span-1">
-              <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-                <div className="flex justify-between items-center mb-4">
-                  <div>
-                    <span className="text-2xl font-bold text-roomi-blue">₵{property.price}</span>
-                    <span className="text-gray-600">/{property.priceUnit}</span>
-                  </div>
-                  {property.verified && (
-                    <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Verified</span>
-                  )}
-                </div>
-                
-                <p className="mb-4 text-sm">{property.availableUnits} units available</p>
-                
-                <Link to={`/student/property/${id}/book`} className="block mb-4">
-                  <Button variant="primary" fullWidth>
-                    Book Now
-                  </Button>
-                </Link>
-                
-                <Button variant="outline" fullWidth>
-                  Request a Tour
-                </Button>
-              </div>
+              <PropertyBookingCard
+                id={property.id}
+                price={property.price}
+                priceUnit={property.priceUnit}
+                verified={property.verified}
+                availableUnits={property.availableUnits}
+              />
             </div>
           </div>
         </div>

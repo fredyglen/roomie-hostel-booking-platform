@@ -24,8 +24,8 @@
    - ✅ Utility inclusion options with switchable UI
    - ✅ Advance payment settings
    - ✅ Location details with landmarks
-2. ✅ Property editing functionality
-3. ✅ Property list view for management
+3. ✅ Property editing functionality
+4. ✅ Property list view for management
 
 ### UI/UX Features
 1. ✅ Responsive design across all pages
@@ -41,6 +41,7 @@
 4. ✅ Redesigned property detail page with tabbed interface for better organization
 5. ✅ Extended data model to support comprehensive property information
 6. ✅ Fixed type definition inconsistencies between frontend and backend
+7. ✅ Refactored large components into smaller, more maintainable pieces
 
 ## Pending Tasks
 
@@ -62,6 +63,16 @@
 3. ⏳ Create reporting and analytics dashboard for owners
 4. ⏳ Implement advanced filtering options for students
 
+## Code Improvements Needed
+
+1. ⏳ Complete student verification component with ID number input field
+2. ⏳ Fix navigation history for back button functionality
+3. ⏳ Enhance image upload component with cover photo selection
+4. ⏳ Create uniform error handling throughout the application
+5. ⏳ Implement proper loading states and skeleton screens
+6. ⏳ Optimize API calls and implement proper caching
+7. ⏳ Review and optimize mobile responsiveness
+
 ## Next Steps
 
 1. Complete student verification flow
@@ -69,4 +80,3 @@
 3. Enhance image upload component
 4. Implement bill sharing options for apartments
 5. Review and optimize performance across the application
-

@@ -1,7 +1,8 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
+import { Icon } from '@iconify/react';
 
 interface StoryViewerProps {
   propertyId: string;
@@ -42,6 +43,8 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
   const [isPaused, setIsPaused] = useState(false);
   const [progress, setProgress] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
+  const [touchStartY, setTouchStartY] = useState(0);
+  const detailsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
   // Property details (mock data)
@@ -101,36 +104,72 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsPaused(true);
+    setTouchStartY(e.touches[0].clientY);
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!touchStartY) return;
+
+    const currentY = e.touches[0].clientY;
+    const diff = touchStartY - currentY;
+
+    // If swiping up, show details
+    if (diff > 50) {
+      setShowDetails(true);
+    }
+    // If swiping down, hide details
+    else if (diff < -50) {
+      setShowDetails(false);
+    }
   };
 
   const handleTouchEnd = () => {
     setIsPaused(false);
+    setTouchStartY(0);
   };
 
   const handleBookNow = () => {
-    navigate(`/properties/${propertyId}/book`);
+    navigate(`/student/property/${propertyId}/book`);
+  };
+
+  const handleMouseDown = () => {
+    setIsPaused(true);
+  };
+
+  const handleMouseUp = () => {
+    setIsPaused(false);
+  };
+
+  const handleDetailsClick = () => {
+    setShowDetails(!showDetails);
   };
 
   return (
-    <div className="story-viewer" onTouchStart={handleTouchStart} onTouchEnd={handleTouchEnd}>
+    <div 
+      className="story-viewer"
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
+      onMouseDown={handleMouseDown}
+      onMouseUp={handleMouseUp}
+    >
       {/* Close button */}
       <button 
         className="absolute top-4 right-4 z-20 text-white bg-black/30 rounded-full p-1"
         onClick={onClose}
       >
-        <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
+        <Icon icon="solar:close-circle-linear" className="h-6 w-6" />
       </button>
       
       {/* Progress bars */}
       <div className="absolute top-2 left-0 right-0 z-20 px-4 flex gap-1">
         {storyMedia.map((_, i) => (
-          <div key={i} className="story-progress flex-1">
+          <div key={i} className="story-progress h-1 bg-white/30 rounded-full flex-1">
             <div 
-              className="story-progress-bar" 
+              className="h-full bg-white rounded-full" 
               style={{ 
-                width: `${i === currentIndex ? progress : i < currentIndex ? 100 : 0}%` 
+                width: `${i === currentIndex ? progress : i < currentIndex ? 100 : 0}%`,
+                transition: i === currentIndex ? 'width 0.1s linear' : 'none'
               }}
             />
           </div>
@@ -159,18 +198,20 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
         
         {/* Swipe up indicator */}
         <div 
-          className="absolute bottom-8 left-0 right-0 flex flex-col items-center"
-          onClick={() => setShowDetails(!showDetails)}
+          className="absolute bottom-8 left-0 right-0 flex flex-col items-center cursor-pointer"
+          onClick={handleDetailsClick}
         >
           <span className="text-white text-sm mb-1">Swipe up for details</span>
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-white animate-bounce" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-          </svg>
+          <Icon 
+            icon="solar:alt-arrow-up-linear" 
+            className="h-6 w-6 text-white animate-bounce" 
+          />
         </div>
       </div>
       
       {/* Property details sheet */}
       <div 
+        ref={detailsRef}
         className={`absolute bottom-0 left-0 right-0 bg-white rounded-t-xl transition-transform duration-300 transform ${
           showDetails ? 'translate-y-0' : 'translate-y-full'
         } z-30 max-h-[80vh] overflow-y-auto`}
@@ -183,13 +224,11 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
           
           <div className="flex justify-between items-center mb-4">
             <div>
-              <span className="font-bold text-xl text-roomi-blue">₵{propertyDetails.price}</span>
+              <span className="font-bold text-xl text-blue-600">₵{propertyDetails.price}</span>
               <span className="text-gray-500">/{propertyDetails.priceUnit}</span>
             </div>
             <div className="flex items-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118l-2.8-2.034c-.783-.57-.38-1.81.588-1.81h3.462a1 1 0 00.95-.69l1.07-3.292z" />
-              </svg>
+              <Icon icon="solar:star-bold" className="h-4 w-4 text-yellow-400" />
               <span className="ml-1">{propertyDetails.rating} ({propertyDetails.reviewCount} reviews)</span>
             </div>
           </div>

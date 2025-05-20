@@ -1,6 +1,4 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -13,30 +11,22 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 260 67% 75%; /* Updated to the purple color */
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 260 53% 54%; /* Secondary purple */
+    --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 260 53% 54%; /* Accent purple */
+    --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 260 67% 75%; /* Updated to match primary */
+    --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
-    
-    /* ROOMi custom colors - Updated with purple palette */
-    --roomi-blue: 260 67% 75%; /* Changed to purple */
-    --roomi-teal: 167 68% 55%;
-    --roomi-dark: 218 41% 25%;
-    --roomi-light: 220 14% 96%;
-    --roomi-purple: 260 67% 75%; /* Added main purple */
-    --roomi-purple-dark: 260 53% 54%; /* Added darker purple */
   }
-
+ 
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
@@ -44,227 +34,74 @@
     --card-foreground: 210 40% 98%;
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
-    --primary: 260 67% 75%; /* Updated to the purple color */
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 260 53% 54%; /* Secondary purple */
+    --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 260 53% 54%; /* Accent purple */
+    --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 260 67% 75%; /* Updated to match primary */
+    --ring: 224.3 76.3% 48%;
   }
+}
 
+@layer base {
+  * {
+    @apply border-border;
+  }
   body {
-    font-family: 'Space Grotesk', sans-serif;
+    @apply bg-background text-foreground;
   }
 }
 
-/* Global styles */
-.text-roomi-blue {
-  color: hsl(var(--roomi-blue));
+/* Custom styles for the story viewer component */
+.story-viewer {
+  @apply fixed top-0 left-0 right-0 bottom-0 z-50 flex items-center justify-center bg-black overflow-hidden;
 }
 
-.bg-roomi-blue {
-  background-color: hsl(var(--roomi-blue));
-}
-
-.text-roomi-teal {
-  color: hsl(var(--roomi-teal));
-}
-
-.bg-roomi-teal {
-  background-color: hsl(var(--roomi-teal));
-}
-
-.text-roomi-dark {
-  color: hsl(var(--roomi-dark));
-}
-
-.bg-roomi-dark {
-  background-color: hsl(var(--roomi-dark));
-}
-
-.bg-roomi-light {
-  background-color: hsl(var(--roomi-light));
-}
-
-.text-roomi-purple {
-  color: hsl(var(--roomi-purple));
-}
-
-.bg-roomi-purple {
-  background-color: hsl(var(--roomi-purple));
-}
-
-.text-roomi-purple-dark {
-  color: hsl(var(--roomi-purple-dark));
-}
-
-.bg-roomi-purple-dark {
-  background-color: hsl(var(--roomi-purple-dark));
-}
-
-.font-space-grotesk {
-  font-family: 'Space Grotesk', sans-serif;
-}
-
-/* Story Viewer Styles */
 .story-progress {
-  height: 3px;
-  background-color: rgba(255, 255, 255, 0.3);
-  margin: 0 2px;
-  border-radius: 3px;
-  overflow: hidden;
+  @apply h-1 bg-white/30 rounded-full relative overflow-hidden;
 }
 
 .story-progress-bar {
-  height: 100%;
-  background-color: white;
-  border-radius: 3px;
+  @apply h-full bg-white rounded-full absolute left-0 top-0;
   transition: width 0.1s linear;
 }
 
-/* Property details sheet (limit height for swipe up) */
-.property-details-sheet {
-  max-height: 85vh; /* Increased from 75% to 85% of the screen height */
+/* Animation utilities */
+@keyframes fade-in {
+  0% { opacity: 0; transform: translateY(10px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
-/* Booking Steps Animation */
-.step-transition {
-  transition: all 0.3s ease-out;
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out forwards;
 }
 
-/* Welcome Page Slideshow Animation */
-@keyframes fade-zoom {
-  0% {
-    opacity: 0;
-    transform: scale(1.05);
-  }
-  5% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  95% {
-    opacity: 1;
-  }
-  100% {
-    opacity: 0;
-    transform: scale(1);
-  }
+@keyframes scale-up {
+  0% { transform: scale(0.95); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
 }
 
-.splash-slide {
-  @apply absolute inset-0 bg-cover bg-center transition-opacity duration-1000;
-  animation: fade-zoom 5s infinite;
+.animate-scale-up {
+  animation: scale-up 0.3s ease-out forwards;
 }
 
-/* WhatsApp-style story viewer enhancements */
-.story-backdrop {
-  position: absolute;
-  inset: 0;
-  background-size: cover;
-  background-position: center;
-  filter: blur(20px) brightness(0.7);
-  transform: scale(1.2);
-  opacity: 0.8;
-  z-index: 0;
+@keyframes slide-up {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
 }
 
-.story-content {
-  z-index: 1;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  position: relative;
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out forwards;
 }
 
-/* Desktop media enhancement for story images */
-@media (min-width: 1024px) {
-  .story-backdrop {
-    filter: blur(25px) brightness(0.6);
-  }
-  
-  .story-content {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    max-height: 85vh;
-    max-width: 90%;
-    object-fit: contain;
-    z-index: 1;
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
-  }
-}
-
-/* WhatsApp status style animations */
-.story-enter {
-  animation: storyEnter 0.3s ease-out forwards;
-}
-
-.story-exit {
-  animation: storyExit 0.3s ease-out forwards;
-}
-
-@keyframes storyEnter {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
-}
-
-@keyframes storyExit {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-}
-
-/* Admin portal styles */
-.admin-sidebar {
-  @apply bg-white shadow-md z-20 fixed inset-y-0 left-0 transform transition-transform duration-200 ease-in-out md:relative md:translate-x-0;
-}
-
-.admin-link {
-  @apply flex items-center px-4 py-3 text-sm rounded-md transition-colors;
-}
-
-.admin-link-active {
-  @apply bg-[#9b87f5] text-white;
-}
-
-.admin-link-inactive {
-  @apply text-gray-600 hover:bg-[#9b87f5]/10;
-}
-
-/* Responsive utilities */
-@media (max-width: 640px) {
-  .hide-on-mobile {
-    display: none !important;
-  }
-}
-
-@media (min-width: 641px) {
-  .hide-on-desktop {
-    display: none !important;
-  }
+/* Splash screen transition duration */
+.duration-7000 {
+  transition-duration: 7000ms;
 }
