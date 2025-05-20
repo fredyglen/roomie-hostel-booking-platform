@@ -58,18 +58,29 @@ export interface Property {
   location?: string;
   landmark?: string;
   
-  // New properties for enhanced property management
+  // Room management properties
   total_rooms?: number;
   rooms_available?: number;
   beds_per_room?: number;
   beds_available?: number;
   max_occupants?: number;
+  
+  // Facility features
   has_bedframes?: boolean;
   has_mattresses?: boolean;
   has_wardrobes?: boolean;
   has_individual_meters?: boolean;
+  
+  // Payment and occupancy details
   advance_payment_months?: number;
   allow_bill_sharing?: boolean;
+  
+  // UI properties
+  rating?: number;
+  reviewCount?: number;
+  verified?: boolean;
+  priceUnit?: string;
+  distanceToCampus?: string;
 }
 
 export type { PropertyFormValues, PropertyInsert } from '@/types/property';

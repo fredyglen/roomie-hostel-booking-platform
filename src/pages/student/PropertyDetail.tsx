@@ -1,9 +1,10 @@
-
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import Button from '@/components/common/Button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { MapPin, Star, CheckCircle, Info, Home } from 'lucide-react';
 
 // Sample property data matching the data structure from the Properties page
 const sampleProperties = [
@@ -36,7 +37,8 @@ const sampleProperties = [
       phone: '+233 50 123 4567',
       responseRate: '95%',
       verified: true
-    }
+    },
+    location: 'East Legon'
   },
   {
     id: '2',
@@ -104,6 +106,7 @@ const sampleProperties = [
 
 const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
+  const [activeTab, setActiveTab] = useState('about');
   
   // Find the property with the matching ID
   const property = sampleProperties.find(p => p.id === id);
@@ -145,9 +148,7 @@ const PropertyDetail: React.FC = () => {
             <div className="flex items-center text-sm text-gray-500">
               <span className="mr-4">{property.distanceToCampus} to campus</span>
               <span className="flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                  <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                </svg>
+                <Star className="h-4 w-4 text-yellow-400 fill-yellow-400 mr-1" />
                 {property.rating} ({property.reviewCount} reviews)
               </span>
             </div>
@@ -173,34 +174,85 @@ const PropertyDetail: React.FC = () => {
             {/* Main Details */}
             <div className="md:col-span-2">
               <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-                <h2 className="text-xl font-bold mb-4">About this property</h2>
-                <p className="text-gray-700 mb-6">{property.description}</p>
-                
-                <h3 className="text-lg font-semibold mb-3">Amenities</h3>
-                <div className="grid grid-cols-2 gap-2 mb-6">
-                  {property.amenities.map((amenity, index) => (
-                    <div key={index} className="flex items-center">
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-roomi-blue mr-2" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                      </svg>
-                      <span>{amenity}</span>
+                <Tabs defaultValue="about" onValueChange={setActiveTab} className="w-full">
+                  <TabsList className="grid grid-cols-4 mb-4">
+                    <TabsTrigger value="about">About</TabsTrigger>
+                    <TabsTrigger value="location">Location</TabsTrigger>
+                    <TabsTrigger value="rules">Rules</TabsTrigger>
+                    <TabsTrigger value="amenities">Amenities</TabsTrigger>
+                  </TabsList>
+                  
+                  <TabsContent value="about" className="space-y-4">
+                    <h2 className="text-xl font-bold mb-2">About this property</h2>
+                    <p className="text-gray-700">{property.description}</p>
+                    
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-sm text-gray-500">Type</div>
+                        <div className="font-medium">{property.type}</div>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-sm text-gray-500">Location</div>
+                        <div className="font-medium">{property.location}</div>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-sm text-gray-500">Available Units</div>
+                        <div className="font-medium">{property.availableUnits}</div>
+                      </div>
+                      <div className="bg-gray-50 p-3 rounded-md">
+                        <div className="text-sm text-gray-500">Distance</div>
+                        <div className="font-medium">{property.distanceToCampus}</div>
+                      </div>
                     </div>
-                  ))}
-                </div>
-                
-                <h3 className="text-lg font-semibold mb-3">House Rules</h3>
-                <ul className="list-disc pl-5 mb-6">
-                  {property.houseRules.map((rule, index) => (
-                    <li key={index} className="mb-1">{rule}</li>
-                  ))}
-                </ul>
+                  </TabsContent>
+                  
+                  <TabsContent value="location">
+                    <div className="flex items-start mb-4">
+                      <MapPin className="h-5 w-5 text-gray-500 mr-2 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <h3 className="font-medium mb-1">Address</h3>
+                        <p className="text-gray-700">{property.address}</p>
+                        <p className="text-gray-600 text-sm mt-1">{property.distanceToCampus} to campus</p>
+                      </div>
+                    </div>
+                    <div className="bg-gray-100 h-48 rounded-md flex items-center justify-center mt-4">
+                      <p className="text-gray-500">Map view coming soon</p>
+                    </div>
+                  </TabsContent>
+                  
+                  <TabsContent value="rules">
+                    <h3 className="text-lg font-semibold mb-3">House Rules</h3>
+                    <ul className="space-y-2">
+                      {property.houseRules.map((rule, index) => (
+                        <li key={index} className="flex items-start">
+                          <Info className="h-5 w-5 text-roomi-blue mr-2 flex-shrink-0 mt-0.5" />
+                          <span>{rule}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </TabsContent>
+                  
+                  <TabsContent value="amenities">
+                    <h3 className="text-lg font-semibold mb-3">Amenities</h3>
+                    <div className="grid grid-cols-2 gap-y-3">
+                      {property.amenities.map((amenity, index) => (
+                        <div key={index} className="flex items-center">
+                          <CheckCircle className="h-5 w-5 text-green-500 mr-2" />
+                          <span>{amenity}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </TabsContent>
+                </Tabs>
               </div>
               
               {/* Owner/Agent Info */}
               <div className="bg-white rounded-lg shadow-md p-6">
                 <h2 className="text-xl font-bold mb-4">Hosted by {property.owner.name}</h2>
                 <div className="flex items-center mb-4">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full mr-4"></div>
+                  <div className="w-12 h-12 bg-gray-200 rounded-full mr-4 flex items-center justify-center">
+                    <Home className="h-6 w-6 text-gray-500" />
+                  </div>
                   <div>
                     {property.owner.verified && (
                       <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Verified</span>
@@ -216,7 +268,7 @@ const PropertyDetail: React.FC = () => {
               <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
                 <div className="flex justify-between items-center mb-4">
                   <div>
-                    <span className="text-2xl font-bold text-roomi-blue">${property.price}</span>
+                    <span className="text-2xl font-bold text-roomi-blue">₵{property.price}</span>
                     <span className="text-gray-600">/{property.priceUnit}</span>
                   </div>
                   {property.verified && (

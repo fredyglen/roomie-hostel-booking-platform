@@ -4,10 +4,13 @@ import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import Logo from './common/Logo';
 
+// Using your uploaded images plus one from the existing list
 const backgroundImages = [
-  'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-  'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80'
+  '/lovable-uploads/c018248d-d6fc-443b-9c79-fd03aa52c962.png',
+  '/lovable-uploads/687d2a93-5ac5-42ea-af7a-729ffcabb3f8.png',
+  '/lovable-uploads/5ba0f880-6f16-4b5f-9f51-2674c0926c2e.png',
+  '/lovable-uploads/a0372271-117e-4341-96f7-99ceff6f2187.png',
+  '/lovable-uploads/77a518c7-d291-4c57-9a6b-85380032b3ef.png',
 ];
 
 const SplashScreen: React.FC = () => {
@@ -28,12 +31,18 @@ const SplashScreen: React.FC = () => {
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-black">
-      {/* Background Slides */}
+      {/* Background Slides with zoom and crossfade transitions */}
       {backgroundImages.map((image, index) => (
         <div 
           key={index}
-          className={`splash-slide ${index === activeIndex ? 'opacity-100' : 'opacity-0'}`}
-          style={{ backgroundImage: `url(${image})` }}
+          className={`absolute inset-0 bg-cover bg-center transition-all duration-5000 ease-in-out transform
+                     ${index === activeIndex ? 'opacity-100 scale-105' : 'opacity-0 scale-100'}`}
+          style={{ 
+            backgroundImage: `url(${image})`,
+            transitionProperty: 'opacity, transform',
+            transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
+            transitionDuration: '5s',
+          }}
         />
       ))}
       

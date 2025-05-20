@@ -54,9 +54,10 @@ const App = () => (
             
             {/* Student Routes */}
             <Route path="/student">
+              {/* Redirect student dashboard to properties list */}
               <Route path="dashboard" element={
                 <ProtectedRoute allowedRoles={['student']}>
-                  <StudentDashboard />
+                  <Navigate to="/student/properties" replace />
                 </ProtectedRoute>
               } />
               <Route path="properties" element={<Properties />} />

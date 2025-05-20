@@ -49,17 +49,33 @@ export type Property = {
   utilities?: string[];
   location?: string;
   landmark?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  
+  // Room management properties
   total_rooms?: number;
   rooms_available?: number;
   beds_per_room?: number;
   beds_available?: number;
   max_occupants?: number;
+  
+  // Facility features
   has_bedframes?: boolean;
   has_mattresses?: boolean;
   has_wardrobes?: boolean;
   has_individual_meters?: boolean;
+  
+  // Payment and occupancy details
   advance_payment_months?: number;
   allow_bill_sharing?: boolean;
+  
+  // Additional fields for UI display
+  images?: string[];
+  house_rules?: string[];
+  image_url?: string;
 };
 
 // This interface is for the PropertyForm component
@@ -80,21 +96,30 @@ export interface PropertyFormValues {
   status: string;
   occupancy?: string;
   image_url?: string;
+  images?: string[];
   all_inclusive: boolean;
   utilities?: string;
   location?: string;
   landmark?: string;
+  
+  // Basic property stats
   bedrooms: number;
   bathrooms: number;
+  
+  // Room management fields
   total_rooms?: number;
   rooms_available?: number;
   beds_per_room?: number;
   beds_available?: number;
   max_occupants?: number;
+  
+  // Additional facility features
   has_bedframes?: boolean;
   has_mattresses?: boolean;
   has_wardrobes?: boolean;
   has_individual_meters?: boolean;
+  
+  // Payment and occupancy details
   advance_payment_months?: number;
   allow_bill_sharing?: boolean;
 }
@@ -123,15 +148,21 @@ export interface PropertyInsert {
   utilities?: string[];
   location?: string;
   landmark?: string;
+  
+  // Room management fields
   total_rooms?: number;
   rooms_available?: number;
   beds_per_room?: number;
   beds_available?: number;
   max_occupants?: number;
+  
+  // Additional facility features
   has_bedframes?: boolean;
   has_mattresses?: boolean;
   has_wardrobes?: boolean;
   has_individual_meters?: boolean;
+  
+  // Payment and occupancy details
   advance_payment_months?: number;
   allow_bill_sharing?: boolean;
 }
