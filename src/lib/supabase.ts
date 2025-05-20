@@ -26,9 +26,11 @@ export interface Property {
   type?: string; // Frontend display property
   price?: number; // Frontend display property
   price_unit?: string; // Frontend display property
+  priceUnit?: string; // Frontend display property
   status?: string; // Frontend display property
   occupancy?: string; // Frontend display property
   distance_to_campus?: string;
+  distanceToCampus?: string; // Frontend display property
   house_rules?: string[];
   image_url?: string;
   
@@ -79,8 +81,6 @@ export interface Property {
   rating?: number;
   reviewCount?: number;
   verified?: boolean;
-  priceUnit?: string;
-  distanceToCampus?: string;
   
   // Story related properties
   stories?: Story[];

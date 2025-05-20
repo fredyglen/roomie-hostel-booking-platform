@@ -26,8 +26,11 @@ export type Property = {
   property_type?: string; // Making this optional but available
   price?: number;
   priceUnit?: string;
+  price_unit?: string; // Database consistency
+  rent?: number; // For database consistency
   address: string;
   distanceToCampus?: string;
+  distance_to_campus?: string; // For database consistency
   stories?: Story[];
   amenities?: string[];
   description?: string;
@@ -84,6 +87,11 @@ export type Property = {
   updated_at?: string;
   available_from?: string;
   available_to?: string;
+  is_available?: boolean; // For database consistency
+  is_furnished?: boolean;
+  
+  // Gender type property
+  genderType?: 'Girls' | 'Boys' | 'Mixed';
 };
 
 // This interface is for the PropertyForm component

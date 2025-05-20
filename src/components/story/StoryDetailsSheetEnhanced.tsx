@@ -9,17 +9,23 @@ import { Property } from '@/types/property';
 interface StoryDetailsSheetEnhancedProps {
   property: Property;
   onClose: () => void;
+  onBookNow?: () => void; // Made this prop optional
 }
 
 const StoryDetailsSheetEnhanced: React.FC<StoryDetailsSheetEnhancedProps> = ({ 
   property, 
-  onClose 
+  onClose,
+  onBookNow 
 }) => {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('about');
 
   const handleBookNow = () => {
-    navigate(`/student/property/${property.id}/book`);
+    if (onBookNow) {
+      onBookNow();
+    } else {
+      navigate(`/student/property/${property.id}/book`);
+    }
   };
 
   return (
@@ -34,10 +40,10 @@ const StoryDetailsSheetEnhanced: React.FC<StoryDetailsSheetEnhancedProps> = ({
           <PropertyTabs
             description={property.description || ''}
             address={property.address}
-            distanceToCampus={property.distanceToCampus}
+            distanceToCampus={property.distanceToCampus || property.distance_to_campus || ''}
             houseRules={property.house_rules || []}
             amenities={property.amenities || []}
-            type={property.type || ''}
+            type={property.type || property.property_type || ''}
             location={property.location || ''}
             availableUnits={property.availableUnits}
             onTabChange={setActiveTab}
@@ -49,8 +55,8 @@ const StoryDetailsSheetEnhanced: React.FC<StoryDetailsSheetEnhancedProps> = ({
       <div className="sticky bottom-0 bg-white p-4 border-t border-gray-200 shadow-lg">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <span className="text-2xl font-bold text-blue-600">₵{property.price?.toLocaleString()}</span>
-            <span className="text-gray-600">/{property.priceUnit}</span>
+            <span className="text-2xl font-bold text-blue-600">₵{(property.price || property.rent || 0).toLocaleString()}</span>
+            <span className="text-gray-600">/{property.priceUnit || property.price_unit || 'semester'}</span>
           </div>
           {property.rating && (
             <div className="flex items-center">

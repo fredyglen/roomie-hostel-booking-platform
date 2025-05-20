@@ -79,7 +79,7 @@ const StoryContainerEnhanced: React.FC = () => {
       <div className="z-40 fixed top-0 left-0 right-0">
         <StoryHeader 
           title={propertyWithDefaults.title || ''}
-          distanceToCampus={propertyWithDefaults.distanceToCampus || ''}
+          distanceToCampus={propertyWithDefaults.distanceToCampus || propertyWithDefaults.distance_to_campus || ''}
           imageUrl={(propertyWithDefaults.stories && propertyWithDefaults.stories[0] && propertyWithDefaults.stories[0].url) || ''}
           onClose={handleClose} 
         />
