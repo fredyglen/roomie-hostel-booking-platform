@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Logo from '@/components/common/Logo';
+import { toast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -40,7 +41,7 @@ const Register: React.FC = () => {
       firstName: "",
       lastName: "",
       phone: "",
-      role: "owner", // Default to owner for the owner portal
+      role: "student", // Default to student for the student portal
     },
   });
 
@@ -58,6 +59,8 @@ const Register: React.FC = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
+      console.log("Register form submitted:", values);
+      
       const { error } = await signUp(
         values.email, 
         values.password, 
@@ -70,8 +73,14 @@ const Register: React.FC = () => {
       );
       
       if (!error) {
+        toast({
+          title: "Account created",
+          description: "Your account has been created successfully. Please log in.",
+        });
         navigate('/login');
       }
+    } catch (error) {
+      console.error("Registration submission error:", error);
     } finally {
       setIsSubmitting(false);
     }

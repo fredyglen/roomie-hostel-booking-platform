@@ -9,7 +9,152 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      bookings: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          property_id: string
+          start_date: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          property_id: string
+          start_date: string
+          status: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          property_id?: string
+          start_date?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          first_name: string | null
+          id: string
+          last_name: string | null
+          phone: string | null
+          role: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          first_name?: string | null
+          id: string
+          last_name?: string | null
+          phone?: string | null
+          role: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string | null
+          id?: string
+          last_name?: string | null
+          phone?: string | null
+          role?: string
+        }
+        Relationships: []
+      }
+      properties: {
+        Row: {
+          address: string
+          amenities: string[] | null
+          available_from: string
+          available_to: string | null
+          bathrooms: number
+          bedrooms: number
+          city: string
+          created_at: string
+          description: string
+          id: string
+          images: string[] | null
+          is_available: boolean | null
+          is_furnished: boolean | null
+          owner_id: string
+          property_type: string
+          rent: number
+          size: number | null
+          state: string
+          title: string
+          updated_at: string
+          zip: string
+        }
+        Insert: {
+          address: string
+          amenities?: string[] | null
+          available_from: string
+          available_to?: string | null
+          bathrooms: number
+          bedrooms: number
+          city: string
+          created_at?: string
+          description: string
+          id?: string
+          images?: string[] | null
+          is_available?: boolean | null
+          is_furnished?: boolean | null
+          owner_id: string
+          property_type: string
+          rent: number
+          size?: number | null
+          state: string
+          title: string
+          updated_at?: string
+          zip: string
+        }
+        Update: {
+          address?: string
+          amenities?: string[] | null
+          available_from?: string
+          available_to?: string | null
+          bathrooms?: number
+          bedrooms?: number
+          city?: string
+          created_at?: string
+          description?: string
+          id?: string
+          images?: string[] | null
+          is_available?: boolean | null
+          is_furnished?: boolean | null
+          owner_id?: string
+          property_type?: string
+          rent?: number
+          size?: number | null
+          state?: string
+          title?: string
+          updated_at?: string
+          zip?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

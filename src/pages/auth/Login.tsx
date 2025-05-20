@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import Logo from '@/components/common/Logo';
+import { toast } from "@/components/ui/use-toast";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -18,6 +19,8 @@ const formSchema = z.object({
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const { signIn, user } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,9 +41,23 @@ const Login: React.FC = () => {
   }, [user, navigate]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const { error } = await signIn(values.email, values.password);
-    if (!error) {
-      // The redirection will be handled by the useEffect above when the user state updates
+    setIsSubmitting(true);
+    try {
+      console.log("Login form submitted:", values);
+      const { error } = await signIn(values.email, values.password);
+      
+      if (!error) {
+        // Success toast
+        toast({
+          title: "Login successful",
+          description: "You have been signed in",
+        });
+        // The redirection will be handled by the useEffect above when the user state updates
+      }
+    } catch (error) {
+      console.error("Login submission error:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -101,11 +118,47 @@ const Login: React.FC = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full" disabled={form.formState.isSubmitting}>
-                {form.formState.isSubmitting ? "Signing in..." : "Sign in"}
+              <Button type="submit" className="w-full" disabled={isSubmitting}>
+                {isSubmitting ? "Signing in..." : "Sign in"}
               </Button>
             </form>
           </Form>
+          
+          {/* Demo accounts section */}
+          <div className="mt-6">
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-300" />
+              </div>
+              <div className="relative flex justify-center text-sm">
+                <span className="px-2 bg-white text-gray-500">Demo accounts</span>
+              </div>
+            </div>
+            
+            <div className="mt-4 grid grid-cols-1 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  form.setValue('email', 'student@roomi.com');
+                  form.setValue('password', 'password123');
+                }}
+                className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Use Student Demo
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => {
+                  form.setValue('email', 'owner@roomi.com');
+                  form.setValue('password', 'password123');
+                }}
+                className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
+              >
+                Use Property Owner Demo
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
