@@ -10,52 +10,40 @@ interface RoomType {
 interface RoomTypeSelectionProps {
   roomTypes: RoomType[];
   selectedRoomType: string;
-  onSelectRoomType: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onSelectRoomType: (name: string, value: string) => void;
 }
 
-const RoomTypeSelection: React.FC<RoomTypeSelectionProps> = ({ 
+const RoomTypeSelection: React.FC<RoomTypeSelectionProps> = ({
   roomTypes,
   selectedRoomType,
   onSelectRoomType
 }) => {
   return (
     <div className="space-y-4">
-      {roomTypes.map((room, index) => (
+      {roomTypes.map((roomType, index) => (
         <div 
-          key={index} 
-          className={`border rounded-lg p-4 cursor-pointer transition-colors ${
-            selectedRoomType === room.name ? 'border-roomi-blue bg-blue-50' : 'hover:bg-gray-50'
+          key={index}
+          className={`border p-4 rounded-lg cursor-pointer transition-all ${
+            selectedRoomType === roomType.name ? 'border-blue-500 bg-blue-50' : 'hover:border-gray-400'
           }`}
-          onClick={() => {
-            // Create a synthetic event when clicking on the div
-            const syntheticEvent = {
-              target: { name: 'roomType', value: room.name }
-            } as React.ChangeEvent<HTMLInputElement>;
-            onSelectRoomType(syntheticEvent);
-          }}
+          onClick={() => onSelectRoomType('roomType', roomType.name)}
         >
           <div className="flex justify-between items-center">
-            <div className="flex items-center">
-              <input
-                type="radio"
-                className="form-radio h-4 w-4 text-roomi-blue"
-                checked={selectedRoomType === room.name}
-                name="roomType"
-                value={room.name}
-                onChange={onSelectRoomType}
-              />
-              <div className="ml-3">
-                <h3 className="font-semibold">{room.name}</h3>
-                <p className="text-sm text-gray-500">Suitable for 1-2 persons</p>
-              </div>
+            <div>
+              <h3 className="font-medium">{roomType.name}</h3>
+              <p className="text-sm text-gray-600">Choose this option for {roomType.name.toLowerCase()} living arrangement</p>
             </div>
             <div className="text-right">
-              <span className="font-bold text-roomi-blue">${room.price}</span>
-              <span className="text-gray-600">/{room.unit}</span>
+              <p className="font-bold text-blue-600">₵{roomType.price.toLocaleString()}</p>
+              <p className="text-sm text-gray-600">per {roomType.unit}</p>
             </div>
           </div>
         </div>
       ))}
+      
+      {roomTypes.length === 0 && (
+        <p className="text-gray-500 italic">No room types available for this property.</p>
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from '@/components/common/Button';
@@ -35,9 +36,17 @@ const BookingStepsContainer: React.FC = () => {
     individualPrice
   } = useBookingViewModel();
   
-  // Create an adapter function for components that expect a different signature
+  // Create adapter functions for components that expect a different signature
   const handleRoommateChangeAdapter = (index: number, field: string, value: string) => {
     handleRoommateChange(index, field, value);
+  };
+  
+  // Create an adapter for RoomTypeSelection
+  const handleRoomTypeSelectionAdapter = (name: string, value: string) => {
+    const syntheticEvent = {
+      target: { name, value }
+    } as React.ChangeEvent<HTMLInputElement>;
+    handleInputChange(syntheticEvent);
   };
   
   if (!property) {
@@ -61,7 +70,7 @@ const BookingStepsContainer: React.FC = () => {
             <RoomTypeSelection 
               roomTypes={property.roomTypes || []}
               selectedRoomType={formData.roomType}
-              onSelectRoomType={handleInputChange}
+              onSelectRoomType={handleRoomTypeSelectionAdapter}
             />
           </div>
         );
@@ -130,7 +139,7 @@ const BookingStepsContainer: React.FC = () => {
             <h2 className="text-xl font-bold mb-4">Booking Summary</h2>
             <BookingSummary 
               propertyTitle={property.title}
-              propertyImage={property.image || ''}
+              propertyImage={property.images?.[0] || ''}
               roomType={formData.roomType}
               duration={formData.duration}
               durationType={formData.durationType}

@@ -23,7 +23,7 @@ const sampleProperties: Property[] = [
     priceUnit: 'month',
     address: '123 University Road, East Legon, Accra',
     distanceToCampus: '5 min walk',
-    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
+    images: ['https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80'],
     roomTypes: [
       { name: '1 in a room', price: 1700, unit: 'month' },
       { name: '2 in a room', price: 1200, unit: 'month' }
@@ -39,7 +39,7 @@ const sampleProperties: Property[] = [
     priceUnit: 'semester',
     address: '456 College Avenue, Legon, Accra',
     distanceToCampus: '10 min walk',
-    image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80',
+    images: ['https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80'],
     roomTypes: [
       { name: '2 in a room', price: 4000, unit: 'semester' },
       { name: '3 in a room', price: 3600, unit: 'semester' }
@@ -56,7 +56,7 @@ const sampleProperties: Property[] = [
     priceUnit: 'month',
     address: '789 Campus Drive, Ayeduase, Kumasi',
     distanceToCampus: '2 min walk',
-    image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80',
+    images: ['https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80'],
     roomTypes: [
       { name: 'Entire apartment', price: 2600, unit: 'month' },
       { name: 'Shared apartment (per student)', price: 950, unit: 'month' }
