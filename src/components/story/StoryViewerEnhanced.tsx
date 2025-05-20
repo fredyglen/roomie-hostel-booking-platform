@@ -1,10 +1,13 @@
 
-import React, { useCallback } from 'react';
-import { ArrowLeft, ArrowRight, ChevronUp } from 'lucide-react';
+import React, { useCallback, useState } from 'react';
+import { Icon } from '@iconify/react';
 import { Story } from '@/types/property';
+import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils';
 
 interface StoryViewerEnhancedProps {
   story: Story;
+  property: any;
   isPaused: boolean;
   onPause: (paused: boolean) => void;
   onNext: () => void;
@@ -14,10 +17,12 @@ interface StoryViewerEnhancedProps {
   onSwipeUp?: () => void;
   showDetails?: boolean;
   isMobile?: boolean;
+  progressPercentage: number;
 }
 
 const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
   story,
+  property,
   isPaused,
   onPause,
   onNext,
@@ -26,7 +31,8 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
   showNextButton,
   onSwipeUp,
   showDetails,
-  isMobile = true
+  isMobile = true,
+  progressPercentage
 }) => {
   const handleTouchStart = useCallback(() => {
     onPause(true);
@@ -48,6 +54,14 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
         style={{ backgroundImage: `url(${story.url})` }}
       ></div>
       
+      {/* Progress bar */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-gray-300 z-20">
+        <div 
+          className="h-full bg-blue-500 transition-all duration-300 ease-linear"
+          style={{ width: `${progressPercentage}%` }}
+        ></div>
+      </div>
+      
       {/* Main content */}
       <div 
         className="w-full h-full touch-none relative z-10 flex items-center justify-center"
@@ -61,7 +75,10 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
             <img
               src={story.url}
               alt="Story content"
-              className={`${isMobile ? 'h-full w-full object-cover' : 'max-h-[85vh] max-w-full rounded-lg shadow-xl'}`}
+              className={cn(
+                "object-contain max-h-full max-w-full",
+                isMobile && "h-full w-full object-cover"
+              )}
             />
           ) : (
             <video
@@ -69,10 +86,30 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
               autoPlay
               playsInline
               muted={isPaused}
-              className={`${isMobile ? 'h-full w-full object-cover' : 'max-h-[85vh] max-w-full rounded-lg shadow-xl'}`}
+              className={cn(
+                "object-contain max-h-full max-w-full",
+                isMobile && "h-full w-full object-cover"
+              )}
               onEnded={onNext}
             />
           )}
+        </div>
+      </div>
+      
+      {/* Property info overlay at bottom */}
+      <div className="absolute bottom-0 left-0 right-0 p-4 z-20 bg-gradient-to-t from-black/70 to-transparent">
+        <div className="flex justify-between items-center text-white">
+          <div>
+            <h3 className="font-bold text-lg">{property.title}</h3>
+            <div className="flex items-center text-sm">
+              <Icon icon="solar:map-point-linear" className="mr-1" width={16} height={16} />
+              <span>{property.distanceToCampus} to campus</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <div className="font-bold text-lg">₵{property.price.toLocaleString()}</div>
+            <div className="text-sm">/{property.priceUnit}</div>
+          </div>
         </div>
       </div>
       
@@ -108,7 +145,7 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
             onClick={onPrevious}
             aria-label="Previous"
           >
-            <ArrowLeft className="h-6 w-6" />
+            <Icon icon="solar:arrow-left-linear" className="h-6 w-6" />
           </button>
         )}
       </div>
@@ -120,7 +157,7 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
             onClick={onNext}
             aria-label="Next"
           >
-            <ArrowRight className="h-6 w-6" />
+            <Icon icon="solar:arrow-right-linear" className="h-6 w-6" />
           </button>
         )}
       </div>
@@ -128,11 +165,11 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
       {/* Swipe Up Indicator */}
       {onSwipeUp && !showDetails && (
         <div 
-          className="absolute bottom-8 left-0 right-0 flex flex-col items-center animate-bounce cursor-pointer z-20"
+          className="absolute bottom-20 left-0 right-0 flex flex-col items-center animate-bounce cursor-pointer z-20"
           onClick={onSwipeUp}
         >
           <p className="text-white text-sm font-medium mb-1 drop-shadow-md">Swipe up for details</p>
-          <ChevronUp className="h-6 w-6 text-white drop-shadow-md" />
+          <Icon icon="solar:arrow-up-linear" className="h-6 w-6 text-white drop-shadow-md" />
         </div>
       )}
     </div>

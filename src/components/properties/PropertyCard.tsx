@@ -1,9 +1,7 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { Badge } from '@/components/ui/badge';
-import Button from '@/components/common/Button';
 
 interface PropertyCardProps {
   property: {
@@ -49,7 +47,10 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
   };
   
   return (
-    <div className="bg-white rounded-lg overflow-hidden shadow-md h-full flex flex-col">
+    <div 
+      className="bg-white rounded-lg overflow-hidden shadow-md h-full flex flex-col cursor-pointer transform hover:scale-[1.02] transition-transform duration-200"
+      onClick={property.onViewDetails}
+    >
       {/* Property Image */}
       <div className="relative">
         <img 
@@ -60,8 +61,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         
         {/* Story View Button */}
         <button 
-          onClick={property.onViewStory}
+          onClick={(e) => {
+            e.stopPropagation();
+            property.onViewStory && property.onViewStory();
+          }}
           className="absolute top-3 left-3 bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-md"
+          aria-label="View story"
         >
           <Icon icon="solar:video-frame-play-linear" className="text-roomi-blue h-5 w-5" />
         </button>
@@ -90,7 +95,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         
         <div className="flex items-center justify-between mt-auto">
           <div>
-            <span className="font-bold text-roomi-blue">₵{property.price}</span>
+            <span className="font-bold text-roomi-blue">₵{property.price.toLocaleString()}</span>
             <span className="text-gray-600">/{property.priceUnit}</span>
           </div>
           {property.rating && (
@@ -100,17 +105,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
               <span className="text-xs text-gray-500 ml-1">({property.reviewCount || 0})</span>
             </div>
           )}
-        </div>
-        
-        <div className="mt-4">
-          <Button 
-            variant="primary" 
-            size="sm" 
-            fullWidth
-            onClick={property.onViewDetails}
-          >
-            View Details
-          </Button>
         </div>
       </div>
     </div>

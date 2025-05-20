@@ -2,7 +2,6 @@
 import React from 'react';
 import PropertyCard from './PropertyCard';
 import { useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
 
 interface PropertyListProps {
   properties: any[];
@@ -34,7 +33,9 @@ const PropertyList: React.FC<PropertyListProps> = ({
       <div className="text-center py-8">
         <p className="text-gray-500 mb-4">{emptyMessage}</p>
         {onResetFilters && (
-          <Button variant="default" onClick={onResetFilters}>Reset Filters</Button>
+          <button className="bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded" onClick={onResetFilters}>
+            Reset Filters
+          </button>
         )}
       </div>
     );

@@ -1,8 +1,7 @@
 
 import React from 'react';
-import { Star } from 'lucide-react';
-import { Link } from 'react-router-dom';
-import Button from '@/components/common/Button';
+import { Icon } from '@iconify/react';
+import { Button } from '@/components/ui/button';
 
 interface PropertyHeaderProps {
   id: string;
@@ -11,27 +10,41 @@ interface PropertyHeaderProps {
   distanceToCampus?: string;
   rating?: number;
   reviewCount?: number;
+  onViewStory?: () => void;
 }
 
 const PropertyHeader: React.FC<PropertyHeaderProps> = ({
-  id, title, address, distanceToCampus, rating, reviewCount
+  id, title, address, distanceToCampus, rating, reviewCount, onViewStory
 }) => {
   return (
     <div className="mb-6">
       <div className="flex justify-between items-start mb-2">
         <h1 className="text-2xl md:text-3xl font-bold">{title}</h1>
         <div className="flex space-x-2">
-          <Link to={`/student/property/${id}/story`}>
-            <Button variant="outline" size="sm">View Story</Button>
-          </Link>
+          {onViewStory && (
+            <Button 
+              onClick={onViewStory} 
+              variant="outline" 
+              size="sm"
+              className="flex items-center gap-1"
+            >
+              <Icon icon="solar:video-frame-play-linear" className="text-blue-500" width={16} height={16} />
+              View Story
+            </Button>
+          )}
         </div>
       </div>
       <p className="text-gray-600 mb-2">{address}</p>
       <div className="flex items-center text-sm text-gray-500">
-        {distanceToCampus && <span className="mr-4">{distanceToCampus} to campus</span>}
+        {distanceToCampus && (
+          <span className="mr-4 flex items-center">
+            <Icon icon="solar:map-point-linear" className="mr-1 text-blue-500" width={16} height={16} />
+            {distanceToCampus} to campus
+          </span>
+        )}
         {rating && reviewCount && (
           <span className="flex items-center">
-            <Star className="h-4 w-4 text-yellow-400 fill-yellow-400 mr-1" />
+            <Icon icon="solar:star-bold" className="mr-1 text-yellow-400" width={16} height={16} />
             {rating} ({reviewCount} reviews)
           </span>
         )}
