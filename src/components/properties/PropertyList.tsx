@@ -21,7 +21,7 @@ const PropertyList: React.FC<PropertyListProps> = ({
 
   if (isLoading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
         {[...Array(8)].map((_, i) => (
           <div key={i} className="animate-pulse bg-gray-200 rounded-lg h-80"></div>
         ))}
@@ -41,7 +41,7 @@ const PropertyList: React.FC<PropertyListProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 px-1">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 px-0 mx-0">
       {properties.map(property => (
         <PropertyCard 
           key={property.id}

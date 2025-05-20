@@ -27,6 +27,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, onToggleFilters,
       <Button 
         onClick={onToggleFilters}
         className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
+        variant="default"
       >
         <Icon icon="solar:filter-linear" className="text-white" width={18} height={18} />
         {showFilters ? 'Hide Filters' : 'Show Filters'}

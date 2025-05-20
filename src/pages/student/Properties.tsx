@@ -88,12 +88,12 @@ const Properties: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col font-space-grotesk pb-16">
       <Header />
-      <main className="flex-grow py-6 px-2 sm:px-4">
+      <main className="flex-grow py-6 px-1 sm:px-2">
         <div className="container mx-auto max-w-full">
-          <h1 className="text-2xl md:text-3xl font-bold mb-6 px-2">Find Your Perfect Student Accommodation</h1>
+          <h1 className="text-2xl md:text-3xl font-bold mb-6 px-1">Find Your Perfect Student Accommodation</h1>
           
           {/* Search and Filter Controls */}
-          <div className="mb-6 px-2">
+          <div className="mb-6 px-1">
             <SearchBar 
               value={searchQuery}
               onChange={setSearchQuery}
