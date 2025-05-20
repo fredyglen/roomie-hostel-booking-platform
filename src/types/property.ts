@@ -7,6 +7,13 @@ export type Story = {
   caption?: string;
 };
 
+// Room type
+export type RoomType = {
+  name: string;
+  price: number;
+  unit: string;
+};
+
 // Property types
 export type Property = {
   id: string;
@@ -29,9 +36,7 @@ export type Property = {
     responseRate: string;
     verified: boolean;
   };
-  roomTypes?: {
-    name: string;
-    price: number;
-    unit: string;
-  }[];
+  roomTypes?: RoomType[];
+  occupancy?: string;
+  propertyCategory?: 'Hostel' | 'Homestel' | 'Apartment';
 };

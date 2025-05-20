@@ -8,7 +8,7 @@ const sampleProperties: Property[] = [
   {
     id: '1',
     title: 'Cozy Studio Apartment Near UPSA',
-    type: 'Studio',
+    type: 'Homestel',
     price: 850,
     priceUnit: 'month',
     address: '123 University Road, East Legon, Accra',
@@ -34,14 +34,19 @@ const sampleProperties: Property[] = [
       }
     ],
     amenities: ['Wi-Fi', 'Air Conditioning', 'Kitchen', 'Security'],
-    description: 'This cozy studio apartment is perfect for students looking for a comfortable and convenient living space near UPSA. The apartment features a modern design, fully furnished with all the essential amenities to make your stay as comfortable as possible.'
+    description: 'This cozy studio apartment is perfect for students looking for a comfortable and convenient living space near UPSA. The apartment features a modern design, fully furnished with all the essential amenities to make your stay as comfortable as possible.',
+    roomTypes: [
+      { name: '1 in a room', price: 1700, unit: 'month' },
+      { name: '2 in a room', price: 1200, unit: 'month' }
+    ],
+    occupancy: '1-2 students'
   },
   {
     id: '2',
     title: 'Shared 2-Bedroom Apartment',
-    type: 'Shared',
-    price: 500,
-    priceUnit: 'month',
+    type: 'Hostel',
+    price: 4000,
+    priceUnit: 'semester',
     address: '456 College Avenue, Legon, Accra',
     distanceToCampus: '10 min walk',
     stories: [
@@ -55,14 +60,21 @@ const sampleProperties: Property[] = [
         url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
         duration: 5000
       }
-    ]
+    ],
+    roomTypes: [
+      { name: '2 in a room', price: 4000, unit: 'semester' },
+      { name: '3 in a room', price: 3600, unit: 'semester' }
+    ],
+    occupancy: '2-3 students',
+    amenities: ['Wi-Fi', 'Shared Kitchen', 'Laundry', 'Water Supply'],
+    description: 'Comfortable hostel with all utilities inclusive. Perfect for students looking for affordable accommodation near campus.'
   },
   {
     id: '3',
     title: 'Premium Single Room in Hostel',
-    type: 'Hostel',
-    price: 950,
-    priceUnit: 'semester',
+    type: 'Apartment',
+    price: 2600,
+    priceUnit: 'month',
     address: '789 Campus Drive, Ayeduase, Kumasi',
     distanceToCampus: '2 min walk',
     stories: [
@@ -76,7 +88,14 @@ const sampleProperties: Property[] = [
         url: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80',
         duration: 5000
       }
-    ]
+    ],
+    roomTypes: [
+      { name: 'Entire apartment', price: 2600, unit: 'month' },
+      { name: 'Shared apartment (per student)', price: 950, unit: 'month' }
+    ],
+    occupancy: '2-4 students',
+    amenities: ['Wi-Fi', 'Study Area', 'Cafeteria', '24/7 Security', 'AC', 'Fully Furnished'],
+    description: 'Executive 2-bedroom apartment that can be shared by multiple students. All rooms ensuite with modern amenities and security.'
   }
 ];
 
