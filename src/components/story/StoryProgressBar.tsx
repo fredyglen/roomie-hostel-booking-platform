@@ -12,6 +12,8 @@ const StoryProgressBar: React.FC<StoryProgressBarProps> = ({
   activeIndex, 
   progressPercentage 
 }) => {
+  // This component renders a single progress bar
+  // The parent component should render multiple of these for each story
   return (
     <div className="h-1 bg-gray-600 rounded-full flex-grow overflow-hidden">
       <div 

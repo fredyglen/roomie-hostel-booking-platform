@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -16,7 +17,7 @@ import Welcome from "./pages/Welcome";
 import StudentDashboard from "./pages/student/Dashboard";
 import Properties from "./pages/student/Properties";
 import PropertyDetail from "./pages/student/PropertyDetail";
-import StoryView from "./pages/student/StoryView";
+import StoryViewEnhanced from "./pages/student/StoryViewEnhanced";
 import BookProperty from "./pages/student/BookProperty";
 
 // Owner/Agent Portal Pages

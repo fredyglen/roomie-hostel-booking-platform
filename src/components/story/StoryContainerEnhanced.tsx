@@ -69,14 +69,14 @@ const StoryContainerEnhanced: React.FC = () => {
         <StoryHeader 
           title={property.title} 
           distanceToCampus={property.distanceToCampus} 
-          imageUrl={property.stories[0].url} 
+          imageUrl={property.stories?.[0]?.url || ''} 
           onClose={handleClose} 
         />
         <div className="px-4 flex gap-1">
-          {property.stories.map((_, index) => (
+          {property.stories && property.stories.map((_, index) => (
             <StoryProgressBar
               key={index}
-              storiesCount={property.stories.length}
+              storiesCount={property.stories?.length || 0}
               activeIndex={activeIndex}
               progressPercentage={index === activeIndex ? progressPercentage : index < activeIndex ? 100 : 0}
             />
@@ -92,7 +92,7 @@ const StoryContainerEnhanced: React.FC = () => {
         onNext={handleNext}
         onPrevious={handlePrevious}
         showPrevButton={activeIndex > 0}
-        showNextButton={activeIndex < property.stories.length - 1}
+        showNextButton={activeIndex < (property.stories?.length ?? 0) - 1}
         onSwipeUp={handleSwipeUp}
         showDetails={showDetails}
         isMobile={isMobile}
