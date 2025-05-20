@@ -11,18 +11,18 @@ import { useMobile } from '@/hooks/use-mobile';
 
 const StoryContainerEnhanced: React.FC = () => {
   const {
-    propertyId,
-    stories,
-    currentIndex,
-    progress,
-    isPaused,
+    property,
+    currentStory,
+    activeIndex,
     showDetails,
-    propertyDetails,
-    setIsPaused,
-    goToNextStory,
-    goToPreviousStory,
-    resetProgress,
-    toggleDetails
+    isPaused,
+    progressPercentage,
+    handleNext,
+    handlePrevious,
+    handleClose,
+    handleSwipeUp,
+    handleSwipeDown,
+    setIsPaused
   } = useStoryViewModel();
 
   const isMobile = useMobile();
@@ -34,12 +34,10 @@ const StoryContainerEnhanced: React.FC = () => {
     return () => setIsMounted(false);
   }, []);
   
-  const handleClose = () => {
-    navigate(`/student/property/${propertyId}`);
-  };
-  
   const handleBookNow = () => {
-    navigate(`/student/property/${propertyId}/book`);
+    if (property) {
+      navigate(`/student/property/${property.id}/book`);
+    }
   };
   
   // Handle navigation to home page
@@ -47,7 +45,7 @@ const StoryContainerEnhanced: React.FC = () => {
     navigate('/');
   };
 
-  if (!isMounted || stories.length === 0) {
+  if (!isMounted || !property || !currentStory) {
     return (
       <div className="flex justify-center items-center h-screen bg-black">
         <div className="animate-pulse">Loading...</div>
@@ -68,13 +66,19 @@ const StoryContainerEnhanced: React.FC = () => {
 
       {/* Header with progress bars */}
       <div className="z-40">
-        <StoryHeader onClose={handleClose} />
+        <StoryHeader 
+          title={property.title} 
+          distanceToCampus={property.distanceToCampus} 
+          imageUrl={property.stories[0].url} 
+          onClose={handleClose} 
+        />
         <div className="px-4 flex gap-1">
-          {stories.map((_, index) => (
+          {property.stories.map((_, index) => (
             <StoryProgressBar
               key={index}
-              isActive={index === currentIndex}
-              progress={index === currentIndex ? progress : index < currentIndex ? 100 : 0}
+              storiesCount={property.stories.length}
+              activeIndex={activeIndex}
+              progressPercentage={index === activeIndex ? progressPercentage : index < activeIndex ? 100 : 0}
             />
           ))}
         </div>
@@ -82,14 +86,14 @@ const StoryContainerEnhanced: React.FC = () => {
       
       {/* Main content */}
       <StoryViewerEnhanced
-        story={stories[currentIndex]}
+        story={currentStory}
         isPaused={isPaused}
         onPause={setIsPaused}
-        onNext={goToNextStory}
-        onPrevious={goToPreviousStory}
-        showPrevButton={currentIndex > 0}
-        showNextButton={currentIndex < stories.length - 1}
-        onSwipeUp={toggleDetails}
+        onNext={handleNext}
+        onPrevious={handlePrevious}
+        showPrevButton={activeIndex > 0}
+        showNextButton={activeIndex < property.stories.length - 1}
+        onSwipeUp={handleSwipeUp}
         showDetails={showDetails}
         isMobile={isMobile}
       />
@@ -97,7 +101,19 @@ const StoryContainerEnhanced: React.FC = () => {
       {/* Property details sheet */}
       <StoryDetailsSheetEnhanced
         showDetails={showDetails}
-        propertyDetails={propertyDetails}
+        propertyDetails={{
+          id: property.id,
+          title: property.title,
+          type: property.type,
+          price: property.price,
+          priceUnit: property.priceUnit,
+          address: property.address,
+          distanceToCampus: property.distanceToCampus,
+          amenities: property.amenities || [],
+          description: property.description || '',
+          rating: property.rating,
+          reviewCount: property.reviewCount
+        }}
         onBookNow={handleBookNow}
       />
     </div>
