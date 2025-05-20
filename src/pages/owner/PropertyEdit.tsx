@@ -6,6 +6,7 @@ import { Loader } from 'lucide-react';
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import PropertyEditForm from '@/components/owner/PropertyEditForm';
 import { usePropertyLoader } from '@/hooks/usePropertyLoader';
+import { PropertyFormValues } from '@/types/property';
 
 const PropertyEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -20,19 +21,24 @@ const PropertyEdit: React.FC = () => {
   });
 
   // Prepare form initial data
-  const initialData = property ? {
-    ...property,
+  const initialData: PropertyFormValues | undefined = property ? {
+    title: property.title || '',
+    type: property.type || property.property_type || '', // Ensure type is always set
     propertyCategory: property.propertyCategory || property.property_category || 'Hostel',
+    address: property.address || '',
+    city: property.city || 'Accra',
+    state: property.state || 'Greater Accra',
+    zip: property.zip || '00000',
+    price: property.price || property.rent || 0,
+    price_unit: property.price_unit || 'semester',
+    description: property.description || '',
+    status: property.is_available ? 'Available' : 'Fully Occupied',
     amenities: property.amenities?.join('\n') || '',
     house_rules: property.house_rules?.join('\n') || '',
     utilities: property.utilities?.join('\n') || '',
     all_inclusive: property.all_inclusive || false,
     bedrooms: property.bedrooms || 1,
     bathrooms: property.bathrooms || 1,
-    city: property.city || 'Accra',
-    state: property.state || 'Greater Accra',
-    zip: property.zip || '00000',
-    price_unit: property.price_unit || 'semester',
     total_rooms: property.total_rooms || 1,
     rooms_available: property.rooms_available || 1,
     beds_per_room: property.beds_per_room || 1,
@@ -45,6 +51,10 @@ const PropertyEdit: React.FC = () => {
     advance_payment_months: property.advance_payment_months || 12,
     allow_bill_sharing: property.allow_bill_sharing || false,
     landmark: property.landmark || '',
+    location: property.location || '',
+    distance_to_campus: property.distance_to_campus || property.distanceToCampus || '',
+    image_url: property.image_url || (property.images && property.images.length > 0 ? property.images[0] : ''),
+    occupancy: property.occupancy || '0/1',
   } : undefined;
 
   if (isLoading) {
