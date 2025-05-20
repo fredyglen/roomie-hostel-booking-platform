@@ -16,6 +16,9 @@ import Welcome from "./pages/Welcome";
 // Student Portal Pages
 import StudentDashboard from "./pages/student/Dashboard";
 import Properties from "./pages/student/Properties";
+import Explore from "./pages/student/Explore";
+import Favorites from "./pages/student/Favorites";
+import Profile from "./pages/student/Profile";
 import PropertyDetail from "./pages/student/PropertyDetail";
 import StoryView from "./pages/student/StoryView";
 import BookProperty from "./pages/student/BookProperty";
@@ -61,6 +64,9 @@ const App = () => (
                 </ProtectedRoute>
               } />
               <Route path="properties" element={<Properties />} />
+              <Route path="explore" element={<Explore />} />
+              <Route path="favorites" element={<Favorites />} />
+              <Route path="profile" element={<Profile />} />
               <Route path="property/:id" element={<PropertyDetail />} />
               <Route path="property/:id/story" element={<StoryView />} />
               <Route path="property/:id/book" element={<BookProperty />} />

@@ -2,12 +2,13 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import PropertyCard from '@/components/PropertyCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PropertyFilters from '@/components/properties/PropertyFilters';
 import { Filter, Search } from 'lucide-react';
+import StudentNavBar from '@/components/navigation/StudentNavBar';
+import { Icon } from '@iconify/react';
 
 // Sample property data for demonstration
 const sampleProperties = [
@@ -194,17 +195,17 @@ const Properties: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col font-space-grotesk">
+    <div className="min-h-screen flex flex-col font-space-grotesk pb-16">
       <Header />
-      <main className="flex-grow py-8 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <h1 className="text-2xl md:text-3xl font-bold mb-6">Find Your Perfect Student Accommodation</h1>
+      <main className="flex-grow py-6 px-2">
+        <div className="container mx-auto max-w-7xl">
+          <h1 className="text-2xl md:text-3xl font-bold mb-6 px-2">Find Your Perfect Student Accommodation</h1>
           
           {/* Search and Filter Controls */}
-          <div className="mb-6">
+          <div className="mb-6 px-2">
             <div className="flex flex-col md:flex-row gap-4 mb-4">
               <div className="flex-grow relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+                <Icon icon="solar:search-linear" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-blue-500" width={20} height={20} />
                 <Input
                   type="text"
                   placeholder="Search by property name, address or type"
@@ -217,7 +218,7 @@ const Properties: React.FC = () => {
                 onClick={toggleFilters}
                 className="flex items-center gap-2"
               >
-                <Filter size={18} />
+                <Icon icon="solar:filter-linear" className="text-blue-500" width={18} height={18} />
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
               </Button>
             </div>
@@ -233,12 +234,12 @@ const Properties: React.FC = () => {
           </div>
           
           {/* Results Section */}
-          <div className="mb-6">
-            <p className="text-gray-600 mb-4">{filteredProperties.length} properties found</p>
+          <div className="mb-4 px-2">
+            <p className="text-gray-600">{filteredProperties.length} properties found</p>
           </div>
           
           {filteredProperties.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 px-1">
               {filteredProperties.map(property => (
                 <PropertyCard 
                   key={property.id}
@@ -258,7 +259,7 @@ const Properties: React.FC = () => {
           )}
         </div>
       </main>
-      <Footer />
+      <StudentNavBar />
     </div>
   );
 };
