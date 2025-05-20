@@ -1,3 +1,4 @@
+
 import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -83,7 +84,8 @@ const PropertyDetail: React.FC = () => {
     distanceToCampus: property.distanceToCampus || property.distance_to_campus || '10 min walk',
     images: property.images || [],
     stories: property.stories || [],
-    description: property.description || '' // Add default empty string for description
+    description: property.description || '', // Add default empty string for description
+    owner_id: property.owner_id || '' // Ensure owner_id has a default value
   };
   
   return (

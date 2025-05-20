@@ -22,7 +22,7 @@ const sampleProperties: Property[] = [
     propertyCategory: 'Hostel',
     genderType: 'Girls',
     description: '', // Add empty description to satisfy the type
-    owner_id: '', // Add required fields
+    owner_id: '', // Add required fields with default values
     city: 'Accra',
     state: 'Greater Accra',
     zip: '00000',
@@ -46,7 +46,7 @@ const sampleProperties: Property[] = [
     propertyCategory: 'Hostel',
     genderType: 'Mixed',
     description: '', // Add empty description to satisfy the type
-    owner_id: '', // Add required fields
+    owner_id: '', // Add required fields with default values
     city: 'Accra',
     state: 'Greater Accra',
     zip: '00000',

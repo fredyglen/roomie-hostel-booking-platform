@@ -40,6 +40,13 @@ const StoryViewEnhanced: React.FC = () => {
     );
   }
 
+  // Ensure property has all required fields with defaults
+  const propertyWithDefaults: Property = {
+    ...property,
+    owner_id: property.owner_id || '', // Add default empty string for owner_id
+    description: property.description || '' // Add default empty string for description
+  };
+
   return (
     <div className="fixed inset-0 bg-black">
       {/* Close button */}
@@ -71,10 +78,7 @@ const StoryViewEnhanced: React.FC = () => {
       {/* Story viewer */}
       <StoryViewerEnhanced
         story={currentStory}
-        property={{
-          ...property,
-          description: property.description || '' // Add default empty string for description
-        }}
+        property={propertyWithDefaults}
         isPaused={isPaused}
         onPause={setIsPaused}
         onNext={handleNext}
@@ -97,7 +101,7 @@ const StoryViewEnhanced: React.FC = () => {
             <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
           </div>
           <StoryDetailsSheetEnhanced 
-            property={property} 
+            property={propertyWithDefaults} 
             onClose={handleSwipeDown} 
           />
         </SheetContent>

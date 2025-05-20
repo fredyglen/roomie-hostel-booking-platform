@@ -22,40 +22,40 @@ export interface Property {
   id: string;
   title: string;
   address: string;
-  description?: string; // Changed to optional to match src/types/property.ts
-  type?: string; // Frontend display property
-  price?: number; // Frontend display property
-  price_unit?: string; // Frontend display property
-  priceUnit?: string; // Frontend display property
-  status?: string; // Frontend display property
-  occupancy?: string; // Frontend display property
+  description?: string;
+  type?: string;
+  price?: number;
+  price_unit?: string;
+  priceUnit?: 'month' | 'semester' | 'year' | 'week';
+  status?: string;
+  occupancy?: string;
   distance_to_campus?: string;
-  distanceToCampus?: string; // Frontend display property
+  distanceToCampus?: string;
   house_rules?: string[];
   image_url?: string;
   
   // Database properties
-  owner_id: string;
-  property_type?: string; // Database property
-  property_category?: PropertyCategory; // Database property
-  propertyCategory?: PropertyCategory; // Frontend display property
-  rent?: number; // Database property
-  city: string;
-  state: string;
-  zip: string;
-  bedrooms: number;
-  bathrooms: number;
+  owner_id?: string;  // Made optional to match with types/property.ts
+  property_type?: string;
+  property_category?: PropertyCategory;
+  propertyCategory?: PropertyCategory;
+  rent?: number;
+  city?: string;  // Made optional to match with types/property.ts
+  state?: string;  // Made optional to match with types/property.ts
+  zip?: string;  // Made optional to match with types/property.ts
+  bedrooms?: number;  // Made optional to match with types/property.ts
+  bathrooms?: number;  // Made optional to match with types/property.ts
   size?: number;
-  available_from: string;
+  available_from?: string;  // Made optional to match with types/property.ts
   available_to?: string;
   is_furnished?: boolean;
   is_available?: boolean;
-  created_at: string;
-  updated_at: string;
+  created_at?: string;  // Made optional to match with types/property.ts
+  updated_at?: string;  // Made optional to match with types/property.ts
   images?: string[];
   amenities?: string[];
-  all_inclusive?: boolean; // Database property
-  allInclusive?: boolean; // Frontend display property
+  all_inclusive?: boolean;
+  allInclusive?: boolean;
   utilities?: string[];
   location?: string;
   landmark?: string;

@@ -82,7 +82,16 @@ const PropertyList: React.FC<PropertyListProps> = ({
             propertyCategory: property.propertyCategory || property.property_category,
             genderType: property.genderType || (property.gender_type as any),
             onViewStory: () => handleViewStory(property.id),
-            onViewDetails: () => handleViewProperty(property.id)
+            onViewDetails: () => handleViewProperty(property.id),
+            owner_id: property.owner_id || '', // Add default empty string for owner_id
+            city: property.city || '', // Add default value
+            state: property.state || '', // Add default value
+            zip: property.zip || '', // Add default value
+            bedrooms: property.bedrooms || 0, // Add default value
+            bathrooms: property.bathrooms || 0, // Add default value
+            available_from: property.available_from || '', // Add default value
+            created_at: property.created_at || '', // Add default value
+            updated_at: property.updated_at || '' // Add default value
           }}
         />
       ))}

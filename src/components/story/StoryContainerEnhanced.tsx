@@ -60,7 +60,8 @@ const StoryContainerEnhanced: React.FC = () => {
     ...property,
     type: property.type || property.property_type || 'Hostel',
     description: property.description || '', // Add default empty string for description
-    stories: property.stories || []
+    stories: property.stories || [],
+    owner_id: property.owner_id || '' // Ensure owner_id has a default value
   };
 
   const storiesCount = stories.length;
