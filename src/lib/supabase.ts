@@ -56,6 +56,20 @@ export interface Property {
   allInclusive?: boolean; // Frontend display property
   utilities?: string[];
   location?: string;
+  landmark?: string;
+  
+  // New properties for enhanced property management
+  total_rooms?: number;
+  rooms_available?: number;
+  beds_per_room?: number;
+  beds_available?: number;
+  max_occupants?: number;
+  has_bedframes?: boolean;
+  has_mattresses?: boolean;
+  has_wardrobes?: boolean;
+  has_individual_meters?: boolean;
+  advance_payment_months?: number;
+  allow_bill_sharing?: boolean;
 }
 
 export type { PropertyFormValues, PropertyInsert } from '@/types/property';

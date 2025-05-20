@@ -45,6 +45,18 @@ const PropertyNew: React.FC = () => {
         all_inclusive: formData.all_inclusive,
         utilities: utilitiesArray,
         location: formData.location,
+        landmark: formData.landmark,
+        total_rooms: formData.total_rooms,
+        rooms_available: formData.rooms_available,
+        beds_per_room: formData.beds_per_room,
+        beds_available: formData.beds_available,
+        max_occupants: formData.max_occupants,
+        has_bedframes: formData.has_bedframes,
+        has_mattresses: formData.has_mattresses,
+        has_wardrobes: formData.has_wardrobes,
+        has_individual_meters: formData.has_individual_meters,
+        advance_payment_months: formData.advance_payment_months,
+        allow_bill_sharing: formData.allow_bill_sharing,
       };
 
       const { data, error } = await supabase

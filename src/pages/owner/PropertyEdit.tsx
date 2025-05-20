@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -45,6 +46,18 @@ const PropertyEdit: React.FC = () => {
         propertyCategory: propertyData.property_category || 'Hostel',
         all_inclusive: propertyData.all_inclusive || false,
         allInclusive: propertyData.all_inclusive || false,
+        total_rooms: propertyData.total_rooms || 1,
+        rooms_available: propertyData.rooms_available || 1,
+        beds_per_room: propertyData.beds_per_room || 1,
+        beds_available: propertyData.beds_available || 1,
+        max_occupants: propertyData.max_occupants || 1,
+        has_bedframes: propertyData.has_bedframes || false,
+        has_mattresses: propertyData.has_mattresses || false,
+        has_wardrobes: propertyData.has_wardrobes || false,
+        has_individual_meters: propertyData.has_individual_meters || false,
+        advance_payment_months: propertyData.advance_payment_months || 12,
+        allow_bill_sharing: propertyData.allow_bill_sharing || false,
+        landmark: propertyData.landmark || '',
       } as Property;
     },
     enabled: !!id && !!user?.id,
@@ -83,8 +96,19 @@ const PropertyEdit: React.FC = () => {
           all_inclusive: formData.all_inclusive,
           utilities: utilitiesArray,
           location: formData.location,
+          landmark: formData.landmark,
+          total_rooms: formData.total_rooms,
+          rooms_available: formData.rooms_available,
+          beds_per_room: formData.beds_per_room,
+          beds_available: formData.beds_available,
+          max_occupants: formData.max_occupants,
+          has_bedframes: formData.has_bedframes,
+          has_mattresses: formData.has_mattresses,
+          has_wardrobes: formData.has_wardrobes,
+          has_individual_meters: formData.has_individual_meters,
+          advance_payment_months: formData.advance_payment_months,
+          allow_bill_sharing: formData.allow_bill_sharing,
           updated_at: new Date().toISOString(),
-          // Keep existing values for other fields
         })
         .eq('id', id)
         .eq('owner_id', user.id);
@@ -125,6 +149,18 @@ const PropertyEdit: React.FC = () => {
     state: property.state || 'Greater Accra',
     zip: property.zip || '00000',
     price_unit: property.price_unit || 'semester',
+    total_rooms: property.total_rooms || 1,
+    rooms_available: property.rooms_available || 1,
+    beds_per_room: property.beds_per_room || 1,
+    beds_available: property.beds_available || 1,
+    max_occupants: property.max_occupants || 1,
+    has_bedframes: property.has_bedframes || false,
+    has_mattresses: property.has_mattresses || false,
+    has_wardrobes: property.has_wardrobes || false,
+    has_individual_meters: property.has_individual_meters || false,
+    advance_payment_months: property.advance_payment_months || 12,
+    allow_bill_sharing: property.allow_bill_sharing || false,
+    landmark: property.landmark || '',
   } : undefined;
 
   if (isLoading) {

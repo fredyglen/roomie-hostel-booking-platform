@@ -48,6 +48,18 @@ export type Property = {
   all_inclusive?: boolean; // Added for database compatibility
   utilities?: string[];
   location?: string;
+  landmark?: string;
+  total_rooms?: number;
+  rooms_available?: number;
+  beds_per_room?: number;
+  beds_available?: number;
+  max_occupants?: number;
+  has_bedframes?: boolean;
+  has_mattresses?: boolean;
+  has_wardrobes?: boolean;
+  has_individual_meters?: boolean;
+  advance_payment_months?: number;
+  allow_bill_sharing?: boolean;
 };
 
 // This interface is for the PropertyForm component
@@ -71,8 +83,20 @@ export interface PropertyFormValues {
   all_inclusive: boolean;
   utilities?: string;
   location?: string;
+  landmark?: string;
   bedrooms: number;
   bathrooms: number;
+  total_rooms?: number;
+  rooms_available?: number;
+  beds_per_room?: number;
+  beds_available?: number;
+  max_occupants?: number;
+  has_bedframes?: boolean;
+  has_mattresses?: boolean;
+  has_wardrobes?: boolean;
+  has_individual_meters?: boolean;
+  advance_payment_months?: number;
+  allow_bill_sharing?: boolean;
 }
 
 // This interface is for inserting into the database
@@ -98,4 +122,16 @@ export interface PropertyInsert {
   all_inclusive?: boolean;
   utilities?: string[];
   location?: string;
+  landmark?: string;
+  total_rooms?: number;
+  rooms_available?: number;
+  beds_per_room?: number;
+  beds_available?: number;
+  max_occupants?: number;
+  has_bedframes?: boolean;
+  has_mattresses?: boolean;
+  has_wardrobes?: boolean;
+  has_individual_meters?: boolean;
+  advance_payment_months?: number;
+  allow_bill_sharing?: boolean;
 }
