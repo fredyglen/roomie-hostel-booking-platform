@@ -1,0 +1,66 @@
+
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+import Logo from '../common/Logo';
+import Button from '../common/Button';
+
+interface HeaderProps {
+  transparent?: boolean;
+}
+
+const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  return (
+    <header className={`w-full ${transparent ? 'absolute top-0 z-10' : 'bg-white shadow-sm'}`}>
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center h-16">
+          <Logo variant={transparent ? 'white' : 'default'} />
+          
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-8">
+            <nav className={`${transparent ? 'text-white' : 'text-roomi-dark'} font-medium`}>
+              <ul className="flex space-x-8">
+                <li><Link to="/properties" className="hover:text-roomi-blue transition-colors">Properties</Link></li>
+                <li><Link to="/about" className="hover:text-roomi-blue transition-colors">About Us</Link></li>
+                <li><Link to="/contact" className="hover:text-roomi-blue transition-colors">Contact</Link></li>
+              </ul>
+            </nav>
+            <div className="flex space-x-4">
+              <Button variant="outline" size="sm">Sign In</Button>
+              <Button variant="primary" size="sm">Sign Up</Button>
+            </div>
+          </div>
+          
+          {/* Mobile menu button */}
+          <button 
+            className="md:hidden text-roomi-blue"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
+            </svg>
+          </button>
+        </div>
+        
+        {/* Mobile menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white py-4">
+            <nav className="flex flex-col space-y-4">
+              <Link to="/properties" className="px-4 py-2 hover:bg-gray-100 rounded-md">Properties</Link>
+              <Link to="/about" className="px-4 py-2 hover:bg-gray-100 rounded-md">About Us</Link>
+              <Link to="/contact" className="px-4 py-2 hover:bg-gray-100 rounded-md">Contact</Link>
+              <hr className="my-2" />
+              <div className="flex flex-col space-y-2 px-4">
+                <Button variant="outline" fullWidth>Sign In</Button>
+                <Button variant="primary" fullWidth>Sign Up</Button>
+              </div>
+            </nav>
+          </div>
+        )}
+      </div>
+    </header>
+  );
+};
+
+export default Header;
