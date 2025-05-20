@@ -10,10 +10,10 @@ import { Icon } from '@iconify/react';
 
 const Profile: React.FC = () => {
   const navigate = useNavigate();
-  const { user, logout } = useAuth();
+  const { user, signOut } = useAuth();
   
   const handleLogout = async () => {
-    await logout();
+    await signOut();
     navigate('/');
   };
   
