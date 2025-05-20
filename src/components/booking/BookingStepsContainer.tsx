@@ -49,10 +49,9 @@ const BookingStepsContainer: React.FC = () => {
             <RoomTypeSelection 
               roomTypes={property.roomTypes || []}
               selectedRoomType={formData.roomType}
-              onSelectRoomType={(roomType) => {
-                // Create a proper adapter function that matches what RoomTypeSelection expects
+              onSelectRoomType={(roomTypeName) => {
                 handleInputChange({
-                  target: { name: 'roomType', value: roomType }
+                  target: { name: 'roomType', value: roomTypeName }
                 } as React.ChangeEvent<HTMLInputElement>)
               }}
             />
@@ -124,7 +123,6 @@ const BookingStepsContainer: React.FC = () => {
               priceUnit={selectedUnit}
               termsAgreed={formData.termsAgreed}
               onCheckboxChange={(name, checked) => {
-                // Convert the parameter-based function to an event-based one expected by BookingSummary
                 handleCheckboxChange({
                   target: { name, checked }
                 } as React.ChangeEvent<HTMLInputElement>)
