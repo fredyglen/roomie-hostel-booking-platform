@@ -113,7 +113,7 @@ const StoryViewEnhanced: React.FC = () => {
           <StoryDetailsSheetEnhanced 
             property={propertyWithDefaults} 
             onClose={handleSwipeDown} 
-            onBook={() => {
+            onBookNow={() => {
               handleSwipeDown();
               setTimeout(() => {
                 navigate(`/student/property/${property.id}/book`, { 
