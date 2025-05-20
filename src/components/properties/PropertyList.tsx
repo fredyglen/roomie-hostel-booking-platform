@@ -68,12 +68,19 @@ const PropertyList: React.FC<PropertyListProps> = ({
         <PropertyCard 
           key={property.id}
           property={{
-            ...property,
+            id: property.id,
+            title: property.title,
             type: property.type || property.property_type || 'Hostel',
             price: property.price || property.rent || 0,
             priceUnit: (property.priceUnit || property.price_unit || 'semester') as 'month' | 'semester' | 'year' | 'week',
+            address: property.address,
             distanceToCampus: property.distanceToCampus || property.distance_to_campus || '10 min walk',
             images: property.images || [],
+            rating: property.rating,
+            reviewCount: property.reviewCount,
+            verified: property.verified,
+            propertyCategory: property.propertyCategory || property.property_category,
+            genderType: property.genderType,
             onViewStory: () => handleViewStory(property.id),
             onViewDetails: () => handleViewProperty(property.id)
           }}

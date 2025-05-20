@@ -1,13 +1,13 @@
 
 import React, { useCallback, useState } from 'react';
 import { Icon } from '@iconify/react';
-import { Story } from '@/types/property';
+import { Story, Property } from '@/types/property';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 interface StoryViewerEnhancedProps {
   story: Story;
-  property: any;
+  property: Property;
   isPaused: boolean;
   onPause: (paused: boolean) => void;
   onNext: () => void;
@@ -103,12 +103,12 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
             <h3 className="font-bold text-lg">{property.title}</h3>
             <div className="flex items-center text-sm">
               <Icon icon="solar:map-point-linear" className="mr-1" width={16} height={16} />
-              <span>{property.distanceToCampus} to campus</span>
+              <span>{property.distanceToCampus || '10 min walk'} to campus</span>
             </div>
           </div>
           <div className="text-right">
-            <div className="font-bold text-lg">₵{property.price.toLocaleString()}</div>
-            <div className="text-sm">/{property.priceUnit}</div>
+            <div className="font-bold text-lg">₵{(property.price || 0).toLocaleString()}</div>
+            <div className="text-sm">/{property.priceUnit || 'semester'}</div>
           </div>
         </div>
       </div>

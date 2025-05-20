@@ -25,7 +25,7 @@ export type Property = {
   type?: string;
   property_type?: string; // Making this optional but available
   price?: number;
-  priceUnit?: string;
+  priceUnit?: 'month' | 'semester' | 'year' | 'week';
   price_unit?: string; // Database consistency
   rent?: number; // For database consistency
   address: string;

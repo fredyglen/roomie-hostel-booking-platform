@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Property } from '@/types/property';
 import { usePropertyLoader } from '@/hooks/usePropertyLoader';
 import PropertyDetailView from '@/components/property/PropertyDetailView';
+import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { Icon } from '@iconify/react';
 import { toast } from 'sonner';
 
@@ -30,7 +31,7 @@ const PropertyDetail: React.FC = () => {
     navigate(`/student/property/${id}/book`);
   };
   
-  React.useEffect(() => {
+  useEffect(() => {
     if (error) {
       console.error("Error loading property:", error);
       toast.error("Could not load property details");
@@ -51,7 +52,7 @@ const PropertyDetail: React.FC = () => {
             </div>
           </div>
         </div>
-        <Footer />
+        <StudentNavBar />
       </div>
     );
   }
@@ -69,7 +70,7 @@ const PropertyDetail: React.FC = () => {
             </Link>
           </div>
         </div>
-        <Footer />
+        <StudentNavBar />
       </div>
     );
   }
@@ -78,6 +79,10 @@ const PropertyDetail: React.FC = () => {
   const propertyWithDefaults: Property = {
     ...property,
     type: property.type || property.property_type || 'Hostel',
+    price: property.price || property.rent || 0,
+    priceUnit: (property.priceUnit || property.price_unit || 'semester') as 'month' | 'semester' | 'year' | 'week',
+    distanceToCampus: property.distanceToCampus || property.distance_to_campus || '10 min walk',
+    images: property.images || [],
     stories: property.stories || []
   };
   
@@ -89,7 +94,7 @@ const PropertyDetail: React.FC = () => {
         onViewStory={handleViewStory}
         onBookNow={handleBookNow}
       />
-      <Footer />
+      <StudentNavBar />
     </div>
   );
 };
