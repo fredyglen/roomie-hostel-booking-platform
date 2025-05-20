@@ -45,7 +45,7 @@ const StudentNavBar: React.FC = () => {
         
         <Link to="/student/explore" className="flex flex-col items-center w-1/4">
           <Icon 
-            icon="solar:discovery-linear" 
+            icon="solar:map-point-linear" 
             className={`text-2xl ${isActive('/student/explore') ? 'text-blue-500' : 'text-gray-500'}`}
           />
           <span className={`text-xs mt-1 ${isActive('/student/explore') ? 'text-blue-500' : 'text-gray-500'}`}>Explore</span>

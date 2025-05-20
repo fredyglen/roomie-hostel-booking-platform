@@ -26,6 +26,93 @@ const universities = [
 
 const recentSearches = ['East Legon hostels', 'UPSA 2 in a room', 'Legon apartments', 'Affordable hostels in Madina'];
 
+// Top rated hostels
+const topRatedHostels = [
+  { 
+    id: '1', 
+    name: 'Prestige Hostel',
+    description: 'Located just opposite the UPSA, the Prestige hostel is a popular hostel in East Legon. The proximity to the campus makes it one of the most preferred hostels for UPSA students.',
+    image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80',
+    rating: 4.8,
+    location: 'East Legon',
+    price: 1200
+  },
+  { 
+    id: '2', 
+    name: 'MB3 Hostel',
+    description: 'A very neat and well organized hostel, MB3 hostel is a favourite for students due to its proximity to campus and the great facilities.',
+    image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80',
+    rating: 4.7,
+    location: 'Madina',
+    price: 850
+  },
+  { 
+    id: '3', 
+    name: 'Heavens Gate Hostel',
+    description: 'Heavens Gate hostel is located in East Legon and is now a twin hostel. The hostel has an old and a new block as well as spacious self contained rooms for students.',
+    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
+    rating: 4.6,
+    location: 'East Legon',
+    price: 950
+  },
+  { 
+    id: '4', 
+    name: 'Chika Hostel (All girls)',
+    description: 'Chika house is an all girls hostel located in East Legon. The hostel has a spacious compound as well as well ventilated rooms.',
+    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
+    rating: 4.6,
+    location: 'East Legon',
+    price: 1100,
+    tags: ['Girls Only']
+  }
+];
+
+// All-girl hostels
+const allGirlsHostels = [
+  { 
+    id: '5', 
+    name: 'Kitatsu Hostel',
+    description: 'This is an all girls hostel located very close to the UPSA. It\'s one of the few hostels located in Madina which take in only female students.',
+    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
+    rating: 4.5,
+    location: 'Madina',
+    price: 950,
+    tags: ['Girls Only']
+  },
+  { 
+    id: '6', 
+    name: 'Student Hostel',
+    description: 'This Student hostel is located in East Legon and it is an all female hostel. Students here have a large compound as well as lots of privacy within their rooms.',
+    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
+    rating: 4.4,
+    location: 'East Legon',
+    price: 1050,
+    tags: ['Girls Only']
+  }
+];
+
+// Near UPSA
+const nearUPSAHostels = [
+  { 
+    id: '7', 
+    name: 'Green Hostel',
+    description: 'Located just behind the UPSA is Green hostel, a 3 storey building hostel for students. You can easily walk to campus from here.',
+    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
+    rating: 4.3,
+    location: 'East Legon',
+    price: 900
+  },
+  { 
+    id: '8', 
+    name: 'Henrich Hostel',
+    description: 'Henrich is a popular hostel located behind the UPSA. The proximity to campus makes this a preferred destination for many students.',
+    image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80',
+    rating: 4.2,
+    location: 'East Legon',
+    price: 920
+  }
+];
+
 const Explore: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
@@ -48,6 +135,10 @@ const Explore: React.FC = () => {
     navigate(`/student/properties?search=${encodeURIComponent(search)}`);
   };
 
+  const handleHostelClick = (id: string) => {
+    navigate(`/student/property/${id}`);
+  };
+
   return (
     <div className="min-h-screen flex flex-col font-space-grotesk pb-16">
       <Header />
@@ -59,7 +150,7 @@ const Explore: React.FC = () => {
           <div className="relative mb-8">
             <Icon 
               icon="solar:search-linear" 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 text-blue-500" 
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500" 
               width={20} 
               height={20} 
             />
@@ -121,6 +212,149 @@ const Explore: React.FC = () => {
                       <p className="text-white text-sm">{location.count} properties</p>
                     </div>
                   </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+          
+          {/* Top Rated Hostels */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold">Top Rated Hostels</h2>
+              <Button 
+                variant="link" 
+                onClick={() => navigate('/student/properties?sort=rating')} 
+                className="text-blue-500 px-0"
+              >
+                See all
+                <Icon icon="solar:arrow-right-linear" className="ml-1" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {topRatedHostels.map(hostel => (
+                <Card 
+                  key={hostel.id} 
+                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => handleHostelClick(hostel.id)}
+                >
+                  <div className="relative h-40">
+                    <img 
+                      src={hostel.image} 
+                      alt={hostel.name}
+                      className="w-full h-full object-cover"
+                    />
+                    {hostel.tags && hostel.tags.includes('Girls Only') && (
+                      <div className="absolute top-2 right-2 bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">
+                        Girls Only
+                      </div>
+                    )}
+                    <div className="absolute top-2 left-2 bg-white rounded-full px-2 py-1 flex items-center">
+                      <Icon icon="solar:star-bold" className="text-yellow-400 mr-1" width={14} height={14} />
+                      <span className="text-xs font-semibold">{hostel.rating}</span>
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-base mb-1">{hostel.name}</h3>
+                    <div className="flex items-center text-gray-600 text-sm mb-2">
+                      <Icon icon="solar:map-point-linear" className="mr-1 text-blue-500" width={14} height={14} />
+                      {hostel.location}
+                    </div>
+                    <p className="text-sm line-clamp-2 text-gray-600 mb-2">{hostel.description}</p>
+                    <p className="font-bold text-blue-600">${hostel.price}/month</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+          
+          {/* All-Girls Hostels */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold">All-Girls Hostels</h2>
+              <Button 
+                variant="link" 
+                onClick={() => navigate('/student/properties?tags=Girls Only')} 
+                className="text-blue-500 px-0"
+              >
+                See all
+                <Icon icon="solar:arrow-right-linear" className="ml-1" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {allGirlsHostels.map(hostel => (
+                <Card 
+                  key={hostel.id} 
+                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => handleHostelClick(hostel.id)}
+                >
+                  <div className="relative h-40">
+                    <img 
+                      src={hostel.image} 
+                      alt={hostel.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 right-2 bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">
+                      Girls Only
+                    </div>
+                    <div className="absolute top-2 left-2 bg-white rounded-full px-2 py-1 flex items-center">
+                      <Icon icon="solar:star-bold" className="text-yellow-400 mr-1" width={14} height={14} />
+                      <span className="text-xs font-semibold">{hostel.rating}</span>
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-base mb-1">{hostel.name}</h3>
+                    <div className="flex items-center text-gray-600 text-sm mb-2">
+                      <Icon icon="solar:map-point-linear" className="mr-1 text-blue-500" width={14} height={14} />
+                      {hostel.location}
+                    </div>
+                    <p className="text-sm line-clamp-2 text-gray-600 mb-2">{hostel.description}</p>
+                    <p className="font-bold text-blue-600">${hostel.price}/month</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+          
+          {/* Near UPSA */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold">Near UPSA</h2>
+              <Button 
+                variant="link" 
+                onClick={() => navigate('/student/properties?university=UPSA')} 
+                className="text-blue-500 px-0"
+              >
+                See all
+                <Icon icon="solar:arrow-right-linear" className="ml-1" />
+              </Button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+              {nearUPSAHostels.map(hostel => (
+                <Card 
+                  key={hostel.id} 
+                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                  onClick={() => handleHostelClick(hostel.id)}
+                >
+                  <div className="relative h-40">
+                    <img 
+                      src={hostel.image} 
+                      alt={hostel.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute top-2 left-2 bg-white rounded-full px-2 py-1 flex items-center">
+                      <Icon icon="solar:star-bold" className="text-yellow-400 mr-1" width={14} height={14} />
+                      <span className="text-xs font-semibold">{hostel.rating}</span>
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <h3 className="font-semibold text-base mb-1">{hostel.name}</h3>
+                    <div className="flex items-center text-gray-600 text-sm mb-2">
+                      <Icon icon="solar:map-point-linear" className="mr-1 text-blue-500" width={14} height={14} />
+                      {hostel.location}
+                    </div>
+                    <p className="text-sm line-clamp-2 text-gray-600 mb-2">{hostel.description}</p>
+                    <p className="font-bold text-blue-600">${hostel.price}/month</p>
+                  </CardContent>
                 </Card>
               ))}
             </div>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -6,7 +5,6 @@ import PropertyCard from '@/components/PropertyCard';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PropertyFilters from '@/components/properties/PropertyFilters';
-import { Filter, Search } from 'lucide-react';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { Icon } from '@iconify/react';
 
@@ -239,7 +237,7 @@ const Properties: React.FC = () => {
           </div>
           
           {filteredProperties.length > 0 ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 px-1">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 px-1">
               {filteredProperties.map(property => (
                 <PropertyCard 
                   key={property.id}
