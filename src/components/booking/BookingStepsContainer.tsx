@@ -112,7 +112,7 @@ const BookingStepsContainer: React.FC = () => {
             <h2 className="text-xl font-bold mb-4">Booking Summary</h2>
             <BookingSummary 
               propertyTitle={property.title}
-              propertyImage={property.stories[0].url}
+              propertyImage={property.image || ''}
               roomType={formData.roomType}
               duration={formData.duration}
               durationType={formData.durationType}
@@ -121,7 +121,12 @@ const BookingStepsContainer: React.FC = () => {
               price={selectedPrice}
               priceUnit={selectedUnit}
               termsAgreed={formData.termsAgreed}
-              onCheckboxChange={handleCheckboxChange}
+              onCheckboxChange={(name, checked) => {
+                // Convert the parameter-based function to an event-based one expected by BookingSummary
+                handleCheckboxChange({
+                  target: { name, checked }
+                } as React.ChangeEvent<HTMLInputElement>)
+              }}
             />
           </div>
         );

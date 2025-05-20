@@ -11,6 +11,7 @@ interface BookingSummaryProps {
   checkInDate: string;
   fullName: string;
   price: number;
+  priceUnit?: string;
   termsAgreed: boolean;
   onCheckboxChange: (name: string, checked: boolean) => void;
 }
@@ -24,6 +25,7 @@ const BookingSummary: React.FC<BookingSummaryProps> = ({
   checkInDate,
   fullName,
   price,
+  priceUnit,
   termsAgreed,
   onCheckboxChange
 }) => {
