@@ -14,6 +14,7 @@ const StoryContainer: React.FC = () => {
     property,
     currentStory,
     activeIndex,
+    stories,
     showDetails,
     isPaused,
     progressPercentage,
@@ -49,7 +50,7 @@ const StoryContainer: React.FC = () => {
       >
         {/* Progress Bars */}
         <StoryProgressBar 
-          storiesCount={property.stories.length}
+          storiesCount={stories.length}
           activeIndex={activeIndex}
           progressPercentage={progressPercentage}
         />
@@ -58,7 +59,7 @@ const StoryContainer: React.FC = () => {
         <StoryHeader 
           title={property.title}
           distanceToCampus={property.distanceToCampus}
-          imageUrl={property.stories[0].url}
+          imageUrl={(stories[0] && stories[0].url) || ''}
           onClose={handleClose}
         />
         
@@ -70,7 +71,7 @@ const StoryContainer: React.FC = () => {
           onNext={handleNext}
           onPrevious={handlePrevious}
           showPrevButton={activeIndex > 0}
-          showNextButton={activeIndex < property.stories.length - 1}
+          showNextButton={activeIndex < stories.length - 1}
           onSwipeUp={handleSwipeUp}
           showDetails={showDetails}
         />

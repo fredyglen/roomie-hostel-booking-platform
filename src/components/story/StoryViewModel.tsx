@@ -42,7 +42,7 @@ export const useStoryViewModel = () => {
   
   // If property has images, convert them to stories
   useEffect(() => {
-    if (property && property.images && property.images.length > 0 && !property.stories) {
+    if (property && property.images && property.images.length > 0 && (!property.stories || property.stories.length === 0)) {
       // Reset progress and active index when property changes
       setProgress(0);
       setActiveIndex(0);

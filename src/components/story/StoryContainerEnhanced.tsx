@@ -14,6 +14,7 @@ const StoryContainerEnhanced: React.FC = () => {
     property,
     currentStory,
     activeIndex,
+    stories,
     showDetails,
     isPaused,
     progressPercentage,
@@ -53,7 +54,6 @@ const StoryContainerEnhanced: React.FC = () => {
     );
   }
 
-  const stories = property.stories || [];
   const storiesCount = stories.length;
 
   return (
@@ -91,6 +91,7 @@ const StoryContainerEnhanced: React.FC = () => {
       <div className="flex-grow flex items-center justify-center">
         <StoryViewerEnhanced
           story={currentStory}
+          property={property}
           isPaused={isPaused}
           onPause={setIsPaused}
           onNext={handleNext}
@@ -100,25 +101,14 @@ const StoryContainerEnhanced: React.FC = () => {
           onSwipeUp={handleSwipeUp}
           showDetails={showDetails}
           isMobile={isMobile}
+          progressPercentage={progressPercentage}
         />
       </div>
       
       {/* Property details sheet */}
       <StoryDetailsSheetEnhanced
-        showDetails={showDetails}
-        propertyDetails={{
-          id: property.id,
-          title: property.title || '',
-          type: property.type || '',
-          price: property.price || 0,
-          priceUnit: property.priceUnit || '',
-          address: property.address || '',
-          distanceToCampus: property.distanceToCampus || '',
-          amenities: property.amenities || [],
-          description: property.description || '',
-          rating: property.rating || 0,
-          reviewCount: property.reviewCount || 0
-        }}
+        property={property}
+        onClose={handleSwipeDown}
         onBookNow={handleBookNow}
       />
     </div>

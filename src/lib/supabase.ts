@@ -1,7 +1,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
-import { PropertyCategory, PropertyFormValues, PropertyInsert } from '@/types/property';
+import { PropertyCategory, PropertyFormValues, PropertyInsert, Story } from '@/types/property';
 
 // Export the supabase client 
 export const supabase = supabaseClient;
@@ -81,6 +81,20 @@ export interface Property {
   verified?: boolean;
   priceUnit?: string;
   distanceToCampus?: string;
+  
+  // Story related properties
+  stories?: Story[];
+  
+  // Gender type property
+  genderType?: 'Girls' | 'Boys' | 'Mixed';
+  
+  // Owner information
+  owner?: {
+    name: string;
+    phone: string;
+    responseRate: string;
+    verified: boolean;
+  };
 }
 
 export type { PropertyFormValues, PropertyInsert } from '@/types/property';

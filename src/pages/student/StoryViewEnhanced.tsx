@@ -6,7 +6,7 @@ import { Icon } from '@iconify/react';
 import StoryViewerEnhanced from '@/components/story/StoryViewerEnhanced';
 import StoryDetailsSheetEnhanced from '@/components/story/StoryDetailsSheetEnhanced';
 import { useStoryViewModel } from '@/components/story/StoryViewModel';
-import useMobile from '@/hooks/use-mobile';
+import { useMobile } from '@/hooks/use-mobile';
 
 const StoryViewEnhanced: React.FC = () => {
   const { 
@@ -88,7 +88,6 @@ const StoryViewEnhanced: React.FC = () => {
         <SheetContent
           side="bottom"
           className="h-[80vh] pt-10 px-0"
-          showCloseButton={false}
         >
           <div className="absolute top-2 left-0 right-0 flex justify-center">
             <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>

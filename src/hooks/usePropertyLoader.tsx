@@ -1,7 +1,7 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase, Property } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
+import { Story } from '@/types/property';
 
 interface UsePropertyLoaderOptions {
   propertyId: string;
@@ -48,6 +48,15 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
       
       return {
         ...data,
+        owner_id: data.owner_id || '',
+        city: data.city || '',
+        state: data.state || '',
+        zip: data.zip || '',
+        bedrooms: data.bedrooms || 0,
+        bathrooms: data.bathrooms || 0,
+        available_from: data.available_from || '',
+        created_at: data.created_at || '',
+        updated_at: data.updated_at || '',
         type: data.property_type,
         price: data.rent,
         priceUnit: 'semester', // Default to semester
@@ -68,11 +77,22 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
         advance_payment_months: propertyData.advance_payment_months || 12,
         allow_bill_sharing: propertyData.allow_bill_sharing || false,
         landmark: propertyData.landmark || '',
+        // Add stories from images if they exist
+        stories: propertyData.stories || convertImagesToStories(data.images || [])
       } as Property;
     },
     enabled: !!propertyId && (!!user?.id || !forOwner) && enabled,
   });
 };
+
+// Convert images to stories if no stories are defined
+function convertImagesToStories(images: string[]): Story[] {
+  return images.map(imageUrl => ({
+    type: 'image',
+    url: imageUrl,
+    duration: 5000
+  }));
+}
 
 // Sample property data for fallback
 function getSampleProperties() {
@@ -91,7 +111,7 @@ function getSampleProperties() {
       verified: true,
       amenities: ['Water Supply', 'Shared Toilet', 'Security'],
       description: "This is an all girls hostel located very close to the UPSA. It's one of the few hostels located in Madina which take in only female students. This hostel has water flowing and shared toilet facilities.",
-      houseRules: [
+      house_rules: [
         'No visitors after 10 PM',
         'Keep noise levels down',
         'Clean common areas after use'
@@ -105,7 +125,31 @@ function getSampleProperties() {
       },
       location: 'Madina',
       propertyCategory: 'Hostel',
-      genderType: 'Girls'
+      genderType: 'Girls',
+      // Required properties for the Property type
+      owner_id: '',
+      city: 'Accra',
+      state: 'Greater Accra',
+      zip: '00000',
+      bedrooms: 1,
+      bathrooms: 1,
+      available_from: '2025-01-01',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+      stories: [
+        {
+          type: 'image',
+          url: '/lovable-uploads/kitatsu_hostel.jpg',
+          duration: 5000,
+          caption: 'Front view of Kitatsu Hostel'
+        },
+        {
+          type: 'image',
+          url: '/lovable-uploads/kitatsu_hostel_2.jpg',
+          duration: 5000,
+          caption: 'Common area at Kitatsu Hostel'
+        }
+      ]
     },
     {
       id: '2',
@@ -121,7 +165,7 @@ function getSampleProperties() {
       verified: true,
       amenities: ['Wi-Fi', 'Air Conditioning', 'Self-contained', 'Study Area', 'Kitchen'],
       description: 'Located just opposite the UPSA, the Prestige hostel is a popular hostel in East Legon. The proximity to the campus makes it one of the most preferred hostels for UPSA students. The rooms are spacious and self-contained with each room having its own toilet and bath. There are a study and kitchen on each floor for convenience. The security within the hostel is also taken very seriously.',
-      houseRules: [
+      house_rules: [
         'No smoking',
         'No pets',
         'Quiet hours from 10 PM to 6 AM'
@@ -135,7 +179,31 @@ function getSampleProperties() {
       },
       location: 'East Legon',
       propertyCategory: 'Hostel',
-      genderType: 'Mixed'
+      genderType: 'Mixed',
+      // Required properties for the Property type
+      owner_id: '',
+      city: 'Accra',
+      state: 'Greater Accra',
+      zip: '00000',
+      bedrooms: 1,
+      bathrooms: 1,
+      available_from: '2025-01-01',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+      stories: [
+        {
+          type: 'image',
+          url: '/lovable-uploads/prestige_hostel.jpg',
+          duration: 5000,
+          caption: 'Front view of Prestige Hostel'
+        },
+        {
+          type: 'image',
+          url: '/lovable-uploads/prestige_hostel_2.jpg',
+          duration: 5000,
+          caption: 'Common area at Prestige Hostel'
+        }
+      ]
     },
     {
       id: '3',
@@ -151,7 +219,7 @@ function getSampleProperties() {
       verified: true,
       amenities: ['Wi-Fi', 'Security', 'Water Supply'],
       description: 'Located close to UPSA, Makasella hostel is a peaceful and comfortable hostel with many rooms. The hostel houses both male and female students in its walled compound. Students can walk for about 5 minutes to get to the UPSA.',
-      houseRules: [
+      house_rules: [
         'No loud music',
         'Keep premises clean',
         'No cooking in rooms'
@@ -165,7 +233,31 @@ function getSampleProperties() {
       },
       location: 'Accra',
       propertyCategory: 'Hostel',
-      genderType: 'Mixed'
+      genderType: 'Mixed',
+      // Required properties for the Property type
+      owner_id: '',
+      city: 'Accra',
+      state: 'Greater Accra',
+      zip: '00000',
+      bedrooms: 1,
+      bathrooms: 1,
+      available_from: '2025-01-01',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+      stories: [
+        {
+          type: 'image',
+          url: '/lovable-uploads/makasella_hostel.jpg',
+          duration: 5000,
+          caption: 'Front view of Makasella Hostel'
+        },
+        {
+          type: 'image',
+          url: '/lovable-uploads/makasella_hostel_2.jpg',
+          duration: 5000,
+          caption: 'Common area at Makasella Hostel'
+        }
+      ]
     },
     {
       id: '4',
@@ -181,7 +273,7 @@ function getSampleProperties() {
       verified: true,
       amenities: ['Wi-Fi', 'Self-contained', 'Security', 'Study Area'],
       description: 'A very neat and well organized hostel, MB3 hostel is a favourite for students due to its proximity to campus and the great facilities. The rooms are spacious and self contained. You also have access to eateries and shops all around the hostel.',
-      houseRules: [
+      house_rules: [
         'No visitors after 9 PM',
         'Register all overnight guests',
         'No cooking in rooms'
@@ -195,7 +287,31 @@ function getSampleProperties() {
       },
       location: 'Madina',
       propertyCategory: 'Hostel',
-      genderType: 'Mixed'
+      genderType: 'Mixed',
+      // Required properties for the Property type
+      owner_id: '',
+      city: 'Accra',
+      state: 'Greater Accra',
+      zip: '00000',
+      bedrooms: 1,
+      bathrooms: 1,
+      available_from: '2025-01-01',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+      stories: [
+        {
+          type: 'image',
+          url: '/lovable-uploads/mb3_hostel.jpg',
+          duration: 5000,
+          caption: 'Front view of MB3 Hostel'
+        },
+        {
+          type: 'image',
+          url: '/lovable-uploads/mb3_hostel_2.jpg',
+          duration: 5000,
+          caption: 'Common area at MB3 Hostel'
+        }
+      ]
     },
     {
       id: '5',
@@ -211,7 +327,7 @@ function getSampleProperties() {
       verified: true,
       amenities: ['Shared Facilities', 'Security', 'Water Supply'],
       description: 'Joy hostel is a large hostel for students in East Legon. Rooms are spacious and have shared facilities. Students of Lancaster University can be found in this hostel.',
-      houseRules: [
+      house_rules: [
         'Keep noise levels down',
         'No cooking in rooms',
         'No pets allowed'
@@ -225,7 +341,31 @@ function getSampleProperties() {
       },
       location: 'Accra',
       propertyCategory: 'Hostel',
-      genderType: 'Mixed'
+      genderType: 'Mixed',
+      // Required properties for the Property type
+      owner_id: '',
+      city: 'Accra',
+      state: 'Greater Accra',
+      zip: '00000',
+      bedrooms: 1,
+      bathrooms: 1,
+      available_from: '2025-01-01',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+      stories: [
+        {
+          type: 'image',
+          url: '/lovable-uploads/joy_hostel.jpg',
+          duration: 5000,
+          caption: 'Front view of Joy Hostel'
+        },
+        {
+          type: 'image',
+          url: '/lovable-uploads/joy_hostel_2.jpg',
+          duration: 5000,
+          caption: 'Common area at Joy Hostel'
+        }
+      ]
     },
     {
       id: '6',
@@ -241,7 +381,7 @@ function getSampleProperties() {
       verified: true,
       amenities: ['Wi-Fi', 'Self-contained', 'Security'],
       description: 'Heavens Gate hostel is located in East Legon and is now a twin hostel. The hostel has an old and a new block as well as spacious self contained rooms for students. All rooms here are 4 in a room which is ideal for UPSA students.',
-      houseRules: [
+      house_rules: [
         'No smoking',
         'No parties',
         'Quiet hours from 10 PM'
@@ -255,7 +395,31 @@ function getSampleProperties() {
       },
       location: 'East Legon',
       propertyCategory: 'Hostel',
-      genderType: 'Mixed'
+      genderType: 'Mixed',
+      // Required properties for the Property type
+      owner_id: '',
+      city: 'Accra',
+      state: 'Greater Accra',
+      zip: '00000',
+      bedrooms: 1,
+      bathrooms: 1,
+      available_from: '2025-01-01',
+      created_at: '2025-01-01',
+      updated_at: '2025-01-01',
+      stories: [
+        {
+          type: 'image',
+          url: '/lovable-uploads/heavens_gate_hostel.jpg',
+          duration: 5000,
+          caption: 'Front view of Heavens Gate Hostel'
+        },
+        {
+          type: 'image',
+          url: '/lovable-uploads/heavens_gate_hostel_2.jpg',
+          duration: 5000,
+          caption: 'Common area at Heavens Gate Hostel'
+        }
+      ]
     }
   ];
 }
