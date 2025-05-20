@@ -7,6 +7,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import Button from '@/components/common/Button';
 import { Separator } from '@/components/ui/separator';
+import StudentVerification from './StudentVerification';
+import { toast } from 'sonner';
 
 interface StudentVerificationStepsProps {
   studentData: any;
@@ -26,6 +28,7 @@ type VerificationFormData = {
   idType: string;
   idFile: File | null;
   additionalNotes: string;
+  studentId: string;
 };
 
 const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({ 
@@ -35,9 +38,12 @@ const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({
   onPrevStep
 }) => {
   const [currentSubStep, setCurrentSubStep] = useState(1);
+  const [isVerifying, setIsVerifying] = useState(false);
+  
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<VerificationFormData>({
     defaultValues: {
-      ...studentData
+      ...studentData,
+      idType: studentData.idType || 'studentId'
     }
   });
 
@@ -63,10 +69,12 @@ const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({
     "Postgraduate"
   ];
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setValue('idFile', e.target.files[0]);
-    }
+  const handleFileChange = (file: File) => {
+    setValue('idFile', file);
+  };
+
+  const handleInputChange = (name: string, value: string) => {
+    setValue(name as any, value);
   };
 
   const handleSubStepNext = () => {
@@ -86,6 +94,17 @@ const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({
   const onSubmit = (data: VerificationFormData) => {
     onDataChange(data);
     onNextStep();
+  };
+
+  const handleVerify = () => {
+    setIsVerifying(true);
+    
+    // Simulate verification process
+    setTimeout(() => {
+      setIsVerifying(false);
+      toast.success("Student verification successful!");
+      handleSubStepNext();
+    }, 2000);
   };
 
   // Render the appropriate sub-step
@@ -202,71 +221,22 @@ const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({
           </div>
         );
         
-      case 3: // Proof
+      case 3: // Student Verification
         return (
           <div className="space-y-4">
             <h3 className="text-lg font-semibold">Student Verification</h3>
-            <p className="text-gray-600 mb-4">Please upload your Student ID or proof of registration.</p>
+            <p className="text-gray-600 mb-4">Please verify your student status by uploading your ID document.</p>
             
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="idType">ID Type</Label>
-                <Select 
-                  value={allValues.idType} 
-                  onValueChange={(value) => setValue('idType', value)}
-                >
-                  <SelectTrigger id="idType" className="mt-1">
-                    <SelectValue placeholder="Select ID type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="student_id">Student ID Card</SelectItem>
-                    <SelectItem value="admission_letter">Admission Letter</SelectItem>
-                    <SelectItem value="registration_receipt">Registration Receipt</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div>
-                <Label htmlFor="idFile">Upload ID Document</Label>
-                <div className="mt-1 border-2 border-dashed rounded-md px-6 pt-5 pb-6 flex justify-center">
-                  <div className="space-y-1 text-center">
-                    <svg className="mx-auto h-12 w-12 text-gray-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true">
-                      <path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                    <div className="flex text-sm text-gray-600">
-                      <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-roomi-blue hover:text-roomi-blue focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-roomi-blue">
-                        <span>Upload a file</span>
-                        <input
-                          id="file-upload"
-                          name="file-upload"
-                          type="file"
-                          onChange={handleFileChange}
-                          className="sr-only"
-                          accept="image/*,application/pdf"
-                        />
-                      </label>
-                      <p className="pl-1">or drag and drop</p>
-                    </div>
-                    <p className="text-xs text-gray-500">PNG, JPG, PDF up to 10MB</p>
-                  </div>
-                </div>
-                {idFile && (
-                  <div className="mt-2">
-                    <p className="text-sm text-green-600">File selected: {idFile.name}</p>
-                  </div>
-                )}
-              </div>
-              
-              <div>
-                <Label htmlFor="additionalNotes">Additional Notes (Optional)</Label>
-                <Textarea 
-                  id="additionalNotes"
-                  {...register('additionalNotes')}
-                  className="mt-1 h-24"
-                  placeholder="Any additional information to help with your verification"
-                />
-              </div>
-            </div>
+            <StudentVerification
+              idType={allValues.idType || 'studentId'}
+              studentId={allValues.studentId}
+              university={allValues.university}
+              program={allValues.program}
+              onInputChange={handleInputChange}
+              onFileUpload={handleFileChange}
+              onVerify={handleVerify}
+              isVerifying={isVerifying}
+            />
           </div>
         );
         
@@ -283,6 +253,7 @@ const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({
                 <p>University: <span className="font-medium">{allValues.university}</span></p>
                 <p>Program: <span className="font-medium">{allValues.program}</span></p>
                 <p>Year of Study: <span className="font-medium">{allValues.year}</span></p>
+                <p>Student ID: <span className="font-medium">{allValues.studentId}</span></p>
               </div>
               
               <Separator />
@@ -299,9 +270,10 @@ const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({
               <div>
                 <h4 className="font-medium mb-2">Verification Document</h4>
                 <p>ID Type: <span className="font-medium">
-                  {allValues.idType === 'student_id' ? 'Student ID Card' :
-                   allValues.idType === 'admission_letter' ? 'Admission Letter' :
-                   allValues.idType === 'registration_receipt' ? 'Registration Receipt' : 'Not selected'}
+                  {allValues.idType === 'studentId' ? 'Student ID Card' :
+                   allValues.idType === 'nationalId' ? 'National ID' :
+                   allValues.idType === 'passport' ? 'Passport' : 
+                   allValues.idType === 'driverLicense' ? 'Driver\'s License' : 'Not selected'}
                 </span></p>
                 <p>Document: <span className="font-medium">{idFile ? idFile.name : 'No file uploaded'}</span></p>
                 {allValues.additionalNotes && (
@@ -324,7 +296,7 @@ const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({
     <div>
       {/* Sub-steps progress indicator */}
       <div className="flex justify-between mb-6">
-        {['Personal Info', 'Emergency Contact', 'Proof', 'Review'].map((step, index) => (
+        {['Personal Info', 'Emergency Contact', 'Verification', 'Review'].map((step, index) => (
           <div 
             key={index} 
             className={`flex items-center ${index < currentSubStep ? 'text-roomi-blue' : 'text-gray-400'}`}
@@ -361,7 +333,9 @@ const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({
             Back
           </Button>
           
-          {currentSubStep < 4 ? (
+          {currentSubStep === 3 ? (
+            null // Button is handled by StudentVerification component
+          ) : currentSubStep < 4 ? (
             <Button 
               type="button" 
               variant="primary"

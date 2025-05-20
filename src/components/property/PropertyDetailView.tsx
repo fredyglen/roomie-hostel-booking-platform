@@ -7,6 +7,7 @@ import PropertyTabs from '@/components/property/PropertyTabs';
 import PropertyOwnerCard from '@/components/property/PropertyOwnerCard';
 import PropertyBookingCard from '@/components/property/PropertyBookingCard';
 import { Property } from '@/types/property';
+import { toast } from 'sonner';
 
 interface PropertyDetailViewProps {
   property: Property;
@@ -20,6 +21,15 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
   onBookNow 
 }) => {
   const [activeTab, setActiveTab] = useState('about');
+  
+  // Ensure we have images to display
+  const images = property.images && property.images.length > 0
+    ? property.images
+    : ['/placeholder.svg'];
+  
+  const handleError = () => {
+    toast.error("Failed to load some images");
+  };
   
   return (
     <main className="flex-grow py-8 px-4">
@@ -37,8 +47,9 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
         
         {/* Property Images */}
         <PropertyImageGallery 
-          images={property.images || []} 
+          images={images} 
           title={property.title} 
+          onError={handleError}
         />
         
         {/* Property Details and Booking Section */}

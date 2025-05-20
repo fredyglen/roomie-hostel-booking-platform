@@ -22,41 +22,52 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
       // For owner view, we require owner authentication
       if (forOwner && !user?.id) throw new Error('User not authenticated');
 
-      let query = supabase
-        .from('properties')
-        .select('*')
-        .eq('id', propertyId);
-      
-      // Add owner check if this is for owner view
-      if (forOwner) {
-        query = query.eq('owner_id', user!.id);
-      }
-
-      const { data, error } = await query.maybeSingle();
-
-      if (error) {
-        console.error("Error fetching property:", error);
-        throw error;
-      }
-      
-      // If no data found in database, check the sample properties
-      if (!data) {
-        console.log("Property not found in database, checking sample data for ID:", propertyId);
-        const sampleProperties = getSampleProperties();
-        const sampleProperty = sampleProperties.find(p => p.id === propertyId);
+      try {
+        console.log("Fetching property with ID:", propertyId);
         
-        if (!sampleProperty) {
-          console.error("Property not found in sample data either");
-          throw new Error('Property not found');
+        let query = supabase
+          .from('properties')
+          .select('*')
+          .eq('id', propertyId);
+        
+        // Add owner check if this is for owner view
+        if (forOwner) {
+          query = query.eq('owner_id', user!.id);
+        }
+
+        const { data, error } = await query.maybeSingle();
+
+        if (error) {
+          console.error("Error fetching property from database:", error);
+          throw error;
         }
         
-        console.log("Found property in sample data:", sampleProperty.title);
-        return sampleProperty;
-      }
+        // If no data found in database, check the sample properties
+        if (!data) {
+          console.log("Property not found in database, checking sample data for ID:", propertyId);
+          const sampleProperties = getSampleProperties();
+          const sampleProperty = sampleProperties.find(p => p.id === propertyId);
+          
+          if (!sampleProperty) {
+            console.error("Property not found in sample data either");
+            throw new Error('Property not found');
+          }
+          
+          console.log("Found property in sample data:", sampleProperty.title);
+          return sampleProperty;
+        }
 
-      // Convert database property to our frontend property format
-      return normalizePropertyData(data);
+        // Convert database property to our frontend property format
+        const normalizedProperty = normalizePropertyData(data);
+        console.log("Normalized property data:", normalizedProperty);
+        return normalizedProperty;
+      } catch (error) {
+        console.error("Error in property loader:", error);
+        throw error;
+      }
     },
     enabled: !!propertyId && (!!user?.id || !forOwner) && enabled,
+    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
+    retry: 1, // Only retry once to avoid infinite retries on 404
   });
 };
