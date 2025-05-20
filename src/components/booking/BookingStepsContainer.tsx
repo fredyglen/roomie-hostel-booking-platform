@@ -25,16 +25,15 @@ const BookingStepsContainer: React.FC = () => {
     handleCheckboxChange,
     handleNext,
     handleBack,
-    setSelectedPaymentMethod
+    setSelectedPaymentMethod,
+    splitPayment,
+    setSplitPayment,
+    numberOfRoommates,
+    setNumberOfRoommates,
+    roommatesInfo,
+    handleRoommateChange,
+    individualPrice
   } = useBookingViewModel();
-  
-  // Create an adapter function to convert between signatures
-  const handleInputChangeAdapter = (name: string, value: string) => {
-    const syntheticEvent = {
-      target: { name, value }
-    } as React.ChangeEvent<HTMLInputElement>;
-    handleInputChange(syntheticEvent);
-  };
   
   if (!property) {
     return (
@@ -57,7 +56,7 @@ const BookingStepsContainer: React.FC = () => {
             <RoomTypeSelection 
               roomTypes={property.roomTypes || []}
               selectedRoomType={formData.roomType}
-              onSelectRoomType={handleInputChangeAdapter}
+              onSelectRoomType={handleInputChange}
             />
           </div>
         );
@@ -72,6 +71,14 @@ const BookingStepsContainer: React.FC = () => {
               checkInDate={formData.checkInDate}
               onInputChange={handleInputChange}
               property={property}
+              splitPayment={splitPayment}
+              setSplitPayment={setSplitPayment}
+              numberOfRoommates={numberOfRoommates}
+              setNumberOfRoommates={setNumberOfRoommates}
+              roommatesInfo={roommatesInfo}
+              handleRoommateChange={handleRoommateChange}
+              individualPrice={individualPrice}
+              selectedUnit={selectedUnit}
             />
           </div>
         );

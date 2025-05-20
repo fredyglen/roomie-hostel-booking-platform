@@ -10,7 +10,7 @@ interface RoomType {
 interface RoomTypeSelectionProps {
   roomTypes: RoomType[];
   selectedRoomType: string;
-  onSelectRoomType: (name: string, value: string) => void;
+  onSelectRoomType: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
 const RoomTypeSelection: React.FC<RoomTypeSelectionProps> = ({ 
@@ -26,7 +26,13 @@ const RoomTypeSelection: React.FC<RoomTypeSelectionProps> = ({
           className={`border rounded-lg p-4 cursor-pointer transition-colors ${
             selectedRoomType === room.name ? 'border-roomi-blue bg-blue-50' : 'hover:bg-gray-50'
           }`}
-          onClick={() => onSelectRoomType('roomType', room.name)}
+          onClick={() => {
+            // Create a synthetic event when clicking on the div
+            const syntheticEvent = {
+              target: { name: 'roomType', value: room.name }
+            } as React.ChangeEvent<HTMLInputElement>;
+            onSelectRoomType(syntheticEvent);
+          }}
         >
           <div className="flex justify-between items-center">
             <div className="flex items-center">
@@ -34,7 +40,9 @@ const RoomTypeSelection: React.FC<RoomTypeSelectionProps> = ({
                 type="radio"
                 className="form-radio h-4 w-4 text-roomi-blue"
                 checked={selectedRoomType === room.name}
-                onChange={() => onSelectRoomType('roomType', room.name)}
+                name="roomType"
+                value={room.name}
+                onChange={onSelectRoomType}
               />
               <div className="ml-3">
                 <h3 className="font-semibold">{room.name}</h3>

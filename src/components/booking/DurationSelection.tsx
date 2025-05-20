@@ -2,15 +2,14 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
 import RoommatesForm from './RoommatesForm';
+import { Property } from '@/types/property';
 
 interface DurationSelectionProps {
   duration: string;
   durationType: string;
   checkInDate: string;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => void;
-  property?: {
-    propertyCategory?: 'Hostel' | 'Homestel' | 'Apartment';
-  };
+  property?: Property;
   splitPayment?: boolean;
   setSplitPayment?: (enabled: boolean) => void;
   numberOfRoommates?: number;
@@ -36,6 +35,7 @@ const DurationSelection: React.FC<DurationSelectionProps> = ({
   individualPrice = 0,
   selectedUnit = 'month'
 }) => {
+  // Check if property category is exactly "Apartment" rather than comparing string types
   const isApartment = property?.propertyCategory === 'Apartment';
   
   return (
