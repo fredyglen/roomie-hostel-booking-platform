@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Icon } from '@iconify/react';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +46,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         return "bg-purple-100 text-purple-800";
     }
   };
+
+  const defaultImage = '/placeholder.svg';
   
   return (
     <div 
@@ -54,9 +57,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
       {/* Property Image */}
       <div className="relative">
         <img 
-          src={property.images && property.images[0] ? property.images[0] : '/placeholder.svg'} 
+          src={(property.images && property.images[0]) || defaultImage} 
           alt={property.title} 
           className="w-full h-48 object-cover"
+          onError={(e) => {
+            const target = e.target as HTMLImageElement;
+            target.src = defaultImage; // Fallback to placeholder if image fails to load
+          }}
         />
         
         {/* Story View Button */}

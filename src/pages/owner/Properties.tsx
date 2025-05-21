@@ -1,14 +1,14 @@
+
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase, Property } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import { useToast } from "@/components/ui/use-toast";
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Plus, Edit, Trash2, Eye } from 'lucide-react';
+import PropertiesGrid from '@/components/owner/PropertiesGrid';
+import { Plus } from 'lucide-react';
 
 // Define a local PropertyDisplay type that matches what we'll display in the UI
 interface PropertyDisplay {
@@ -149,104 +149,16 @@ const Properties: React.FC = () => {
           </Link>
         </div>
 
-        {isLoading ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {[1, 2, 3].map((i) => (
-              <Card key={i} className="overflow-hidden">
-                <div className="h-48 bg-gray-200 animate-pulse" />
-                <CardContent className="pt-4">
-                  <div className="space-y-2">
-                    <div className="h-4 bg-gray-200 rounded animate-pulse" />
-                    <div className="h-3 bg-gray-100 rounded animate-pulse" />
-                    <div className="flex justify-between items-center">
-                      <div className="h-5 w-20 bg-gray-200 rounded animate-pulse" />
-                      <div className="h-3 w-12 bg-gray-100 rounded animate-pulse" />
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-0 flex justify-between">
-                  <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
-                  <div className="h-8 w-20 bg-gray-200 rounded animate-pulse" />
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
-        ) : error ? (
+        {error ? (
           <div className="p-4 bg-red-50 rounded-md text-red-800">
             <p>Error loading properties. Please try again.</p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {propertyList.map((property) => (
-              <Card key={property.id} className="overflow-hidden">
-                <div className="h-48 relative">
-                  <img 
-                    src={property.image_url} 
-                    alt={property.title} 
-                    className="w-full h-full object-cover"
-                  />
-                  <div className="absolute top-2 right-2">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-                      property.status === 'Available' ? 'bg-green-100 text-green-800' : 
-                      property.status === 'Partially Occupied' ? 'bg-yellow-100 text-yellow-800' : 
-                      'bg-red-100 text-red-800'
-                    }`}>
-                      {property.status}
-                    </span>
-                  </div>
-                </div>
-                <CardContent className="pt-4">
-                  <div className="space-y-2">
-                    <h3 className="font-semibold truncate">{property.title}</h3>
-                    <p className="text-sm text-gray-500 truncate">{property.address}</p>
-                    <div className="flex justify-between items-center">
-                      <span className="font-bold text-lg">${property.price}</span>
-                      <span className="text-sm text-gray-500">per {property.price_unit}</span>
-                    </div>
-                    <div className="flex justify-between text-sm">
-                      <span>Type: {property.type}</span>
-                      <span>Occupancy: {property.occupancy}</span>
-                    </div>
-                  </div>
-                </CardContent>
-                <CardFooter className="pt-0 flex justify-between">
-                  <Button variant="outline" size="sm">
-                    <Eye className="w-4 h-4 mr-1" /> View
-                  </Button>
-                  <Link to={`/owner/property/${property.id}/edit`}>
-                    <Button variant="outline" size="sm">
-                      <Edit className="w-4 h-4 mr-1" /> Edit
-                    </Button>
-                  </Link>
-                  <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                        <Trash2 className="w-4 h-4 mr-1" /> Delete
-                      </Button>
-                    </AlertDialogTrigger>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                        <AlertDialogDescription>
-                          This will permanently delete this property and all associated data. This action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction 
-                          onClick={() => handleDeleteProperty(property.id)}
-                          className="bg-red-600 hover:bg-red-700"
-                        >
-                          Delete
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </CardFooter>
-              </Card>
-            ))}
-          </div>
+          <PropertiesGrid 
+            properties={propertyList} 
+            isLoading={isLoading}
+            onDeleteProperty={handleDeleteProperty} 
+          />
         )}
       </div>
     </OwnerLayout>
