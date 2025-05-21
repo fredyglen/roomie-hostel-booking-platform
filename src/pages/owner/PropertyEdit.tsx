@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Loader } from 'lucide-react';
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import PropertyEditForm from '@/components/owner/PropertyEditForm';
-import { usePropertyLoader } from '@/hooks/usePropertyLoader';
+import { usePropertyLoader } from '@/hooks/property';
 import { PropertyFormValues } from '@/types/property';
 
 const PropertyEdit: React.FC = () => {

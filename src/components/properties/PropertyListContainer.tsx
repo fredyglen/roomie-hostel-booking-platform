@@ -1,9 +1,8 @@
-
 import React from 'react';
 import PropertyList from './PropertyList';
 import PropertiesFiltersPanel from './PropertiesFiltersPanel';
 import { Property } from '@/types/property';
-import { usePropertiesFilter } from '@/hooks/usePropertiesFilter';
+import { usePropertiesFilter } from '@/hooks/filters';
 
 interface PropertyListContainerProps {
   properties: Property[];

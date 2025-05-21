@@ -5,7 +5,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Property } from '@/types/property';
-import { usePropertyLoader } from '@/hooks/usePropertyLoader';
+import { usePropertyLoader } from '@/hooks/property';
 import PropertyDetailView from '@/components/property/PropertyDetailView';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { Icon } from '@iconify/react';

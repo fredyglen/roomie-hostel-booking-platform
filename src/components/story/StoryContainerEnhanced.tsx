@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home } from 'lucide-react';
@@ -8,7 +7,7 @@ import StoryViewerEnhanced from '@/components/story/StoryViewerEnhanced';
 import StoryDetailsSheetEnhanced from '@/components/story/StoryDetailsSheetEnhanced';
 import { useStoryViewModel } from '@/components/story/StoryViewModel';
 import { useMobile } from '@/hooks/use-mobile';
-import { Property } from '@/lib/supabase';
+import { Property } from '@/types/property';
 
 const StoryContainerEnhanced: React.FC = () => {
   const {
