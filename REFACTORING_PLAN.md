@@ -21,7 +21,7 @@ This document outlines the step-by-step approach for refactoring the student acc
 ### 2. Break Down Large Components ✅
 - [x] Split `PropertyForm.tsx` into logical sub-components
 - [x] Refactor `Properties.tsx` into smaller components
-- [ ] Extract reusable form components
+- [x] Extract reusable form components
 - [x] Create dedicated utility functions for form transformations
 
 ### 3. Improve Error Handling & Data Loading ✅
@@ -39,18 +39,19 @@ This document outlines the step-by-step approach for refactoring the student acc
 - [x] Implement consistent routing strategy
 - [x] Standardize state persistence between routes
 - [x] Unify prop naming conventions
-- [ ] Create navigation utility functions
+- [x] Create navigation utility functions
 
 ### 6. Improve Property Components ✅
 - [x] Refactor property detail components
 - [x] Refactor property card components
-- [ ] Create reusable components for common patterns
+- [x] Create reusable components for common patterns
 
-### 7. Implement Testing
-- [ ] Add unit tests for core utilities
-- [ ] Implement component tests for critical UI elements
+### 7. Implement Testing ⏱️
+- [x] Set up testing infrastructure
+- [x] Add unit tests for navigation utilities
+- [x] Implement component tests for common UI elements
 - [ ] Create integration tests for main user flows
-- [ ] Set up automated test runs
+- [ ] Expand test coverage across the application
 
 ## Progress Tracking
 
@@ -85,14 +86,25 @@ This document outlines the step-by-step approach for refactoring the student acc
   - PropertyHouseRulesTab.tsx (dedicated component for house rules)
 - ✅ Improved navigation patterns in PropertyListContainer and PropertyList
 - ✅ Standardized route handling with proper state persistence
+- ✅ Extracted reusable form components:
+  - FormField.tsx (reusable form field wrapper)
+  - FormSection.tsx (form section with title and description)
+  - CheckboxField.tsx (standardized checkbox field)
+  - SelectField.tsx (standardized select dropdown)
+- ✅ Created navigation utility functions in navigation.ts
+- ✅ Created reusable components for common patterns:
+  - InfoCard.tsx (standardized info card component)
+  - EmptyState.tsx (empty state pattern with optional action)
+  - LoadingIndicator.tsx (standardized loading indicator)
+  - ImageWithFallback.tsx (image with fallback handling)
+- ✅ Set up testing infrastructure and initial tests
 
 ### In Progress
-- 🔄 Creating reusable components for common patterns
+- 🔄 Extending test coverage across the application
 
 ### Up Next
-- ⏱️ Extract reusable form components
-- ⏱️ Create navigation utility functions
-- ⏱️ Implement testing
+- ⏱️ Create integration tests for main user flows
+- ⏱️ Implement mocking strategies for data fetching
 
 ## Refactoring Guidelines
 1. Make incremental changes and test after each step
@@ -108,4 +120,3 @@ This document outlines the step-by-step approach for refactoring the student acc
 3. Make changes following the guidelines
 4. Test thoroughly before submitting
 5. Update this plan to track progress
-

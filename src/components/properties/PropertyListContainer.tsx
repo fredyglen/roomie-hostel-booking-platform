@@ -5,6 +5,7 @@ import PropertyList from './PropertyList';
 import PropertiesFiltersPanel from './PropertiesFiltersPanel';
 import { Property } from '@/types/property';
 import { usePropertiesFilter } from '@/hooks/filters';
+import { navigateToProperty, navigateToStory } from '@/utils/navigation';
 
 interface PropertyListContainerProps {
   properties: Property[];
@@ -37,25 +38,13 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
     resetFilters
   } = usePropertiesFilter({ properties });
   
-  // Standard navigation handlers
+  // Use the navigation utilities for standardized routing
   const handleViewProperty = (id: string) => {
-    if (!id) {
-      console.error("Cannot navigate to property without ID");
-      return;
-    }
-    
-    console.log("Navigating to property:", id);
-    navigate(`/student/property/${id}`);
+    navigateToProperty(navigate, id);
   };
 
   const handleViewStory = (id: string) => {
-    if (!id) {
-      console.error("Cannot navigate to story without property ID");
-      return;
-    }
-    
-    console.log("Navigating to story:", id);
-    navigate(`/student/property/${id}/story`);
+    navigateToStory(navigate, id);
   };
   
   return (
