@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -13,10 +14,11 @@ export const STEP_LABELS = [
   'Payment'
 ];
 
-// Sample property data with properly typed priceUnit
+// Sample property data with properly typed priceUnit and required owner_id
 const sampleProperties: Property[] = [
   {
     id: '1',
+    owner_id: 'sample-owner-1', // Added required owner_id
     title: 'Cozy Studio Apartment Near UPSA',
     type: 'Homestel',
     price: 850,
@@ -33,6 +35,7 @@ const sampleProperties: Property[] = [
   },
   {
     id: '2',
+    owner_id: 'sample-owner-2', // Added required owner_id
     title: 'Shared 2-Bedroom Apartment',
     type: 'Hostel',
     price: 4000,
@@ -50,6 +53,7 @@ const sampleProperties: Property[] = [
   },
   {
     id: '3',
+    owner_id: 'sample-owner-3', // Added required owner_id
     title: 'Premium Single Room in Hostel',
     type: 'Apartment',
     price: 2600,
