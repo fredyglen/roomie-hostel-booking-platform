@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from '@/components/ui/button';
-import { Form } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PropertyCategory } from '@/types/property';
@@ -176,6 +176,3 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 };
 
 export default PropertyForm;
-
-// Missing FormLabel and FormMessage components - adding them here
-import { FormLabel, FormMessage } from '@/components/ui/form';
