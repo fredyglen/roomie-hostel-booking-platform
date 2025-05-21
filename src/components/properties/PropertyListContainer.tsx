@@ -1,4 +1,6 @@
+
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import PropertyList from './PropertyList';
 import PropertiesFiltersPanel from './PropertiesFiltersPanel';
 import { Property } from '@/types/property';
@@ -7,12 +9,16 @@ import { usePropertiesFilter } from '@/hooks/filters';
 interface PropertyListContainerProps {
   properties: Property[];
   isLoading?: boolean;
+  onPropertySelect?: (property: Property) => void;
 }
 
 const PropertyListContainer: React.FC<PropertyListContainerProps> = ({ 
   properties, 
-  isLoading = false 
+  isLoading = false,
+  onPropertySelect
 }) => {
+  const navigate = useNavigate();
+  
   // Use the custom hook for handling property filtering
   const {
     searchQuery,
@@ -30,6 +36,27 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
     filteredProperties,
     resetFilters
   } = usePropertiesFilter({ properties });
+  
+  // Standard navigation handlers
+  const handleViewProperty = (id: string) => {
+    if (!id) {
+      console.error("Cannot navigate to property without ID");
+      return;
+    }
+    
+    console.log("Navigating to property:", id);
+    navigate(`/student/property/${id}`);
+  };
+
+  const handleViewStory = (id: string) => {
+    if (!id) {
+      console.error("Cannot navigate to story without property ID");
+      return;
+    }
+    
+    console.log("Navigating to story:", id);
+    navigate(`/student/property/${id}/story`);
+  };
   
   return (
     <>
@@ -56,6 +83,8 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
         properties={filteredProperties} 
         isLoading={isLoading}
         onResetFilters={resetFilters}
+        onViewProperty={handleViewProperty}
+        onViewStory={handleViewStory}
       />
     </>
   );

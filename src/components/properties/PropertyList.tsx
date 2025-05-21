@@ -1,7 +1,6 @@
 
 import React from 'react';
 import PropertyCard from './PropertyCard';
-import { useNavigate } from 'react-router-dom';
 import { Property } from '@/types/property';
 
 interface PropertyListProps {
@@ -9,16 +8,18 @@ interface PropertyListProps {
   isLoading?: boolean;
   emptyMessage?: string;
   onResetFilters?: () => void;
+  onViewProperty?: (id: string) => void;
+  onViewStory?: (id: string) => void;
 }
 
 const PropertyList: React.FC<PropertyListProps> = ({ 
   properties, 
   isLoading = false, 
   emptyMessage = "No properties match your search criteria.", 
-  onResetFilters 
+  onResetFilters,
+  onViewProperty,
+  onViewStory
 }) => {
-  const navigate = useNavigate();
-
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-0 mx-0">
@@ -42,26 +43,6 @@ const PropertyList: React.FC<PropertyListProps> = ({
     );
   }
 
-  const handleViewProperty = (id: string) => {
-    if (!id) {
-      console.error("Cannot navigate to property without ID");
-      return;
-    }
-    
-    console.log("Navigating to property:", id);
-    navigate(`/student/property/${id}`);
-  };
-
-  const handleViewStory = (id: string) => {
-    if (!id) {
-      console.error("Cannot navigate to story without property ID");
-      return;
-    }
-    
-    console.log("Navigating to story:", id);
-    navigate(`/student/property/${id}/story`);
-  };
-
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-0 mx-0">
       {properties.map(property => (
@@ -81,8 +62,8 @@ const PropertyList: React.FC<PropertyListProps> = ({
             verified: property.verified,
             propertyCategory: property.propertyCategory || property.property_category,
             genderType: property.genderType || (property.gender_type as any),
-            onViewStory: () => handleViewStory(property.id),
-            onViewDetails: () => handleViewProperty(property.id)
+            onViewStory: () => onViewStory && onViewStory(property.id),
+            onViewDetails: () => onViewProperty && onViewProperty(property.id)
           }}
         />
       ))}

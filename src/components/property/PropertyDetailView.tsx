@@ -6,7 +6,7 @@ import PropertyImageGallery from '@/components/property/PropertyImageGallery';
 import PropertyTabs from '@/components/property/PropertyTabs';
 import PropertyOwnerCard from '@/components/property/PropertyOwnerCard';
 import PropertyBookingCard from '@/components/property/PropertyBookingCard';
-import { Property } from '@/lib/supabase';
+import { Property } from '@/types/property';
 import { toast } from 'sonner';
 
 interface PropertyDetailViewProps {
@@ -66,7 +66,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({
                 type={property.type || property.property_type || ''}
                 location={property.location || ''}
                 availableUnits={property.availableUnits}
-                onTabChange={setActiveTab}
+                onTabChange={(tab) => setActiveTab(tab)}
               />
             </div>
             

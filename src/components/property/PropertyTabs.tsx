@@ -1,17 +1,17 @@
 
-import React from 'react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from 'react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PropertyAboutTab from './PropertyAboutTab';
 import PropertyLocationTab from './PropertyLocationTab';
-import PropertyRulesTab from './PropertyRulesTab';
 import PropertyAmenitiesTab from './PropertyAmenitiesTab';
+import PropertyHouseRulesTab from './PropertyHouseRulesTab';
 
 interface PropertyTabsProps {
   description: string;
   address: string;
   distanceToCampus?: string;
-  houseRules: string[];
-  amenities: string[];
+  houseRules?: string[];
+  amenities?: string[];
   type?: string;
   location?: string;
   availableUnits?: number;
@@ -22,27 +22,34 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
   description,
   address,
   distanceToCampus,
-  houseRules,
-  amenities,
+  houseRules = [],
+  amenities = [],
   type,
   location,
   availableUnits,
   onTabChange
 }) => {
+  const [activeTab, setActiveTab] = useState('about');
+  
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    if (onTabChange) onTabChange(value);
+  };
+
   return (
-    <Tabs defaultValue="about" onValueChange={onTabChange} className="w-full">
-      <TabsList className="grid grid-cols-4 mb-4">
+    <Tabs defaultValue="about" value={activeTab} onValueChange={handleTabChange}>
+      <TabsList className="grid grid-cols-4 mb-6">
         <TabsTrigger value="about">About</TabsTrigger>
         <TabsTrigger value="location">Location</TabsTrigger>
-        <TabsTrigger value="rules">Rules</TabsTrigger>
         <TabsTrigger value="amenities">Amenities</TabsTrigger>
+        <TabsTrigger value="rules">Rules</TabsTrigger>
       </TabsList>
       
       <TabsContent value="about">
-        <PropertyAboutTab
+        <PropertyAboutTab 
           description={description}
           type={type}
-          location={location}
+          location={location} 
           availableUnits={availableUnits}
           distanceToCampus={distanceToCampus}
         />
@@ -50,17 +57,17 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
       
       <TabsContent value="location">
         <PropertyLocationTab 
-          address={address} 
-          distanceToCampus={distanceToCampus} 
+          address={address}
+          distanceToCampus={distanceToCampus}
         />
-      </TabsContent>
-      
-      <TabsContent value="rules">
-        <PropertyRulesTab rules={houseRules} />
       </TabsContent>
       
       <TabsContent value="amenities">
         <PropertyAmenitiesTab amenities={amenities} />
+      </TabsContent>
+      
+      <TabsContent value="rules">
+        <PropertyHouseRulesTab houseRules={houseRules} />
       </TabsContent>
     </Tabs>
   );
