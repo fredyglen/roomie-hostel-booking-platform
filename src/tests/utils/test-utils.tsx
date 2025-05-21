@@ -1,6 +1,6 @@
 
 import React, { ReactElement } from 'react';
-import { render, RenderOptions, screen, fireEvent } from '@testing-library/react';
+import { render, RenderOptions, screen, fireEvent, waitFor } from '@testing-library/react';
 import { BrowserRouter } from 'react-router-dom';
 import { expect, afterEach, vi } from 'vitest';
 
@@ -22,4 +22,4 @@ const customRender = (
 
 // Re-export everything from testing library
 export * from '@testing-library/react';
-export { customRender as render, vi, expect };
+export { customRender as render, vi, expect, screen, fireEvent, waitFor };

@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { render, screen, fireEvent, expect, vi } from '../../utils/test-utils';
-import { describe, it, beforeEach } from 'vitest';
+import { render, screen, fireEvent } from '../../utils/test-utils';
+import { describe, it, beforeEach, expect, vi } from 'vitest';
 import EmptyState from '@/components/common/EmptyState';
 import { Search } from 'lucide-react';
 
