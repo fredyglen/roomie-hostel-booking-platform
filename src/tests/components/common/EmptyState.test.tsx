@@ -1,11 +1,15 @@
 
 import React from 'react';
-import { render, screen, fireEvent } from '../../utils/test-utils';
+import { render, screen, fireEvent, expect, vi } from '../../utils/test-utils';
 import EmptyState from '@/components/common/EmptyState';
 import { Search } from 'lucide-react';
 
 describe('EmptyState', () => {
   const mockActionFn = vi.fn();
+  
+  beforeEach(() => {
+    vi.resetAllMocks();
+  });
   
   it('renders with title and description', () => {
     render(
