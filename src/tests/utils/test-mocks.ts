@@ -1,5 +1,6 @@
 
 import { Property } from '@/types/property';
+import { vi } from 'vitest';
 
 /**
  * Mock property data for testing
