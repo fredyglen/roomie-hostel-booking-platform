@@ -2,7 +2,7 @@
 import React from 'react';
 import PropertyCard from './PropertyCard';
 import { useNavigate } from 'react-router-dom';
-import { Property } from '@/lib/supabase';
+import { Property } from '@/types/property';
 
 interface PropertyListProps {
   properties: Property[];

@@ -47,11 +47,11 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
           console.log("Property not found in database, checking sample data for ID:", propertyId);
           const sampleProperties = getSampleProperties();
           
-          // FIXED: Handle numeric IDs in string format
+          // Handle different ID formats consistently (string vs number)
           const sampleProperty = sampleProperties.find(p => 
-            p.id === propertyId || // Check exact match
-            p.id === String(propertyId) || // Check string conversion
-            String(p.id) === propertyId // Handle case where ID might be stored as number but passed as string
+            p.id === propertyId || 
+            p.id === String(propertyId) || 
+            String(p.id) === propertyId
           );
           
           if (!sampleProperty) {

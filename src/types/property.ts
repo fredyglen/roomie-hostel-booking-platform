@@ -19,45 +19,48 @@ export type RoomType = {
 // Property types
 export type PropertyCategory = 'Hostel' | 'Homestel' | 'Apartment';
 
-export type Property = {
+// Gender types
+export type GenderType = 'Girls' | 'Boys' | 'Mixed';
+
+/**
+ * Unified Property interface
+ * - Required database fields are non-optional
+ * - Presentation fields are marked optional
+ * - Both snake_case (database) and camelCase (frontend) variants are included
+ */
+export interface Property {
+  // Core identifiers - required
   id: string;
+  owner_id: string;
   title: string;
-  type?: string;
-  property_type?: string; // Making this optional but available
-  price?: number;
-  priceUnit?: 'month' | 'semester' | 'year' | 'week';
-  price_unit?: string; // Database consistency
-  rent?: number; // For database consistency
   address: string;
-  distanceToCampus?: string;
-  distance_to_campus?: string; // For database consistency
-  stories?: Story[];
-  amenities?: string[];
-  description?: string;
-  rating?: number;
-  reviewCount?: number;
-  verified?: boolean;
-  availableUnits?: number;
-  owner?: {
-    name: string;
-    phone: string;
-    responseRate: string;
-    verified: boolean;
-  };
-  roomTypes?: RoomType[];
-  occupancy?: string;
-  propertyCategory?: PropertyCategory;
-  property_category?: PropertyCategory; // Added for database compatibility
-  allInclusive?: boolean;
-  all_inclusive?: boolean; // Added for database compatibility
-  utilities?: string[];
-  location?: string;
-  landmark?: string;
+
+  // Basic property details
+  type?: string;
+  property_type?: string; 
+  price?: number;
+  rent?: number;
+  priceUnit?: 'month' | 'semester' | 'year' | 'week';
+  price_unit?: string;
+  
+  // Location information
   city?: string;
   state?: string;
   zip?: string;
+  location?: string;
+  landmark?: string;
+  distanceToCampus?: string;
+  distance_to_campus?: string;
+  
+  // Property features
+  description?: string;
   bedrooms?: number;
   bathrooms?: number;
+  size?: number;
+  amenities?: string[];
+  house_rules?: string[];
+  images?: string[];
+  image_url?: string;
   
   // Room management properties
   total_rooms?: number;
@@ -65,6 +68,7 @@ export type Property = {
   beds_per_room?: number;
   beds_available?: number;
   max_occupants?: number;
+  availableUnits?: number;
   
   // Facility features
   has_bedframes?: boolean;
@@ -72,27 +76,46 @@ export type Property = {
   has_wardrobes?: boolean;
   has_individual_meters?: boolean;
   
+  // Property classification
+  propertyCategory?: PropertyCategory;
+  property_category?: PropertyCategory;
+  genderType?: GenderType;
+  gender_type?: string;
+  
   // Payment and occupancy details
   advance_payment_months?: number;
   allow_bill_sharing?: boolean;
+  allInclusive?: boolean;
+  all_inclusive?: boolean;
+  utilities?: string[];
   
-  // Additional fields for UI display
-  images?: string[];
-  house_rules?: string[];
-  image_url?: string;
-  
-  // Database required fields
-  owner_id?: string;
-  created_at?: string;
-  updated_at?: string;
+  // Availability
+  occupancy?: string;
+  is_available?: boolean;
+  is_furnished?: boolean;
+  status?: string;
   available_from?: string;
   available_to?: string;
-  is_available?: boolean; // For database consistency
-  is_furnished?: boolean;
   
-  // Gender type property
-  genderType?: 'Girls' | 'Boys' | 'Mixed';
-};
+  // Timestamps
+  created_at?: string;
+  updated_at?: string;
+  
+  // UI/display properties
+  rating?: number;
+  reviewCount?: number;
+  verified?: boolean;
+  stories?: Story[];
+  roomTypes?: RoomType[];
+  
+  // Owner information (presentation only)
+  owner?: {
+    name: string;
+    phone: string;
+    responseRate: string;
+    verified: boolean;
+  };
+}
 
 // This interface is for the PropertyForm component
 export interface PropertyFormValues {

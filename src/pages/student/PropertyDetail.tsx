@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
-import { Property } from '@/lib/supabase';
+import { Property } from '@/types/property';
 import { usePropertyLoader } from '@/hooks/usePropertyLoader';
 import PropertyDetailView from '@/components/property/PropertyDetailView';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
