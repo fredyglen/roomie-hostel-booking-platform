@@ -18,17 +18,17 @@ This document outlines the step-by-step approach for refactoring the student acc
 - [x] Create a single source of truth for Property type
 - [x] Fix sample data to conform to the updated type definitions
 
-### 2. Improve Error Handling & Data Loading
+### 2. Break Down Large Components ✅
+- [x] Split `PropertyForm.tsx` into logical sub-components
+- [ ] Refactor `Properties.tsx` into smaller components
+- [ ] Extract reusable form components
+- [ ] Create dedicated utility functions for form transformations
+
+### 3. Improve Error Handling & Data Loading
 - [ ] Refactor `usePropertyLoader` hook
 - [ ] Standardize error handling patterns
 - [ ] Implement proper fallback UI components
 - [ ] Add loading states and skeletons
-
-### 3. Break Down Large Components
-- [ ] Split `PropertyForm.tsx` into logical sub-components
-- [ ] Refactor `Properties.tsx` into smaller components
-- [ ] Extract reusable form components
-- [ ] Create dedicated utility functions for form transformations
 
 ### 4. Standardize Navigation Patterns
 - [ ] Implement consistent routing strategy
@@ -47,13 +47,25 @@ This document outlines the step-by-step approach for refactoring the student acc
 ### Completed Tasks
 - ✅ Consolidated Property types into a single source of truth
 - ✅ Fixed sample property data to include required `owner_id` field
+- ✅ Refactored PropertyForm.tsx into smaller, focused components:
+  - PropertyFormSchema.ts (form validation schema)
+  - HostelFields.tsx (hostel-specific form fields)
+  - HomestelFields.tsx (homestel-specific form fields)
+  - ApartmentFields.tsx (apartment-specific form fields)
+  - LocationFields.tsx (address and location fields)
+  - RoomFeaturesFields.tsx (room amenities and features)
+  - AmenitiesFields.tsx (property amenities and utilities)
+  - PropertyImageUpload.tsx (image upload interface)
+  - DescriptionFields.tsx (property description and rules)
+  - PricingFields.tsx (price-related fields)
+  - PropertyTypeFields.tsx (property type selection fields)
 
 ### In Progress
 - 🔄 
 
 ### Up Next
 - ⏱️ Refactor `usePropertyLoader` hook
-- ⏱️ Break down `PropertyForm.tsx` component
+- ⏱️ Break down `Properties.tsx` component
 
 ## Refactoring Guidelines
 1. Make incremental changes and test after each step
@@ -69,4 +81,3 @@ This document outlines the step-by-step approach for refactoring the student acc
 3. Make changes following the guidelines
 4. Test thoroughly before submitting
 5. Update this plan to track progress
-
