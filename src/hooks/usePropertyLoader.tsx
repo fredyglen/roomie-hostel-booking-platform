@@ -25,48 +25,53 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
       try {
         console.log("Fetching property with ID:", propertyId);
         
-        let query = supabase
-          .from('properties')
-          .select('*')
-          .eq('id', propertyId);
+        // First check if the ID is a valid UUID format (required for Supabase query)
+        const isUuid = propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
         
-        // Add owner check if this is for owner view
-        if (forOwner) {
-          query = query.eq('owner_id', user!.id);
-        }
-
-        const { data, error } = await query.maybeSingle();
-
-        if (error) {
-          console.error("Error fetching property from database:", error);
-          throw error;
-        }
-        
-        // If no data found in database, check the sample properties
-        if (!data) {
-          console.log("Property not found in database, checking sample data for ID:", propertyId);
-          const sampleProperties = getSampleProperties();
+        if (isUuid) {
+          let query = supabase
+            .from('properties')
+            .select('*')
+            .eq('id', propertyId);
           
-          // Handle different ID formats consistently (string vs number)
-          const sampleProperty = sampleProperties.find(p => 
-            p.id === propertyId || 
-            p.id === String(propertyId) || 
-            String(p.id) === propertyId
-          );
-          
-          if (!sampleProperty) {
-            console.error("Property not found in sample data either");
-            throw new Error('Property not found');
+          // Add owner check if this is for owner view
+          if (forOwner) {
+            query = query.eq('owner_id', user!.id);
+          }
+
+          const { data, error } = await query.maybeSingle();
+
+          if (error) {
+            console.error("Error fetching property from database:", error);
+            throw error;
           }
           
-          console.log("Found property in sample data:", sampleProperty.title);
-          return sampleProperty;
+          if (data) {
+            console.log("Found property in database:", data.title);
+            // Convert database property to our frontend property format
+            const normalizedProperty = normalizePropertyData(data);
+            return normalizedProperty;
+          }
         }
 
-        // Convert database property to our frontend property format
-        const normalizedProperty = normalizePropertyData(data);
-        console.log("Normalized property data:", normalizedProperty);
-        return normalizedProperty;
+        // If no UUID match or no data found in database, check the sample properties
+        console.log("Checking sample data for ID:", propertyId);
+        const sampleProperties = getSampleProperties();
+        
+        // Handle different ID formats consistently (string vs number)
+        const sampleProperty = sampleProperties.find(p => 
+          p.id === propertyId || 
+          p.id === String(propertyId) || 
+          String(p.id) === propertyId
+        );
+        
+        if (!sampleProperty) {
+          console.error("Property not found in sample data either");
+          throw new Error('Property not found');
+        }
+        
+        console.log("Found property in sample data:", sampleProperty.title);
+        return sampleProperty;
       } catch (error) {
         console.error("Error in property loader:", error);
         throw error;
