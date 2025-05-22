@@ -1,17 +1,11 @@
-import React, { useState, useEffect } from 'react';
+
+import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePropertyLoader } from '@/hooks/property';
+import { useBookingForm } from '@/hooks/booking/useBookingForm';
 import BookingSteps from './BookingSteps';
-import PersonalInfoForm from './PersonalInfoForm';
-import DatePickerStep from './DatePickerStep';
-import RoomOptionsStep from './RoomOptionsStep';
-import RoommatesForm from './RoommatesForm';
-import EmergencyContactForm from './EmergencyContactForm';
-import StudentVerification from './StudentVerification';
-import PaymentStep from './PaymentStep';
+import StepDisplay from './StepDisplay';
 import { useToast } from '@/hooks/use-toast';
-import { formatDate } from '@/lib/utils';
-import { Button } from '@/components/ui/button';
 
 // Fixing the BookingStepsContainer component to handle type issues
 const BookingStepsContainer: React.FC = () => {
@@ -31,9 +25,6 @@ const BookingStepsContainer: React.FC = () => {
     'Payment'
   ]);
   
-  const [loading, setLoading] = useState(false);
-  const [bookingComplete, setBookingComplete] = useState(false);
-  
   // Property data
   const { data: property, isLoading: propertyLoading } = usePropertyLoader({
     propertyId: id || '',
@@ -41,62 +32,8 @@ const BookingStepsContainer: React.FC = () => {
     enabled: !!id
   });
   
-  // Personal info
-  const [personalInfo, setPersonalInfo] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-  });
-  
-  // Booking dates
-  const [bookingDates, setBookingDates] = useState({
-    moveIn: new Date(),
-    moveOut: new Date(new Date().setMonth(new Date().getMonth() + 4)),
-    duration: '1 semester',
-  });
-  
-  // Room options
-  const [roomOptions, setRoomOptions] = useState({
-    roomType: 'single',
-    furnishingOption: 'fully_furnished',
-    floor: '1st',
-    extraRequests: '',
-  });
-  
-  // Roommates
-  const [roommates, setRoommates] = useState([
-    { name: '', email: '', phone: '' },
-  ]);
-  
-  // Emergency contact
-  const [emergencyContact, setEmergencyContact] = useState({
-    name: '',
-    relationship: '',
-    phone: '',
-    alternatePhone: '',
-  });
-  
-  // Student verification
-  const [studentVerification, setStudentVerification] = useState({
-    idType: '',
-    studentId: '',
-    university: '',
-    program: '',
-    idImage: null as File | null,
-    verified: false,
-  });
-  
-  // Payment info
-  const [paymentInfo, setPaymentInfo] = useState({
-    method: 'momo',
-    momoNumber: '',
-    cardNumber: '',
-    cardExpiry: '',
-    cardCvc: '',
-    isProcessing: false,
-    isComplete: false,
-  });
+  // Use our custom hook for form state and handlers
+  const bookingForm = useBookingForm();
   
   // Handle completion of current step
   const handleNextStep = () => {
@@ -111,139 +48,21 @@ const BookingStepsContainer: React.FC = () => {
     }
   };
   
-  // Handle personal info form changes
-  const handlePersonalInfoChange = (name: string, value: string) => {
-    setPersonalInfo({
-      ...personalInfo,
-      [name]: value,
-    });
-  };
-  
-  // Adapter for converting event-based onChange to our name/value pattern
-  const handlePersonalInfoAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handlePersonalInfoChange(e.target.name, e.target.value);
-  };
-  
-  // Handle date changes
-  const handleDateChange = (name: string, value: Date | string) => {
-    setBookingDates({
-      ...bookingDates,
-      [name]: value,
-    });
-  };
-  
-  // Adapter for date picker
-  const handleMoveInDateAdapter = (date: Date) => {
-    handleDateChange('moveIn', date);
-  };
-  
-  const handleMoveOutDateAdapter = (date: Date) => {
-    handleDateChange('moveOut', date);
-  };
-  
-  // Handle room option changes
-  const handleRoomOptionChange = (name: string, value: string) => {
-    setRoomOptions({
-      ...roomOptions,
-      [name]: value,
-    });
-  };
-  
-  // Handle roommate changes
-  const handleRoommateChange = (index: number, field: string, value: string) => {
-    const updatedRoommates = [...roommates];
-    updatedRoommates[index] = {
-      ...updatedRoommates[index],
-      [field]: value,
-    };
-    setRoommates(updatedRoommates);
-  };
-  
-  const addRoommate = () => {
-    if (roommates.length < 3) {
-      setRoommates([...roommates, { name: '', email: '', phone: '' }]);
-    }
-  };
-  
-  const removeRoommate = (index: number) => {
-    const updatedRoommates = roommates.filter((_, i) => i !== index);
-    setRoommates(updatedRoommates);
-  };
-  
-  // Handle emergency contact changes
-  const handleEmergencyContactChange = (name: string, value: string) => {
-    setEmergencyContact({
-      ...emergencyContact,
-      [name]: value,
-    });
-  };
-  
-  // Adapter for emergency contact
-  const handleEmergencyContactAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleEmergencyContactChange(e.target.name, e.target.value);
-  };
-  
-  // Handle relationship change for emergency contact
-  const handleRelationshipChange = (value: string) => {
-    handleEmergencyContactChange('relationship', value);
-  };
-  
-  // Handle student verification changes
-  const handleVerificationChange = (name: string, value: string) => {
-    setStudentVerification({
-      ...studentVerification,
-      [name]: value,
-    });
-  };
-  
-  const handleIdUpload = (file: File) => {
-    setStudentVerification({
-      ...studentVerification,
-      idImage: file,
-    });
-  };
-  
-  const handleVerifyStudent = () => {
-    setLoading(true);
-    
-    // Simulate verification process
-    setTimeout(() => {
-      setStudentVerification({
-        ...studentVerification,
-        verified: true,
-      });
-      setLoading(false);
-      handleNextStep();
-      toast({
-        title: "Verification Successful",
-        description: "Your student status has been verified successfully.",
-      });
-    }, 2000);
-  };
-  
-  // Handle payment method changes
-  const handlePaymentChange = (name: string, value: string) => {
-    setPaymentInfo({
-      ...paymentInfo,
-      [name]: value,
-    });
-  };
-  
   const handleProcessPayment = () => {
-    setPaymentInfo({
-      ...paymentInfo,
+    bookingForm.setPaymentInfo({
+      ...bookingForm.paymentInfo,
       isProcessing: true,
     });
     
     // Simulate payment processing
     setTimeout(() => {
-      setPaymentInfo({
-        ...paymentInfo,
+      bookingForm.setPaymentInfo({
+        ...bookingForm.paymentInfo,
         isProcessing: false,
         isComplete: true,
       });
       
-      setBookingComplete(true);
+      bookingForm.setBookingComplete(true);
       
       toast({
         title: "Booking Successful!",
@@ -257,122 +76,42 @@ const BookingStepsContainer: React.FC = () => {
     }, 3000);
   };
   
-  // Determine which form to show based on current step
-  const renderCurrentStepContent = () => {
-    switch (currentStep) {
-      case 1:
-        return (
-          <PersonalInfoForm
-            firstName={personalInfo.firstName}
-            lastName={personalInfo.lastName}
-            email={personalInfo.email}
-            phone={personalInfo.phone}
-            onInputChange={handlePersonalInfoAdapter}
-            onNext={handleNextStep}
-          />
-        );
-      case 2:
-        return (
-          <DatePickerStep
-            startDate={bookingDates.moveIn}
-            endDate={bookingDates.moveOut}
-            selectedDuration="1-semester"
-            onStartDateChange={handleMoveInDateAdapter}
-            onEndDateChange={handleMoveOutDateAdapter}
-            onDurationChange={(value) => handleDateChange('duration', value)}
-            onPrevious={handlePreviousStep}
-            onNext={handleNextStep}
-          />
-        );
-      case 3:
-        return (
-          <RoomOptionsStep
-            selectedRoomType={roomOptions.roomType}
-            selectedFurnishing={roomOptions.furnishingOption}
-            selectedFloor={roomOptions.floor}
-            extraRequests={roomOptions.extraRequests}
-            onRoomTypeChange={(value) => handleRoomOptionChange('roomType', value)}
-            onFurnishingChange={(value) => handleRoomOptionChange('furnishingOption', value)}
-            onFloorChange={(value) => handleRoomOptionChange('floor', value)}
-            onRequestsChange={(value) => handleRoomOptionChange('extraRequests', value)}
-            onPrevious={handlePreviousStep}
-            onNext={handleNextStep}
-            availableRoomTypes={property?.roomTypes?.map(rt => rt.name) || ['single', 'double', 'triple']}
-          />
-        );
-      case 4:
-        return (
-          <RoommatesForm
-            roommatesList={roommates}
-            onRoommateChange={handleRoommateChange}
-            onAddRoommate={addRoommate}
-            onRemoveRoommate={removeRoommate}
-            onPrevious={handlePreviousStep}
-            onNext={handleNextStep}
-          />
-        );
-      case 5:
-        return (
-          <EmergencyContactForm
-            name={emergencyContact.name}
-            relationship={emergencyContact.relationship}
-            phone={emergencyContact.phone}
-            alternatePhone={emergencyContact.alternatePhone}
-            onInputChange={handleEmergencyContactAdapter}
-            onRelationshipChange={handleRelationshipChange}
-            onPrevious={handlePreviousStep}
-            onNext={handleNextStep}
-          />
-        );
-      case 6:
-        return (
-          <StudentVerification
-            idType={studentVerification.idType}
-            studentId={studentVerification.studentId}
-            university={studentVerification.university}
-            program={studentVerification.program}
-            onInputChange={(name, value) => handleVerificationChange(name, value)}
-            onFileUpload={handleIdUpload}
-            onVerify={handleVerifyStudent}
-            isVerifying={loading}
-            onPrevious={handlePreviousStep}
-            onNext={handleNextStep}
-          />
-        );
-      case 7:
-        return (
-          <div className="space-y-6">
-            <h2 className="text-xl font-bold mb-4">Payment</h2>
-            <div className="border p-4 rounded-lg">
-              <p>Total Amount: ₵{property?.price || 0}</p>
-              <p>Room Type: {roomOptions.roomType}</p>
-              <p>Duration: {bookingDates.duration}</p>
-              <p>Move In: {formatDate(bookingDates.moveIn)}</p>
-              <p>Move Out: {formatDate(bookingDates.moveOut)}</p>
-            </div>
-            <div className="flex justify-between pt-4">
-              <Button type="button" variant="outline" onClick={handlePreviousStep}>
-                Previous
-              </Button>
-              <Button 
-                type="button" 
-                onClick={handleProcessPayment}
-                disabled={paymentInfo.isProcessing}
-              >
-                {paymentInfo.isProcessing ? 'Processing...' : 'Complete Payment'}
-              </Button>
-            </div>
-          </div>
-        );
-      default:
-        return <div>Something went wrong</div>;
-    }
-  };
-  
   if (propertyLoading) {
     return <div className="flex justify-center p-8">Loading...</div>;
   }
   
+  // Prepare the form data object to pass to StepDisplay
+  const formData = {
+    personalInfo: bookingForm.personalInfo,
+    bookingDates: bookingForm.bookingDates,
+    roomOptions: bookingForm.roomOptions,
+    roommates: bookingForm.roommates,
+    emergencyContact: bookingForm.emergencyContact,
+    studentVerification: bookingForm.studentVerification,
+    paymentInfo: bookingForm.paymentInfo
+  };
+  
+  // Prepare handlers to pass to StepDisplay
+  const handlers = {
+    handlePreviousStep,
+    handleNextStep,
+    handlePersonalInfoAdapter: bookingForm.handlePersonalInfoAdapter,
+    handleMoveInDateAdapter: bookingForm.handleMoveInDateAdapter,
+    handleMoveOutDateAdapter: bookingForm.handleMoveOutDateAdapter,
+    handleDateChange: bookingForm.handleDateChange,
+    handleRoomOptionChange: bookingForm.handleRoomOptionChange,
+    handleRoommateChange: bookingForm.handleRoommateChange,
+    addRoommate: bookingForm.addRoommate,
+    removeRoommate: bookingForm.removeRoommate,
+    handleEmergencyContactAdapter: bookingForm.handleEmergencyContactAdapter,
+    handleRelationshipChange: bookingForm.handleRelationshipChange,
+    handleVerificationChange: bookingForm.handleVerificationChange,
+    handleIdUpload: bookingForm.handleIdUpload,
+    handleVerifyStudent: bookingForm.handleVerifyStudent,
+    handleProcessPayment,
+    loading: bookingForm.loading
+  };
+
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-3xl">
       <BookingSteps 
@@ -382,7 +121,12 @@ const BookingStepsContainer: React.FC = () => {
       />
       
       <div className="mt-8">
-        {renderCurrentStepContent()}
+        <StepDisplay 
+          currentStep={currentStep} 
+          property={property}
+          formData={formData}
+          handlers={handlers}
+        />
       </div>
     </div>
   );
