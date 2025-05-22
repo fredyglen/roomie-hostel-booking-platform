@@ -165,7 +165,7 @@ const EnhancedStoryView: React.FC = () => {
         {/* Property info */}
         <div className="absolute bottom-16 left-0 right-0 p-4 z-20 flex justify-between items-end">
           <div className="text-white">
-            <h3 className="text-lg font-bold">{property.name}</h3>
+            <h3 className="text-lg font-bold">{property.title}</h3>
             <p className="text-sm opacity-90">{property.location}</p>
             <p className="text-xs opacity-75">
               {property.distanceToCampus || '10 min walk to campus'}
@@ -200,13 +200,13 @@ const EnhancedStoryView: React.FC = () => {
             </div>
             
             <div className="h-full overflow-auto px-4">
-              <h2 className="text-2xl font-bold mb-2">{property.name}</h2>
+              <h2 className="text-2xl font-bold mb-2">{property.title}</h2>
               <p className="text-gray-600 mb-4">{property.location}</p>
               
               <div className="mb-6">
                 <PropertyImageGallery 
                   images={property.images || []} 
-                  title={property.name || 'Property'}
+                  title={property.title || 'Property'}
                 />
               </div>
               
@@ -242,13 +242,13 @@ const EnhancedStoryView: React.FC = () => {
         <Dialog open={showDetails} onOpenChange={setShowDetails}>
           <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
             <div className="h-full overflow-auto px-4">
-              <h2 className="text-2xl font-bold mb-2">{property.name}</h2>
+              <h2 className="text-2xl font-bold mb-2">{property.title}</h2>
               <p className="text-gray-600 mb-4">{property.location}</p>
               
               <div className="mb-6">
                 <PropertyImageGallery 
                   images={property.images || []} 
-                  title={property.name || 'Property'}
+                  title={property.title || 'Property'}
                 />
               </div>
               

@@ -1,68 +1,92 @@
 
 import React from 'react';
-import { format } from "date-fns";
-import { Calendar } from "@/components/ui/calendar";
-import { CalendarIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import { cn } from "@/lib/utils";
+import { Button } from '@/components/ui/button';
+import { Calendar } from '@/components/ui/calendar';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 interface DatePickerStepProps {
-  selectedDate: Date | undefined;
-  onDateChange: (date: Date | undefined) => void;
+  startDate?: Date;
+  endDate?: Date;
+  selectedDuration?: string;
+  onStartDateChange?: (date: Date) => void;
+  onEndDateChange?: (date: Date) => void;
+  onDurationChange?: (value: string) => void;
+  onPrevious: () => void;
+  onNext: () => void;
 }
 
-const DatePickerStep: React.FC<DatePickerStepProps> = ({ selectedDate, onDateChange }) => {
+const DatePickerStep: React.FC<DatePickerStepProps> = ({
+  startDate = new Date(),
+  endDate = new Date(new Date().setMonth(new Date().getMonth() + 4)),
+  selectedDuration = '1-semester',
+  onStartDateChange,
+  onEndDateChange,
+  onDurationChange,
+  onPrevious,
+  onNext,
+}) => {
+  const durations = [
+    { value: '1-semester', label: '1 Semester (4 months)' },
+    { value: '2-semester', label: '2 Semesters (8 months)' },
+    { value: 'full-year', label: 'Full Year (12 months)' },
+  ];
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div>
-        <h2 className="text-xl font-bold mb-2">Select Move-in Date</h2>
-        <p className="text-gray-600 mb-4">Choose when you want to move into your new accommodation.</p>
+        <h2 className="text-xl font-bold mb-2">Select Duration</h2>
+        <p className="text-gray-600 mb-4">How long would you like to stay?</p>
+        
+        <RadioGroup
+          value={selectedDuration}
+          onValueChange={onDurationChange}
+          className="space-y-3"
+        >
+          {durations.map((option) => (
+            <div key={option.value} className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 transition-colors">
+              <RadioGroupItem value={option.value} id={option.value} />
+              <Label htmlFor={option.value} className="cursor-pointer">{option.label}</Label>
+            </div>
+          ))}
+        </RadioGroup>
       </div>
-      
-      <div className="flex flex-col items-center">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full md:w-[280px] justify-start text-left font-normal",
-                !selectedDate && "text-muted-foreground"
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {selectedDate ? format(selectedDate, "PPP") : <span>Pick a date</span>}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="center">
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div>
+          <h3 className="font-medium mb-2">Move In Date</h3>
+          <div className="border rounded-md p-3">
             <Calendar
               mode="single"
-              selected={selectedDate}
-              onSelect={onDateChange}
-              initialFocus
-              className="p-3 pointer-events-auto"
-              disabled={(date) => {
-                // Disable dates in the past and more than 6 months in the future
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-                const sixMonthsLater = new Date();
-                sixMonthsLater.setMonth(today.getMonth() + 6);
-                return date < today || date > sixMonthsLater;
-              }}
+              selected={startDate}
+              onSelect={onStartDateChange}
+              disabled={(date) => date < new Date()}
+              className="rounded-md border"
             />
-          </PopoverContent>
-        </Popover>
-        
-        {selectedDate && (
-          <div className="mt-6 text-center">
-            <p>You selected</p>
-            <p className="text-xl font-semibold text-roomi-blue">{format(selectedDate, "PPPP")}</p>
           </div>
-        )}
+        </div>
+        
+        <div>
+          <h3 className="font-medium mb-2">Move Out Date</h3>
+          <div className="border rounded-md p-3">
+            <Calendar
+              mode="single"
+              selected={endDate}
+              onSelect={onEndDateChange}
+              disabled={(date) => date <= (startDate || new Date())}
+              className="rounded-md border"
+            />
+          </div>
+        </div>
+      </div>
+      
+      <div className="flex justify-between pt-4">
+        <Button type="button" variant="outline" onClick={onPrevious}>
+          Previous
+        </Button>
+        <Button type="button" onClick={onNext}>
+          Next
+        </Button>
       </div>
     </div>
   );

@@ -1,30 +1,47 @@
 
 import React from 'react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 
 interface PersonalInfoFormProps {
-  fullName: string;
-  phone: string;
+  firstName: string;
+  lastName: string;
   email: string;
+  phone: string;
   onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onNext: () => void;
 }
 
 const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
-  fullName,
-  phone,
+  firstName,
+  lastName,
   email,
-  onInputChange
+  phone,
+  onInputChange,
+  onNext
 }) => {
   return (
     <div>
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
         <Input
           type="text"
-          name="fullName"
-          value={fullName}
+          name="firstName"
+          value={firstName}
           onChange={onInputChange}
-          placeholder="Your full name"
+          placeholder="Your first name"
+          required
+        />
+      </div>
+      
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+        <Input
+          type="text"
+          name="lastName"
+          value={lastName}
+          onChange={onInputChange}
+          placeholder="Your last name"
           required
         />
       </div>
@@ -51,6 +68,12 @@ const PersonalInfoForm: React.FC<PersonalInfoFormProps> = ({
           placeholder="Your email address"
           required
         />
+      </div>
+      
+      <div className="mt-6">
+        <Button type="button" onClick={onNext} className="w-full">
+          Next
+        </Button>
       </div>
     </div>
   );
