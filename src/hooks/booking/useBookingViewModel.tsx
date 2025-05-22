@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useToast } from '@/hooks/use-toast';
 import { Property } from '@/types/property';
 
 export const STEP_LABELS = [
@@ -18,6 +19,7 @@ export const STEP_LABELS = [
  */
 export const useBookingViewModel = (property: Property | undefined, id: string) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [splitPayment, setSplitPayment] = useState(false);
@@ -140,25 +142,37 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
     switch (currentStep) {
       case 1: // Room Type
         if (!formData.roomType) {
-          toast.error('Please select a room type');
+          toast({
+            title: "Please select a room type",
+            variant: "destructive"
+          });
           return false;
         }
         return true;
         
       case 2: // Duration
         if (!formData.duration) {
-          toast.error('Please enter duration');
+          toast({
+            title: "Please enter duration",
+            variant: "destructive"
+          });
           return false;
         }
         if (!formData.checkInDate) {
-          toast.error('Please select check-in date');
+          toast({
+            title: "Please select check-in date",
+            variant: "destructive"
+          });
           return false;
         }
         
         // Validate split payment info if it's an apartment and split payment is enabled
         if (property?.propertyCategory === 'Apartment' && splitPayment) {
           if (numberOfRoommates < 2) {
-            toast.error('Please specify at least 2 roommates for split payment');
+            toast({
+              title: "Please specify at least 2 roommates for split payment",
+              variant: "destructive"
+            });
             return false;
           }
           
@@ -170,7 +184,10 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
           });
           
           if (incompleteRoommate) {
-            toast.error('Please provide complete information for all roommates');
+            toast({
+              title: "Please provide complete information for all roommates",
+              variant: "destructive"
+            });
             return false;
           }
         }
@@ -179,7 +196,10 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
         
       case 3: // Personal Info
         if (!formData.fullName || !formData.phone || !formData.email) {
-          toast.error('Please fill in all personal information');
+          toast({
+            title: "Please fill in all personal information",
+            variant: "destructive"
+          });
           return false;
         }
         
@@ -194,7 +214,10 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
         
       case 4: // Emergency Contact
         if (!formData.emergencyContact || !formData.emergencyPhone) {
-          toast.error('Please fill in all emergency contact information');
+          toast({
+            title: "Please fill in all emergency contact information",
+            variant: "destructive"
+          });
           return false;
         }
         return true;
@@ -205,14 +228,20 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
         
       case 6: // Summary
         if (!formData.termsAgreed) {
-          toast.error('Please agree to the terms and conditions');
+          toast({
+            title: "Please agree to the terms and conditions",
+            variant: "destructive"
+          });
           return false;
         }
         return true;
         
       case 7: // Payment
         if (!selectedPaymentMethod) {
-          toast.error('Please select a payment method');
+          toast({
+            title: "Please select a payment method",
+            variant: "destructive"
+          });
           return false;
         }
         return true;
@@ -224,11 +253,15 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
   
   const processPayment = () => {
     // Simulate payment processing
-    toast.loading('Processing payment...');
+    toast({
+      title: "Processing payment...",
+    });
     
     setTimeout(() => {
-      toast.dismiss();
-      toast.success('Payment successful! Booking confirmed.');
+      toast({
+        title: "Payment successful!",
+        description: "Booking confirmed."
+      });
       
       // Clear booking form data from localStorage
       localStorage.removeItem(`booking_form_${id}`);

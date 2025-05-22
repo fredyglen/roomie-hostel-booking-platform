@@ -2,112 +2,169 @@
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-export function useBookingForm() {
+interface PersonalInfo {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+}
+
+interface BookingDates {
+  moveIn: Date;
+  moveOut: Date;
+  duration: string;
+}
+
+interface RoomOptions {
+  roomType: string;
+  furnishingOption: string;
+  floor: string;
+  extraRequests: string;
+}
+
+interface Roommate {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+interface EmergencyContact {
+  name: string;
+  relationship: string;
+  phone: string;
+  alternatePhone: string;
+}
+
+interface StudentVerification {
+  idType: string;
+  studentId: string;
+  university: string;
+  program: string;
+  idImage: File | null;
+  verified: boolean;
+}
+
+interface PaymentInfo {
+  method: string;
+  momoNumber: string;
+  cardNumber: string;
+  cardExpiry: string;
+  cardCvc: string;
+  isProcessing: boolean;
+  isComplete: boolean;
+}
+
+export const useBookingForm = () => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
   
-  // Personal info
-  const [personalInfo, setPersonalInfo] = useState({
+  // Personal Information
+  const [personalInfo, setPersonalInfo] = useState<PersonalInfo>({
     firstName: '',
     lastName: '',
     email: '',
-    phone: '',
+    phone: ''
   });
   
-  // Booking dates
-  const [bookingDates, setBookingDates] = useState({
+  // Dates
+  const [bookingDates, setBookingDates] = useState<BookingDates>({
     moveIn: new Date(),
-    moveOut: new Date(new Date().setMonth(new Date().getMonth() + 4)),
-    duration: '1 semester',
+    moveOut: new Date(new Date().setMonth(new Date().getMonth() + 4)), // Default 4 months
+    duration: '1 semester'
   });
   
-  // Room options
-  const [roomOptions, setRoomOptions] = useState({
+  // Room Options
+  const [roomOptions, setRoomOptions] = useState<RoomOptions>({
     roomType: 'single',
     furnishingOption: 'fully_furnished',
     floor: '1st',
-    extraRequests: '',
+    extraRequests: ''
   });
   
   // Roommates
-  const [roommates, setRoommates] = useState([
-    { name: '', email: '', phone: '' },
+  const [roommates, setRoommates] = useState<Roommate[]>([
+    {
+      name: '',
+      email: '',
+      phone: ''
+    }
   ]);
   
-  // Emergency contact
-  const [emergencyContact, setEmergencyContact] = useState({
+  // Emergency Contact
+  const [emergencyContact, setEmergencyContact] = useState<EmergencyContact>({
     name: '',
-    relationship: '',
+    relationship: 'parent',
     phone: '',
-    alternatePhone: '',
+    alternatePhone: ''
   });
   
-  // Student verification
-  const [studentVerification, setStudentVerification] = useState({
-    idType: '',
+  // Student Verification
+  const [studentVerification, setStudentVerification] = useState<StudentVerification>({
+    idType: 'studentId',
     studentId: '',
     university: '',
     program: '',
-    idImage: null as File | null,
-    verified: false,
+    idImage: null,
+    verified: false
   });
   
-  // Payment info
-  const [paymentInfo, setPaymentInfo] = useState({
-    method: 'momo',
+  // Payment Information
+  const [paymentInfo, setPaymentInfo] = useState<PaymentInfo>({
+    method: '',
     momoNumber: '',
     cardNumber: '',
     cardExpiry: '',
     cardCvc: '',
     isProcessing: false,
-    isComplete: false,
+    isComplete: false
   });
-
-  // Handle personal info form changes
-  const handlePersonalInfoChange = (name: string, value: string) => {
-    setPersonalInfo({
-      ...personalInfo,
-      [name]: value,
-    });
-  };
   
-  // Adapter for converting event-based onChange to our name/value pattern
+  // Handlers for Personal Information
   const handlePersonalInfoAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handlePersonalInfoChange(e.target.name, e.target.value);
+    const { name, value } = e.target;
+    setPersonalInfo(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
   
-  // Handle date changes
-  const handleDateChange = (name: string, value: Date | string) => {
-    setBookingDates({
-      ...bookingDates,
-      [name]: value,
-    });
-  };
-  
-  // Adapter for date picker
+  // Handlers for Dates
   const handleMoveInDateAdapter = (date: Date) => {
-    handleDateChange('moveIn', date);
+    setBookingDates(prev => ({
+      ...prev,
+      moveIn: date
+    }));
   };
   
   const handleMoveOutDateAdapter = (date: Date) => {
-    handleDateChange('moveOut', date);
+    setBookingDates(prev => ({
+      ...prev,
+      moveOut: date
+    }));
   };
   
-  // Handle room option changes
+  const handleDateChange = (name: string, value: Date | string) => {
+    setBookingDates(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  // Handlers for Room Options
   const handleRoomOptionChange = (name: string, value: string) => {
-    setRoomOptions({
-      ...roomOptions,
-      [name]: value,
-    });
+    setRoomOptions(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
   
-  // Handle roommate changes
+  // Handlers for Roommates
   const handleRoommateChange = (index: number, field: string, value: string) => {
     const updatedRoommates = [...roommates];
     updatedRoommates[index] = {
       ...updatedRoommates[index],
-      [field]: value,
+      [field]: value
     };
     setRoommates(updatedRoommates);
   };
@@ -115,77 +172,81 @@ export function useBookingForm() {
   const addRoommate = () => {
     if (roommates.length < 3) {
       setRoommates([...roommates, { name: '', email: '', phone: '' }]);
+    } else {
+      toast({
+        title: "Maximum roommates reached",
+        description: "You can add a maximum of 3 roommates.",
+        variant: "destructive"
+      });
     }
   };
   
   const removeRoommate = (index: number) => {
-    const updatedRoommates = roommates.filter((_, i) => i !== index);
-    setRoommates(updatedRoommates);
+    if (index > 0) {
+      setRoommates(roommates.filter((_, i) => i !== index));
+    }
   };
   
-  // Handle emergency contact changes
-  const handleEmergencyContactChange = (name: string, value: string) => {
-    setEmergencyContact({
-      ...emergencyContact,
-      [name]: value,
-    });
-  };
-  
-  // Adapter for emergency contact
+  // Handlers for Emergency Contact
   const handleEmergencyContactAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
-    handleEmergencyContactChange(e.target.name, e.target.value);
+    const { name, value } = e.target;
+    setEmergencyContact(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
   
-  // Handle relationship change for emergency contact
   const handleRelationshipChange = (value: string) => {
-    handleEmergencyContactChange('relationship', value);
+    setEmergencyContact(prev => ({
+      ...prev,
+      relationship: value
+    }));
   };
   
-  // Handle student verification changes
+  // Handlers for Student Verification
   const handleVerificationChange = (name: string, value: string) => {
-    setStudentVerification({
-      ...studentVerification,
-      [name]: value,
-    });
+    setStudentVerification(prev => ({
+      ...prev,
+      [name]: value
+    }));
   };
   
   const handleIdUpload = (file: File) => {
-    setStudentVerification({
-      ...studentVerification,
-      idImage: file,
-    });
+    setStudentVerification(prev => ({
+      ...prev,
+      idImage: file
+    }));
   };
   
-  const handleVerifyStudent = () => {
+  const handleVerifyStudent = async () => {
     setLoading(true);
     
-    // Simulate verification process
-    setTimeout(() => {
-      setStudentVerification({
-        ...studentVerification,
-        verified: true,
-      });
-      setLoading(false);
+    // Simulate API call for verification
+    try {
+      // In a real implementation, this would be an API call to verify the student
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      setStudentVerification(prev => ({
+        ...prev,
+        verified: true
+      }));
+      
       toast({
-        title: "Verification Successful",
-        description: "Your student status has been verified successfully.",
+        title: "Verification successful",
+        description: "Your student status has been verified.",
       });
-    }, 2000);
+    } catch (error) {
+      toast({
+        title: "Verification failed",
+        description: "Failed to verify your student status. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
   };
   
-  // Handle payment method changes
-  const handlePaymentChange = (name: string, value: string) => {
-    setPaymentInfo({
-      ...paymentInfo,
-      [name]: value,
-    });
-  };
-
   return {
-    loading,
-    setLoading,
-    bookingComplete,
-    setBookingComplete,
     personalInfo,
     bookingDates,
     roomOptions,
@@ -193,22 +254,22 @@ export function useBookingForm() {
     emergencyContact,
     studentVerification,
     paymentInfo,
-    handlePersonalInfoChange,
+    loading,
+    bookingComplete,
+    setPaymentInfo,
+    setBookingComplete,
     handlePersonalInfoAdapter,
-    handleDateChange,
     handleMoveInDateAdapter,
     handleMoveOutDateAdapter,
+    handleDateChange,
     handleRoomOptionChange,
     handleRoommateChange,
     addRoommate,
     removeRoommate,
-    handleEmergencyContactChange,
     handleEmergencyContactAdapter,
     handleRelationshipChange,
     handleVerificationChange,
     handleIdUpload,
-    handleVerifyStudent,
-    handlePaymentChange,
-    setPaymentInfo
+    handleVerifyStudent
   };
-}
+};

@@ -1,8 +1,9 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select } from '@/components/ui/select';
+import { CheckCircle } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 interface StudentVerificationProps {
   idType: string;
@@ -15,6 +16,7 @@ interface StudentVerificationProps {
   isVerifying: boolean;
   onPrevious: () => void;
   onNext: () => void;
+  verified?: boolean;
 }
 
 const StudentVerification: React.FC<StudentVerificationProps> = ({
@@ -27,15 +29,25 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
   onVerify,
   isVerifying,
   onPrevious,
-  onNext
+  onNext,
+  verified = false
 }) => {
+  const { toast } = useToast();
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     onInputChange(e.target.name, e.target.value);
   };
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
-      onFileUpload(e.target.files[0]);
+      const file = e.target.files[0];
+      setUploadedFile(file);
+      onFileUpload(file);
+      toast({
+        title: "File uploaded",
+        description: `${file.name} has been successfully uploaded.`,
+      });
     }
   };
   
@@ -111,6 +123,13 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
             Upload a clear image of your student ID or other verification document.
           </p>
         </div>
+        
+        {verified && (
+          <div className="flex items-center p-3 bg-green-50 text-green-700 rounded-md">
+            <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
+            <span>Your student status has been verified!</span>
+          </div>
+        )}
       </div>
       
       <div className="flex justify-between pt-4">
@@ -122,11 +141,15 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
             type="button"
             variant="secondary"
             onClick={onVerify}
-            disabled={isVerifying}
+            disabled={isVerifying || !uploadedFile || verified}
           >
-            {isVerifying ? 'Verifying...' : 'Verify Student Status'}
+            {isVerifying ? 'Verifying...' : verified ? 'Verified' : 'Verify Student Status'}
           </Button>
-          <Button type="button" onClick={onNext}>
+          <Button 
+            type="button" 
+            onClick={onNext}
+            disabled={!verified && !uploadedFile}
+          >
             Next
           </Button>
         </div>

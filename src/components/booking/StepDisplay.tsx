@@ -1,8 +1,6 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Icon } from '@iconify/react';
-import { formatDate } from '@/lib/utils';
 
 // Import step components
 import PersonalInfoForm from './PersonalInfoForm';
@@ -130,7 +128,7 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
         <DatePickerStep
           startDate={bookingDates.moveIn}
           endDate={bookingDates.moveOut}
-          selectedDuration="1-semester"
+          selectedDuration={bookingDates.duration}
           onStartDateChange={handleMoveInDateAdapter}
           onEndDateChange={handleMoveOutDateAdapter}
           onDurationChange={(value) => handleDateChange('duration', value)}
@@ -189,6 +187,7 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
           onFileUpload={handleIdUpload}
           onVerify={handleVerifyStudent}
           isVerifying={loading}
+          verified={studentVerification.verified}
           onPrevious={handlePreviousStep}
           onNext={handleNextStep}
         />

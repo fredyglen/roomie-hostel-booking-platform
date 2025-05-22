@@ -2,14 +2,13 @@
 import React, { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePropertyLoader } from '@/hooks/property';
-import { useBookingForm } from '@/hooks/booking/useBookingForm';
+import { useBookingForm } from '@/hooks/booking';
 import BookingSteps from './BookingSteps';
 import StepDisplay from './StepDisplay';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { formatDate } from '@/lib/utils';
 
-// Fixing the BookingStepsContainer component to handle type issues
 const BookingStepsContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -126,12 +125,14 @@ const BookingStepsContainer: React.FC = () => {
         
         <div className="mt-8 space-y-6">
           <h2 className="text-xl font-bold mb-4">Payment</h2>
-          <div className="border p-4 rounded-lg">
-            <p>Total Amount: ₵{property?.price || 0}</p>
-            <p>Room Type: {bookingForm.roomOptions.roomType}</p>
-            <p>Duration: {bookingForm.bookingDates.duration}</p>
-            <p>Move In: {formatDate(bookingForm.bookingDates.moveIn)}</p>
-            <p>Move Out: {formatDate(bookingForm.bookingDates.moveOut)}</p>
+          <div className="border p-4 rounded-lg space-y-2">
+            <p className="font-medium">Booking Summary</p>
+            <p className="flex justify-between"><span>Property:</span> <span className="font-medium">{property?.title}</span></p>
+            <p className="flex justify-between"><span>Total Amount:</span> <span className="font-medium">₵{property?.price || 0}</span></p>
+            <p className="flex justify-between"><span>Room Type:</span> <span>{bookingForm.roomOptions.roomType}</span></p>
+            <p className="flex justify-between"><span>Duration:</span> <span>{bookingForm.bookingDates.duration}</span></p>
+            <p className="flex justify-between"><span>Move In:</span> <span>{formatDate(bookingForm.bookingDates.moveIn)}</span></p>
+            <p className="flex justify-between"><span>Move Out:</span> <span>{formatDate(bookingForm.bookingDates.moveOut)}</span></p>
           </div>
           <div className="flex justify-between pt-4">
             <Button type="button" variant="outline" onClick={handlePreviousStep}>
