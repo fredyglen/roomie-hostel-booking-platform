@@ -1,250 +1,342 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Button from '@/components/common/Button';
-import BookingSteps from '@/components/booking/BookingSteps';
-import RoomTypeSelection from '@/components/booking/RoomTypeSelection';
-import DurationSelection from '@/components/booking/DurationSelection';
-import PersonalInfoForm from '@/components/booking/PersonalInfoForm';
-import EmergencyContactForm from '@/components/booking/EmergencyContactForm';
-import StudentVerification from '@/components/booking/StudentVerification';
-import BookingSummary from '@/components/booking/BookingSummary';
-import PaymentOptions from '@/components/booking/PaymentOptions';
-import { useBookingViewModel, STEP_LABELS } from '@/components/booking/BookingViewModel';
-import { toast } from 'sonner';
+
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { usePropertyLoader } from '@/hooks/property';
+import BookingSteps from './BookingSteps';
+import PersonalInfoForm from './PersonalInfoForm';
+import DatePickerStep from './DatePickerStep';
+import RoomOptionsStep from './RoomOptionsStep';
+import RoommatesForm from './RoommatesForm';
+import EmergencyContactForm from './EmergencyContactForm';
+import StudentVerification from './StudentVerification';
+import PaymentStep from './PaymentStep';
+import { useToast } from '@/hooks/use-toast';
+import { formatDate } from '@/lib/utils';
 
 const BookingStepsContainer: React.FC = () => {
+  const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [isVerifying, setIsVerifying] = useState(false);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const { toast } = useToast();
   
-  const {
-    property,
-    currentStep,
-    formData,
-    selectedPaymentMethod,
-    selectedPrice,
-    selectedUnit,
-    totalPrice,
-    handleInputChange,
-    handleCheckboxChange,
-    handleNext,
-    handleBack,
-    setSelectedPaymentMethod,
-    splitPayment,
-    setSplitPayment,
-    numberOfRoommates,
-    setNumberOfRoommates,
-    roommatesInfo,
-    handleRoommateChange,
-    individualPrice
-  } = useBookingViewModel();
+  const [currentStep, setCurrentStep] = useState(1);
+  const [totalSteps] = useState(7);
   
-  // Create adapter functions for components that expect a different signature
-  const handleRoommateChangeAdapter = (index: number, field: string, value: string) => {
-    handleRoommateChange(index, field, value);
-  };
+  const [loading, setLoading] = useState(false);
+  const [bookingComplete, setBookingComplete] = useState(false);
   
-  // Create adapter function for StudentVerification
-  const handleStudentVerificationInputChange = (name: string, value: string) => {
-    handleInputChange({ target: { name, value } } as React.ChangeEvent<HTMLInputElement>);
-  };
+  // Property data
+  const { data: property, isLoading: propertyLoading } = usePropertyLoader({
+    propertyId: id || '',
+    forOwner: false,
+    enabled: !!id
+  });
   
-  // Handle file upload
-  const handleFileUpload = (file: File) => {
-    console.log('File uploaded:', file.name);
-    setUploadedFile(file);
-  };
+  // Personal info
+  const [personalInfo, setPersonalInfo] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+  });
   
-  // Handle verification process
-  const handleVerify = () => {
-    if (!uploadedFile) {
-      toast.error('Please upload your ID document');
-      return;
+  // Booking dates
+  const [bookingDates, setBookingDates] = useState({
+    moveIn: new Date(),
+    moveOut: new Date(new Date().setMonth(new Date().getMonth() + 4)),
+    duration: '1 semester',
+  });
+  
+  // Room options
+  const [roomOptions, setRoomOptions] = useState({
+    roomType: 'single',
+    furnishingOption: 'fully_furnished',
+    floor: '1st',
+    extraRequests: '',
+  });
+  
+  // Roommates
+  const [roommates, setRoommates] = useState([
+    { name: '', email: '', phone: '' },
+  ]);
+  
+  // Emergency contact
+  const [emergencyContact, setEmergencyContact] = useState({
+    name: '',
+    relationship: '',
+    phone: '',
+    alternatePhone: '',
+  });
+  
+  // Student verification
+  const [studentVerification, setStudentVerification] = useState({
+    idType: '',
+    studentId: '',
+    university: '',
+    program: '',
+    idImage: null as File | null,
+    verified: false,
+  });
+  
+  // Payment info
+  const [paymentInfo, setPaymentInfo] = useState({
+    method: 'momo',
+    momoNumber: '',
+    cardNumber: '',
+    cardExpiry: '',
+    cardCvc: '',
+    isProcessing: false,
+    isComplete: false,
+  });
+  
+  // Handle completion of current step
+  const handleNextStep = () => {
+    if (currentStep < totalSteps) {
+      setCurrentStep(currentStep + 1);
     }
-    
-    if (!formData.studentId) {
-      toast.error('Please enter your Student ID');
-      return;
+  };
+  
+  const handlePreviousStep = () => {
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
     }
+  };
+  
+  // Handle personal info form changes
+  const handlePersonalInfoChange = (name: string, value: string) => {
+    setPersonalInfo({
+      ...personalInfo,
+      [name]: value,
+    });
+  };
+  
+  // Handle date changes
+  const handleDateChange = (name: string, value: Date | string) => {
+    setBookingDates({
+      ...bookingDates,
+      [name]: value,
+    });
+  };
+  
+  // Handle room option changes
+  const handleRoomOptionChange = (name: string, value: string) => {
+    setRoomOptions({
+      ...roomOptions,
+      [name]: value,
+    });
+  };
+  
+  // Handle roommate changes
+  const handleRoommateChange = (index: number, field: string, value: string) => {
+    const updatedRoommates = [...roommates];
+    updatedRoommates[index] = {
+      ...updatedRoommates[index],
+      [field]: value,
+    };
+    setRoommates(updatedRoommates);
+  };
+  
+  const addRoommate = () => {
+    if (roommates.length < 3) {
+      setRoommates([...roommates, { name: '', email: '', phone: '' }]);
+    }
+  };
+  
+  const removeRoommate = (index: number) => {
+    const updatedRoommates = roommates.filter((_, i) => i !== index);
+    setRoommates(updatedRoommates);
+  };
+  
+  // Handle emergency contact changes
+  const handleEmergencyContactChange = (name: string, value: string) => {
+    setEmergencyContact({
+      ...emergencyContact,
+      [name]: value,
+    });
+  };
+  
+  // Handle student verification changes
+  const handleVerificationChange = (name: string, value: string) => {
+    setStudentVerification({
+      ...studentVerification,
+      [name]: value,
+    });
+  };
+  
+  const handleIdUpload = (file: File) => {
+    setStudentVerification({
+      ...studentVerification,
+      idImage: file,
+    });
+  };
+  
+  const handleVerifyStudent = () => {
+    setLoading(true);
     
-    setIsVerifying(true);
-    
-    // Simulate verification process with a delay
+    // Simulate verification process
     setTimeout(() => {
-      setIsVerifying(false);
-      toast.success('Student verification successful!');
-      handleNext();
+      setStudentVerification({
+        ...studentVerification,
+        verified: true,
+      });
+      setLoading(false);
+      handleNextStep();
+      toast({
+        title: "Verification Successful",
+        description: "Your student status has been verified successfully.",
+      });
     }, 2000);
   };
   
-  if (!property) {
-    return (
-      <div className="text-center">
-        <h2 className="text-2xl font-bold mb-4">Property Not Found</h2>
-        <p className="mb-6">The property you're looking for doesn't exist or has been removed.</p>
-        <Button variant="primary" onClick={() => navigate('/student/properties')}>
-          Browse Properties
-        </Button>
-      </div>
-    );
-  }
-
-  const renderStepContent = () => {
+  // Handle payment method changes
+  const handlePaymentChange = (name: string, value: string) => {
+    setPaymentInfo({
+      ...paymentInfo,
+      [name]: value,
+    });
+  };
+  
+  const handleProcessPayment = () => {
+    setPaymentInfo({
+      ...paymentInfo,
+      isProcessing: true,
+    });
+    
+    // Simulate payment processing
+    setTimeout(() => {
+      setPaymentInfo({
+        ...paymentInfo,
+        isProcessing: false,
+        isComplete: true,
+      });
+      
+      setBookingComplete(true);
+      
+      toast({
+        title: "Booking Successful!",
+        description: "Your booking has been confirmed. You will receive an email with details shortly.",
+      });
+      
+      // Redirect to booking confirmation or dashboard after a delay
+      setTimeout(() => {
+        navigate('/student/properties');
+      }, 3000);
+    }, 3000);
+  };
+  
+  // Determine which form to show based on current step
+  const renderCurrentStepContent = () => {
     switch (currentStep) {
       case 1:
         return (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Choose Room Type</h2>
-            <RoomTypeSelection 
-              roomTypes={property.roomTypes || []}
-              selectedRoomType={formData.roomType}
-              onSelectRoomType={handleInputChange}
-            />
-          </div>
+          <PersonalInfoForm
+            firstName={personalInfo.firstName}
+            lastName={personalInfo.lastName}
+            email={personalInfo.email}
+            phone={personalInfo.phone}
+            onInputChange={handlePersonalInfoChange}
+            onNext={handleNextStep}
+          />
         );
-      
       case 2:
         return (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Select Duration and Date</h2>
-            <DurationSelection 
-              duration={formData.duration}
-              durationType={formData.durationType}
-              checkInDate={formData.checkInDate}
-              onInputChange={handleInputChange}
-              property={property}
-              splitPayment={splitPayment}
-              setSplitPayment={setSplitPayment}
-              numberOfRoommates={numberOfRoommates}
-              setNumberOfRoommates={setNumberOfRoommates}
-              roommatesInfo={roommatesInfo}
-              handleRoommateChange={handleRoommateChangeAdapter}
-              individualPrice={individualPrice}
-              selectedUnit={selectedUnit}
-            />
-          </div>
+          <DatePickerStep
+            moveInDate={bookingDates.moveIn}
+            moveOutDate={bookingDates.moveOut}
+            duration={bookingDates.duration}
+            onDateChange={handleDateChange}
+            onPrevious={handlePreviousStep}
+            onNext={handleNextStep}
+          />
         );
-      
       case 3:
         return (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Personal Information</h2>
-            <PersonalInfoForm 
-              fullName={formData.fullName}
-              phone={formData.phone}
-              email={formData.email}
-              onInputChange={handleInputChange}
-            />
-          </div>
+          <RoomOptionsStep
+            roomType={roomOptions.roomType}
+            furnishingOption={roomOptions.furnishingOption}
+            floor={roomOptions.floor}
+            extraRequests={roomOptions.extraRequests}
+            onInputChange={handleRoomOptionChange}
+            onPrevious={handlePreviousStep}
+            onNext={handleNextStep}
+            availableOptions={property?.roomTypes || ['single', 'double', 'triple']}
+          />
         );
-      
       case 4:
         return (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Emergency Contact</h2>
-            <EmergencyContactForm 
-              emergencyContact={formData.emergencyContact}
-              emergencyPhone={formData.emergencyPhone}
-              onInputChange={handleInputChange}
-            />
-          </div>
+          <RoommatesForm
+            roommates={roommates}
+            onRoommateChange={handleRoommateChange}
+            onAddRoommate={addRoommate}
+            onRemoveRoommate={removeRoommate}
+            onPrevious={handlePreviousStep}
+            onNext={handleNextStep}
+          />
         );
-      
       case 5:
         return (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Student Verification</h2>
-            <StudentVerification 
-              idType={formData.idType || 'studentId'}
-              studentId={formData.studentId}
-              university={formData.university}
-              program={formData.program}
-              onInputChange={handleStudentVerificationInputChange}
-              onFileUpload={handleFileUpload}
-              onVerify={handleVerify}
-              isVerifying={isVerifying}
-            />
-          </div>
+          <EmergencyContactForm
+            name={emergencyContact.name}
+            relationship={emergencyContact.relationship}
+            phone={emergencyContact.phone}
+            alternatePhone={emergencyContact.alternatePhone}
+            onInputChange={handleEmergencyContactChange}
+            onPrevious={handlePreviousStep}
+            onNext={handleNextStep}
+          />
         );
-      
       case 6:
         return (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Booking Summary</h2>
-            <BookingSummary 
-              propertyTitle={property.title}
-              propertyImage={property.images?.[0] || ''}
-              roomType={formData.roomType}
-              duration={formData.duration}
-              durationType={formData.durationType}
-              checkInDate={formData.checkInDate}
-              fullName={formData.fullName}
-              price={selectedPrice}
-              priceUnit={selectedUnit}
-              termsAgreed={formData.termsAgreed}
-              onCheckboxChange={(name, checked) => {
-                handleCheckboxChange({
-                  target: { name, checked }
-                } as React.ChangeEvent<HTMLInputElement>)
-              }}
-            />
-          </div>
+          <StudentVerification
+            idType={studentVerification.idType}
+            studentId={studentVerification.studentId}
+            university={studentVerification.university}
+            program={studentVerification.program}
+            onInputChange={handleVerificationChange}
+            onFileUpload={handleIdUpload}
+            onVerify={handleVerifyStudent}
+            isVerifying={loading}
+          />
         );
-      
       case 7:
         return (
-          <div>
-            <h2 className="text-xl font-bold mb-4">Payment</h2>
-            <PaymentOptions 
-              totalPrice={totalPrice}
-              selectedPaymentMethod={selectedPaymentMethod}
-              onSelectPaymentMethod={setSelectedPaymentMethod}
-            />
-          </div>
+          <PaymentStep
+            amount={property?.price || 0}
+            roomType={roomOptions.roomType}
+            duration={bookingDates.duration}
+            moveInDate={formatDate(bookingDates.moveIn)}
+            moveOutDate={formatDate(bookingDates.moveOut)}
+            paymentMethod={paymentInfo.method}
+            momoNumber={paymentInfo.momoNumber}
+            cardNumber={paymentInfo.cardNumber}
+            cardExpiry={paymentInfo.cardExpiry}
+            cardCvc={paymentInfo.cardCvc}
+            onInputChange={handlePaymentChange}
+            onPrevious={handlePreviousStep}
+            onSubmit={handleProcessPayment}
+            isProcessing={paymentInfo.isProcessing}
+            isComplete={paymentInfo.isComplete}
+          />
         );
-      
       default:
-        return null;
+        return <div>Something went wrong</div>;
     }
   };
-
+  
+  if (propertyLoading) {
+    return <div className="flex justify-center p-8">Loading...</div>;
+  }
+  
   return (
-    <div>
-      <div className="mb-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-2">Book {property.title}</h1>
-        <p className="text-gray-600">{property.address}</p>
-      </div>
-      
-      {/* Progress Steps */}
+    <div className="container mx-auto p-4 md:p-8 max-w-3xl">
       <BookingSteps 
-        currentStep={currentStep}
-        totalSteps={7}
-        stepLabels={STEP_LABELS}
+        currentStep={currentStep} 
+        totalSteps={totalSteps} 
+        property={property}
+        bookingComplete={bookingComplete}
       />
       
-      {/* Step Content */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        {renderStepContent()}
-        
-        {/* Navigation Buttons */}
-        <div className="flex justify-between mt-8">
-          <Button variant="outline" onClick={handleBack}>
-            Back
-          </Button>
-          {currentStep === 5 ? (
-            // Don't show the "Next" button on verification screen,
-            // as it will be handled by the verification component
-            null
-          ) : (
-            <Button 
-              variant="primary" 
-              onClick={handleNext}
-              disabled={currentStep === 6 && !formData.termsAgreed}
-            >
-              {currentStep === 7 ? 'Make Payment' : 'Next'}
-            </Button>
-          )}
-        </div>
+      <div className="mt-8">
+        {renderCurrentStepContent()}
       </div>
     </div>
   );

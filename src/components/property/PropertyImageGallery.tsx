@@ -6,14 +6,18 @@ import { toast } from 'sonner';
 interface PropertyImageGalleryProps {
   images: string[];
   title: string;
+  onError?: () => void;
 }
 
-const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({ images, title }) => {
+const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({ images, title, onError }) => {
   const handleImageError = () => {
     toast.error("Failed to load image", {
       id: "property-gallery-error",
       duration: 2000,
     });
+    
+    // Call the parent's onError handler if provided
+    if (onError) onError();
   };
 
   return (

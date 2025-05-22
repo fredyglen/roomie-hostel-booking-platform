@@ -1,149 +1,140 @@
 
 import React from 'react';
-import { FormProvider, useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { toast } from 'sonner';
+import { Icon } from '@iconify/react';
+import { Button } from '../ui/button';
+import { Input } from '../ui/input';
+import { Label } from '../ui/label';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
+import FormField from '../common/form/FormField';
 
-const verificationSchema = z.object({
-  studentId: z.string().min(1, "Student ID is required"),
-  idNumber: z.string().min(1, "National ID number is required"),
-  idType: z.enum(["national-id", "passport", "drivers-license"]),
-  university: z.string().min(1, "University is required")
-});
-
-type VerificationFormData = z.infer<typeof verificationSchema>;
-
-interface StudentVerificationProps {
-  onNext: () => void;
-  onPrevious: () => void;
+export interface StudentVerificationProps {
+  studentId?: string;
+  university?: string;
+  program?: string;
+  idType?: string;
+  onInputChange: (name: string, value: string) => void;
+  onFileUpload: (file: File) => void;
+  onVerify: () => void;
+  isVerifying: boolean;
 }
 
-const StudentVerification: React.FC<StudentVerificationProps> = ({ onNext, onPrevious }) => {
-  const form = useForm<VerificationFormData>({
-    resolver: zodResolver(verificationSchema),
-    defaultValues: {
-      studentId: '',
-      idNumber: '',
-      idType: 'national-id',
-      university: 'University of Ghana'
+const StudentVerification: React.FC<StudentVerificationProps> = ({
+  studentId,
+  university,
+  program,
+  idType,
+  onInputChange,
+  onFileUpload,
+  onVerify,
+  isVerifying
+}) => {
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      onFileUpload(e.target.files[0]);
     }
-  });
-
-  const onSubmit = (data: VerificationFormData) => {
-    console.log("Verification data:", data);
-    // Save verification data to context or storage
-    toast.success("Verification information submitted", {
-      description: "Your information will be reviewed shortly"
-    });
-    
-    // In a production environment, we would submit this to an API
-    // For now, just proceed to the next step
-    onNext();
   };
 
   return (
-    <div className="space-y-6 py-4">
-      <div>
-        <h2 className="text-2xl font-bold">Student Verification</h2>
-        <p className="text-gray-500 mt-1">Please provide your student information for verification</p>
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
+          <Icon icon="solar:user-id-linear" className="w-8 h-8 text-blue-600" />
+        </div>
+        <h2 className="text-xl font-semibold mb-1">Student Verification</h2>
+        <p className="text-gray-500 max-w-md mx-auto">
+          We need to verify your student status before proceeding with the booking
+        </p>
       </div>
-      
-      <FormProvider {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <FormField
-            control={form.control}
-            name="studentId"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Student ID</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your student ID" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+
+      <div className="space-y-4">
+        <FormField label="ID Type">
+          <Select 
+            value={idType} 
+            onValueChange={(value) => onInputChange('idType', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select ID type" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="student_id">Student ID</SelectItem>
+              <SelectItem value="national_id">National ID</SelectItem>
+              <SelectItem value="passport">Passport</SelectItem>
+              <SelectItem value="drivers_license">Driver's License</SelectItem>
+            </SelectContent>
+          </Select>
+        </FormField>
+
+        <FormField label="Student ID Number">
+          <Input 
+            type="text"
+            placeholder="Enter your student ID number"
+            value={studentId}
+            onChange={(e) => onInputChange('studentId', e.target.value)}
           />
-          
-          <FormField
-            control={form.control}
-            name="idNumber"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>National ID Number</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your ID number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
+        </FormField>
+
+        <FormField label="University">
+          <Select 
+            value={university} 
+            onValueChange={(value) => onInputChange('university', value)}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Select your university" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="upsa">UPSA</SelectItem>
+              <SelectItem value="legon">University of Ghana, Legon</SelectItem>
+              <SelectItem value="knust">KNUST</SelectItem>
+              <SelectItem value="central">University of Cape Coast</SelectItem>
+              <SelectItem value="gimpa">GIMPA</SelectItem>
+            </SelectContent>
+          </Select>
+        </FormField>
+
+        <FormField label="Program of Study">
+          <Input 
+            type="text"
+            placeholder="E.g. Computer Science"
+            value={program}
+            onChange={(e) => onInputChange('program', e.target.value)}
           />
-          
-          <FormField
-            control={form.control}
-            name="idType"
-            render={({ field }) => (
-              <FormItem className="space-y-3">
-                <FormLabel>ID Type</FormLabel>
-                <FormControl>
-                  <RadioGroup
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}
-                    className="flex flex-col space-y-1"
-                  >
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="national-id" />
-                      </FormControl>
-                      <FormLabel className="font-normal">National ID</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="passport" />
-                      </FormControl>
-                      <FormLabel className="font-normal">Passport</FormLabel>
-                    </FormItem>
-                    <FormItem className="flex items-center space-x-3 space-y-0">
-                      <FormControl>
-                        <RadioGroupItem value="drivers-license" />
-                      </FormControl>
-                      <FormLabel className="font-normal">Driver's License</FormLabel>
-                    </FormItem>
-                  </RadioGroup>
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="university"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>University</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter your university" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <div className="flex justify-between pt-4">
-            <Button type="button" variant="outline" onClick={onPrevious}>
-              Previous
-            </Button>
-            <Button type="submit">
-              Next
-            </Button>
+        </FormField>
+
+        <div className="space-y-2">
+          <Label htmlFor="id-upload">Upload ID (Front and Back)</Label>
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50">
+            <input
+              id="id-upload"
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleFileChange}
+            />
+            <Label htmlFor="id-upload" className="cursor-pointer">
+              <Icon icon="solar:upload-linear" className="w-8 h-8 mx-auto text-gray-400 mb-2" />
+              <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
+              <p className="text-xs text-gray-400 mt-1">PNG, JPG, or PDF (max. 5MB)</p>
+            </Label>
           </div>
-        </form>
-      </FormProvider>
+        </div>
+      </div>
+
+      <div className="pt-4">
+        <Button 
+          className="w-full"
+          onClick={onVerify}
+          disabled={isVerifying}
+        >
+          {isVerifying ? (
+            <>
+              <Icon icon="solar:refresh-circle-linear" className="animate-spin w-4 h-4 mr-2" />
+              Verifying...
+            </>
+          ) : (
+            'Verify Student Status'
+          )}
+        </Button>
+      </div>
     </div>
   );
 };

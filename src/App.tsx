@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,6 +12,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Welcome from "./pages/Welcome";
+import EnhancedStoryPage from "./pages/student/EnhancedStoryPage";
 
 // Student Portal Pages
 import StudentDashboard from "./pages/student/Dashboard";
@@ -69,7 +71,7 @@ const App = () => (
               <Route path="property/:id" element={<PropertyDetail />} />
               <Route path="property/:id/story" element={<StoryView />} />
               <Route path="property/:id/book" element={<BookProperty />} />
-              <Route path="/student/property/:id/enhanced-story" element={<EnhancedStoryPage />} />
+              <Route path="property/:id/enhanced-story" element={<EnhancedStoryPage />} />
             </Route>
             
             {/* Owner/Agent Routes */}
