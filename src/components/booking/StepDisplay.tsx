@@ -11,7 +11,6 @@ import RoomOptionsStep from './RoomOptionsStep';
 import RoommatesForm from './RoommatesForm';
 import EmergencyContactForm from './EmergencyContactForm';
 import StudentVerification from './StudentVerification';
-import PaymentStep from './PaymentStep';
 
 interface StepDisplayProps {
   currentStep: number;
@@ -92,8 +91,7 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
     roomOptions, 
     roommates, 
     emergencyContact, 
-    studentVerification, 
-    paymentInfo 
+    studentVerification
   } = formData;
   
   const {
@@ -112,7 +110,6 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
     handleVerificationChange,
     handleIdUpload,
     handleVerifyStudent,
-    handleProcessPayment,
     loading
   } = handlers;
 
@@ -195,31 +192,6 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
           onPrevious={handlePreviousStep}
           onNext={handleNextStep}
         />
-      );
-    case 7:
-      return (
-        <div className="space-y-6">
-          <h2 className="text-xl font-bold mb-4">Payment</h2>
-          <div className="border p-4 rounded-lg">
-            <p>Total Amount: ₵{property?.price || 0}</p>
-            <p>Room Type: {roomOptions.roomType}</p>
-            <p>Duration: {bookingDates.duration}</p>
-            <p>Move In: {formatDate(bookingDates.moveIn)}</p>
-            <p>Move Out: {formatDate(bookingDates.moveOut)}</p>
-          </div>
-          <div className="flex justify-between pt-4">
-            <Button type="button" variant="outline" onClick={handlePreviousStep}>
-              Previous
-            </Button>
-            <Button 
-              type="button" 
-              onClick={handleProcessPayment}
-              disabled={paymentInfo.isProcessing}
-            >
-              {paymentInfo.isProcessing ? 'Processing...' : 'Complete Payment'}
-            </Button>
-          </div>
-        </div>
       );
     default:
       return <div>Something went wrong</div>;

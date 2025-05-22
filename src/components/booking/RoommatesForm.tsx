@@ -28,6 +28,7 @@ interface StandaloneRoommatesFormProps {
   setNumberOfRoommates?: undefined;
   individualPrice?: undefined;
   priceUnit?: undefined;
+  roommatesInfo?: undefined;
 }
 
 // For embedded mode in DurationSelection
@@ -110,24 +111,24 @@ const RoommatesForm: React.FC<RoommatesFormProps> = (props) => {
                   <div>
                     <Label>Name</Label>
                     <Input
-                      value={roommatesInfo[index]?.name || ''}
-                      onChange={(e) => onRoommateChange(index, 'name', e.target.value)}
+                      value={roommatesInfo[index + 1]?.name || ''}
+                      onChange={(e) => onRoommateChange(index + 1, 'name', e.target.value)}
                       placeholder="Full Name"
                     />
                   </div>
                   <div>
                     <Label>Email</Label>
                     <Input
-                      value={roommatesInfo[index]?.email || ''}
-                      onChange={(e) => onRoommateChange(index, 'email', e.target.value)}
+                      value={roommatesInfo[index + 1]?.email || ''}
+                      onChange={(e) => onRoommateChange(index + 1, 'email', e.target.value)}
                       placeholder="Email Address"
                     />
                   </div>
                   <div>
                     <Label>Phone</Label>
                     <Input
-                      value={roommatesInfo[index]?.phone || ''}
-                      onChange={(e) => onRoommateChange(index, 'phone', e.target.value)}
+                      value={roommatesInfo[index + 1]?.phone || ''}
+                      onChange={(e) => onRoommateChange(index + 1, 'phone', e.target.value)}
                       placeholder="Phone Number"
                     />
                   </div>

@@ -1,29 +1,27 @@
 
 import React from 'react';
-import { Icon } from '@iconify/react';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Label } from '../ui/label';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Select } from '@/components/ui/select';
 
-export interface StudentVerificationProps {
-  studentId?: string;
-  university?: string;
-  program?: string;
-  idType?: string;
+interface StudentVerificationProps {
+  idType: string;
+  studentId: string;
+  university: string;
+  program: string;
   onInputChange: (name: string, value: string) => void;
   onFileUpload: (file: File) => void;
   onVerify: () => void;
   isVerifying: boolean;
-  onPrevious?: () => void;  // Added this prop
-  onNext?: () => void;      // Added this prop
+  onPrevious: () => void;
+  onNext: () => void;
 }
 
 const StudentVerification: React.FC<StudentVerificationProps> = ({
+  idType,
   studentId,
   university,
   program,
-  idType,
   onInputChange,
   onFileUpload,
   onVerify,
@@ -31,127 +29,107 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
   onPrevious,
   onNext
 }) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    onInputChange(e.target.name, e.target.value);
+  };
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       onFileUpload(e.target.files[0]);
     }
   };
-
+  
   return (
     <div className="space-y-6">
-      <div className="text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 mb-4">
-          <Icon icon="solar:user-id-linear" className="w-8 h-8 text-blue-600" />
-        </div>
-        <h2 className="text-xl font-semibold mb-1">Student Verification</h2>
-        <p className="text-gray-500 max-w-md mx-auto">
-          We need to verify your student status before proceeding with the booking
-        </p>
-      </div>
-
+      <h2 className="text-xl font-bold mb-4">Student Verification</h2>
+      <p className="text-gray-600 mb-6">
+        Please provide your student details for verification.
+      </p>
+      
       <div className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="id-type">ID Type</Label>
-          <Select 
-            value={idType} 
-            onValueChange={(value) => onInputChange('idType', value)}
-          >
-            <SelectTrigger id="id-type">
-              <SelectValue placeholder="Select ID type" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="student_id">Student ID</SelectItem>
-              <SelectItem value="national_id">National ID</SelectItem>
-              <SelectItem value="passport">Passport</SelectItem>
-              <SelectItem value="drivers_license">Driver's License</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="student-id">Student ID Number</Label>
-          <Input 
-            id="student-id"
-            type="text"
-            placeholder="Enter your student ID number"
-            value={studentId}
-            onChange={(e) => onInputChange('studentId', e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="university">University</Label>
-          <Select 
-            value={university} 
-            onValueChange={(value) => onInputChange('university', value)}
-          >
-            <SelectTrigger id="university">
-              <SelectValue placeholder="Select your university" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="upsa">UPSA</SelectItem>
-              <SelectItem value="legon">University of Ghana, Legon</SelectItem>
-              <SelectItem value="knust">KNUST</SelectItem>
-              <SelectItem value="central">University of Cape Coast</SelectItem>
-              <SelectItem value="gimpa">GIMPA</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="program">Program of Study</Label>
-          <Input 
-            id="program"
-            type="text"
-            placeholder="E.g. Computer Science"
-            value={program}
-            onChange={(e) => onInputChange('program', e.target.value)}
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="id-upload">Upload ID (Front and Back)</Label>
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center cursor-pointer hover:bg-gray-50">
-            <input
-              id="id-upload"
-              type="file"
-              accept="image/*"
-              className="hidden"
-              onChange={handleFileChange}
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">ID Type</label>
+            <select
+              name="idType"
+              value={idType}
+              onChange={handleChange}
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="studentId">Student ID</option>
+              <option value="nationalId">National ID</option>
+              <option value="passport">Passport</option>
+              <option value="driversLicense">Driver's License</option>
+            </select>
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">ID Number</label>
+            <Input
+              type="text"
+              name="studentId"
+              value={studentId}
+              onChange={handleChange}
+              placeholder="Enter your ID number"
             />
-            <Label htmlFor="id-upload" className="cursor-pointer">
-              <Icon icon="solar:upload-linear" className="w-8 h-8 mx-auto text-gray-400 mb-2" />
-              <p className="text-sm text-gray-500">Click to upload or drag and drop</p>
-              <p className="text-xs text-gray-400 mt-1">PNG, JPG, or PDF (max. 5MB)</p>
-            </Label>
           </div>
         </div>
+        
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">University/Institution</label>
+            <Input
+              type="text"
+              name="university"
+              value={university}
+              onChange={handleChange}
+              placeholder="Enter your institution"
+            />
+          </div>
+          
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Program/Course</label>
+            <Input
+              type="text"
+              name="program"
+              value={program}
+              onChange={handleChange}
+              placeholder="Enter your program"
+            />
+          </div>
+        </div>
+        
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">Upload ID/Document</label>
+          <Input
+            type="file"
+            onChange={handleFileChange}
+            accept="image/*,.pdf"
+            className="border border-gray-300 rounded-md p-2"
+          />
+          <p className="text-xs text-gray-500 mt-1">
+            Upload a clear image of your student ID or other verification document.
+          </p>
+        </div>
       </div>
-
+      
       <div className="flex justify-between pt-4">
-        {onPrevious && (
-          <Button 
-            type="button" 
-            variant="outline" 
-            onClick={onPrevious}
-          >
-            Previous
-          </Button>
-        )}
-        <Button 
-          className={onPrevious ? "" : "w-full"}
-          onClick={onVerify}
-          disabled={isVerifying}
-        >
-          {isVerifying ? (
-            <>
-              <Icon icon="solar:refresh-circle-linear" className="animate-spin w-4 h-4 mr-2" />
-              Verifying...
-            </>
-          ) : (
-            'Verify Student Status'
-          )}
+        <Button type="button" variant="outline" onClick={onPrevious}>
+          Previous
         </Button>
+        <div className="space-x-2">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={onVerify}
+            disabled={isVerifying}
+          >
+            {isVerifying ? 'Verifying...' : 'Verify Student Status'}
+          </Button>
+          <Button type="button" onClick={onNext}>
+            Next
+          </Button>
+        </div>
       </div>
     </div>
   );

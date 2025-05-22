@@ -6,6 +6,8 @@ import { useBookingForm } from '@/hooks/booking/useBookingForm';
 import BookingSteps from './BookingSteps';
 import StepDisplay from './StepDisplay';
 import { useToast } from '@/hooks/use-toast';
+import { Button } from '@/components/ui/button';
+import { formatDate } from '@/lib/utils';
 
 // Fixing the BookingStepsContainer component to handle type issues
 const BookingStepsContainer: React.FC = () => {
@@ -111,6 +113,42 @@ const BookingStepsContainer: React.FC = () => {
     handleProcessPayment,
     loading: bookingForm.loading
   };
+
+  // For payment step, we'll render a custom component
+  if (currentStep === 7) {
+    return (
+      <div className="container mx-auto p-4 md:p-8 max-w-3xl">
+        <BookingSteps 
+          currentStep={currentStep} 
+          totalSteps={totalSteps}
+          stepLabels={stepLabels}
+        />
+        
+        <div className="mt-8 space-y-6">
+          <h2 className="text-xl font-bold mb-4">Payment</h2>
+          <div className="border p-4 rounded-lg">
+            <p>Total Amount: ₵{property?.price || 0}</p>
+            <p>Room Type: {bookingForm.roomOptions.roomType}</p>
+            <p>Duration: {bookingForm.bookingDates.duration}</p>
+            <p>Move In: {formatDate(bookingForm.bookingDates.moveIn)}</p>
+            <p>Move Out: {formatDate(bookingForm.bookingDates.moveOut)}</p>
+          </div>
+          <div className="flex justify-between pt-4">
+            <Button type="button" variant="outline" onClick={handlePreviousStep}>
+              Previous
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleProcessPayment}
+              disabled={bookingForm.paymentInfo.isProcessing}
+            >
+              {bookingForm.paymentInfo.isProcessing ? 'Processing...' : 'Complete Payment'}
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container mx-auto p-4 md:p-8 max-w-3xl">
