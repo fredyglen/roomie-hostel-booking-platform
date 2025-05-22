@@ -1,108 +1,105 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Icon } from '@iconify/react';
-import { Drawer } from '@/components/ui/drawer';
+import React, { useState, useEffect } from 'react';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
+import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Button } from '@/components/ui/button';
-import { usePropertyLoader } from '@/hooks/property';
+import { Icon } from '@iconify/react';
 import { useMobile } from '@/hooks/use-mobile';
-import { Property, Story } from '@/types/property';
-import PropertyTabs from '@/components/property/PropertyTabs';
-import ImageWithFallback from '@/components/common/ImageWithFallback';
+import { usePropertyLoader } from '@/hooks/property';
+import { toast } from 'sonner';
+import PropertyImageGallery from '../property/PropertyImageGallery';
+import { Dialog, DialogContent } from '../ui/dialog';
 
 const EnhancedStoryView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
   const isMobile = useMobile();
   
-  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
-  const [progress, setProgress] = useState(0);
+  // Story state
+  const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
+  const [progressPercentage, setProgressPercentage] = useState(0);
   
-  const { data: property, isLoading, error } = usePropertyLoader({ 
-    propertyId: id || '', 
+  // Property data
+  const { data: property, isLoading, error } = usePropertyLoader({
+    propertyId: id || '',
     forOwner: false,
     enabled: !!id
   });
   
-  // Generate stories from images if they don't exist
-  const stories = property?.stories || 
-    (property?.images?.map((image, index) => ({
-      type: 'image' as 'image',
-      url: image,
-      duration: 5000,
-      caption: `${property.title} - Image ${index + 1}`
-    })) as Story[]) || [];
+  // Get stories from property
+  const stories = property?.images || [];
+  const currentStory = stories[activeIndex];
   
-  const currentStory = stories[currentStoryIndex];
-  
-  // Effect to advance through stories automatically
+  // Handle story timer
   useEffect(() => {
-    if (isLoading || isPaused || showDetails || !currentStory) return;
+    if (!stories.length || isPaused || showDetails) return;
     
-    const duration = currentStory.duration || 5000;
-    const interval = 100; // Update progress every 100ms for smoother animation
+    const storyDuration = 5000; // 5 seconds per story
+    const interval = 50; // Update progress every 50ms
+    const incrementPerInterval = (interval / storyDuration) * 100;
     
+    let progress = 0;
     const timer = setInterval(() => {
-      setProgress(prev => {
-        const newProgress = prev + interval;
-        if (newProgress >= duration) {
-          clearInterval(timer);
-          // Move to next story or exit if at the end
-          if (currentStoryIndex < stories.length - 1) {
-            setCurrentStoryIndex(currentStoryIndex + 1);
-            return 0;
-          } else {
-            // Exit story view when done
-            setTimeout(() => navigate(`/student/property/${id}`), 100);
-          }
-        }
-        return newProgress;
-      });
+      progress += incrementPerInterval;
+      setProgressPercentage(Math.min(progress, 100));
+      
+      if (progress >= 100) {
+        clearInterval(timer);
+        handleNext();
+      }
     }, interval);
     
     return () => clearInterval(timer);
-  }, [currentStoryIndex, isPaused, showDetails, stories, currentStory, isLoading, id, navigate]);
+  }, [activeIndex, isPaused, showDetails, stories.length]);
   
-  const handleNext = useCallback(() => {
-    if (currentStoryIndex < stories.length - 1) {
-      setCurrentStoryIndex(currentStoryIndex + 1);
-      setProgress(0);
+  useEffect(() => {
+    if (error) {
+      toast.error("Failed to load property");
+      handleClose();
+    }
+  }, [error]);
+  
+  // Handle navigation
+  const handleNext = () => {
+    if (activeIndex < stories.length - 1) {
+      setActiveIndex(activeIndex + 1);
+      setProgressPercentage(0);
     } else {
-      navigate(`/student/property/${id}`);
+      handleClose();
     }
-  }, [currentStoryIndex, stories.length, id, navigate]);
+  };
   
-  const handlePrevious = useCallback(() => {
-    if (currentStoryIndex > 0) {
-      setCurrentStoryIndex(currentStoryIndex - 1);
-      setProgress(0);
+  const handlePrevious = () => {
+    if (activeIndex > 0) {
+      setActiveIndex(activeIndex - 1);
+      setProgressPercentage(0);
     }
-  }, [currentStoryIndex]);
+  };
   
-  const handleClose = useCallback(() => {
-    navigate(`/student/property/${id}`);
-  }, [id, navigate]);
+  const handleClose = () => {
+    navigate(-1);
+  };
   
-  const handleSwipeUp = useCallback(() => {
+  const handleSwipeUp = () => {
     setShowDetails(true);
     setIsPaused(true);
-  }, []);
+  };
   
-  const handleSwipeDown = useCallback(() => {
+  const handleSwipeDown = () => {
     setShowDetails(false);
     setIsPaused(false);
-  }, []);
+  };
   
-  const handleBookNow = useCallback(() => {
+  const handleBookNow = () => {
     navigate(`/student/property/${id}/book`);
-  }, [id, navigate]);
-
-  // Loading state
-  if (isLoading) {
+  };
+  
+  if (isLoading || !property) {
     return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="w-32 h-32 rounded-full bg-gray-700"></div>
           <div className="w-48 h-6 bg-gray-700 rounded"></div>
@@ -111,26 +108,9 @@ const EnhancedStoryView: React.FC = () => {
     );
   }
   
-  // Error state
-  if (error || !property) {
-    return (
-      <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-        <div className="text-center text-white">
-          <h2 className="text-2xl font-bold mb-4">Property Not Found</h2>
-          <Button variant="default" onClick={() => navigate('/student/properties')}>
-            Browse Properties
-          </Button>
-        </div>
-      </div>
-    );
-  }
-  
-  // Progress percentage for visualization
-  const progressPercentage = currentStory ? (progress / (currentStory.duration || 5000)) * 100 : 0;
-  
   return (
-    <div className="fixed inset-0 bg-black z-50">
-      {/* Progress indicators */}
+    <div className="fixed inset-0 bg-black">
+      {/* Story progress indicators */}
       <div className="absolute top-4 left-4 right-16 z-30 flex gap-1">
         {stories.map((_, idx) => (
           <div
@@ -140,7 +120,7 @@ const EnhancedStoryView: React.FC = () => {
             <div
               className="h-full bg-white transition-all duration-300"
               style={{
-                width: idx === currentStoryIndex ? `${progressPercentage}%` : idx < currentStoryIndex ? '100%' : '0%',
+                width: idx === activeIndex ? `${progressPercentage}%` : idx < activeIndex ? '100%' : '0%',
               }}
             ></div>
           </div>
@@ -156,129 +136,151 @@ const EnhancedStoryView: React.FC = () => {
         <Icon icon="solar:close-circle-linear" className="h-6 w-6" />
       </button>
       
-      {/* Main story content */}
-      <div className="h-full w-full">
-        {/* Background blur */}
-        <div 
-          className="absolute inset-0 bg-cover bg-center opacity-50 blur-xl scale-110"
-          style={{ backgroundImage: `url(${currentStory?.url})` }}
-        ></div>
-        
-        {/* Main media */}
+      {/* Story content */}
+      <div className="relative h-full w-full flex flex-col justify-between">
+        {/* Main image */}
         <div 
           className="absolute inset-0 flex items-center justify-center"
-          onTouchStart={() => setIsPaused(true)}
-          onTouchEnd={() => !showDetails && setIsPaused(false)}
-          onMouseDown={() => setIsPaused(true)}
-          onMouseUp={() => !showDetails && setIsPaused(false)}
+          onClick={() => setIsPaused(!isPaused)}
         >
-          {currentStory?.type === 'image' ? (
-            <ImageWithFallback
-              src={currentStory.url}
-              alt="Story content"
-              className={`${isMobile ? 'h-full w-full object-cover' : 'max-h-full max-w-full object-contain'}`}
-              fallbackSrc="/placeholder.svg"
-            />
-          ) : (
-            <video
-              src={currentStory?.url}
-              autoPlay
-              playsInline
-              muted={isPaused}
-              className={`${isMobile ? 'h-full w-full object-cover' : 'max-h-full max-w-full object-contain'}`}
-              onEnded={handleNext}
-            />
-          )}
+          <img 
+            src={currentStory} 
+            alt={`Story ${activeIndex + 1}`} 
+            className="h-full w-full object-contain"
+            onError={() => toast.error("Failed to load image")}
+          />
           
-          {/* Navigation controls - invisible buttons */}
-          <div className="absolute inset-0 flex z-10">
-            <div 
-              className="w-1/3 h-full" 
-              onClick={handlePrevious}
-            />
-            <div 
-              className="w-1/3 h-full" 
-              onClick={() => setIsPaused(!isPaused)}
-            />
-            <div 
-              className="w-1/3 h-full" 
-              onClick={handleNext}
-            />
+          {/* Overlay for pause/play indicator */}
+          {isPaused && (
+            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+              <Icon icon="solar:play-circle-bold" className="text-white w-16 h-16" />
+            </div>
+          )}
+        </div>
+        
+        {/* Navigation controls */}
+        <div className="absolute inset-y-0 left-0 w-1/3 z-20" onClick={handlePrevious}></div>
+        <div className="absolute inset-y-0 right-0 w-1/3 z-20" onClick={handleNext}></div>
+        
+        {/* Property info */}
+        <div className="absolute bottom-16 left-0 right-0 p-4 z-20 flex justify-between items-end">
+          <div className="text-white">
+            <h3 className="text-lg font-bold">{property.name}</h3>
+            <p className="text-sm opacity-90">{property.location}</p>
+            <p className="text-xs opacity-75">
+              {property.distanceToCampus || '10 min walk to campus'}
+            </p>
+          </div>
+          
+          <div className="text-white text-right">
+            <p className="text-lg font-bold">₵{property.price?.toLocaleString()}</p>
+            <p className="text-xs opacity-75">per {property.priceUnit || 'semester'}</p>
           </div>
         </div>
         
-        {/* Property info overlay */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/70 to-transparent">
-          <div className="flex justify-between items-end text-white">
-            <div>
-              <h3 className="font-bold text-lg">{property.title}</h3>
-              <div className="flex items-center text-sm">
-                <Icon icon="solar:map-point-linear" className="mr-1" width={16} height={16} />
-                <span>{property.distanceToCampus || '10 min walk'} to campus</span>
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="font-bold text-lg">₵{(property.price || 0).toLocaleString()}</div>
-              <div className="text-sm">/{property.priceUnit || 'semester'}</div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Swipe up indicator */}
-        {!showDetails && (
-          <div 
-            className="absolute bottom-20 left-0 right-0 flex flex-col items-center animate-bounce cursor-pointer z-20"
-            onClick={handleSwipeUp}
-          >
-            <p className="text-white text-sm font-medium mb-1 drop-shadow-md">Swipe up for details</p>
-            <Icon icon="solar:arrow-up-linear" className="h-6 w-6 text-white drop-shadow-md" />
-          </div>
-        )}
+        {/* Swipe up button */}
+        <button 
+          className="absolute bottom-4 left-1/2 transform -translate-x-1/2 text-white flex flex-col items-center z-20"
+          onClick={handleSwipeUp}
+        >
+          <Icon icon="solar:arrow-up-linear" className="h-5 w-5" />
+          <span className="text-xs mt-1">Swipe up for details</span>
+        </button>
       </div>
       
-      {/* Property details drawer */}
-      <Drawer open={showDetails} onOpenChange={setShowDetails}>
-        <Drawer.Content className="h-[80vh]">
-          <div className="p-4 h-full flex flex-col">
-            <div className="flex-grow overflow-auto">
-              <PropertyTabs
-                description={property.description || ''}
-                address={property.address}
-                distanceToCampus={property.distanceToCampus || property.distance_to_campus || ''}
-                houseRules={property.house_rules || []}
-                amenities={property.amenities || []}
-                type={property.type || property.property_type || ''}
-                location={property.location || ''}
-                availableUnits={property.availableUnits}
-              />
+      {/* Use Dialog for desktop and Sheet for mobile */}
+      {isMobile ? (
+        <Sheet open={showDetails} onOpenChange={setShowDetails}>
+          <SheetContent
+            side="bottom"
+            className="h-[80vh] pt-10 px-0"
+          >
+            <div className="absolute top-2 left-0 right-0 flex justify-center">
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
             </div>
             
-            {/* Book Now button */}
-            <div className="sticky bottom-0 pt-4 bg-white border-t border-gray-200 mt-4">
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <span className="text-2xl font-bold text-blue-600">₵{(property.price || property.rent || 0).toLocaleString()}</span>
-                  <span className="text-gray-600">/{property.priceUnit || property.price_unit || 'semester'}</span>
-                </div>
-                {property.rating && (
-                  <div className="flex items-center">
-                    <Icon icon="solar:star-bold" className="h-4 w-4 text-yellow-400" />
-                    <span className="text-sm ml-1">{property.rating}</span>
-                    <span className="text-xs text-gray-500 ml-1">({property.reviewCount || 0})</span>
-                  </div>
-                )}
+            <div className="h-full overflow-auto px-4">
+              <h2 className="text-2xl font-bold mb-2">{property.name}</h2>
+              <p className="text-gray-600 mb-4">{property.location}</p>
+              
+              <div className="mb-6">
+                <PropertyImageGallery 
+                  images={property.images || []} 
+                  title={property.name || 'Property'}
+                />
               </div>
-              <Button 
-                variant="default" 
-                className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-                onClick={handleBookNow}
-              >
-                Book Now
-              </Button>
+              
+              <div className="prose max-w-none mb-6">
+                <h3 className="text-xl font-semibold">Description</h3>
+                <p>{property.description}</p>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold mb-2">Amenities</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {(property.amenities || []).map((amenity, index) => (
+                    <div key={index} className="flex items-center">
+                      <Icon icon="solar:check-circle-bold" className="text-green-500 mr-2" />
+                      <span>{amenity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="py-4">
+                <Button 
+                  className="w-full"
+                  onClick={handleBookNow}
+                >
+                  Book Now
+                </Button>
+              </div>
             </div>
-          </div>
-        </Drawer.Content>
-      </Drawer>
+          </SheetContent>
+        </Sheet>
+      ) : (
+        <Dialog open={showDetails} onOpenChange={setShowDetails}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+            <div className="h-full overflow-auto px-4">
+              <h2 className="text-2xl font-bold mb-2">{property.name}</h2>
+              <p className="text-gray-600 mb-4">{property.location}</p>
+              
+              <div className="mb-6">
+                <PropertyImageGallery 
+                  images={property.images || []} 
+                  title={property.name || 'Property'}
+                />
+              </div>
+              
+              <div className="prose max-w-none mb-6">
+                <h3 className="text-xl font-semibold">Description</h3>
+                <p>{property.description}</p>
+              </div>
+              
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold mb-2">Amenities</h3>
+                <div className="grid grid-cols-2 gap-2">
+                  {(property.amenities || []).map((amenity, index) => (
+                    <div key={index} className="flex items-center">
+                      <Icon icon="solar:check-circle-bold" className="text-green-500 mr-2" />
+                      <span>{amenity}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="py-4">
+                <Button 
+                  className="w-full"
+                  onClick={handleBookNow}
+                >
+                  Book Now
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   );
 };

@@ -5,7 +5,6 @@ import { Button } from '../ui/button';
 import { Input } from '../ui/input';
 import { Label } from '../ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
-import FormField from '../common/form/FormField';
 
 export interface StudentVerificationProps {
   studentId?: string;
@@ -47,12 +46,13 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
       </div>
 
       <div className="space-y-4">
-        <FormField label="ID Type">
+        <div className="space-y-2">
+          <Label htmlFor="id-type">ID Type</Label>
           <Select 
             value={idType} 
             onValueChange={(value) => onInputChange('idType', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="id-type">
               <SelectValue placeholder="Select ID type" />
             </SelectTrigger>
             <SelectContent>
@@ -62,23 +62,26 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
               <SelectItem value="drivers_license">Driver's License</SelectItem>
             </SelectContent>
           </Select>
-        </FormField>
+        </div>
 
-        <FormField label="Student ID Number">
+        <div className="space-y-2">
+          <Label htmlFor="student-id">Student ID Number</Label>
           <Input 
+            id="student-id"
             type="text"
             placeholder="Enter your student ID number"
             value={studentId}
             onChange={(e) => onInputChange('studentId', e.target.value)}
           />
-        </FormField>
+        </div>
 
-        <FormField label="University">
+        <div className="space-y-2">
+          <Label htmlFor="university">University</Label>
           <Select 
             value={university} 
             onValueChange={(value) => onInputChange('university', value)}
           >
-            <SelectTrigger>
+            <SelectTrigger id="university">
               <SelectValue placeholder="Select your university" />
             </SelectTrigger>
             <SelectContent>
@@ -89,16 +92,18 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
               <SelectItem value="gimpa">GIMPA</SelectItem>
             </SelectContent>
           </Select>
-        </FormField>
+        </div>
 
-        <FormField label="Program of Study">
+        <div className="space-y-2">
+          <Label htmlFor="program">Program of Study</Label>
           <Input 
+            id="program"
             type="text"
             placeholder="E.g. Computer Science"
             value={program}
             onChange={(e) => onInputChange('program', e.target.value)}
           />
-        </FormField>
+        </div>
 
         <div className="space-y-2">
           <Label htmlFor="id-upload">Upload ID (Front and Back)</Label>

@@ -13,6 +13,7 @@ import PaymentStep from './PaymentStep';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
 
+// Fixing the BookingStepsContainer component to handle type issues
 const BookingStepsContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -109,12 +110,26 @@ const BookingStepsContainer: React.FC = () => {
     });
   };
   
+  // Adapter for converting event-based onChange to our name/value pattern
+  const handlePersonalInfoAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handlePersonalInfoChange(e.target.name, e.target.value);
+  };
+  
   // Handle date changes
   const handleDateChange = (name: string, value: Date | string) => {
     setBookingDates({
       ...bookingDates,
       [name]: value,
     });
+  };
+  
+  // Adapter for date picker
+  const handleMoveInDateAdapter = (date: Date) => {
+    handleDateChange('moveIn', date);
+  };
+  
+  const handleMoveOutDateAdapter = (date: Date) => {
+    handleDateChange('moveOut', date);
   };
   
   // Handle room option changes
@@ -152,6 +167,11 @@ const BookingStepsContainer: React.FC = () => {
       ...emergencyContact,
       [name]: value,
     });
+  };
+  
+  // Adapter for emergency contact
+  const handleEmergencyContactAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
+    handleEmergencyContactChange(e.target.name, e.target.value);
   };
   
   // Handle student verification changes
@@ -233,7 +253,7 @@ const BookingStepsContainer: React.FC = () => {
             lastName={personalInfo.lastName}
             email={personalInfo.email}
             phone={personalInfo.phone}
-            onInputChange={handlePersonalInfoChange}
+            onInputChange={handlePersonalInfoAdapter}
             onNext={handleNextStep}
           />
         );
@@ -243,7 +263,9 @@ const BookingStepsContainer: React.FC = () => {
             moveInDate={bookingDates.moveIn}
             moveOutDate={bookingDates.moveOut}
             duration={bookingDates.duration}
-            onDateChange={handleDateChange}
+            onMoveInDateChange={handleMoveInDateAdapter}
+            onMoveOutDateChange={handleMoveOutDateAdapter}
+            onDurationChange={(value) => handleDateChange('duration', value)}
             onPrevious={handlePreviousStep}
             onNext={handleNextStep}
           />
@@ -251,20 +273,23 @@ const BookingStepsContainer: React.FC = () => {
       case 3:
         return (
           <RoomOptionsStep
-            roomType={roomOptions.roomType}
-            furnishingOption={roomOptions.furnishingOption}
-            floor={roomOptions.floor}
+            selectedRoomType={roomOptions.roomType}
+            selectedFurnishing={roomOptions.furnishingOption}
+            selectedFloor={roomOptions.floor}
             extraRequests={roomOptions.extraRequests}
-            onInputChange={handleRoomOptionChange}
+            onRoomTypeChange={(value) => handleRoomOptionChange('roomType', value)}
+            onFurnishingChange={(value) => handleRoomOptionChange('furnishingOption', value)}
+            onFloorChange={(value) => handleRoomOptionChange('floor', value)}
+            onRequestsChange={(value) => handleRoomOptionChange('extraRequests', value)}
             onPrevious={handlePreviousStep}
             onNext={handleNextStep}
-            availableOptions={property?.roomTypes || ['single', 'double', 'triple']}
+            availableRoomTypes={property?.roomTypes || ['single', 'double', 'triple']}
           />
         );
       case 4:
         return (
           <RoommatesForm
-            roommates={roommates}
+            roommatesList={roommates}
             onRoommateChange={handleRoommateChange}
             onAddRoommate={addRoommate}
             onRemoveRoommate={removeRoommate}
@@ -279,7 +304,7 @@ const BookingStepsContainer: React.FC = () => {
             relationship={emergencyContact.relationship}
             phone={emergencyContact.phone}
             alternatePhone={emergencyContact.alternatePhone}
-            onInputChange={handleEmergencyContactChange}
+            onInputChange={handleEmergencyContactAdapter}
             onPrevious={handlePreviousStep}
             onNext={handleNextStep}
           />
@@ -300,7 +325,7 @@ const BookingStepsContainer: React.FC = () => {
       case 7:
         return (
           <PaymentStep
-            amount={property?.price || 0}
+            price={property?.price || 0}
             roomType={roomOptions.roomType}
             duration={bookingDates.duration}
             moveInDate={formatDate(bookingDates.moveIn)}
@@ -310,9 +335,13 @@ const BookingStepsContainer: React.FC = () => {
             cardNumber={paymentInfo.cardNumber}
             cardExpiry={paymentInfo.cardExpiry}
             cardCvc={paymentInfo.cardCvc}
-            onInputChange={handlePaymentChange}
+            onPaymentMethodChange={(value) => handlePaymentChange('method', value)}
+            onMomoNumberChange={(value) => handlePaymentChange('momoNumber', value)}
+            onCardNumberChange={(value) => handlePaymentChange('cardNumber', value)}
+            onCardExpiryChange={(value) => handlePaymentChange('cardExpiry', value)}
+            onCardCvcChange={(value) => handlePaymentChange('cardCvc', value)}
             onPrevious={handlePreviousStep}
-            onSubmit={handleProcessPayment}
+            onPaymentSubmit={handleProcessPayment}
             isProcessing={paymentInfo.isProcessing}
             isComplete={paymentInfo.isComplete}
           />
@@ -331,7 +360,6 @@ const BookingStepsContainer: React.FC = () => {
       <BookingSteps 
         currentStep={currentStep} 
         totalSteps={totalSteps} 
-        property={property}
         bookingComplete={bookingComplete}
       />
       
