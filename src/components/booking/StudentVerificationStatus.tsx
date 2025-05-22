@@ -5,7 +5,7 @@ import { CheckCircle, Clock, AlertCircle } from 'lucide-react';
 
 export type VerificationStatus = 'pending' | 'verified' | 'rejected';
 
-interface VerificationStep {
+export interface VerificationStep {
   title: string;
   description: string;
   status: VerificationStatus;
@@ -16,54 +16,66 @@ interface StudentVerificationStatusProps {
 }
 
 const StudentVerificationStatus: React.FC<StudentVerificationStatusProps> = ({ steps }) => {
-  const getStatusIcon = (status: VerificationStatus) => {
+  const getStatusConfig = (status: VerificationStatus): {
+    icon: React.ReactNode;
+    text: string;
+    bgColor: string;
+    borderColor: string;
+    textColor: string;
+  } => {
     switch (status) {
       case 'verified':
-        return <CheckCircle className="h-6 w-6 text-green-500" />;
+        return {
+          icon: <CheckCircle className="h-6 w-6 text-green-500" />,
+          text: 'Verified',
+          bgColor: 'bg-green-50',
+          borderColor: 'border-green-200',
+          textColor: 'text-green-600'
+        };
       case 'rejected':
-        return <AlertCircle className="h-6 w-6 text-red-500" />;
+        return {
+          icon: <AlertCircle className="h-6 w-6 text-red-500" />,
+          text: 'Rejected',
+          bgColor: 'bg-red-50',
+          borderColor: 'border-red-200',
+          textColor: 'text-red-600'
+        };
       default:
-        return <Clock className="h-6 w-6 text-blue-500" />;
-    }
-  };
-  
-  const getStatusText = (status: VerificationStatus) => {
-    switch (status) {
-      case 'verified':
-        return 'Verified';
-      case 'rejected':
-        return 'Rejected';
-      default:
-        return 'Pending';
+        return {
+          icon: <Clock className="h-6 w-6 text-blue-500" />,
+          text: 'Pending',
+          bgColor: 'bg-blue-50',
+          borderColor: 'border-blue-200',
+          textColor: 'text-blue-600'
+        };
     }
   };
   
   return (
     <div className="space-y-4">
-      {steps.map((step, index) => (
-        <Card key={index} className={`shadow-sm border ${
-          step.status === 'verified' ? 'border-green-200 bg-green-50' : 
-          step.status === 'rejected' ? 'border-red-200 bg-red-50' : 
-          'border-blue-200 bg-blue-50'
-        }`}>
-          <CardContent className="p-4 flex justify-between items-center">
-            <div>
-              <h3 className="font-medium">{step.title}</h3>
-              <p className="text-sm text-gray-500">{step.description}</p>
-            </div>
-            <div className="flex items-center">
-              <span className={`text-sm mr-2 ${
-                step.status === 'verified' ? 'text-green-600' : 
-                step.status === 'rejected' ? 'text-red-600' : 
-                'text-blue-600'
-              }`}>
-                {getStatusText(step.status)}
-              </span>
-              {getStatusIcon(step.status)}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+      {steps.map((step, index) => {
+        const statusConfig = getStatusConfig(step.status);
+        
+        return (
+          <Card 
+            key={index} 
+            className={`shadow-sm border ${statusConfig.borderColor} ${statusConfig.bgColor}`}
+          >
+            <CardContent className="p-4 flex justify-between items-center">
+              <div>
+                <h3 className="font-medium">{step.title}</h3>
+                <p className="text-sm text-gray-500">{step.description}</p>
+              </div>
+              <div className="flex items-center">
+                <span className={`text-sm mr-2 ${statusConfig.textColor}`}>
+                  {statusConfig.text}
+                </span>
+                {statusConfig.icon}
+              </div>
+            </CardContent>
+          </Card>
+        )
+      })}
     </div>
   );
 };

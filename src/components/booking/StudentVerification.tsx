@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { CheckCircle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { VerificationStatus } from './StudentVerificationStatus';
 
 interface StudentVerificationProps {
   idType: string;
@@ -17,6 +18,7 @@ interface StudentVerificationProps {
   onPrevious: () => void;
   onNext: () => void;
   verified?: boolean;
+  status?: VerificationStatus;
 }
 
 const StudentVerification: React.FC<StudentVerificationProps> = ({
@@ -30,7 +32,8 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
   isVerifying,
   onPrevious,
   onNext,
-  verified = false
+  verified = false,
+  status = 'pending'
 }) => {
   const { toast } = useToast();
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -48,6 +51,17 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
         title: "File uploaded",
         description: `${file.name} has been successfully uploaded.`,
       });
+    }
+  };
+
+  const getStatusColor = () => {
+    switch (status) {
+      case 'verified':
+        return 'bg-green-50 text-green-700';
+      case 'rejected':
+        return 'bg-red-50 text-red-700';
+      default:
+        return 'bg-blue-50 text-blue-700';
     }
   };
   
@@ -118,6 +132,7 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
             onChange={handleFileChange}
             accept="image/*,.pdf"
             className="border border-gray-300 rounded-md p-2"
+            disabled={verified}
           />
           <p className="text-xs text-gray-500 mt-1">
             Upload a clear image of your student ID or other verification document.
@@ -125,7 +140,7 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
         </div>
         
         {verified && (
-          <div className="flex items-center p-3 bg-green-50 text-green-700 rounded-md">
+          <div className={`flex items-center p-3 rounded-md ${getStatusColor()}`}>
             <CheckCircle className="h-5 w-5 mr-2 text-green-500" />
             <span>Your student status has been verified!</span>
           </div>
