@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   fallbackSrc?: string;
   fallbackAlt?: string;
+  onError?: () => void;
 }
 
 /**
@@ -13,9 +14,10 @@ interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElemen
 const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   src,
   alt,
-  fallbackSrc = "https://via.placeholder.com/800x450?text=No+Image+Available",
+  fallbackSrc = "/placeholder.svg",
   fallbackAlt = "Image not available",
   className,
+  onError: onErrorProp,
   ...props
 }) => {
   const [imgSrc, setImgSrc] = useState(src);
@@ -24,6 +26,7 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   const handleError = () => {
     setImgSrc(fallbackSrc);
     setImgAlt(fallbackAlt);
+    if (onErrorProp) onErrorProp();
   };
 
   return (

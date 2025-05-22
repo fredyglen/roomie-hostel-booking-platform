@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -70,6 +69,7 @@ const App = () => (
               <Route path="property/:id" element={<PropertyDetail />} />
               <Route path="property/:id/story" element={<StoryView />} />
               <Route path="property/:id/book" element={<BookProperty />} />
+              <Route path="/student/property/:id/enhanced-story" element={<EnhancedStoryPage />} />
             </Route>
             
             {/* Owner/Agent Routes */}

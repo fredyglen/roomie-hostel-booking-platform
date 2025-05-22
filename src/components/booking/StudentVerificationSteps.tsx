@@ -1,358 +1,130 @@
 
 import React, { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import Button from '@/components/common/Button';
-import { Separator } from '@/components/ui/separator';
-import StudentVerification from './StudentVerification';
-import { toast } from 'sonner';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { CheckCircle2, Clock, AlertCircle } from 'lucide-react';
 
-interface StudentVerificationStepsProps {
-  studentData: any;
-  onDataChange: (data: any) => void;
-  onNextStep: () => void;
-  onPrevStep: () => void;
+export type VerificationStatus = 'pending' | 'verified' | 'rejected';
+
+interface VerificationStep {
+  title: string;
+  description: string;
+  status: VerificationStatus;
 }
 
-type VerificationFormData = {
-  fullName: string;
-  university: string;
-  program: string;
-  year: string;
-  emergencyContactName: string;
-  emergencyContactPhone: string;
-  emergencyRelationship: string;
-  idType: string;
-  idFile: File | null;
-  additionalNotes: string;
-  studentId: string;
-};
+interface StudentVerificationStepsProps {
+  onNext: () => void;
+}
 
-const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({ 
-  studentData, 
-  onDataChange,
-  onNextStep,
-  onPrevStep
-}) => {
-  const [currentSubStep, setCurrentSubStep] = useState(1);
-  const [isVerifying, setIsVerifying] = useState(false);
+const StudentVerificationSteps: React.FC<StudentVerificationStepsProps> = ({ onNext }) => {
+  const [steps, setSteps] = useState<VerificationStep[]>([
+    {
+      title: 'Student ID Verification',
+      description: 'We\'ll verify your student ID with your university.',
+      status: 'pending'
+    },
+    {
+      title: 'National ID Verification',
+      description: 'We\'ll verify your national ID for security purposes.',
+      status: 'pending'
+    },
+    {
+      title: 'University Enrollment',
+      description: 'We\'ll confirm your enrollment status with your university.',
+      status: 'pending'
+    }
+  ]);
   
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<VerificationFormData>({
-    defaultValues: {
-      ...studentData,
-      idType: studentData.idType || 'studentId'
-    }
-  });
-
-  const idFile = watch('idFile');
-  const allValues = watch();
-
-  // Mock university options
-  const universities = [
-    "University of Ghana",
-    "KNUST",
-    "UPSA",
-    "University of Cape Coast",
-    "Central University",
-    "Ashesi University",
-  ];
-
-  // Mock year options
-  const yearOptions = [
-    "First Year",
-    "Second Year",
-    "Third Year",
-    "Final Year",
-    "Postgraduate"
-  ];
-
-  const handleFileChange = (file: File) => {
-    setValue('idFile', file);
+  // In a real application, this would be updated from an API
+  const updateStepStatus = (index: number, status: VerificationStatus) => {
+    setSteps(prev => {
+      const newSteps = [...prev];
+      newSteps[index] = { ...newSteps[index], status };
+      return newSteps;
+    });
   };
-
-  const handleInputChange = (name: string, value: string) => {
-    setValue(name as any, value);
-  };
-
-  const handleSubStepNext = () => {
-    if (currentSubStep < 4) {
-      setCurrentSubStep(currentSubStep + 1);
-    }
-  };
-
-  const handleSubStepBack = () => {
-    if (currentSubStep > 1) {
-      setCurrentSubStep(currentSubStep - 1);
-    } else {
-      onPrevStep();
-    }
-  };
-
-  const onSubmit = (data: VerificationFormData) => {
-    onDataChange(data);
-    onNextStep();
-  };
-
-  const handleVerify = () => {
-    setIsVerifying(true);
-    
-    // Simulate verification process
-    setTimeout(() => {
-      setIsVerifying(false);
-      toast.success("Student verification successful!");
-      handleSubStepNext();
-    }, 2000);
-  };
-
-  // Render the appropriate sub-step
-  const renderSubStep = () => {
-    switch (currentSubStep) {
-      case 1: // Personal Info
-        return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Personal Information</h3>
-            <p className="text-gray-600 mb-4">Please provide your personal details.</p>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="fullName">Full Name</Label>
-                <Input 
-                  id="fullName"
-                  {...register('fullName', { required: "Full name is required" })}
-                  className="mt-1"
-                  placeholder="e.g. John Doe"
-                />
-                {errors.fullName && <p className="text-sm text-red-500 mt-1">{errors.fullName.message}</p>}
-              </div>
-              
-              <div>
-                <Label htmlFor="university">University</Label>
-                <Select 
-                  value={allValues.university} 
-                  onValueChange={(value) => setValue('university', value)}
-                >
-                  <SelectTrigger id="university" className="mt-1">
-                    <SelectValue placeholder="Select your university" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {universities.map((uni) => (
-                      <SelectItem key={uni} value={uni}>{uni}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.university && <p className="text-sm text-red-500 mt-1">{errors.university.message}</p>}
-              </div>
-              
-              <div>
-                <Label htmlFor="program">Program of Study</Label>
-                <Input 
-                  id="program"
-                  {...register('program', { required: "Program is required" })}
-                  className="mt-1"
-                  placeholder="e.g. Computer Science"
-                />
-                {errors.program && <p className="text-sm text-red-500 mt-1">{errors.program.message}</p>}
-              </div>
-              
-              <div>
-                <Label htmlFor="year">Year of Study</Label>
-                <Select 
-                  value={allValues.year} 
-                  onValueChange={(value) => setValue('year', value)}
-                >
-                  <SelectTrigger id="year" className="mt-1">
-                    <SelectValue placeholder="Select your year" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {yearOptions.map((year) => (
-                      <SelectItem key={year} value={year}>{year}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                {errors.year && <p className="text-sm text-red-500 mt-1">{errors.year.message}</p>}
-              </div>
-            </div>
-          </div>
-        );
-        
-      case 2: // Emergency Contact
-        return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Emergency Contact</h3>
-            <p className="text-gray-600 mb-4">Please provide emergency contact details.</p>
-            
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="emergencyContactName">Emergency Contact Name</Label>
-                <Input 
-                  id="emergencyContactName"
-                  {...register('emergencyContactName', { required: "Emergency contact name is required" })}
-                  className="mt-1"
-                  placeholder="e.g. Jane Doe"
-                />
-                {errors.emergencyContactName && <p className="text-sm text-red-500 mt-1">{errors.emergencyContactName.message}</p>}
-              </div>
-              
-              <div>
-                <Label htmlFor="emergencyContactPhone">Emergency Contact Phone</Label>
-                <Input 
-                  id="emergencyContactPhone"
-                  {...register('emergencyContactPhone', { required: "Emergency contact phone is required" })}
-                  className="mt-1"
-                  placeholder="e.g. +233 50 123 4567"
-                />
-                {errors.emergencyContactPhone && <p className="text-sm text-red-500 mt-1">{errors.emergencyContactPhone.message}</p>}
-              </div>
-              
-              <div>
-                <Label htmlFor="emergencyRelationship">Relationship to Emergency Contact</Label>
-                <Input 
-                  id="emergencyRelationship"
-                  {...register('emergencyRelationship', { required: "Relationship is required" })}
-                  className="mt-1"
-                  placeholder="e.g. Parent, Sibling, Spouse"
-                />
-                {errors.emergencyRelationship && <p className="text-sm text-red-500 mt-1">{errors.emergencyRelationship.message}</p>}
-              </div>
-            </div>
-          </div>
-        );
-        
-      case 3: // Student Verification
-        return (
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold">Student Verification</h3>
-            <p className="text-gray-600 mb-4">Please verify your student status by uploading your ID document.</p>
-            
-            <StudentVerification
-              idType={allValues.idType || 'studentId'}
-              studentId={allValues.studentId}
-              university={allValues.university}
-              program={allValues.program}
-              onInputChange={handleInputChange}
-              onFileUpload={handleFileChange}
-              onVerify={handleVerify}
-              isVerifying={isVerifying}
-            />
-          </div>
-        );
-        
-      case 4: // Review
-        return (
-          <div className="space-y-6">
-            <h3 className="text-lg font-semibold">Review Your Information</h3>
-            <p className="text-gray-600 mb-4">Please review your information before submitting.</p>
-            
-            <div className="bg-gray-50 rounded-lg p-4 space-y-4">
-              <div>
-                <h4 className="font-medium mb-2">Personal Information</h4>
-                <p>Full Name: <span className="font-medium">{allValues.fullName}</span></p>
-                <p>University: <span className="font-medium">{allValues.university}</span></p>
-                <p>Program: <span className="font-medium">{allValues.program}</span></p>
-                <p>Year of Study: <span className="font-medium">{allValues.year}</span></p>
-                <p>Student ID: <span className="font-medium">{allValues.studentId}</span></p>
-              </div>
-              
-              <Separator />
-              
-              <div>
-                <h4 className="font-medium mb-2">Emergency Contact</h4>
-                <p>Name: <span className="font-medium">{allValues.emergencyContactName}</span></p>
-                <p>Phone: <span className="font-medium">{allValues.emergencyContactPhone}</span></p>
-                <p>Relationship: <span className="font-medium">{allValues.emergencyRelationship}</span></p>
-              </div>
-              
-              <Separator />
-              
-              <div>
-                <h4 className="font-medium mb-2">Verification Document</h4>
-                <p>ID Type: <span className="font-medium">
-                  {allValues.idType === 'studentId' ? 'Student ID Card' :
-                   allValues.idType === 'nationalId' ? 'National ID' :
-                   allValues.idType === 'passport' ? 'Passport' : 
-                   allValues.idType === 'driverLicense' ? 'Driver\'s License' : 'Not selected'}
-                </span></p>
-                <p>Document: <span className="font-medium">{idFile ? idFile.name : 'No file uploaded'}</span></p>
-                {allValues.additionalNotes && (
-                  <>
-                    <h5 className="font-medium mt-2">Additional Notes:</h5>
-                    <p className="text-gray-600 text-sm">{allValues.additionalNotes}</p>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-        );
-        
+  
+  const getStatusIcon = (status: VerificationStatus) => {
+    switch (status) {
+      case 'verified':
+        return <CheckCircle2 className="h-6 w-6 text-green-500" />;
+      case 'rejected':
+        return <AlertCircle className="h-6 w-6 text-red-500" />;
       default:
-        return null;
+        return <Clock className="h-6 w-6 text-blue-500" />;
     }
   };
-
+  
+  const getStatusText = (status: VerificationStatus) => {
+    switch (status) {
+      case 'verified':
+        return 'Verified';
+      case 'rejected':
+        return 'Rejected';
+      default:
+        return 'Pending';
+    }
+  };
+  
+  const isAllVerified = steps.every(step => step.status === 'verified');
+  
+  // Simulate a verification process (for demo purposes)
+  const simulateVerification = () => {
+    setTimeout(() => updateStepStatus(0, 'verified'), 1500);
+    setTimeout(() => updateStepStatus(1, 'verified'), 3000);
+    setTimeout(() => updateStepStatus(2, 'verified'), 4500);
+  };
+  
   return (
-    <div>
-      {/* Sub-steps progress indicator */}
-      <div className="flex justify-between mb-6">
-        {['Personal Info', 'Emergency Contact', 'Verification', 'Review'].map((step, index) => (
-          <div 
-            key={index} 
-            className={`flex items-center ${index < currentSubStep ? 'text-roomi-blue' : 'text-gray-400'}`}
-            onClick={() => index + 1 <= currentSubStep && setCurrentSubStep(index + 1)}
-          >
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-              index + 1 === currentSubStep ? 'bg-roomi-blue text-white' : 
-              index + 1 < currentSubStep ? 'bg-roomi-teal text-white' : 'bg-gray-200'
-            }`}>
-              {index + 1 < currentSubStep ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                index + 1
-              )}
-            </div>
-            <span className={`ml-2 text-sm ${index + 1 === currentSubStep ? 'font-medium' : ''} hidden md:inline`}>{step}</span>
-          </div>
+    <div className="space-y-6 py-4">
+      <div>
+        <h2 className="text-2xl font-bold">Verification Status</h2>
+        <p className="text-gray-500 mt-1">Track the status of your verification</p>
+      </div>
+      
+      <div className="space-y-4">
+        {steps.map((step, index) => (
+          <Card key={index} className={`shadow-sm border ${
+            step.status === 'verified' ? 'border-green-200 bg-green-50' : 
+            step.status === 'rejected' ? 'border-red-200 bg-red-50' : 
+            'border-blue-200 bg-blue-50'
+          }`}>
+            <CardContent className="p-4 flex justify-between items-center">
+              <div>
+                <h3 className="font-medium">{step.title}</h3>
+                <p className="text-sm text-gray-500">{step.description}</p>
+              </div>
+              <div className="flex items-center">
+                <span className={`text-sm mr-2 ${
+                  step.status === 'verified' ? 'text-green-600' : 
+                  step.status === 'rejected' ? 'text-red-600' : 
+                  'text-blue-600'
+                }`}>
+                  {getStatusText(step.status)}
+                </span>
+                {getStatusIcon(step.status)}
+              </div>
+            </CardContent>
+          </Card>
         ))}
       </div>
       
-      {/* Current sub-step content */}
-      <form onSubmit={handleSubmit(onSubmit)}>
-        {renderSubStep()}
-        
-        {/* Navigation buttons */}
-        <div className="flex justify-between mt-8">
-          <Button 
-            type="button" 
-            variant="outline"
-            onClick={handleSubStepBack}
-          >
-            Back
-          </Button>
-          
-          {currentSubStep === 3 ? (
-            null // Button is handled by StudentVerification component
-          ) : currentSubStep < 4 ? (
-            <Button 
-              type="button" 
-              variant="primary"
-              onClick={handleSubStepNext}
-            >
-              Continue
-            </Button>
-          ) : (
-            <Button 
-              type="submit" 
-              variant="primary"
-            >
-              Submit & Continue
-            </Button>
-          )}
-        </div>
-      </form>
+      <div className="flex justify-between pt-4">
+        <Button 
+          type="button" 
+          variant="outline"
+          onClick={simulateVerification}
+        >
+          Refresh Status
+        </Button>
+        <Button 
+          type="button" 
+          disabled={!isAllVerified}
+          onClick={onNext}
+        >
+          {isAllVerified ? 'Continue' : 'Waiting for Verification'}
+        </Button>
+      </div>
     </div>
   );
 };

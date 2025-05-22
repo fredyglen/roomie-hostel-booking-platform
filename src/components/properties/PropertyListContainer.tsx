@@ -5,18 +5,16 @@ import PropertyList from './PropertyList';
 import PropertiesFiltersPanel from './PropertiesFiltersPanel';
 import { Property } from '@/types/property';
 import { usePropertiesFilter } from '@/hooks/filters';
-import { navigateToProperty, navigateToStory } from '@/utils/navigation';
+import { toast } from 'sonner';
 
 interface PropertyListContainerProps {
   properties: Property[];
   isLoading?: boolean;
-  onPropertySelect?: (property: Property) => void;
 }
 
 const PropertyListContainer: React.FC<PropertyListContainerProps> = ({ 
   properties, 
-  isLoading = false,
-  onPropertySelect
+  isLoading = false
 }) => {
   const navigate = useNavigate();
   
@@ -38,13 +36,20 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
     resetFilters
   } = usePropertiesFilter({ properties });
   
-  // Use the navigation utilities for standardized routing
   const handleViewProperty = (id: string) => {
-    navigateToProperty(navigate, id);
+    navigate(`/student/property/${id}`);
   };
 
   const handleViewStory = (id: string) => {
-    navigateToStory(navigate, id);
+    // Use the enhanced story view
+    navigate(`/student/property/${id}/enhanced-story`);
+  };
+
+  const handleError = (error: any) => {
+    console.error('Error in PropertyListContainer:', error);
+    toast.error("Something went wrong", {
+      description: "Please try again later"
+    });
   };
   
   return (

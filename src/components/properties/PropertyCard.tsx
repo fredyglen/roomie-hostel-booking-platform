@@ -3,6 +3,8 @@ import React from 'react';
 import { Icon } from '@iconify/react';
 import { Badge } from '@/components/ui/badge';
 import { PropertyCategory } from '@/types/property';
+import ImageWithFallback from '@/components/common/ImageWithFallback';
+import { toast } from 'sonner';
 
 interface PropertyCardProps {
   property: {
@@ -47,23 +49,28 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
     }
   };
 
-  const defaultImage = '/placeholder.svg';
-  
+  const handleImageError = () => {
+    toast.error("Failed to load image", {
+      id: `image-error-${property.id}`,
+      duration: 2000,
+    });
+  };
+
   return (
     <div 
       className="bg-white rounded-lg overflow-hidden shadow-md h-full flex flex-col cursor-pointer transform hover:scale-[1.02] transition-transform duration-200"
       onClick={property.onViewDetails}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${property.title}`}
     >
       {/* Property Image */}
       <div className="relative">
-        <img 
-          src={(property.images && property.images[0]) || defaultImage} 
+        <ImageWithFallback 
+          src={(property.images && property.images[0]) || "/placeholder.svg"} 
           alt={property.title} 
           className="w-full h-48 object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = defaultImage; // Fallback to placeholder if image fails to load
-          }}
+          onError={handleImageError}
         />
         
         {/* Story View Button */}
