@@ -12,6 +12,7 @@ import StudentVerification from './StudentVerification';
 import PaymentStep from './PaymentStep';
 import { useToast } from '@/hooks/use-toast';
 import { formatDate } from '@/lib/utils';
+import { Button } from '@/components/ui/button';
 
 // Fixing the BookingStepsContainer component to handle type issues
 const BookingStepsContainer: React.FC = () => {
@@ -21,6 +22,15 @@ const BookingStepsContainer: React.FC = () => {
   
   const [currentStep, setCurrentStep] = useState(1);
   const [totalSteps] = useState(7);
+  const [stepLabels] = useState([
+    'Personal Info',
+    'Dates',
+    'Room Type',
+    'Roommates',
+    'Emergency',
+    'Verification', 
+    'Payment'
+  ]);
   
   const [loading, setLoading] = useState(false);
   const [bookingComplete, setBookingComplete] = useState(false);
@@ -264,16 +274,16 @@ const BookingStepsContainer: React.FC = () => {
         );
       case 2:
         return (
-          // DatePickerStep component is not modified in your editable files
-          // We'll assume it takes the props as defined in the error message
-          <div>
-            <h2 className="text-xl font-bold mb-4">Select Dates</h2>
-            <p>Please select your move-in and move-out dates.</p>
-            <div className="mt-4">
-              <Button onClick={handlePreviousStep} variant="outline" className="mr-2">Previous</Button>
-              <Button onClick={handleNextStep}>Next</Button>
-            </div>
-          </div>
+          <DatePickerStep
+            startDate={bookingDates.moveIn}
+            endDate={bookingDates.moveOut}
+            selectedDuration="1-semester"
+            onStartDateChange={handleMoveInDateAdapter}
+            onEndDateChange={handleMoveOutDateAdapter}
+            onDurationChange={(value) => handleDateChange('duration', value)}
+            onPrevious={handlePreviousStep}
+            onNext={handleNextStep}
+          />
         );
       case 3:
         return (
@@ -322,16 +332,16 @@ const BookingStepsContainer: React.FC = () => {
             studentId={studentVerification.studentId}
             university={studentVerification.university}
             program={studentVerification.program}
-            onInputChange={handleVerificationChange}
+            onInputChange={(name, value) => handleVerificationChange(name, value)}
             onFileUpload={handleIdUpload}
             onVerify={handleVerifyStudent}
             isVerifying={loading}
+            onPrevious={handlePreviousStep}
+            onNext={() => {}}
           />
         );
       case 7:
         return (
-          // PaymentStep component is not modified in your editable files
-          // We'll create a simpler temporary version
           <div className="space-y-6">
             <h2 className="text-xl font-bold mb-4">Payment</h2>
             <div className="border p-4 rounded-lg">
@@ -369,6 +379,7 @@ const BookingStepsContainer: React.FC = () => {
       <BookingSteps 
         currentStep={currentStep} 
         totalSteps={totalSteps}
+        stepLabels={stepLabels}
       />
       
       <div className="mt-8">

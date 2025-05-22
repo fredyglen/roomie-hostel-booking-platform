@@ -3,24 +3,123 @@ import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@iconify/react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 
 interface RoommatesFormProps {
-  roommatesList: Array<{ name: string; email: string; phone: string }>;
-  onRoommateChange: (index: number, field: string, value: string) => void;
-  onAddRoommate: () => void;
-  onRemoveRoommate: (index: number) => void;
-  onPrevious: () => void;
-  onNext: () => void;
+  // Props for standalone component
+  roommatesList?: Array<{ name: string; email: string; phone: string }>;
+  onRoommateChange?: (index: number, field: string, value: string) => void;
+  onAddRoommate?: () => void;
+  onRemoveRoommate?: (index: number) => void;
+  onPrevious?: () => void;
+  onNext?: () => void;
+  
+  // Props for embedded in DurationSelection
+  enabled?: boolean;
+  setEnabled?: (enabled: boolean) => void;
+  numberOfRoommates?: number;
+  setNumberOfRoommates?: (num: number) => void;
+  roommatesInfo?: Array<{ name: string; email: string; phone: string }>;
+  individualPrice?: number;
+  priceUnit?: string;
 }
 
 const RoommatesForm: React.FC<RoommatesFormProps> = ({
-  roommatesList,
-  onRoommateChange,
-  onAddRoommate,
-  onRemoveRoommate,
+  // Default values for standalone usage
+  roommatesList = [],
+  onRoommateChange = () => {},
+  onAddRoommate = () => {},
+  onRemoveRoommate = () => {},
   onPrevious,
-  onNext
+  onNext,
+  
+  // For embedded usage in DurationSelection
+  enabled = false,
+  setEnabled = () => {},
+  numberOfRoommates = 1,
+  setNumberOfRoommates = () => {},
+  roommatesInfo = [],
+  individualPrice = 0,
+  priceUnit = 'month'
 }) => {
+  // Check if being used in standalone mode (in booking flow) or embedded mode (in DurationSelection)
+  const isStandalone = onPrevious !== undefined && onNext !== undefined;
+  
+  // Handle roommates in embedded mode (DurationSelection)
+  if (!isStandalone) {
+    return (
+      <div className="space-y-4 border-t pt-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-medium">Split Payment with Roommates</h3>
+            <p className="text-sm text-gray-500">Share the cost with others</p>
+          </div>
+          <Switch 
+            checked={enabled}
+            onCheckedChange={setEnabled}
+          />
+        </div>
+        
+        {enabled && (
+          <div className="space-y-4">
+            <div>
+              <Label>Number of Roommates (including you)</Label>
+              <select 
+                value={numberOfRoommates}
+                onChange={(e) => setNumberOfRoommates(parseInt(e.target.value))}
+                className="w-full p-2 border rounded-md mt-1"
+              >
+                {[1, 2, 3, 4].map(num => (
+                  <option key={num} value={num}>{num}</option>
+                ))}
+              </select>
+              
+              {individualPrice > 0 && (
+                <p className="text-sm mt-2">
+                  Each person pays: <span className="font-semibold">₵{individualPrice.toLocaleString()}</span>/{priceUnit}
+                </p>
+              )}
+            </div>
+            
+            {numberOfRoommates > 1 && Array.from({ length: numberOfRoommates - 1 }).map((_, index) => (
+              <div key={index} className="border p-3 rounded-md">
+                <h4 className="font-medium mb-2">Roommate {index + 1}</h4>
+                <div className="space-y-3">
+                  <div>
+                    <Label>Name</Label>
+                    <Input
+                      value={roommatesInfo[index]?.name || ''}
+                      onChange={(e) => onRoommateChange(index, 'name', e.target.value)}
+                      placeholder="Full Name"
+                    />
+                  </div>
+                  <div>
+                    <Label>Email</Label>
+                    <Input
+                      value={roommatesInfo[index]?.email || ''}
+                      onChange={(e) => onRoommateChange(index, 'email', e.target.value)}
+                      placeholder="Email Address"
+                    />
+                  </div>
+                  <div>
+                    <Label>Phone</Label>
+                    <Input
+                      value={roommatesInfo[index]?.phone || ''}
+                      onChange={(e) => onRoommateChange(index, 'phone', e.target.value)}
+                      placeholder="Phone Number"
+                    />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+  
+  // Original standalone implementation
   return (
     <div className="space-y-6">
       <div>
