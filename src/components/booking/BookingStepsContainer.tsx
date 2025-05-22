@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePropertyLoader } from '@/hooks/property';
@@ -337,7 +336,7 @@ const BookingStepsContainer: React.FC = () => {
             onVerify={handleVerifyStudent}
             isVerifying={loading}
             onPrevious={handlePreviousStep}
-            onNext={() => {}}
+            onNext={handleNextStep}
           />
         );
       case 7:

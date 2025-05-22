@@ -15,6 +15,8 @@ export interface StudentVerificationProps {
   onFileUpload: (file: File) => void;
   onVerify: () => void;
   isVerifying: boolean;
+  onPrevious?: () => void;  // Added this prop
+  onNext?: () => void;      // Added this prop
 }
 
 const StudentVerification: React.FC<StudentVerificationProps> = ({
@@ -25,7 +27,9 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
   onInputChange,
   onFileUpload,
   onVerify,
-  isVerifying
+  isVerifying,
+  onPrevious,
+  onNext
 }) => {
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -124,9 +128,18 @@ const StudentVerification: React.FC<StudentVerificationProps> = ({
         </div>
       </div>
 
-      <div className="pt-4">
+      <div className="flex justify-between pt-4">
+        {onPrevious && (
+          <Button 
+            type="button" 
+            variant="outline" 
+            onClick={onPrevious}
+          >
+            Previous
+          </Button>
+        )}
         <Button 
-          className="w-full"
+          className={onPrevious ? "" : "w-full"}
           onClick={onVerify}
           disabled={isVerifying}
         >
