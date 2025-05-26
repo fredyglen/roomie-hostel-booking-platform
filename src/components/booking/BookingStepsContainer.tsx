@@ -1,8 +1,8 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { usePropertyLoader } from '@/hooks/property';
-import { useBookingForm } from '@/hooks/booking';
+import { useBookingState } from '@/hooks/booking/useBookingState';
 import BookingSteps from './BookingSteps';
 import StepDisplay from './StepDisplay';
 import { useToast } from '@/hooks/use-toast';
@@ -14,9 +14,8 @@ const BookingStepsContainer: React.FC = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   
-  const [currentStep, setCurrentStep] = useState(1);
-  const [totalSteps] = useState(7);
-  const [stepLabels] = useState([
+  const totalSteps = 7;
+  const stepLabels = [
     'Personal Info',
     'Dates',
     'Room Type',
@@ -24,7 +23,7 @@ const BookingStepsContainer: React.FC = () => {
     'Emergency',
     'Verification', 
     'Payment'
-  ]);
+  ];
   
   // Property data
   const { data: property, isLoading: propertyLoading } = usePropertyLoader({
@@ -33,10 +32,82 @@ const BookingStepsContainer: React.FC = () => {
     enabled: !!id
   });
   
-  // Use our custom hook for form state and handlers
-  const bookingForm = useBookingForm();
+  // Centralized booking state
+  const {
+    bookingState,
+    currentStep,
+    setCurrentStep,
+    bookingComplete,
+    setBookingComplete,
+    loading,
+    setLoading,
+    updatePersonalInfo,
+    updateBookingDates,
+    updateRoomOptions,
+    updateRoommate,
+    addRoommate,
+    removeRoommate,
+    updateEmergencyContact,
+    updateStudentVerification,
+    updatePaymentInfo
+  } = useBookingState(id);
   
-  // Handle completion of current step
+  // Handler functions
+  const handlePersonalInfoAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    updatePersonalInfo(name, value);
+  };
+  
+  const handleMoveInDateAdapter = (date: Date) => {
+    updateBookingDates('moveIn', date);
+  };
+  
+  const handleMoveOutDateAdapter = (date: Date) => {
+    updateBookingDates('moveOut', date);
+  };
+  
+  const handleDateChange = (name: string, value: Date | string) => {
+    updateBookingDates(name, value);
+  };
+  
+  const handleRoomOptionChange = (name: string, value: string) => {
+    updateRoomOptions(name, value);
+  };
+  
+  const handleRoommateChange = (index: number, field: string, value: string) => {
+    updateRoommate(index, field, value);
+  };
+  
+  const handleEmergencyContactAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    updateEmergencyContact(name, value);
+  };
+  
+  const handleRelationshipChange = (value: string) => {
+    updateEmergencyContact('relationship', value);
+  };
+  
+  const handleVerificationChange = (name: string, value: string) => {
+    updateStudentVerification(name, value);
+  };
+  
+  const handleIdUpload = (file: File) => {
+    updateStudentVerification('idImage', file);
+  };
+  
+  const handleVerifyStudent = () => {
+    setLoading(true);
+    // Simulate verification process
+    setTimeout(() => {
+      updateStudentVerification('verified', true);
+      setLoading(false);
+      toast({
+        title: "Verification Successful",
+        description: "Your student status has been verified.",
+      });
+    }, 2000);
+  };
+  
   const handleNextStep = () => {
     if (currentStep < totalSteps) {
       setCurrentStep(currentStep + 1);
@@ -50,20 +121,16 @@ const BookingStepsContainer: React.FC = () => {
   };
   
   const handleProcessPayment = () => {
-    bookingForm.setPaymentInfo({
-      ...bookingForm.paymentInfo,
-      isProcessing: true,
-    });
+    updatePaymentInfo({ isProcessing: true });
     
     // Simulate payment processing
     setTimeout(() => {
-      bookingForm.setPaymentInfo({
-        ...bookingForm.paymentInfo,
+      updatePaymentInfo({
         isProcessing: false,
         isComplete: true,
       });
       
-      bookingForm.setBookingComplete(true);
+      setBookingComplete(true);
       
       toast({
         title: "Booking Successful!",
@@ -81,36 +148,25 @@ const BookingStepsContainer: React.FC = () => {
     return <div className="flex justify-center p-8">Loading...</div>;
   }
   
-  // Prepare the form data object to pass to StepDisplay
-  const formData = {
-    personalInfo: bookingForm.personalInfo,
-    bookingDates: bookingForm.bookingDates,
-    roomOptions: bookingForm.roomOptions,
-    roommates: bookingForm.roommates,
-    emergencyContact: bookingForm.emergencyContact,
-    studentVerification: bookingForm.studentVerification,
-    paymentInfo: bookingForm.paymentInfo
-  };
-  
   // Prepare handlers to pass to StepDisplay
   const handlers = {
     handlePreviousStep,
     handleNextStep,
-    handlePersonalInfoAdapter: bookingForm.handlePersonalInfoAdapter,
-    handleMoveInDateAdapter: bookingForm.handleMoveInDateAdapter,
-    handleMoveOutDateAdapter: bookingForm.handleMoveOutDateAdapter,
-    handleDateChange: bookingForm.handleDateChange,
-    handleRoomOptionChange: bookingForm.handleRoomOptionChange,
-    handleRoommateChange: bookingForm.handleRoommateChange,
-    addRoommate: bookingForm.addRoommate,
-    removeRoommate: bookingForm.removeRoommate,
-    handleEmergencyContactAdapter: bookingForm.handleEmergencyContactAdapter,
-    handleRelationshipChange: bookingForm.handleRelationshipChange,
-    handleVerificationChange: bookingForm.handleVerificationChange,
-    handleIdUpload: bookingForm.handleIdUpload,
-    handleVerifyStudent: bookingForm.handleVerifyStudent,
+    handlePersonalInfoAdapter,
+    handleMoveInDateAdapter,
+    handleMoveOutDateAdapter,
+    handleDateChange,
+    handleRoomOptionChange,
+    handleRoommateChange,
+    addRoommate,
+    removeRoommate,
+    handleEmergencyContactAdapter,
+    handleRelationshipChange,
+    handleVerificationChange,
+    handleIdUpload,
+    handleVerifyStudent,
     handleProcessPayment,
-    loading: bookingForm.loading
+    loading
   };
 
   // For payment step, we'll render a custom component
@@ -129,10 +185,10 @@ const BookingStepsContainer: React.FC = () => {
             <p className="font-medium">Booking Summary</p>
             <p className="flex justify-between"><span>Property:</span> <span className="font-medium">{property?.title}</span></p>
             <p className="flex justify-between"><span>Total Amount:</span> <span className="font-medium">₵{property?.price || 0}</span></p>
-            <p className="flex justify-between"><span>Room Type:</span> <span>{bookingForm.roomOptions.roomType}</span></p>
-            <p className="flex justify-between"><span>Duration:</span> <span>{bookingForm.bookingDates.duration}</span></p>
-            <p className="flex justify-between"><span>Move In:</span> <span>{formatDate(bookingForm.bookingDates.moveIn)}</span></p>
-            <p className="flex justify-between"><span>Move Out:</span> <span>{formatDate(bookingForm.bookingDates.moveOut)}</span></p>
+            <p className="flex justify-between"><span>Room Type:</span> <span>{bookingState.roomOptions.roomType}</span></p>
+            <p className="flex justify-between"><span>Duration:</span> <span>{bookingState.bookingDates.duration}</span></p>
+            <p className="flex justify-between"><span>Move In:</span> <span>{formatDate(bookingState.bookingDates.moveIn)}</span></p>
+            <p className="flex justify-between"><span>Move Out:</span> <span>{formatDate(bookingState.bookingDates.moveOut)}</span></p>
           </div>
           <div className="flex justify-between pt-4">
             <Button type="button" variant="outline" onClick={handlePreviousStep}>
@@ -141,9 +197,9 @@ const BookingStepsContainer: React.FC = () => {
             <Button 
               type="button" 
               onClick={handleProcessPayment}
-              disabled={bookingForm.paymentInfo.isProcessing}
+              disabled={bookingState.paymentInfo.isProcessing}
             >
-              {bookingForm.paymentInfo.isProcessing ? 'Processing...' : 'Complete Payment'}
+              {bookingState.paymentInfo.isProcessing ? 'Processing...' : 'Complete Payment'}
             </Button>
           </div>
         </div>
@@ -163,7 +219,7 @@ const BookingStepsContainer: React.FC = () => {
         <StepDisplay 
           currentStep={currentStep} 
           property={property}
-          formData={formData}
+          formData={bookingState}
           handlers={handlers}
         />
       </div>

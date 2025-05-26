@@ -1,6 +1,7 @@
 
 import { useBookingForm } from './useBookingForm';
 import { useBookingViewModel } from './useBookingViewModel';
+import { useBookingState } from './useBookingState';
 import { usePersonalInfoForm } from './usePersonalInfoForm';
 import { useDatesForm } from './useDatesForm';
 import { useRoomOptionsForm } from './useRoomOptionsForm';
@@ -18,6 +19,7 @@ export {
   // Main hooks
   useBookingForm,
   useBookingViewModel,
+  useBookingState,
   STEP_LABELS,
   
   // Form hooks
