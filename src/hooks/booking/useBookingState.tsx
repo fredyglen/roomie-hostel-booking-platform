@@ -101,28 +101,28 @@ export const useBookingState = (propertyId?: string) => {
   const [loading, setLoading] = useState(false);
 
   const updatePersonalInfo = (field: string, value: string) => {
-    setBookingState(prev => ({
+    setBookingState((prev: BookingState) => ({
       ...prev,
       personalInfo: { ...prev.personalInfo, [field]: value }
     }));
   };
 
   const updateBookingDates = (field: string, value: Date | string) => {
-    setBookingState(prev => ({
+    setBookingState((prev: BookingState) => ({
       ...prev,
       bookingDates: { ...prev.bookingDates, [field]: value }
     }));
   };
 
   const updateRoomOptions = (field: string, value: string) => {
-    setBookingState(prev => ({
+    setBookingState((prev: BookingState) => ({
       ...prev,
       roomOptions: { ...prev.roomOptions, [field]: value }
     }));
   };
 
   const updateRoommate = (index: number, field: string, value: string) => {
-    setBookingState(prev => {
+    setBookingState((prev: BookingState) => {
       const updatedRoommates = [...prev.roommates];
       updatedRoommates[index] = { ...updatedRoommates[index], [field]: value };
       return { ...prev, roommates: updatedRoommates };
@@ -130,35 +130,35 @@ export const useBookingState = (propertyId?: string) => {
   };
 
   const addRoommate = () => {
-    setBookingState(prev => ({
+    setBookingState((prev: BookingState) => ({
       ...prev,
       roommates: [...prev.roommates, { name: '', email: '', phone: '' }]
     }));
   };
 
   const removeRoommate = (index: number) => {
-    setBookingState(prev => ({
+    setBookingState((prev: BookingState) => ({
       ...prev,
       roommates: prev.roommates.filter((_, i) => i !== index)
     }));
   };
 
   const updateEmergencyContact = (field: string, value: string) => {
-    setBookingState(prev => ({
+    setBookingState((prev: BookingState) => ({
       ...prev,
       emergencyContact: { ...prev.emergencyContact, [field]: value }
     }));
   };
 
   const updateStudentVerification = (field: string, value: string | File | boolean) => {
-    setBookingState(prev => ({
+    setBookingState((prev: BookingState) => ({
       ...prev,
       studentVerification: { ...prev.studentVerification, [field]: value }
     }));
   };
 
   const updatePaymentInfo = (updates: Partial<BookingState['paymentInfo']>) => {
-    setBookingState(prev => ({
+    setBookingState((prev: BookingState) => ({
       ...prev,
       paymentInfo: { ...prev.paymentInfo, ...updates }
     }));
