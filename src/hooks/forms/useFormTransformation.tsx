@@ -5,7 +5,7 @@ import { GhanaRegions } from '@/components/owner/property-form/PropertyFormSchem
 export const useFormTransformation = () => {
   const transformDbToFormValues = (property: Property): Partial<PropertyFormValues> => {
     // Ensure region is a valid Ghana region, fallback to Greater Accra
-    const validRegion = property.state && GhanaRegions.includes(property.state as any) 
+    const validRegion: typeof GhanaRegions[number] = property.state && GhanaRegions.includes(property.state as any) 
       ? property.state as typeof GhanaRegions[number]
       : 'Greater Accra';
 
