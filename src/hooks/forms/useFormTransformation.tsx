@@ -3,9 +3,9 @@ import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
 
 export const useFormTransformation = () => {
   const transformDbToFormValues = (property: Property): PropertyFormValues => {
-    // Explicitly construct the PropertyFormValues object with all required fields
+    // Ensure all required fields have proper values, not just defaults
     const formValues: PropertyFormValues = {
-      // Required fields with proper defaults
+      // Required fields - ensure they always have values
       title: property.title || '',
       type: property.type || property.property_type || '',
       propertyCategory: (property.propertyCategory || property.property_category || 'Hostel') as 'Hostel' | 'Homestel' | 'Apartment',
@@ -53,53 +53,91 @@ export const useFormTransformation = () => {
     return formValues;
   };
 
-  const transformFormToDbFormat = (formData: PropertyFormValues, ownerId: string): PropertyInsert => {
-    const amenitiesArray = formData.amenities 
-      ? formData.amenities.split('\n').map(item => item.trim()).filter(Boolean)
+  const transformFormToDbFormat = (formData: any, ownerId: string): PropertyInsert => {
+    // Create a safe form data object with all required fields
+    const safeFormData: PropertyFormValues = {
+      title: formData.title || '',
+      type: formData.type || '',
+      propertyCategory: formData.propertyCategory || 'Hostel',
+      address: formData.address || '',
+      city: formData.city || '',
+      state: formData.state || '',
+      zip: formData.zip || '',
+      price: Number(formData.price) || 0,
+      price_unit: formData.price_unit || 'month',
+      description: formData.description || '',
+      status: formData.status || 'available',
+      bedrooms: Number(formData.bedrooms) || 1,
+      bathrooms: Number(formData.bathrooms) || 1,
+      all_inclusive: Boolean(formData.all_inclusive),
+      distance_to_campus: formData.distance_to_campus || '',
+      amenities: formData.amenities || '',
+      house_rules: formData.house_rules || '',
+      occupancy: formData.occupancy || '',
+      image_url: formData.image_url || '',
+      images: formData.images || [],
+      utilities: formData.utilities || '',
+      location: formData.location || '',
+      landmark: formData.landmark || '',
+      total_rooms: Number(formData.total_rooms) || 0,
+      rooms_available: Number(formData.rooms_available) || 0,
+      beds_per_room: Number(formData.beds_per_room) || 1,
+      beds_available: Number(formData.beds_available) || 0,
+      max_occupants: Number(formData.max_occupants) || 1,
+      has_bedframes: Boolean(formData.has_bedframes),
+      has_mattresses: Boolean(formData.has_mattresses),
+      has_wardrobes: Boolean(formData.has_wardrobes),
+      has_individual_meters: Boolean(formData.has_individual_meters),
+      advance_payment_months: Number(formData.advance_payment_months) || 1,
+      allow_bill_sharing: Boolean(formData.allow_bill_sharing),
+    };
+
+    const amenitiesArray = safeFormData.amenities 
+      ? safeFormData.amenities.split('\n').map(item => item.trim()).filter(Boolean)
       : [];
     
-    const houseRulesArray = formData.house_rules 
-      ? formData.house_rules.split('\n').map(item => item.trim()).filter(Boolean)
+    const houseRulesArray = safeFormData.house_rules 
+      ? safeFormData.house_rules.split('\n').map(item => item.trim()).filter(Boolean)
       : [];
     
-    const utilitiesArray = formData.utilities 
-      ? formData.utilities.split('\n').map(item => item.trim()).filter(Boolean)
+    const utilitiesArray = safeFormData.utilities 
+      ? safeFormData.utilities.split('\n').map(item => item.trim()).filter(Boolean)
       : [];
 
     return {
       owner_id: ownerId,
-      title: formData.title,
-      property_type: formData.type,
-      property_category: formData.propertyCategory,
-      rent: formData.price,
-      address: formData.address,
-      city: formData.city,
-      state: formData.state,
-      zip: formData.zip,
-      bedrooms: formData.bedrooms,
-      bathrooms: formData.bathrooms,
+      title: safeFormData.title,
+      property_type: safeFormData.type,
+      property_category: safeFormData.propertyCategory,
+      rent: safeFormData.price,
+      address: safeFormData.address,
+      city: safeFormData.city,
+      state: safeFormData.state,
+      zip: safeFormData.zip,
+      bedrooms: safeFormData.bedrooms,
+      bathrooms: safeFormData.bathrooms,
       available_from: new Date().toISOString().split('T')[0],
-      description: formData.description,
+      description: safeFormData.description,
       amenities: amenitiesArray,
-      images: formData.images || [],
-      is_available: formData.status === 'available',
-      distance_to_campus: formData.distance_to_campus,
+      images: safeFormData.images || [],
+      is_available: safeFormData.status === 'available',
+      distance_to_campus: safeFormData.distance_to_campus,
       house_rules: houseRulesArray,
-      all_inclusive: formData.all_inclusive,
+      all_inclusive: safeFormData.all_inclusive,
       utilities: utilitiesArray,
-      location: formData.location,
-      landmark: formData.landmark,
-      total_rooms: formData.total_rooms,
-      rooms_available: formData.rooms_available,
-      beds_per_room: formData.beds_per_room,
-      beds_available: formData.beds_available,
-      max_occupants: formData.max_occupants,
-      has_bedframes: formData.has_bedframes,
-      has_mattresses: formData.has_mattresses,
-      has_wardrobes: formData.has_wardrobes,
-      has_individual_meters: formData.has_individual_meters,
-      advance_payment_months: formData.advance_payment_months,
-      allow_bill_sharing: formData.allow_bill_sharing,
+      location: safeFormData.location,
+      landmark: safeFormData.landmark,
+      total_rooms: safeFormData.total_rooms,
+      rooms_available: safeFormData.rooms_available,
+      beds_per_room: safeFormData.beds_per_room,
+      beds_available: safeFormData.beds_available,
+      max_occupants: safeFormData.max_occupants,
+      has_bedframes: safeFormData.has_bedframes,
+      has_mattresses: safeFormData.has_mattresses,
+      has_wardrobes: safeFormData.has_wardrobes,
+      has_individual_meters: safeFormData.has_individual_meters,
+      advance_payment_months: safeFormData.advance_payment_months,
+      allow_bill_sharing: safeFormData.allow_bill_sharing,
     };
   };
 
