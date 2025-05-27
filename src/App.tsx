@@ -12,6 +12,7 @@ import Landing from "./pages/Landing";
 import Login from "./pages/auth/Login";
 import Register from "./pages/auth/Register";
 import Welcome from "./pages/Welcome";
+import ModernHomepage from "./pages/ModernHomepage";
 import EnhancedStoryPage from "./pages/student/EnhancedStoryPage";
 
 // Student Portal Pages
@@ -60,8 +61,10 @@ const App = () => (
         <Sonner />
         <BrowserRouter>
           <Routes>
-            <Route path="/" element={<Welcome />} />
+            <Route path="/" element={<ModernHomepage />} />
+            <Route path="/welcome" element={<Welcome />} />
             <Route path="/landing" element={<Landing />} />
+            <Route path="/index" element={<Index />} />
             
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
