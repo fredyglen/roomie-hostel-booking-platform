@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PropertyCategory } from '@/types/property';
@@ -53,7 +54,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       location: initialData?.location || "",
       landmark: initialData?.landmark || "",
       price: initialData?.price || 0,
-      price_unit: initialData?.price_unit || "week",
+      price_unit: initialData?.price_unit || "semester",
       description: initialData?.description || "",
       distance_to_campus: initialData?.distance_to_campus || "",
       amenities: initialData?.amenities || "",
@@ -89,12 +90,17 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
   const propertyCategory = form.watch("propertyCategory") as PropertyCategory;
   
-  // Feature access control - simulate premium features based on user role
+  // Set default price unit based on property category
+  useEffect(() => {
+    if (propertyCategory === "Hostel") {
+      form.setValue("price_unit", "semester");
+    }
+  }, [propertyCategory, form]);
+  
+  // Feature access control
   const hasFeatureAccess = (feature: string): boolean => {
-    // For now, all owners have access to all features
-    // This can be extended with actual subscription/tier checking
     const premiumFeatures = ['virtual_tours', 'priority_listing', 'analytics', 'multiple_images'];
-    return user?.role === 'owner'; // Basic access control
+    return user?.role === 'owner';
   };
 
   // Calculate occupancy details based on property type

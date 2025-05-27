@@ -50,7 +50,10 @@ const PricingFields: React.FC<PricingFieldsProps> = ({ form, propertyCategory })
               </FormControl>
               <SelectContent>
                 {propertyCategory === "Hostel" ? (
-                  <SelectItem value="semester">Per Semester</SelectItem>
+                  <>
+                    <SelectItem value="semester">Per Semester</SelectItem>
+                    <SelectItem value="year">Per Year (Discount Option)</SelectItem>
+                  </>
                 ) : (
                   <>
                     <SelectItem value="week">Per Week</SelectItem>
@@ -61,6 +64,12 @@ const PricingFields: React.FC<PricingFieldsProps> = ({ form, propertyCategory })
                 )}
               </SelectContent>
             </Select>
+            <FormDescription>
+              {propertyCategory === "Hostel" 
+                ? "Hostels typically charge per semester, with yearly options for discounts"
+                : "Choose the billing period that works best for your property"
+              }
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

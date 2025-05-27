@@ -86,7 +86,7 @@ const AmenitiesSelector: React.FC<AmenitiesSelectorProps> = ({ form }) => {
       }
     }
     
-    form.setValue('amenities', amenitiesArray.join('\n'));
+    form.setValue('amenities', amenitiesArray.join('\n'), { shouldValidate: true });
   };
 
   const isAmenitySelected = (amenityName: string): boolean => {
@@ -126,21 +126,29 @@ const AmenitiesSelector: React.FC<AmenitiesSelectorProps> = ({ form }) => {
                       <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                         {category.items.map((amenity) => {
                           const IconComponent = amenity.icon;
+                          const isSelected = isAmenitySelected(amenity.name);
                           return (
                             <div 
                               key={amenity.name}
                               className="flex items-center space-x-3 border rounded-lg p-3 hover:bg-gray-50 cursor-pointer"
-                              onClick={() => handleAmenityToggle(amenity.name, !isAmenitySelected(amenity.name))}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleAmenityToggle(amenity.name, !isSelected);
+                              }}
                             >
                               <Checkbox
-                                checked={isAmenitySelected(amenity.name)}
-                                onCheckedChange={(checked) => handleAmenityToggle(amenity.name, !!checked)}
+                                checked={isSelected}
+                                onCheckedChange={(checked) => {
+                                  handleAmenityToggle(amenity.name, !!checked);
+                                }}
                                 id={`amenity-${amenity.name}`}
+                                onClick={(e) => e.stopPropagation()}
                               />
                               <IconComponent className="w-5 h-5 text-gray-600" />
                               <label 
                                 htmlFor={`amenity-${amenity.name}`} 
                                 className="text-sm font-medium cursor-pointer flex-1"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {amenity.name}
                               </label>
