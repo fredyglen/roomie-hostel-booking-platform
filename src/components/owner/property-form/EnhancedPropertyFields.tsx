@@ -3,76 +3,58 @@ import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Shield, Car, Wifi, Users, FileText, Phone } from 'lucide-react';
+import { Shield, Wifi, Car, Users, Calendar, AlertTriangle } from 'lucide-react';
 
 interface EnhancedPropertyFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
-  propertyCategory: 'Hostel' | 'Homestel' | 'Apartment';
+  propertyCategory: string;
 }
 
 const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, propertyCategory }) => {
-  const verificationOptions = [
-    { value: 'pending', label: 'Pending Verification' },
-    { value: 'verified', label: 'Verified' },
-    { value: 'rejected', label: 'Rejected' }
-  ];
-
-  const genderOptions = [
-    { value: 'mixed', label: 'Mixed (All Genders)' },
-    { value: 'male', label: 'Male Only' },
-    { value: 'female', label: 'Female Only' }
-  ];
-
-  const semesterOptions = [
-    { value: 'semester_1', label: 'First Semester' },
-    { value: 'semester_2', label: 'Second Semester' },
-    { value: 'year_round', label: 'Year Round' }
-  ];
-
-  const cancellationPolicyOptions = [
-    { value: 'flexible', label: 'Flexible - Free cancellation' },
-    { value: 'moderate', label: 'Moderate - Partial refund' },
-    { value: 'strict', label: 'Strict - No refund' }
-  ];
-
-  const petPolicyOptions = [
-    { value: 'not_allowed', label: 'Pets Not Allowed' },
-    { value: 'allowed', label: 'Pets Allowed' },
-    { value: 'cats_only', label: 'Cats Only' },
-    { value: 'small_pets', label: 'Small Pets Only' }
-  ];
-
   const securityFeatures = [
     'CCTV Surveillance',
-    '24/7 Security Guards',
-    'Electronic Gate Access',
-    'Visitor Registration',
-    'Emergency Alarm System',
-    'Biometric Access',
+    '24/7 Security Guard',
+    'Access Control System',
     'Security Lighting',
-    'Perimeter Fencing'
+    'Emergency Alarms',
+    'Gated Compound',
+    'Intercom System',
+    'Motion Sensors'
   ];
 
-  const internetSpeeds = [
-    { value: 'basic', label: 'Basic (1-10 Mbps)' },
-    { value: 'standard', label: 'Standard (10-50 Mbps)' },
-    { value: 'high_speed', label: 'High Speed (50+ Mbps)' },
-    { value: 'fiber', label: 'Fiber Optic' }
-  ];
+  const handleSecurityFeatureToggle = (feature: string) => {
+    const currentFeatures = form.getValues('security_features') || [];
+    const updatedFeatures = currentFeatures.includes(feature)
+      ? currentFeatures.filter(f => f !== feature)
+      : [...currentFeatures, feature];
+    
+    form.setValue('security_features', updatedFeatures);
+  };
+
+  const handleSemesterAvailabilityToggle = (semester: 'semester_1' | 'semester_2' | 'year_round') => {
+    const currentAvailability = form.getValues('semester_availability') || [];
+    const updatedAvailability = currentAvailability.includes(semester)
+      ? currentAvailability.filter(s => s !== semester)
+      : [...currentAvailability, semester];
+    
+    form.setValue('semester_availability', updatedAvailability);
+  };
 
   return (
     <div className="space-y-6">
-      {/* Verification & Contact Section */}
+      {/* Verification & Emergency Contact */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Shield className="w-5 h-5" />
-            Verification & Emergency Contact
+          <CardTitle className="flex items-center space-x-2">
+            <Shield className="h-5 w-5" />
+            <span>Verification & Emergency Contact</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -83,18 +65,16 @@ const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, p
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Verification Status</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || 'pending'}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select verification status" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {verificationOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="pending">Pending</SelectItem>
+                      <SelectItem value="verified">Verified</SelectItem>
+                      <SelectItem value="rejected">Rejected</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -102,30 +82,28 @@ const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, p
               )}
             />
 
-            <FormField
-              control={form.control}
-              name="gender_restriction"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Gender Restriction</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || 'mixed'}>
+            <div className="flex items-center space-x-3">
+              <FormField
+                control={form.control}
+                name="has_accessibility_features"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select gender restriction" />
-                      </SelectTrigger>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {genderOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Accessibility Features</FormLabel>
+                      <FormDescription>
+                        Property has wheelchair access, ramps, etc.
+                      </FormDescription>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -136,7 +114,7 @@ const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, p
                 <FormItem>
                   <FormLabel>Emergency Contact Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Full name of emergency contact" {...field} />
+                    <Input placeholder="John Doe" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -150,7 +128,7 @@ const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, p
                 <FormItem>
                   <FormLabel>Emergency Contact Phone</FormLabel>
                   <FormControl>
-                    <Input placeholder="+233 XX XXX XXXX" {...field} />
+                    <Input placeholder="+233 24 123 4567" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -160,265 +138,181 @@ const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, p
         </CardContent>
       </Card>
 
-      {/* Accessibility & Policies Section */}
+      {/* Policies & Restrictions */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Users className="w-5 h-5" />
-            Accessibility & Policies
+          <CardTitle className="flex items-center space-x-2">
+            <Users className="h-5 w-5" />
+            <span>Policies & Restrictions</span>
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <FormField
               control={form.control}
-              name="has_accessibility_features"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Accessibility Features</FormLabel>
-                    <FormDescription>
-                      Property has wheelchair access, ramps, or other accessibility features
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
               name="pet_policy"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Pet Policy</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value || 'not_allowed'}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select pet policy" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {petPolicyOptions.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="not_allowed">Not Allowed</SelectItem>
+                      <SelectItem value="allowed">Allowed</SelectItem>
+                      <SelectItem value="cats_only">Cats Only</SelectItem>
+                      <SelectItem value="small_pets">Small Pets Only</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
-
-          <FormField
-            control={form.control}
-            name="cancellation_policy"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cancellation Policy</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value || 'moderate'}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select cancellation policy" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {cancellationPolicyOptions.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <FormDescription>
-                  Define the terms for booking cancellations and refunds
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Parking & Security Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Car className="w-5 h-5" />
-            Parking & Security
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <FormField
-              control={form.control}
-              name="parking_available"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel>Parking Available</FormLabel>
-                    <FormDescription>
-                      Property has parking facilities
-                    </FormDescription>
-                  </div>
-                </FormItem>
-              )}
-            />
-
-            {form.watch('parking_available') && (
-              <FormField
-                control={form.control}
-                name="parking_cost"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Parking Cost (₵/month)</FormLabel>
-                    <FormControl>
-                      <Input 
-                        type="number" 
-                        placeholder="e.g. 100" 
-                        {...field}
-                        onChange={(e) => field.onChange(e.target.valueAsNumber || 0)} 
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
 
             <FormField
               control={form.control}
-              name="internet_speed"
+              name="gender_restriction"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Internet Speed</FormLabel>
+                  <FormLabel>Gender Restriction</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select internet speed" />
+                        <SelectValue placeholder="Select gender policy" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      {internetSpeeds.map((option) => (
-                        <SelectItem key={option.value} value={option.value}>
-                          {option.label}
-                        </SelectItem>
-                      ))}
+                      <SelectItem value="mixed">Mixed Gender</SelectItem>
+                      <SelectItem value="male">Male Only</SelectItem>
+                      <SelectItem value="female">Female Only</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </div>
 
-          <FormField
-            control={form.control}
-            name="security_features"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Security Features</FormLabel>
-                <FormDescription>
-                  Select all security features available at the property
-                </FormDescription>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
-                  {securityFeatures.map((feature) => (
-                    <div key={feature} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={feature}
-                        checked={(field.value || []).includes(feature)}
-                        onCheckedChange={(checked) => {
-                          const currentFeatures = field.value || [];
-                          if (checked) {
-                            field.onChange([...currentFeatures, feature]);
-                          } else {
-                            field.onChange(currentFeatures.filter(f => f !== feature));
-                          }
-                        }}
-                      />
-                      <label htmlFor={feature} className="text-sm font-medium">
-                        {feature}
-                      </label>
-                    </div>
-                  ))}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </CardContent>
-      </Card>
-
-      {/* Academic & Availability Section */}
-      {propertyCategory === 'Hostel' && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="w-5 h-5" />
-              Academic Availability
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
             <FormField
               control={form.control}
-              name="semester_availability"
+              name="cancellation_policy"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Semester Availability</FormLabel>
+                  <FormLabel>Cancellation Policy</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select cancellation policy" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="flexible">Flexible</SelectItem>
+                      <SelectItem value="moderate">Moderate</SelectItem>
+                      <SelectItem value="strict">Strict</SelectItem>
+                    </SelectContent>
+                  </Select>
                   <FormDescription>
-                    Select which semesters this hostel is available for booking
+                    How strict are your cancellation terms?
                   </FormDescription>
-                  <div className="grid grid-cols-3 gap-3 mt-2">
-                    {semesterOptions.map((option) => (
-                      <div key={option.value} className="flex items-center space-x-2">
-                        <Checkbox
-                          id={option.value}
-                          checked={(field.value || []).includes(option.value)}
-                          onCheckedChange={(checked) => {
-                            const currentAvailability = field.value || [];
-                            if (checked) {
-                              field.onChange([...currentAvailability, option.value]);
-                            } else {
-                              field.onChange(currentAvailability.filter(s => s !== option.value));
-                            }
-                          }}
-                        />
-                        <label htmlFor={option.value} className="text-sm font-medium">
-                          {option.label}
-                        </label>
-                      </div>
-                    ))}
-                  </div>
                   <FormMessage />
                 </FormItem>
               )}
             />
-          </CardContent>
-        </Card>
-      )}
+          </div>
+        </CardContent>
+      </Card>
 
-      {/* Virtual Tour Section */}
+      {/* Parking & Transportation */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Wifi className="w-5 h-5" />
-            Virtual Tour (Premium Feature)
+          <CardTitle className="flex items-center space-x-2">
+            <Car className="h-5 w-5" />
+            <span>Parking & Transportation</span>
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-4">
+          <FormField
+            control={form.control}
+            name="parking_available"
+            render={({ field }) => (
+              <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                <FormControl>
+                  <Switch
+                    checked={field.value}
+                    onCheckedChange={field.onChange}
+                  />
+                </FormControl>
+                <div className="space-y-1 leading-none">
+                  <FormLabel>Parking Available</FormLabel>
+                  <FormDescription>
+                    Property has parking spaces available
+                  </FormDescription>
+                </div>
+              </FormItem>
+            )}
+          />
+
+          {form.watch('parking_available') && (
+            <FormField
+              control={form.control}
+              name="parking_cost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Parking Cost (GH₵ per month)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      placeholder="50" 
+                      {...field}
+                      onChange={(e) => field.onChange(e.target.valueAsNumber || 0)}
+                    />
+                  </FormControl>
+                  <FormDescription>
+                    Leave blank if parking is free
+                  </FormDescription>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Internet & Technology */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Wifi className="h-5 w-5" />
+            <span>Internet & Technology</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FormField
+            control={form.control}
+            name="internet_speed"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Internet Speed</FormLabel>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select internet speed" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    <SelectItem value="basic">Basic (up to 10 Mbps)</SelectItem>
+                    <SelectItem value="standard">Standard (10-50 Mbps)</SelectItem>
+                    <SelectItem value="high_speed">High Speed (50-100 Mbps)</SelectItem>
+                    <SelectItem value="fiber">Fiber (100+ Mbps)</SelectItem>
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+
           <FormField
             control={form.control}
             name="virtual_tour_url"
@@ -427,14 +321,102 @@ const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, p
                 <FormLabel>Virtual Tour URL</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="https://yourvirtualtour.com/property"
-                    disabled
-                    className="bg-gray-100"
+                    placeholder="https://example.com/virtual-tour" 
                     {...field} 
                   />
                 </FormControl>
                 <FormDescription>
-                  Virtual tour feature coming soon! This will be available for premium subscribers.
+                  Link to 360° tour or video walkthrough
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Security Features */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Shield className="h-5 w-5" />
+            <span>Security Features</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FormField
+            control={form.control}
+            name="security_features"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Available Security Features</FormLabel>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {securityFeatures.map((feature) => (
+                    <div 
+                      key={feature}
+                      className="flex items-center space-x-2 border rounded p-3 cursor-pointer hover:bg-slate-50"
+                      onClick={() => handleSecurityFeatureToggle(feature)}
+                    >
+                      <Checkbox
+                        checked={(field.value || []).includes(feature)}
+                        onChange={() => {}} // Handled by parent onClick
+                        id={`security-${feature}`}
+                      />
+                      <label htmlFor={`security-${feature}`} className="text-sm cursor-pointer">
+                        {feature}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                <FormDescription>
+                  Select all security features available at the property
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Availability & Booking */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5" />
+            <span>Availability & Booking</span>
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <FormField
+            control={form.control}
+            name="semester_availability"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Semester Availability</FormLabel>
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { value: 'semester_1' as const, label: 'First Semester' },
+                    { value: 'semester_2' as const, label: 'Second Semester' },
+                    { value: 'year_round' as const, label: 'Year Round' }
+                  ].map((semester) => (
+                    <div 
+                      key={semester.value}
+                      className="flex items-center space-x-2 border rounded p-3 cursor-pointer hover:bg-slate-50"
+                      onClick={() => handleSemesterAvailabilityToggle(semester.value)}
+                    >
+                      <Checkbox
+                        checked={(field.value || []).includes(semester.value)}
+                        onChange={() => {}} // Handled by parent onClick
+                        id={`semester-${semester.value}`}
+                      />
+                      <label htmlFor={`semester-${semester.value}`} className="text-sm cursor-pointer">
+                        {semester.label}
+                      </label>
+                    </div>
+                  ))}
+                </div>
+                <FormDescription>
+                  Select when the property is available for booking
                 </FormDescription>
                 <FormMessage />
               </FormItem>

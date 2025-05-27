@@ -76,6 +76,7 @@ const PropertyNew: React.FC = () => {
           onSubmit={handleSubmit} 
           onCancel={handleCancel}
           isLoading={createPropertyMutation.isPending}
+          isEdit={false}
         />
       </div>
     </OwnerLayout>

@@ -31,13 +31,15 @@ interface PropertyFormProps {
   onCancel: () => void;
   isLoading?: boolean;
   initialData?: Partial<PropertyFormValues>;
+  isEdit?: boolean;
 }
 
 const PropertyForm: React.FC<PropertyFormProps> = ({ 
   onSubmit, 
   onCancel, 
   isLoading = false,
-  initialData 
+  initialData,
+  isEdit = false 
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
@@ -71,6 +73,28 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   });
 
   const propertyCategory = form.watch('propertyCategory');
+
+  // Calculate occupancy details based on property type
+  const updateOccupancyDetails = () => {
+    const category = form.getValues("propertyCategory");
+    const totalRooms = form.getValues("total_rooms") || 0;
+    const roomsAvailable = form.getValues("rooms_available") || 0;
+    const bedsPerRoom = form.getValues("beds_per_room") || 0;
+    const bedsAvailable = form.getValues("beds_available") || 0;
+    
+    let occupancyText = "";
+    
+    if (category === "Hostel") {
+      occupancyText = `${bedsAvailable}/${totalRooms * bedsPerRoom} beds`;
+    } else if (category === "Homestel") {
+      occupancyText = `${roomsAvailable}/${totalRooms} rooms`;
+    } else {
+      // Apartment
+      occupancyText = `${form.getValues("max_occupants") || 0} max occupants`;
+    }
+    
+    return occupancyText;
+  };
 
   const handleSubmit = (data: PropertyFormValues) => {
     setShowPreview(true);
@@ -109,7 +133,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="flex items-center justify-between mb-6">
             <div>
-              <h2 className="text-2xl font-bold">Add New Property</h2>
+              <h2 className="text-2xl font-bold">{isEdit ? 'Edit Property' : 'Add New Property'}</h2>
               <p className="text-gray-600">Create a comprehensive listing for your {propertyCategory.toLowerCase()}</p>
             </div>
             <div className="flex items-center space-x-3">
@@ -139,7 +163,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <CardTitle>Basic Property Information</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <PropertyTypeFields form={form} />
+                  <PropertyTypeFields form={form} propertyCategory={propertyCategory} />
                   <PricingFields form={form} propertyCategory={propertyCategory} />
                 </CardContent>
               </Card>
@@ -162,11 +186,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <CardTitle>Property Details</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <PropertyDetailsFields form={form} />
+                  <PropertyDetailsFields form={form} propertyCategory={propertyCategory} />
                   
                   {/* Category-specific fields */}
-                  {propertyCategory === 'Hostel' && <HostelFields form={form} />}
-                  {propertyCategory === 'Homestel' && <HomestelFields form={form} />}
+                  {propertyCategory === 'Hostel' && <HostelFields form={form} updateOccupancyDetails={updateOccupancyDetails} />}
+                  {propertyCategory === 'Homestel' && <HomestelFields form={form} updateOccupancyDetails={updateOccupancyDetails} />}
                   {propertyCategory === 'Apartment' && <ApartmentFields form={form} />}
                   
                   <DescriptionFields form={form} />
@@ -180,7 +204,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <CardTitle>Room Features & Structure</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <RoomFeaturesFields form={form} propertyCategory={propertyCategory} />
+                  <RoomFeaturesFields form={form} />
                   
                   {/* Multi-level building structure - Premium feature */}
                   <div className="mt-8">
@@ -257,7 +281,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 </Button>
               ) : (
                 <Button type="submit" disabled={isLoading}>
-                  {isLoading ? 'Creating...' : 'Preview & Submit'}
+                  {isLoading ? 'Saving...' : isEdit ? 'Update Property' : 'Preview & Submit'}
                 </Button>
               )}
             </div>
@@ -271,6 +295,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
         onConfirm={handleConfirmSubmission}
         formData={form.getValues()}
         isLoading={isLoading}
+        isEdit={isEdit}
       />
     </>
   );

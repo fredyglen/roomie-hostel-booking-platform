@@ -4,7 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescripti
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
-import { PropertyFormValues, GhanaRegions } from './PropertyFormSchema';
+import { PropertyFormValues, ghanaRegions } from './PropertyFormSchema';
 
 interface LocationFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -104,7 +104,7 @@ const LocationFields: React.FC<LocationFieldsProps> = ({ form }) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  {GhanaRegions.map((region) => (
+                  {ghanaRegions.map((region) => (
                     <SelectItem key={region} value={region}>
                       {region}
                     </SelectItem>
