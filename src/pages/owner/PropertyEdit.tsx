@@ -7,6 +7,7 @@ import { useAuth } from '@/context/AuthContext';
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import PropertyEditForm from '@/components/owner/PropertyEditForm';
 import { useFormTransformation } from '@/hooks/forms/useFormTransformation';
+import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
 import { Loader } from 'lucide-react';
 
 const PropertyEdit: React.FC = () => {
@@ -62,7 +63,7 @@ const PropertyEdit: React.FC = () => {
   }
 
   // Transform database data to form values
-  const initialData = transformDbToFormValues(property);
+  const initialData: Partial<PropertyFormValues> = transformDbToFormValues(property);
 
   return (
     <OwnerLayout pageTitle="Edit Property" showBackButton backUrl="/owner/properties">
