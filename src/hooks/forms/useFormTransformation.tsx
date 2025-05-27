@@ -1,9 +1,13 @@
-
 import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
 import { GhanaRegions } from '@/components/owner/property-form/PropertyFormSchema';
 
 export const useFormTransformation = () => {
   const transformDbToFormValues = (property: Property): PropertyFormValues => {
+    // Ensure region is a valid Ghana region, fallback to Greater Accra
+    const validRegion = property.state && GhanaRegions.includes(property.state as any) 
+      ? property.state as typeof GhanaRegions[number]
+      : 'Greater Accra';
+
     // Ensure all required fields have proper values, not just defaults
     const formValues: PropertyFormValues = {
       // Required fields - ensure they always have values
@@ -12,10 +16,8 @@ export const useFormTransformation = () => {
       propertyCategory: (property.propertyCategory || property.property_category || 'Hostel') as 'Hostel' | 'Homestel' | 'Apartment',
       address: property.address || '',
       city: property.city || '',
-      // Ensure region is one of the valid Ghana regions
-      region: (property.state && GhanaRegions.includes(property.state as any)) 
-        ? property.state as typeof GhanaRegions[number]
-        : 'Greater Accra',
+      // Ensure region is one of the valid Ghana regions with proper typing
+      region: validRegion,
       zip: property.zip || '',
       price: property.price || property.rent || 0,
       price_unit: (property.priceUnit || property.price_unit || 'week') as 'week' | 'month' | 'year' | 'semester',
@@ -56,12 +58,12 @@ export const useFormTransformation = () => {
       has_wardrobes: property.has_wardrobes || false,
       
       // New room features
-      has_fan: false, // New field, default to false
-      has_tiled_room: false, // New field, default to false
-      washroom_type: undefined,
-      shared_washroom_count: undefined,
+      has_fan: property.has_fan || false,
+      has_tiled_room: property.has_tiled_room || false,
+      washroom_type: property.washroom_type,
+      shared_washroom_count: property.shared_washroom_count,
       meter_type: property.has_individual_meters ? 'self' : undefined,
-      shared_meter_count: undefined,
+      shared_meter_count: property.shared_meter_count,
       
       has_individual_meters: property.has_individual_meters || false,
       advance_payment_months: property.advance_payment_months || 12,
