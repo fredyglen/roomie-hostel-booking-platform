@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,6 +22,7 @@ import Profile from "./pages/student/Profile";
 import PropertyDetail from "./pages/student/PropertyDetail";
 import StoryView from "./pages/student/StoryView";
 import BookProperty from "./pages/student/BookProperty";
+import StudentSubscription from "./pages/student/Subscription";
 
 // Owner/Agent Portal Pages
 import OwnerDashboard from "./pages/owner/Dashboard";
@@ -31,6 +31,7 @@ import OwnerPropertyNew from "./pages/owner/PropertyNew";
 import OwnerPropertyEdit from "./pages/owner/PropertyEdit";
 import OwnerBookings from "./pages/owner/Bookings";
 import OwnerProfile from "./pages/owner/Profile";
+import OwnerSubscription from "./pages/owner/Subscription";
 
 // Admin Portal Pages
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -38,6 +39,8 @@ import AdminUsers from "./pages/admin/Users";
 import AdminProperties from "./pages/admin/Properties";
 import AdminBookings from "./pages/admin/Bookings";
 import AdminSettings from "./pages/admin/Settings";
+import AdminSubscriptionManagement from "./pages/admin/SubscriptionManagement";
+import AdminFeatureManagement from "./pages/admin/FeatureManagement";
 
 const queryClient = new QueryClient();
 
@@ -68,6 +71,11 @@ const App = () => (
               <Route path="explore" element={<Explore />} />
               <Route path="favorites" element={<Favorites />} />
               <Route path="profile" element={<Profile />} />
+              <Route path="subscription" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StudentSubscription />
+                </ProtectedRoute>
+              } />
               <Route path="property/:id" element={<PropertyDetail />} />
               <Route path="property/:id/story" element={<StoryView />} />
               <Route path="property/:id/book" element={<BookProperty />} />
@@ -106,6 +114,11 @@ const App = () => (
                   <OwnerProfile />
                 </ProtectedRoute>
               } />
+              <Route path="subscription" element={
+                <ProtectedRoute allowedRoles={['owner']}>
+                  <OwnerSubscription />
+                </ProtectedRoute>
+              } />
             </Route>
             
             {/* Admin Routes */}
@@ -133,6 +146,16 @@ const App = () => (
               <Route path="settings" element={
                 <ProtectedRoute allowedRoles={['admin']}>
                   <AdminSettings />
+                </ProtectedRoute>
+              } />
+              <Route path="features" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminFeatureManagement />
+                </ProtectedRoute>
+              } />
+              <Route path="subscriptions" element={
+                <ProtectedRoute allowedRoles={['admin']}>
+                  <AdminSubscriptionManagement />
                 </ProtectedRoute>
               } />
             </Route>
