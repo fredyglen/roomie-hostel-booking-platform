@@ -7,6 +7,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { PropertyCategory } from '@/types/property';
+import { useAuth } from '@/context/AuthContext';
 
 // Import subcomponents
 import { propertyFormSchema, PropertyFormValues } from './PropertyFormSchema';
@@ -24,14 +25,19 @@ import PropertyTypeFields from './PropertyTypeFields';
 interface PropertyFormProps {
   initialData?: Partial<PropertyFormValues>;
   onSubmit: (data: PropertyFormValues) => void;
+  onCancel?: () => void;
   isLoading: boolean;
 }
 
 const PropertyForm: React.FC<PropertyFormProps> = ({
   initialData,
   onSubmit,
+  onCancel,
   isLoading
 }) => {
+  const { user } = useAuth();
+  const [mediaTab, setMediaTab] = useState<string>("upload");
+  
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
@@ -71,9 +77,15 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     },
   });
 
-  const [mediaTab, setMediaTab] = useState<string>("upload");
   const propertyCategory = form.watch("propertyCategory") as PropertyCategory;
-  const allInclusive = form.watch("all_inclusive");
+  
+  // Feature access control - simulate premium features based on user role
+  const hasFeatureAccess = (feature: string): boolean => {
+    // For now, all owners have access to all features
+    // This can be extended with actual subscription/tier checking
+    const premiumFeatures = ['virtual_tours', 'priority_listing', 'analytics', 'multiple_images'];
+    return user?.role === 'owner'; // Basic access control
+  };
   
   // Calculate occupancy details based on property type
   const updateOccupancyDetails = () => {
@@ -95,6 +107,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     }
     
     form.setValue("occupancy", occupancyText);
+  };
+
+  const handleCancel = () => {
+    if (onCancel) {
+      onCancel();
+    } else {
+      window.history.back();
+    }
   };
 
   return (
@@ -145,24 +165,26 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             <LocationFields form={form} />
 
             {/* Room Feature Fields */}
-            <RoomFeaturesFields form={form} />
+            <RoomFeaturesFields form={form} hasFeatureAccess={hasFeatureAccess} />
             
             {/* Amenities Fields */}
-            <AmenitiesFields form={form} />
+            <AmenitiesFields form={form} hasFeatureAccess={hasFeatureAccess} />
 
             {/* Image Upload */}
-            <PropertyImageUpload
-              form={form}
-              mediaTab={mediaTab}
-              setMediaTab={setMediaTab}
-            />
+            {hasFeatureAccess('multiple_images') && (
+              <PropertyImageUpload
+                form={form}
+                mediaTab={mediaTab}
+                setMediaTab={setMediaTab}
+              />
+            )}
 
             {/* Description Fields */}
             <DescriptionFields form={form} />
           </div>
 
           <div className="flex justify-end space-x-4">
-            <Button variant="outline" type="button" onClick={() => history.back()}>
+            <Button variant="outline" type="button" onClick={handleCancel}>
               Cancel
             </Button>
             <Button type="submit" disabled={isLoading}>

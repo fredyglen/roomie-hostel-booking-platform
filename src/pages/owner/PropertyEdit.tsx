@@ -1,67 +1,46 @@
 
 import React from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
-import { Loader } from 'lucide-react';
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import PropertyEditForm from '@/components/owner/PropertyEditForm';
-import { usePropertyLoader } from '@/hooks/property';
-import { PropertyFormValues } from '@/types/property';
+import { useFormTransformation } from '@/hooks/forms/useFormTransformation';
+import { Loader } from 'lucide-react';
 
 const PropertyEdit: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { user } = useAuth();
-  
-  // Fetch property details using the custom hook
-  const { data: property, isLoading, error } = usePropertyLoader({
-    propertyId: id || '',
-    enabled: !!id && !!user?.id,
-    forOwner: true
-  });
+  const { transformDbToFormValues } = useFormTransformation();
 
-  // Prepare form initial data
-  const initialData: PropertyFormValues | undefined = property ? {
-    title: property.title || '',
-    type: property.type || property.property_type || '', // Ensure type is always set
-    propertyCategory: property.propertyCategory || property.property_category || 'Hostel',
-    address: property.address || '',
-    city: property.city || 'Accra',
-    state: property.state || 'Greater Accra',
-    zip: property.zip || '00000',
-    price: property.price || property.rent || 0,
-    price_unit: property.priceUnit || property.price_unit || 'semester',
-    description: property.description || '',
-    status: property.is_available ? 'Available' : 'Fully Occupied',
-    amenities: property.amenities?.join('\n') || '',
-    house_rules: property.house_rules?.join('\n') || '',
-    utilities: property.utilities?.join('\n') || '',
-    all_inclusive: property.all_inclusive || property.allInclusive || false,
-    bedrooms: property.bedrooms || 1,
-    bathrooms: property.bathrooms || 1,
-    total_rooms: property.total_rooms || 1,
-    rooms_available: property.rooms_available || 1,
-    beds_per_room: property.beds_per_room || 1,
-    beds_available: property.beds_available || 1,
-    max_occupants: property.max_occupants || 1,
-    has_bedframes: property.has_bedframes || false,
-    has_mattresses: property.has_mattresses || false,
-    has_wardrobes: property.has_wardrobes || false,
-    has_individual_meters: property.has_individual_meters || false,
-    advance_payment_months: property.advance_payment_months || 12,
-    allow_bill_sharing: property.allow_bill_sharing || false,
-    landmark: property.landmark || '',
-    location: property.location || '',
-    distance_to_campus: property.distanceToCampus || property.distance_to_campus || '',
-    image_url: property.image_url || (property.images && property.images.length > 0 ? property.images[0] : ''),
-    occupancy: property.occupancy || '0/1',
-  } : undefined;
+  // Fetch property data
+  const { data: property, isLoading, error } = useQuery({
+    queryKey: ['property', id],
+    queryFn: async () => {
+      if (!id || !user?.id) throw new Error('Property ID or user ID missing');
+
+      const { data, error } = await supabase
+        .from('properties')
+        .select('*')
+        .eq('id', id)
+        .eq('owner_id', user.id)
+        .single();
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!id && !!user?.id,
+  });
 
   if (isLoading) {
     return (
-      <OwnerLayout pageTitle="Edit Property">
-        <div className="flex justify-center items-center h-64">
-          <Loader className="h-8 w-8 animate-spin text-blue-500" />
+      <OwnerLayout pageTitle="Edit Property" showBackButton>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="flex items-center space-x-2">
+            <Loader className="h-6 w-6 animate-spin text-[#9b87f5]" />
+            <span className="text-gray-600">Loading property details...</span>
+          </div>
         </div>
       </OwnerLayout>
     );
@@ -69,26 +48,28 @@ const PropertyEdit: React.FC = () => {
 
   if (error || !property) {
     return (
-      <OwnerLayout pageTitle="Edit Property">
-        <div className="bg-red-50 p-4 rounded-md">
-          <h2 className="text-lg font-semibold text-red-800">Error</h2>
-          <p className="text-sm text-red-600">
-            {error instanceof Error ? error.message : 'Failed to load property. Please try again.'}
-          </p>
-          <button 
-            onClick={() => navigate('/owner/properties')}
-            className="mt-4 text-sm text-blue-600 hover:underline"
-          >
-            Back to Properties
-          </button>
+      <OwnerLayout pageTitle="Edit Property" showBackButton>
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-center">
+            <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Property</h2>
+            <p className="text-gray-600 mb-4">
+              {error instanceof Error ? error.message : 'Property not found or access denied'}
+            </p>
+          </div>
         </div>
       </OwnerLayout>
     );
   }
 
+  // Transform database data to form values
+  const initialData = transformDbToFormValues(property);
+
   return (
-    <OwnerLayout pageTitle={`Edit Property: ${property?.title}`}>
-      <PropertyEditForm propertyId={id || ''} initialData={initialData} />
+    <OwnerLayout pageTitle="Edit Property" showBackButton backUrl="/owner/properties">
+      <PropertyEditForm 
+        propertyId={id!} 
+        initialData={initialData} 
+      />
     </OwnerLayout>
   );
 };

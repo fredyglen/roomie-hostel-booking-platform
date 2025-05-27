@@ -9,17 +9,27 @@ import {
   Settings,
   LogOut,
   Menu,
-  X
+  X,
+  ArrowLeft
 } from "lucide-react";
 import Logo from '../common/Logo';
 import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { navigateBack } from '@/utils/navigation';
 
 interface OwnerLayoutProps {
   children: React.ReactNode;
   pageTitle: string;
+  showBackButton?: boolean;
+  backUrl?: string;
 }
 
-const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
+const OwnerLayout: React.FC<OwnerLayoutProps> = ({ 
+  children, 
+  pageTitle, 
+  showBackButton = false,
+  backUrl
+}) => {
   const location = useLocation();
   const navigate = useNavigate();
   const { signOut } = useAuth();
@@ -46,6 +56,20 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
       console.error('Error signing out:', error);
     }
   };
+
+  const handleBack = () => {
+    if (backUrl) {
+      navigate(backUrl);
+    } else {
+      navigateBack(navigate, '/owner/dashboard');
+    }
+  };
+
+  // Auto-detect if we should show back button
+  const shouldShowBackButton = showBackButton || 
+    location.pathname.includes('/new') || 
+    location.pathname.includes('/edit') ||
+    location.pathname.includes('/property/');
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -170,7 +194,20 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({ children, pageTitle }) => {
         <header className="bg-white shadow-sm z-10">
           <div className="px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
+              <div className="flex items-center space-x-4">
+                {shouldShowBackButton && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleBack}
+                    className="flex items-center space-x-1"
+                  >
+                    <ArrowLeft className="h-4 w-4" />
+                    <span>Back</span>
+                  </Button>
+                )}
+                <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
+              </div>
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <button className="p-1 rounded-full text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600">

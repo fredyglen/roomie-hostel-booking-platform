@@ -90,7 +90,9 @@ const Properties: React.FC = () => {
   });
 
   const handleDeleteProperty = (propertyId: string) => {
-    deletePropertyMutation.mutate(propertyId);
+    if (window.confirm('Are you sure you want to delete this property?')) {
+      deletePropertyMutation.mutate(propertyId);
+    }
   };
 
   // Show mock data if no properties or still loading
@@ -136,6 +138,10 @@ const Properties: React.FC = () => {
     }
   ];
 
+  if (error) {
+    console.error('Properties loading error:', error);
+  }
+
   return (
     <OwnerLayout pageTitle="My Properties">
       <div className="space-y-6">
@@ -145,13 +151,17 @@ const Properties: React.FC = () => {
             <p className="text-sm text-gray-500">Manage your property listings</p>
           </div>
           <Link to="/owner/property/new">
-            <Button><Plus className="mr-2 h-4 w-4" />Add New Property</Button>
+            <Button className="bg-[#9b87f5] hover:bg-[#8b77f0]">
+              <Plus className="mr-2 h-4 w-4" />
+              Add New Property
+            </Button>
           </Link>
         </div>
 
         {error ? (
           <div className="p-4 bg-red-50 rounded-md text-red-800">
             <p>Error loading properties. Please try again.</p>
+            <pre className="text-xs mt-2">{JSON.stringify(error, null, 2)}</pre>
           </div>
         ) : (
           <PropertiesGrid 
