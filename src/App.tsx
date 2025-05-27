@@ -72,145 +72,158 @@ const App = () => (
             
             {/* Student Routes */}
             <Route path="/student">
-              {/* Dashboard redirects to properties */}
+              {/* Dashboard route - NO automatic redirect */}
               <Route path="dashboard" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Navigate to="/student/properties" replace />
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
+                  <StudentDashboard />
                 </ProtectedRoute>
               } />
               
               {/* Main student pages */}
               <Route path="properties" element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
                   <Properties />
                 </ProtectedRoute>
               } />
               <Route path="explore" element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
                   <Explore />
                 </ProtectedRoute>
               } />
               <Route path="favorites" element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
                   <Favorites />
                 </ProtectedRoute>
               } />
               <Route path="profile" element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
                   <Profile />
                 </ProtectedRoute>
               } />
               <Route path="subscription" element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
                   <StudentSubscription />
                 </ProtectedRoute>
               } />
               
               {/* Property-specific routes */}
               <Route path="property/:id" element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
                   <PropertyDetail />
                 </ProtectedRoute>
               } />
               <Route path="property/:id/story" element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
                   <StoryView />
                 </ProtectedRoute>
               } />
               <Route path="property/:id/enhanced-story" element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
                   <EnhancedStoryPage />
                 </ProtectedRoute>
               } />
               <Route path="property/:id/book" element={
-                <ProtectedRoute allowedRoles={['student']}>
+                <ProtectedRoute allowedRoles={['student']} preserveLocation={false}>
                   <BookProperty />
                 </ProtectedRoute>
               } />
               
-              {/* Legacy booking route */}
+              {/* Legacy routes with proper redirects */}
               <Route path="book/:id" element={
-                <ProtectedRoute allowedRoles={['student']}>
-                  <Navigate to="/student/property/:id/book" replace />
-                </ProtectedRoute>
+                <Navigate to="/student/property/:id/book" replace />
+              } />
+              
+              {/* Default student route */}
+              <Route index element={
+                <Navigate to="/student/properties" replace />
               } />
             </Route>
             
             {/* Owner/Agent Routes */}
             <Route path="/owner">
               <Route path="dashboard" element={
-                <ProtectedRoute allowedRoles={['owner']}>
+                <ProtectedRoute allowedRoles={['owner']} preserveLocation={false}>
                   <OwnerDashboard />
                 </ProtectedRoute>
               } />
               <Route path="properties" element={
-                <ProtectedRoute allowedRoles={['owner']}>
+                <ProtectedRoute allowedRoles={['owner']} preserveLocation={false}>
                   <OwnerProperties />
                 </ProtectedRoute>
               } />
               <Route path="property/new" element={
-                <ProtectedRoute allowedRoles={['owner']}>
+                <ProtectedRoute allowedRoles={['owner']} preserveLocation={false}>
                   <OwnerPropertyNew />
                 </ProtectedRoute>
               } />
               <Route path="property/:id/edit" element={
-                <ProtectedRoute allowedRoles={['owner']}>
+                <ProtectedRoute allowedRoles={['owner']} preserveLocation={false}>
                   <OwnerPropertyEdit />
                 </ProtectedRoute>
               } />
               <Route path="bookings" element={
-                <ProtectedRoute allowedRoles={['owner']}>
+                <ProtectedRoute allowedRoles={['owner']} preserveLocation={false}>
                   <OwnerBookings />
                 </ProtectedRoute>
               } />
               <Route path="profile" element={
-                <ProtectedRoute allowedRoles={['owner']}>
+                <ProtectedRoute allowedRoles={['owner']} preserveLocation={false}>
                   <OwnerProfile />
                 </ProtectedRoute>
               } />
               <Route path="subscription" element={
-                <ProtectedRoute allowedRoles={['owner']}>
+                <ProtectedRoute allowedRoles={['owner']} preserveLocation={false}>
                   <OwnerSubscription />
                 </ProtectedRoute>
+              } />
+              
+              {/* Default owner route */}
+              <Route index element={
+                <Navigate to="/owner/dashboard" replace />
               } />
             </Route>
             
             {/* Admin Routes */}
             <Route path="/admin">
               <Route path="dashboard" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['admin']} preserveLocation={false}>
                   <AdminDashboard />
                 </ProtectedRoute>
               } />
               <Route path="users" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['admin']} preserveLocation={false}>
                   <AdminUsers />
                 </ProtectedRoute>
               } />
               <Route path="properties" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['admin']} preserveLocation={false}>
                   <AdminProperties />
                 </ProtectedRoute>
               } />
               <Route path="bookings" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['admin']} preserveLocation={false}>
                   <AdminBookings />
                 </ProtectedRoute>
               } />
               <Route path="settings" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['admin']} preserveLocation={false}>
                   <AdminSettings />
                 </ProtectedRoute>
               } />
               <Route path="features" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['admin']} preserveLocation={false}>
                   <AdminFeatureManagement />
                 </ProtectedRoute>
               } />
               <Route path="subscriptions" element={
-                <ProtectedRoute allowedRoles={['admin']}>
+                <ProtectedRoute allowedRoles={['admin']} preserveLocation={false}>
                   <AdminSubscriptionManagement />
                 </ProtectedRoute>
+              } />
+              
+              {/* Default admin route */}
+              <Route index element={
+                <Navigate to="/admin/dashboard" replace />
               } />
             </Route>
             

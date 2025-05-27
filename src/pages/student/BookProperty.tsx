@@ -6,7 +6,7 @@ import Footer from '@/components/layout/Footer';
 import BookingStepsContainer from '@/components/booking/BookingStepsContainer';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@iconify/react';
-import { navigateBack } from '@/utils/navigation';
+import { navigateBack, enhancedNavigate } from '@/utils/navigation';
 
 const BookProperty: React.FC = () => {
   const navigate = useNavigate();
@@ -14,6 +14,7 @@ const BookProperty: React.FC = () => {
   const { id } = useParams<{ id: string }>();
 
   const handleBack = () => {
+    console.log('Back button clicked from BookProperty');
     // Navigate back to property detail or fallback to properties list
     const fallbackPath = id ? `/student/property/${id}` : '/student/properties';
     navigateBack(navigate, fallbackPath, location.state);

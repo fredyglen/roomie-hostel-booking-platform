@@ -15,7 +15,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   allowedRoles,
   redirectTo,
-  preserveLocation = true
+  preserveLocation = false
 }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
@@ -35,14 +35,26 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Navigate to="/login" state={state} replace />;
   }
 
-  // Check if user has required role
+  // Check if user has required role - be less aggressive with redirects
   if (!allowedRoles.includes(user.role)) {
-    // Use custom redirect path or default based on role
+    // Use custom redirect path if provided
     if (redirectTo) {
       return <Navigate to={redirectTo} replace />;
     }
 
-    // Default role-based redirects
+    // Only redirect to role-specific areas if user is in wrong section
+    const currentPath = location.pathname;
+    
+    // If user is already in their correct section, don't redirect
+    if (user.role === 'student' && currentPath.startsWith('/student/')) {
+      return <>{children}</>;
+    } else if (user.role === 'owner' && currentPath.startsWith('/owner/')) {
+      return <>{children}</>;
+    } else if (user.role === 'admin' && currentPath.startsWith('/admin/')) {
+      return <>{children}</>;
+    }
+
+    // Default role-based redirects only when necessary
     if (user.role === 'student') {
       return <Navigate to="/student/properties" replace />;
     } else if (user.role === 'owner') {

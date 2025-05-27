@@ -2,7 +2,7 @@
 import { NavigateFunction } from 'react-router-dom';
 
 /**
- * Enhanced navigation utility functions with proper state management
+ * Enhanced navigation utility functions with proper state management and browser history respect
  */
 
 export interface NavigationState {
@@ -28,7 +28,8 @@ export const navigateToProperty = (
     state: { 
       from: state?.from || window.location.pathname,
       ...state 
-    } 
+    },
+    replace: state?.replace || false
   });
 };
 
@@ -45,11 +46,12 @@ export const navigateToBooking = (
     return;
   }
 
-  navigate(`/student/book/${propertyId}`, { 
+  navigate(`/student/property/${propertyId}/book`, { 
     state: { 
       from: state?.from || window.location.pathname,
       ...state 
-    } 
+    },
+    replace: state?.replace || false
   });
 };
 
@@ -70,7 +72,8 @@ export const navigateToStory = (
     state: { 
       from: state?.from || window.location.pathname,
       ...state 
-    } 
+    },
+    replace: state?.replace || false
   });
 };
 
@@ -100,28 +103,39 @@ export const navigateToProperties = (
       from: state?.from || window.location.pathname,
       ...state 
     },
-    replace: state?.replace 
+    replace: state?.replace || false
   });
 };
 
 /**
- * Smart back navigation with fallback support
+ * Enhanced back navigation that respects browser history
  */
 export const navigateBack = (
   navigate: NavigateFunction,
   fallbackPath: string = '/student/properties',
   locationState?: any
 ): void => {
-  // Check if there's a stored previous location in state
+  console.log('Navigation back called with state:', locationState);
+  
+  // If we have a referrer in the state, use it
   const previousPath = locationState?.from;
   
   if (previousPath && previousPath !== window.location.pathname) {
-    navigate(previousPath, { replace: true });
-  } else if (window.history.length > 1) {
-    navigate(-1);
-  } else {
-    navigate(fallbackPath, { replace: true });
+    console.log('Navigating to previous path:', previousPath);
+    navigate(previousPath);
+    return;
   }
+
+  // Check if we can go back in browser history
+  if (window.history.length > 1) {
+    console.log('Using browser back navigation');
+    navigate(-1);
+    return;
+  }
+
+  // Fallback to default path
+  console.log('Using fallback path:', fallbackPath);
+  navigate(fallbackPath);
 };
 
 /**
@@ -133,7 +147,7 @@ export const navigateToDashboard = (
 ): void => {
   switch (userRole) {
     case 'student':
-      navigate('/student/properties');
+      navigate('/student/dashboard');
       break;
     case 'owner':
       navigate('/owner/dashboard');
@@ -142,7 +156,7 @@ export const navigateToDashboard = (
       navigate('/admin/dashboard');
       break;
     default:
-      navigate('/student/properties');
+      navigate('/student/dashboard');
   }
 };
 
@@ -200,4 +214,30 @@ export const handleModalClose = (
   } else {
     navigateBack(navigate, fallbackPath);
   }
+};
+
+/**
+ * Enhanced navigation helper that preserves browser navigation behavior
+ */
+export const enhancedNavigate = (
+  navigate: NavigateFunction,
+  to: string,
+  options?: {
+    replace?: boolean;
+    state?: any;
+    preserveHistory?: boolean;
+  }
+): void => {
+  const navigationOptions: any = {
+    replace: options?.replace || false
+  };
+
+  if (options?.state || options?.preserveHistory) {
+    navigationOptions.state = {
+      from: window.location.pathname,
+      ...options?.state
+    };
+  }
+
+  navigate(to, navigationOptions);
 };

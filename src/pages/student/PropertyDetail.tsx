@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/layout/Header';
@@ -9,7 +8,7 @@ import PropertyDetailView from '@/components/property/PropertyDetailView';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { Icon } from '@iconify/react';
 import { toast } from 'sonner';
-import { navigateBack, navigateToStory, navigateToBooking } from '@/utils/navigation';
+import { navigateBack, navigateToStory, navigateToBooking, enhancedNavigate } from '@/utils/navigation';
 
 const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -40,6 +39,7 @@ const PropertyDetail: React.FC = () => {
   };
   
   const handleBack = () => {
+    console.log('Back button clicked from PropertyDetail');
     navigateBack(navigate, '/student/properties', location.state);
   };
   
@@ -81,11 +81,13 @@ const PropertyDetail: React.FC = () => {
               <Button onClick={handleBack} variant="outline">
                 Go Back
               </Button>
-              <Link to="/student/properties">
-                <Button variant="default" className="bg-blue-500 hover:bg-blue-600">
-                  Browse Properties
-                </Button>
-              </Link>
+              <Button 
+                onClick={() => enhancedNavigate(navigate, '/student/properties')}
+                variant="default" 
+                className="bg-blue-500 hover:bg-blue-600"
+              >
+                Browse Properties
+              </Button>
             </div>
           </div>
         </div>
