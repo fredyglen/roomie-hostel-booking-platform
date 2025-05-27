@@ -116,7 +116,7 @@ const SubscriptionManager: React.FC = () => {
   ];
 
   // Filter tiers based on user type (from profile role)
-  const userType = user?.user_metadata?.role || 'student';
+  const userType = user?.role || 'student';
   const availableTiers = subscriptionTiers.filter(tier => tier.user_type === userType);
 
   const handleSelectTier = (tier: SubscriptionTier) => {
