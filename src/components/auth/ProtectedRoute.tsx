@@ -7,11 +7,15 @@ import { Loader } from 'lucide-react';
 type ProtectedRouteProps = {
   children: React.ReactNode;
   allowedRoles: string[];
+  redirectTo?: string;
+  preserveLocation?: boolean;
 };
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  allowedRoles 
+  allowedRoles,
+  redirectTo,
+  preserveLocation = true
 }) => {
   const { user, loading } = useAuth();
   const location = useLocation();
@@ -27,14 +31,20 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 
   // Redirect to login if not authenticated
   if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    const state = preserveLocation ? { from: location.pathname + location.search } : undefined;
+    return <Navigate to="/login" state={state} replace />;
   }
 
   // Check if user has required role
   if (!allowedRoles.includes(user.role)) {
-    // Redirect based on role
+    // Use custom redirect path or default based on role
+    if (redirectTo) {
+      return <Navigate to={redirectTo} replace />;
+    }
+
+    // Default role-based redirects
     if (user.role === 'student') {
-      return <Navigate to="/student/dashboard" replace />;
+      return <Navigate to="/student/properties" replace />;
     } else if (user.role === 'owner') {
       return <Navigate to="/owner/dashboard" replace />;
     } else if (user.role === 'admin') {

@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -42,7 +43,14 @@ import AdminSettings from "./pages/admin/Settings";
 import AdminSubscriptionManagement from "./pages/admin/SubscriptionManagement";
 import AdminFeatureManagement from "./pages/admin/FeatureManagement";
 
-const queryClient = new QueryClient();
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: 1,
+      staleTime: 5 * 60 * 1000, // 5 minutes
+    },
+  },
+});
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -61,25 +69,68 @@ const App = () => (
             
             {/* Student Routes */}
             <Route path="/student">
-              {/* Redirect student dashboard to properties list */}
+              {/* Dashboard redirects to properties */}
               <Route path="dashboard" element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <Navigate to="/student/properties" replace />
                 </ProtectedRoute>
               } />
-              <Route path="properties" element={<Properties />} />
-              <Route path="explore" element={<Explore />} />
-              <Route path="favorites" element={<Favorites />} />
-              <Route path="profile" element={<Profile />} />
+              
+              {/* Main student pages */}
+              <Route path="properties" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <Properties />
+                </ProtectedRoute>
+              } />
+              <Route path="explore" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <Explore />
+                </ProtectedRoute>
+              } />
+              <Route path="favorites" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <Favorites />
+                </ProtectedRoute>
+              } />
+              <Route path="profile" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <Profile />
+                </ProtectedRoute>
+              } />
               <Route path="subscription" element={
                 <ProtectedRoute allowedRoles={['student']}>
                   <StudentSubscription />
                 </ProtectedRoute>
               } />
-              <Route path="property/:id" element={<PropertyDetail />} />
-              <Route path="property/:id/story" element={<StoryView />} />
-              <Route path="property/:id/book" element={<BookProperty />} />
-              <Route path="property/:id/enhanced-story" element={<EnhancedStoryPage />} />
+              
+              {/* Property-specific routes */}
+              <Route path="property/:id" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <PropertyDetail />
+                </ProtectedRoute>
+              } />
+              <Route path="property/:id/story" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <StoryView />
+                </ProtectedRoute>
+              } />
+              <Route path="property/:id/enhanced-story" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <EnhancedStoryPage />
+                </ProtectedRoute>
+              } />
+              <Route path="property/:id/book" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <BookProperty />
+                </ProtectedRoute>
+              } />
+              
+              {/* Legacy booking route */}
+              <Route path="book/:id" element={
+                <ProtectedRoute allowedRoles={['student']}>
+                  <Navigate to="/student/property/:id/book" replace />
+                </ProtectedRoute>
+              } />
             </Route>
             
             {/* Owner/Agent Routes */}
@@ -160,7 +211,7 @@ const App = () => (
               } />
             </Route>
             
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            {/* Catch-all route - MUST be last */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

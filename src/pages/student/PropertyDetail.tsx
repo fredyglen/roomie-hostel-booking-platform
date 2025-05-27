@@ -2,7 +2,6 @@
 import React, { useEffect } from 'react';
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom';
 import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import { Property } from '@/types/property';
 import { usePropertyLoader } from '@/hooks/property';
@@ -10,6 +9,7 @@ import PropertyDetailView from '@/components/property/PropertyDetailView';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { Icon } from '@iconify/react';
 import { toast } from 'sonner';
+import { navigateBack, navigateToStory, navigateToBooking } from '@/utils/navigation';
 
 const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -24,17 +24,23 @@ const PropertyDetail: React.FC = () => {
   });
 
   const handleViewStory = () => {
-    navigate(`/student/property/${id}/story`, { state: { from: location.pathname } });
+    if (!id) return;
+    navigateToStory(navigate, id, { 
+      from: location.pathname,
+      preserveHistory: true 
+    });
   };
   
   const handleBookNow = () => {
-    navigate(`/student/property/${id}/book`, { state: { from: location.pathname } });
+    if (!id) return;
+    navigateToBooking(navigate, id, { 
+      from: location.pathname,
+      preserveHistory: true 
+    });
   };
   
   const handleBack = () => {
-    // Check if there's a stored previous location
-    const previousPath = location.state?.from || '/student/properties';
-    navigate(previousPath);
+    navigateBack(navigate, '/student/properties', location.state);
   };
   
   useEffect(() => {
@@ -71,9 +77,16 @@ const PropertyDetail: React.FC = () => {
           <div className="text-center">
             <h2 className="text-2xl font-bold mb-4">Property Not Found</h2>
             <p className="mb-6">The property you're looking for doesn't exist or has been removed.</p>
-            <Link to="/student/properties">
-              <Button variant="default" className="bg-blue-500 hover:bg-blue-600">Browse Properties</Button>
-            </Link>
+            <div className="flex gap-4 justify-center">
+              <Button onClick={handleBack} variant="outline">
+                Go Back
+              </Button>
+              <Link to="/student/properties">
+                <Button variant="default" className="bg-blue-500 hover:bg-blue-600">
+                  Browse Properties
+                </Button>
+              </Link>
+            </div>
           </div>
         </div>
         <StudentNavBar />
@@ -101,10 +114,10 @@ const PropertyDetail: React.FC = () => {
       <div className="container mx-auto px-4 py-2">
         <button 
           onClick={handleBack}
-          className="flex items-center text-gray-600 hover:text-blue-600 mb-4"
+          className="flex items-center text-gray-600 hover:text-blue-600 mb-4 transition-colors"
         >
           <Icon icon="solar:arrow-left-linear" className="mr-1" />
-          Back to properties
+          Back
         </button>
       </div>
       <PropertyDetailView 

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation, useParams } from 'react-router-dom';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
@@ -9,6 +8,7 @@ import { usePropertyLoader } from '@/hooks/property';
 import { toast } from 'sonner';
 import PropertyImageGallery from '../property/PropertyImageGallery';
 import { Dialog, DialogContent } from '../ui/dialog';
+import { navigateBack, navigateToBooking } from '@/utils/navigation';
 
 const EnhancedStoryView: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -62,6 +62,36 @@ const EnhancedStoryView: React.FC = () => {
     }
   }, [error]);
   
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (showDetails) return;
+      
+      switch (e.key) {
+        case 'ArrowLeft':
+          handlePrevious();
+          break;
+        case 'ArrowRight':
+        case ' ':
+          e.preventDefault();
+          handleNext();
+          break;
+        case 'Escape':
+          handleClose();
+          break;
+        case 'ArrowUp':
+          handleSwipeUp();
+          break;
+        case 'ArrowDown':
+          handleSwipeDown();
+          break;
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [activeIndex, showDetails, stories.length]);
+  
   // Handle navigation
   const handleNext = () => {
     if (activeIndex < stories.length - 1) {
@@ -80,7 +110,8 @@ const EnhancedStoryView: React.FC = () => {
   };
   
   const handleClose = () => {
-    navigate(-1);
+    const fallbackPath = id ? `/student/property/${id}` : '/student/properties';
+    navigateBack(navigate, fallbackPath, location.state);
   };
   
   const handleSwipeUp = () => {
@@ -94,7 +125,11 @@ const EnhancedStoryView: React.FC = () => {
   };
   
   const handleBookNow = () => {
-    navigate(`/student/property/${id}/book`);
+    if (!id) return;
+    navigateToBooking(navigate, id, { 
+      from: location.pathname,
+      preserveHistory: true 
+    });
   };
   
   if (isLoading || !property) {
@@ -108,8 +143,21 @@ const EnhancedStoryView: React.FC = () => {
     );
   }
   
+  if (!stories.length) {
+    return (
+      <div className="fixed inset-0 bg-black flex items-center justify-center">
+        <div className="text-center text-white">
+          <h2 className="text-xl mb-4">No Stories Available</h2>
+          <Button onClick={handleClose} variant="outline">
+            Go Back
+          </Button>
+        </div>
+      </div>
+    );
+  }
+  
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className="fixed inset-0 bg-black z-50">
       {/* Story progress indicators */}
       <div className="absolute top-4 left-4 right-16 z-30 flex gap-1">
         {stories.map((_, idx) => (
@@ -122,7 +170,7 @@ const EnhancedStoryView: React.FC = () => {
               style={{
                 width: idx === activeIndex ? `${progressPercentage}%` : idx < activeIndex ? '100%' : '0%',
               }}
-            ></div>
+            />
           </div>
         ))}
       </div>
@@ -130,7 +178,7 @@ const EnhancedStoryView: React.FC = () => {
       {/* Close button */}
       <button
         onClick={handleClose}
-        className="absolute top-4 right-4 z-30 bg-black/40 text-white rounded-full p-2"
+        className="absolute top-4 right-4 z-30 bg-black/40 text-white rounded-full p-2 hover:bg-black/60 transition-colors"
         aria-label="Close story"
       >
         <Icon icon="solar:close-circle-linear" className="h-6 w-6" />
@@ -159,8 +207,8 @@ const EnhancedStoryView: React.FC = () => {
         </div>
         
         {/* Navigation controls */}
-        <div className="absolute inset-y-0 left-0 w-1/3 z-20" onClick={handlePrevious}></div>
-        <div className="absolute inset-y-0 right-0 w-1/3 z-20" onClick={handleNext}></div>
+        <div className="absolute inset-y-0 left-0 w-1/3 z-20" onClick={handlePrevious} />
+        <div className="absolute inset-y-0 right-0 w-1/3 z-20" onClick={handleNext} />
         
         {/* Property info */}
         <div className="absolute bottom-16 left-0 right-0 p-4 z-20 flex justify-between items-end">
@@ -188,19 +236,29 @@ const EnhancedStoryView: React.FC = () => {
         </button>
       </div>
       
-      {/* Use Dialog for desktop and Sheet for mobile */}
+      {/* Property details modal/sheet */}
       {isMobile ? (
         <Sheet open={showDetails} onOpenChange={setShowDetails}>
           <SheetContent
             side="bottom"
             className="h-[80vh] pt-10 px-0"
+            onInteractOutside={handleSwipeDown}
           >
             <div className="absolute top-2 left-0 right-0 flex justify-center">
-              <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
+              <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
             </div>
             
             <div className="h-full overflow-auto px-4">
-              <h2 className="text-2xl font-bold mb-2">{property.title}</h2>
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-2xl font-bold">{property.title}</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleSwipeDown}
+                >
+                  <Icon icon="solar:close-linear" className="h-4 w-4" />
+                </Button>
+              </div>
               <p className="text-gray-600 mb-4">{property.location}</p>
               
               <div className="mb-6">
@@ -215,17 +273,19 @@ const EnhancedStoryView: React.FC = () => {
                 <p>{property.description}</p>
               </div>
               
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold mb-2">Amenities</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {(property.amenities || []).map((amenity, index) => (
-                    <div key={index} className="flex items-center">
-                      <Icon icon="solar:check-circle-bold" className="text-green-500 mr-2" />
-                      <span>{amenity}</span>
-                    </div>
-                  ))}
+              {property.amenities && property.amenities.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold mb-2">Amenities</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {property.amenities.map((amenity, index) => (
+                      <div key={index} className="flex items-center">
+                        <Icon icon="solar:check-circle-bold" className="text-green-500 mr-2" />
+                        <span>{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
               
               <div className="py-4">
                 <Button 
@@ -257,17 +317,19 @@ const EnhancedStoryView: React.FC = () => {
                 <p>{property.description}</p>
               </div>
               
-              <div className="mb-6">
-                <h3 className="text-xl font-semibold mb-2">Amenities</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {(property.amenities || []).map((amenity, index) => (
-                    <div key={index} className="flex items-center">
-                      <Icon icon="solar:check-circle-bold" className="text-green-500 mr-2" />
-                      <span>{amenity}</span>
-                    </div>
-                  ))}
+              {property.amenities && property.amenities.length > 0 && (
+                <div className="mb-6">
+                  <h3 className="text-xl font-semibold mb-2">Amenities</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {property.amenities.map((amenity, index) => (
+                      <div key={index} className="flex items-center">
+                        <Icon icon="solar:check-circle-bold" className="text-green-500 mr-2" />
+                        <span>{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
               
               <div className="py-4">
                 <Button 

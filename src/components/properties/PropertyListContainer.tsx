@@ -1,11 +1,12 @@
 
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import PropertyList from './PropertyList';
 import PropertiesFiltersPanel from './PropertiesFiltersPanel';
 import { Property } from '@/types/property';
 import { usePropertiesFilter } from '@/hooks/filters';
 import { toast } from 'sonner';
+import { navigateToProperty, navigateToStory } from '@/utils/navigation';
 
 interface PropertyListContainerProps {
   properties: Property[];
@@ -17,6 +18,7 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
   isLoading = false
 }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Use the custom hook for handling property filtering
   const {
@@ -37,12 +39,17 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
   } = usePropertiesFilter({ properties });
   
   const handleViewProperty = (id: string) => {
-    navigate(`/student/property/${id}`);
+    navigateToProperty(navigate, id, { 
+      from: location.pathname + location.search,
+      preserveHistory: true 
+    });
   };
 
   const handleViewStory = (id: string) => {
-    // Use the enhanced story view
-    navigate(`/student/property/${id}/enhanced-story`);
+    navigateToStory(navigate, id, { 
+      from: location.pathname + location.search,
+      preserveHistory: true 
+    });
   };
 
   const handleError = (error: any) => {
