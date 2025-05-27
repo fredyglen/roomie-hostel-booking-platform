@@ -4,6 +4,7 @@ import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
 export const useFormTransformation = () => {
   const transformDbToFormValues = (property: Property): PropertyFormValues => {
     return {
+      // Required fields with proper defaults
       title: property.title || '',
       type: property.type || property.property_type || '',
       propertyCategory: property.propertyCategory || property.property_category || 'Hostel',
@@ -14,6 +15,12 @@ export const useFormTransformation = () => {
       price: property.price || property.rent || 0,
       price_unit: property.priceUnit || property.price_unit || 'month',
       description: property.description || '',
+      status: property.status || 'available',
+      bedrooms: property.bedrooms || 1,
+      bathrooms: property.bathrooms || 1,
+      all_inclusive: property.allInclusive || property.all_inclusive || false,
+      
+      // Optional fields
       distance_to_campus: property.distanceToCampus || property.distance_to_campus || '',
       amenities: Array.isArray(property.amenities) 
         ? property.amenities.join('\n') 
@@ -21,18 +28,14 @@ export const useFormTransformation = () => {
       house_rules: Array.isArray(property.house_rules) 
         ? property.house_rules.join('\n') 
         : property.house_rules || '',
-      status: property.status || 'available',
       occupancy: property.occupancy || '',
       image_url: property.image_url || '',
       images: property.images || [],
-      all_inclusive: property.allInclusive || property.all_inclusive || false,
       utilities: Array.isArray(property.utilities) 
         ? property.utilities.join('\n') 
         : property.utilities || '',
       location: property.location || '',
       landmark: property.landmark || '',
-      bedrooms: property.bedrooms || 1,
-      bathrooms: property.bathrooms || 1,
       total_rooms: property.total_rooms || 0,
       rooms_available: property.rooms_available || 0,
       beds_per_room: property.beds_per_room || 1,
