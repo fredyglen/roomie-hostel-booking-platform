@@ -43,14 +43,14 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ propertyId, initial
     },
     onSuccess: () => {
       toast({
-        title: "Success",
-        description: "Property has been updated successfully.",
+        title: "Property Updated",
+        description: "Your property has been updated successfully.",
       });
       navigate('/owner/properties');
     },
     onError: (error) => {
       toast({
-        title: "Error",
+        title: "Update Failed",
         description: `Failed to update property: ${error instanceof Error ? error.message : 'Unknown error'}`,
         variant: "destructive",
       });

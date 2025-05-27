@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -16,8 +15,9 @@ import HomestelFields from './HomestelFields';
 import ApartmentFields from './ApartmentFields';
 import LocationFields from './LocationFields';
 import RoomFeaturesFields from './RoomFeaturesFields';
-import AmenitiesFields from './AmenitiesFields';
-import PropertyImageUpload from './PropertyImageUpload';
+import MediaUploadTabs from './MediaUploadTabs';
+import AmenitiesSelector from './AmenitiesSelector';
+import FormSubmissionModal from './FormSubmissionModal';
 import DescriptionFields from './DescriptionFields';
 import PricingFields from './PricingFields';
 import PropertyTypeFields from './PropertyTypeFields';
@@ -37,7 +37,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   isLoading
 }) => {
   const { user } = useAuth();
-  const [mediaTab, setMediaTab] = useState<string>("upload");
+  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<PropertyFormValues | null>(null);
   
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
@@ -120,6 +121,24 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     }
   };
 
+  const handleFormSubmit = (data: PropertyFormValues) => {
+    setPendingFormData(data);
+    setShowSubmissionModal(true);
+  };
+
+  const handleConfirmSubmission = () => {
+    if (pendingFormData) {
+      onSubmit(pendingFormData);
+      setShowSubmissionModal(false);
+      setPendingFormData(null);
+    }
+  };
+
+  const handleCancelSubmission = () => {
+    setShowSubmissionModal(false);
+    setPendingFormData(null);
+  };
+
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
@@ -129,91 +148,96 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   };
 
   return (
-    <Card className="p-6">
-      <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <FormField
-              control={form.control}
-              name="title"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Property Title</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Cozy Studio Apartment Near University" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
+    <>
+      <Card className="p-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Property Title</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Cozy Studio Apartment Near University" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Property Type Fields */}
+              <PropertyTypeFields 
+                form={form} 
+                propertyCategory={propertyCategory} 
+              />
+
+              {/* Property Details Section */}
+              <PropertyDetailsFields 
+                form={form} 
+                propertyCategory={propertyCategory} 
+              />
+
+              {/* Conditional fields based on property category */}
+              {propertyCategory === "Hostel" && (
+                <HostelFields 
+                  form={form} 
+                  updateOccupancyDetails={updateOccupancyDetails}
+                />
               )}
-            />
 
-            {/* Property Type Fields */}
-            <PropertyTypeFields 
-              form={form} 
-              propertyCategory={propertyCategory} 
-            />
+              {propertyCategory === "Homestel" && (
+                <HomestelFields 
+                  form={form} 
+                  updateOccupancyDetails={updateOccupancyDetails}
+                />
+              )}
 
-            {/* Property Details Section - NEW */}
-            <PropertyDetailsFields 
-              form={form} 
-              propertyCategory={propertyCategory} 
-            />
+              {propertyCategory === "Apartment" && (
+                <ApartmentFields form={form} />
+              )}
 
-            {/* Conditional fields based on property category */}
-            {propertyCategory === "Hostel" && (
-              <HostelFields 
-                form={form} 
-                updateOccupancyDetails={updateOccupancyDetails}
-              />
-            )}
+              {/* Pricing Fields */}
+              <PricingFields form={form} propertyCategory={propertyCategory} />
 
-            {propertyCategory === "Homestel" && (
-              <HomestelFields 
-                form={form} 
-                updateOccupancyDetails={updateOccupancyDetails}
-              />
-            )}
+              {/* Location Fields */}
+              <LocationFields form={form} />
 
-            {propertyCategory === "Apartment" && (
-              <ApartmentFields form={form} />
-            )}
+              {/* Room Feature Fields */}
+              <RoomFeaturesFields form={form} hasFeatureAccess={hasFeatureAccess} />
+              
+              {/* Enhanced Amenities Fields */}
+              <AmenitiesSelector form={form} />
 
-            {/* Pricing Fields */}
-            <PricingFields form={form} propertyCategory={propertyCategory} />
+              {/* Enhanced Media Upload */}
+              <MediaUploadTabs form={form} />
 
-            {/* Location Fields */}
-            <LocationFields form={form} />
+              {/* Description Fields */}
+              <DescriptionFields form={form} />
+            </div>
 
-            {/* Room Feature Fields */}
-            <RoomFeaturesFields form={form} hasFeatureAccess={hasFeatureAccess} />
-            
-            {/* Amenities Fields */}
-            <AmenitiesFields form={form} hasFeatureAccess={hasFeatureAccess} />
+            <div className="flex justify-end space-x-4">
+              <Button variant="outline" type="button" onClick={handleCancel}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={isLoading}>
+                {initialData?.title ? "Update Property" : "Add Property"}
+              </Button>
+            </div>
+          </form>
+        </Form>
+      </Card>
 
-            {/* Image Upload */}
-            {hasFeatureAccess('multiple_images') && (
-              <PropertyImageUpload
-                form={form}
-                mediaTab={mediaTab}
-                setMediaTab={setMediaTab}
-              />
-            )}
-
-            {/* Description Fields */}
-            <DescriptionFields form={form} />
-          </div>
-
-          <div className="flex justify-end space-x-4">
-            <Button variant="outline" type="button" onClick={handleCancel}>
-              Cancel
-            </Button>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Saving..." : (initialData?.title ? "Update Property" : "Add Property")}
-            </Button>
-          </div>
-        </form>
-      </Form>
-    </Card>
+      <FormSubmissionModal
+        isOpen={showSubmissionModal}
+        onClose={handleCancelSubmission}
+        onConfirm={handleConfirmSubmission}
+        formData={pendingFormData}
+        isEdit={!!initialData?.title}
+        isLoading={isLoading}
+      />
+    </>
   );
 };
 
