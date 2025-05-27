@@ -27,7 +27,7 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ propertyId, initial
       if (!propertyId) throw new Error('Property ID is required');
       if (!user?.id) throw new Error('User not authenticated');
 
-      // Transform form data to database format
+      // Transform form data to database format - formData is already PropertyFormValues
       const propertyData = transformFormToDbFormat(formData, user.id);
 
       const { error } = await supabase

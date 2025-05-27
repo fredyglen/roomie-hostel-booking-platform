@@ -21,6 +21,7 @@ const PropertyNew: React.FC = () => {
     mutationFn: async (formData: PropertyFormValues) => {
       if (!user?.id) throw new Error('User not authenticated');
 
+      // formData is already PropertyFormValues with all required fields
       const propertyData = transformFormToDbFormat(formData, user.id);
 
       const { data, error } = await supabase
