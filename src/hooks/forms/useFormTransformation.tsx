@@ -1,15 +1,16 @@
+
 import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
 import { GhanaRegions } from '@/components/owner/property-form/PropertyFormSchema';
 
 export const useFormTransformation = () => {
-  const transformDbToFormValues = (property: Property): PropertyFormValues => {
+  const transformDbToFormValues = (property: Property): Partial<PropertyFormValues> => {
     // Ensure region is a valid Ghana region, fallback to Greater Accra
     const validRegion = property.state && GhanaRegions.includes(property.state as any) 
       ? property.state as typeof GhanaRegions[number]
       : 'Greater Accra';
 
     // Ensure all required fields have proper values, not just defaults
-    const formValues: PropertyFormValues = {
+    const formValues: Partial<PropertyFormValues> = {
       // Required fields - ensure they always have values
       title: property.title || '',
       type: property.type || property.property_type || '',
