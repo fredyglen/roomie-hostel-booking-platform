@@ -50,6 +50,85 @@ export type Database = {
           },
         ]
       }
+      buildings: {
+        Row: {
+          created_at: string
+          description: string | null
+          floors_count: number
+          id: string
+          name: string
+          property_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          floors_count?: number
+          id?: string
+          name: string
+          property_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          floors_count?: number
+          id?: string
+          name?: string
+          property_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buildings_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      floors: {
+        Row: {
+          building_id: string
+          created_at: string
+          description: string | null
+          floor_number: number
+          id: string
+          name: string | null
+          rooms_count: number
+          updated_at: string
+        }
+        Insert: {
+          building_id: string
+          created_at?: string
+          description?: string | null
+          floor_number: number
+          id?: string
+          name?: string | null
+          rooms_count?: number
+          updated_at?: string
+        }
+        Update: {
+          building_id?: string
+          created_at?: string
+          description?: string | null
+          floor_number?: number
+          id?: string
+          name?: string | null
+          rooms_count?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "floors_building_id_fkey"
+            columns: ["building_id"]
+            isOneToOne: false
+            referencedRelation: "buildings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -91,20 +170,33 @@ export type Database = {
           available_to: string | null
           bathrooms: number
           bedrooms: number
+          cancellation_policy: string | null
           city: string
           created_at: string
           description: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          gender_restriction: string | null
+          has_accessibility_features: boolean | null
           id: string
           images: string[] | null
+          internet_speed: string | null
           is_available: boolean | null
           is_furnished: boolean | null
           owner_id: string
+          parking_available: boolean | null
+          parking_cost: number | null
+          pet_policy: string | null
           property_type: string
           rent: number
+          security_features: string[] | null
+          semester_availability: string[] | null
           size: number | null
           state: string
           title: string
           updated_at: string
+          verification_status: string | null
+          virtual_tour_url: string | null
           zip: string
         }
         Insert: {
@@ -114,20 +206,33 @@ export type Database = {
           available_to?: string | null
           bathrooms: number
           bedrooms: number
+          cancellation_policy?: string | null
           city: string
           created_at?: string
           description: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          gender_restriction?: string | null
+          has_accessibility_features?: boolean | null
           id?: string
           images?: string[] | null
+          internet_speed?: string | null
           is_available?: boolean | null
           is_furnished?: boolean | null
           owner_id: string
+          parking_available?: boolean | null
+          parking_cost?: number | null
+          pet_policy?: string | null
           property_type: string
           rent: number
+          security_features?: string[] | null
+          semester_availability?: string[] | null
           size?: number | null
           state: string
           title: string
           updated_at?: string
+          verification_status?: string | null
+          virtual_tour_url?: string | null
           zip: string
         }
         Update: {
@@ -137,23 +242,139 @@ export type Database = {
           available_to?: string | null
           bathrooms?: number
           bedrooms?: number
+          cancellation_policy?: string | null
           city?: string
           created_at?: string
           description?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          gender_restriction?: string | null
+          has_accessibility_features?: boolean | null
           id?: string
           images?: string[] | null
+          internet_speed?: string | null
           is_available?: boolean | null
           is_furnished?: boolean | null
           owner_id?: string
+          parking_available?: boolean | null
+          parking_cost?: number | null
+          pet_policy?: string | null
           property_type?: string
           rent?: number
+          security_features?: string[] | null
+          semester_availability?: string[] | null
           size?: number | null
           state?: string
           title?: string
           updated_at?: string
+          verification_status?: string | null
+          virtual_tour_url?: string | null
           zip?: string
         }
         Relationships: []
+      }
+      room_occupancy: {
+        Row: {
+          bed_number: number | null
+          check_in_date: string
+          check_out_date: string | null
+          created_at: string
+          id: string
+          room_id: string
+          status: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          bed_number?: number | null
+          check_in_date: string
+          check_out_date?: string | null
+          created_at?: string
+          id?: string
+          room_id: string
+          status?: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          bed_number?: number | null
+          check_in_date?: string
+          check_out_date?: string | null
+          created_at?: string
+          id?: string
+          room_id?: string
+          status?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "room_occupancy_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rooms: {
+        Row: {
+          amenities: string[] | null
+          bed_count: number
+          beds_available: number
+          created_at: string
+          description: string | null
+          floor_id: string
+          id: string
+          images: string[] | null
+          is_available: boolean
+          max_occupants: number
+          rent_amount: number | null
+          room_number: string
+          room_type: string
+          updated_at: string
+        }
+        Insert: {
+          amenities?: string[] | null
+          bed_count?: number
+          beds_available?: number
+          created_at?: string
+          description?: string | null
+          floor_id: string
+          id?: string
+          images?: string[] | null
+          is_available?: boolean
+          max_occupants?: number
+          rent_amount?: number | null
+          room_number: string
+          room_type: string
+          updated_at?: string
+        }
+        Update: {
+          amenities?: string[] | null
+          bed_count?: number
+          beds_available?: number
+          created_at?: string
+          description?: string | null
+          floor_id?: string
+          id?: string
+          images?: string[] | null
+          is_available?: boolean
+          max_occupants?: number
+          rent_amount?: number | null
+          room_number?: string
+          room_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rooms_floor_id_fkey"
+            columns: ["floor_id"]
+            isOneToOne: false
+            referencedRelation: "floors"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

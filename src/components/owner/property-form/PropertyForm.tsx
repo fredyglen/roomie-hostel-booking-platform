@@ -1,246 +1,275 @@
 
-import React, { useState, useEffect } from 'react';
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import React, { useState } from 'react';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { Form } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { PropertyCategory } from '@/types/property';
-import { useAuth } from '@/context/AuthContext';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 
-// Import subcomponents
 import { propertyFormSchema, PropertyFormValues } from './PropertyFormSchema';
+import PropertyTypeFields from './PropertyTypeFields';
+import LocationFields from './LocationFields';
+import PropertyDetailsFields from './PropertyDetailsFields';
+import PricingFields from './PricingFields';
+import RoomFeaturesFields from './RoomFeaturesFields';
+import AmenitiesSelector from './AmenitiesSelector';
+import DescriptionFields from './DescriptionFields';
+import MediaUploadTabs from './MediaUploadTabs';
+import FormSubmissionModal from './FormSubmissionModal';
+import BuildingStructureFields from './BuildingStructureFields';
+import EnhancedPropertyFields from './EnhancedPropertyFields';
+
+// Category-specific components
 import HostelFields from './HostelFields';
 import HomestelFields from './HomestelFields';
 import ApartmentFields from './ApartmentFields';
-import LocationFields from './LocationFields';
-import RoomFeaturesFields from './RoomFeaturesFields';
-import MediaUploadTabs from './MediaUploadTabs';
-import AmenitiesSelector from './AmenitiesSelector';
-import FormSubmissionModal from './FormSubmissionModal';
-import DescriptionFields from './DescriptionFields';
-import PricingFields from './PricingFields';
-import PropertyTypeFields from './PropertyTypeFields';
-import PropertyDetailsFields from './PropertyDetailsFields';
 
 interface PropertyFormProps {
-  initialData?: Partial<PropertyFormValues>;
   onSubmit: (data: PropertyFormValues) => void;
-  onCancel?: () => void;
-  isLoading: boolean;
+  onCancel: () => void;
+  isLoading?: boolean;
+  initialData?: Partial<PropertyFormValues>;
 }
 
-const PropertyForm: React.FC<PropertyFormProps> = ({
-  initialData,
-  onSubmit,
-  onCancel,
-  isLoading
+const PropertyForm: React.FC<PropertyFormProps> = ({ 
+  onSubmit, 
+  onCancel, 
+  isLoading = false,
+  initialData 
 }) => {
-  const { user } = useAuth();
-  const [showSubmissionModal, setShowSubmissionModal] = useState(false);
-  const [pendingFormData, setPendingFormData] = useState<PropertyFormValues | null>(null);
-  
+  const [showPreview, setShowPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState('basic');
+
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
-      title: initialData?.title || "",
-      propertyCategory: initialData?.propertyCategory || "Hostel",
-      type: initialData?.type || "",
-      address: initialData?.address || "",
-      city: initialData?.city || "Accra",
-      region: initialData?.region || "Greater Accra",
-      zip: initialData?.zip || "00000",
-      location: initialData?.location || "",
-      landmark: initialData?.landmark || "",
-      price: initialData?.price || 0,
-      price_unit: initialData?.price_unit || "semester",
-      description: initialData?.description || "",
-      distance_to_campus: initialData?.distance_to_campus || "",
-      amenities: initialData?.amenities || "",
-      house_rules: initialData?.house_rules || "",
-      status: initialData?.status || "Available",
-      occupancy_type: initialData?.occupancy_type,
-      occupancy_available: initialData?.occupancy_available || 0,
-      occupancy_total: initialData?.occupancy_total || 0,
-      image_url: initialData?.image_url || "",
-      all_inclusive: initialData?.all_inclusive || false,
-      utilities: initialData?.utilities || "",
-      bedrooms: initialData?.bedrooms || 1,
-      bathrooms: initialData?.bathrooms || 1,
-      max_occupants: initialData?.max_occupants || 1,
-      total_rooms: initialData?.total_rooms || 1,
-      rooms_available: initialData?.rooms_available || 1,
-      beds_per_room: initialData?.beds_per_room || 1,
-      beds_available: initialData?.beds_available || 1,
-      has_bedframes: initialData?.has_bedframes || false,
-      has_mattresses: initialData?.has_mattresses || false,
-      has_wardrobes: initialData?.has_wardrobes || false,
-      has_fan: initialData?.has_fan || false,
-      has_tiled_room: initialData?.has_tiled_room || false,
-      washroom_type: initialData?.washroom_type,
-      shared_washroom_count: initialData?.shared_washroom_count,
-      meter_type: initialData?.meter_type,
-      shared_meter_count: initialData?.shared_meter_count,
-      has_individual_meters: initialData?.has_individual_meters || false,
-      advance_payment_months: initialData?.advance_payment_months || 12,
-      allow_bill_sharing: initialData?.allow_bill_sharing || false,
+      title: '',
+      type: '',
+      propertyCategory: 'Hostel',
+      address: '',
+      city: '',
+      region: 'Greater Accra',
+      zip: '',
+      price: 0,
+      price_unit: 'semester',
+      description: '',
+      bedrooms: 1,
+      bathrooms: 1,
+      all_inclusive: false,
+      status: 'Available',
+      verification_status: 'pending',
+      gender_restriction: 'mixed',
+      pet_policy: 'not_allowed',
+      parking_available: false,
+      has_accessibility_features: false,
+      cancellation_policy: 'moderate',
+      internet_speed: 'standard',
+      ...initialData
     },
   });
 
-  const propertyCategory = form.watch("propertyCategory") as PropertyCategory;
-  
-  // Set default price unit based on property category
-  useEffect(() => {
-    if (propertyCategory === "Hostel") {
-      form.setValue("price_unit", "semester");
-    }
-  }, [propertyCategory, form]);
-  
-  // Feature access control
-  const hasFeatureAccess = (feature: string): boolean => {
-    const premiumFeatures = ['virtual_tours', 'priority_listing', 'analytics', 'multiple_images'];
-    return user?.role === 'owner';
-  };
+  const propertyCategory = form.watch('propertyCategory');
 
-  // Calculate occupancy details based on property type
-  const updateOccupancyDetails = () => {
-    const category = form.getValues("propertyCategory");
-    const totalRooms = form.getValues("total_rooms") || 0;
-    const roomsAvailable = form.getValues("rooms_available") || 0;
-    const bedsPerRoom = form.getValues("beds_per_room") || 0;
-    const bedsAvailable = form.getValues("beds_available") || 0;
-    
-    if (category === "Hostel") {
-      form.setValue("occupancy_type", "beds");
-      form.setValue("occupancy_available", bedsAvailable);
-      form.setValue("occupancy_total", totalRooms * bedsPerRoom);
-    } else if (category === "Homestel") {
-      form.setValue("occupancy_type", "rooms");
-      form.setValue("occupancy_available", roomsAvailable);
-      form.setValue("occupancy_total", totalRooms);
-    } else {
-      // Apartment
-      form.setValue("occupancy_type", "units");
-      form.setValue("occupancy_available", 1);
-      form.setValue("occupancy_total", 1);
-    }
-  };
-
-  const handleFormSubmit = (data: PropertyFormValues) => {
-    setPendingFormData(data);
-    setShowSubmissionModal(true);
+  const handleSubmit = (data: PropertyFormValues) => {
+    setShowPreview(true);
   };
 
   const handleConfirmSubmission = () => {
-    if (pendingFormData) {
-      onSubmit(pendingFormData);
-      setShowSubmissionModal(false);
-      setPendingFormData(null);
-    }
+    const formData = form.getValues();
+    onSubmit(formData);
+    setShowPreview(false);
   };
 
-  const handleCancelSubmission = () => {
-    setShowSubmissionModal(false);
-    setPendingFormData(null);
+  const getCurrentStepCount = () => {
+    const formData = form.getValues();
+    let completedSteps = 0;
+    
+    // Basic Info
+    if (formData.title && formData.propertyCategory && formData.type) completedSteps++;
+    
+    // Location
+    if (formData.address && formData.city && formData.region) completedSteps++;
+    
+    // Details & Pricing
+    if (formData.price > 0 && formData.price_unit && formData.bedrooms && formData.bathrooms) completedSteps++;
+    
+    // Description
+    if (formData.description && formData.description.length >= 10) completedSteps++;
+    
+    return { completed: completedSteps, total: 7 };
   };
 
-  const handleCancel = () => {
-    if (onCancel) {
-      onCancel();
-    } else {
-      window.history.back();
-    }
-  };
+  const stepProgress = getCurrentStepCount();
 
   return (
     <>
-      <Card className="p-6">
-        <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleFormSubmit)} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <FormField
-                control={form.control}
-                name="title"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Property Title</FormLabel>
-                    <FormControl>
-                      <Input placeholder="e.g. Cozy Studio Apartment Near University" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold">Add New Property</h2>
+              <p className="text-gray-600">Create a comprehensive listing for your {propertyCategory.toLowerCase()}</p>
+            </div>
+            <div className="flex items-center space-x-3">
+              <Badge variant="outline">
+                Progress: {stepProgress.completed}/{stepProgress.total}
+              </Badge>
+              <Badge variant={stepProgress.completed >= 4 ? "default" : "secondary"}>
+                {stepProgress.completed >= 4 ? "Ready to Submit" : "In Progress"}
+              </Badge>
+            </div>
+          </div>
 
-              {/* Property Type Fields */}
-              <PropertyTypeFields 
-                form={form} 
-                propertyCategory={propertyCategory} 
-              />
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <TabsList className="grid w-full grid-cols-7">
+              <TabsTrigger value="basic">Basic Info</TabsTrigger>
+              <TabsTrigger value="location">Location</TabsTrigger>
+              <TabsTrigger value="details">Details</TabsTrigger>
+              <TabsTrigger value="features">Features</TabsTrigger>
+              <TabsTrigger value="amenities">Amenities</TabsTrigger>
+              <TabsTrigger value="enhanced">Enhanced</TabsTrigger>
+              <TabsTrigger value="media">Media</TabsTrigger>
+            </TabsList>
 
-              {/* Property Details Section */}
-              <PropertyDetailsFields 
-                form={form} 
-                propertyCategory={propertyCategory} 
-              />
+            <TabsContent value="basic" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Basic Property Information</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <PropertyTypeFields form={form} />
+                  <PricingFields form={form} propertyCategory={propertyCategory} />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-              {/* Conditional fields based on property category */}
-              {propertyCategory === "Hostel" && (
-                <HostelFields 
-                  form={form} 
-                  updateOccupancyDetails={updateOccupancyDetails}
-                />
-              )}
+            <TabsContent value="location" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Location Details</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <LocationFields form={form} />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-              {propertyCategory === "Homestel" && (
-                <HomestelFields 
-                  form={form} 
-                  updateOccupancyDetails={updateOccupancyDetails}
-                />
-              )}
+            <TabsContent value="details" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Property Details</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <PropertyDetailsFields form={form} />
+                  
+                  {/* Category-specific fields */}
+                  {propertyCategory === 'Hostel' && <HostelFields form={form} />}
+                  {propertyCategory === 'Homestel' && <HomestelFields form={form} />}
+                  {propertyCategory === 'Apartment' && <ApartmentFields form={form} />}
+                  
+                  <DescriptionFields form={form} />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-              {propertyCategory === "Apartment" && (
-                <ApartmentFields form={form} />
-              )}
+            <TabsContent value="features" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Room Features & Structure</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <RoomFeaturesFields form={form} propertyCategory={propertyCategory} />
+                  
+                  {/* Multi-level building structure - Premium feature */}
+                  <div className="mt-8">
+                    <div className="border-t pt-6">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="text-lg font-semibold">Advanced Property Structure</h3>
+                        <Badge variant="secondary">Premium Feature</Badge>
+                      </div>
+                      <BuildingStructureFields form={form} propertyCategory={propertyCategory} />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-              {/* Pricing Fields */}
-              <PricingFields form={form} propertyCategory={propertyCategory} />
+            <TabsContent value="amenities" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Amenities & Facilities</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <AmenitiesSelector form={form} />
+                </CardContent>
+              </Card>
+            </TabsContent>
 
-              {/* Location Fields */}
-              <LocationFields form={form} />
+            <TabsContent value="enhanced" className="space-y-6">
+              <EnhancedPropertyFields form={form} propertyCategory={propertyCategory} />
+            </TabsContent>
 
-              {/* Room Feature Fields */}
-              <RoomFeaturesFields form={form} hasFeatureAccess={hasFeatureAccess} />
+            <TabsContent value="media" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Property Media</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <MediaUploadTabs form={form} />
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          <div className="flex items-center justify-between pt-6 border-t">
+            <Button type="button" variant="outline" onClick={onCancel}>
+              Cancel
+            </Button>
+            
+            <div className="flex items-center space-x-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'media'].indexOf(activeTab);
+                  if (currentIndex > 0) {
+                    setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'media'][currentIndex - 1]);
+                  }
+                }}
+                disabled={activeTab === 'basic'}
+              >
+                Previous
+              </Button>
               
-              {/* Enhanced Amenities Fields */}
-              <AmenitiesSelector form={form} />
-
-              {/* Enhanced Media Upload */}
-              <MediaUploadTabs form={form} />
-
-              {/* Description Fields */}
-              <DescriptionFields form={form} />
+              {activeTab !== 'media' ? (
+                <Button
+                  type="button"
+                  onClick={() => {
+                    const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'media'].indexOf(activeTab);
+                    if (currentIndex < 6) {
+                      setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'media'][currentIndex + 1]);
+                    }
+                  }}
+                >
+                  Next
+                </Button>
+              ) : (
+                <Button type="submit" disabled={isLoading}>
+                  {isLoading ? 'Creating...' : 'Preview & Submit'}
+                </Button>
+              )}
             </div>
-
-            <div className="flex justify-end space-x-4">
-              <Button variant="outline" type="button" onClick={handleCancel}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={isLoading}>
-                {initialData?.title ? "Update Property" : "Add Property"}
-              </Button>
-            </div>
-          </form>
-        </Form>
-      </Card>
+          </div>
+        </form>
+      </Form>
 
       <FormSubmissionModal
-        isOpen={showSubmissionModal}
-        onClose={handleCancelSubmission}
+        isOpen={showPreview}
+        onClose={() => setShowPreview(false)}
         onConfirm={handleConfirmSubmission}
-        formData={pendingFormData}
-        isEdit={!!initialData?.title}
+        formData={form.getValues()}
         isLoading={isLoading}
       />
     </>

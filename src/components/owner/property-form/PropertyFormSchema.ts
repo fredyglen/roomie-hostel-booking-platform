@@ -1,95 +1,111 @@
 
-import * as z from "zod";
+import { z } from 'zod';
 
 // Ghana regions enum
-export const GhanaRegions = [
+export const ghanaRegions = [
   'Greater Accra', 'Ashanti', 'Western', 'Eastern', 'Central', 
-  'Northern', 'Upper East', 'Upper West', 'Volta', 'Brong-Ahafo', 
+  'Northern', 'Upper East', 'Upper West', 'Volta', 'Brong-Ahafo',
   'Western North', 'Ahafo', 'Bono East', 'North East', 'Savannah', 'Oti'
 ] as const;
 
-// Define the property form schema to use with zod validation
+export type GhanaRegion = typeof ghanaRegions[number];
+
 export const propertyFormSchema = z.object({
-  title: z.string().min(3, {
-    message: "Title must be at least 3 characters.",
-  }),
-  propertyCategory: z.enum(['Hostel', 'Homestel', 'Apartment'] as const, {
-    message: "Please select a property category.",
-  }),
-  type: z.string().min(1, {
-    message: "Please select a property type.",
-  }),
-  address: z.string().min(5, {
-    message: "Address must be at least 5 characters.",
-  }),
-  city: z.string().min(1, {
-    message: "City is required",
-  }),
-  region: z.enum(GhanaRegions, {
-    message: "Please select a region",
-  }),
-  zip: z.string().min(1, {
-    message: "Zip code is required",
-  }),
-  location: z.string().optional().default(""),
-  landmark: z.string().optional().default(""),
-  price: z.number().positive({
-    message: "Price must be a positive number.",
-  }),
-  price_unit: z.enum(['week', 'month', 'year', 'semester'] as const, {
-    message: "Please select a price unit.",
-  }),
-  description: z.string().min(10, {
-    message: "Description must be at least 10 characters.",
-  }),
-  distance_to_campus: z.string().optional().default(""),
-  amenities: z.string().optional().default(""),
-  house_rules: z.string().optional().default(""),
-  status: z.string().min(1, {
-    message: "Please select a property status.",
-  }),
-  // Occupancy type selection (checkbox-based)
-  occupancy_type: z.enum(['beds', 'rooms', 'units'] as const).optional(),
-  occupancy_available: z.number().optional().default(0),
-  occupancy_total: z.number().optional().default(0),
+  title: z.string().min(1, "Title is required"),
+  type: z.string().min(1, "Property type is required"),
+  propertyCategory: z.enum(['Hostel', 'Homestel', 'Apartment']),
+  address: z.string().min(1, "Address is required"),
+  city: z.string().min(1, "City is required"),
+  region: z.enum(ghanaRegions),
+  zip: z.string().optional(),
+  price: z.number().min(1, "Price must be greater than 0"),
+  price_unit: z.enum(['week', 'month', 'year', 'semester']),
+  description: z.string().min(10, "Description must be at least 10 characters"),
+  distance_to_campus: z.string().optional(),
+  amenities: z.string().optional(),
+  house_rules: z.string().optional(),
+  status: z.string().default("Available"),
   
-  image_url: z.string().optional().default(""),
-  images: z.array(z.string()).optional().default([]),
-  all_inclusive: z.boolean().default(false),
-  utilities: z.string().optional().default(""),
-  bedrooms: z.number().positive({
-    message: "Bedrooms must be a positive number.",
-  }),
-  bathrooms: z.number().positive({
-    message: "Bathrooms must be a positive number.",
-  }),
-  max_occupants: z.number().optional().default(1),
-  total_rooms: z.number().optional().default(1),
-  rooms_available: z.number().optional().default(1),
-  beds_per_room: z.number().optional().default(1),
-  beds_available: z.number().optional().default(1),
+  // Basic property stats
+  bedrooms: z.number().min(1, "Must have at least 1 bedroom"),
+  bathrooms: z.number().min(1, "Must have at least 1 bathroom"),
   
-  // Room Features & Furnishing (without allow_bill_sharing)
-  has_bedframes: z.boolean().default(false),
-  has_mattresses: z.boolean().default(false),
-  has_wardrobes: z.boolean().default(false),
-  has_fan: z.boolean().default(false),
-  has_tiled_room: z.boolean().default(false),
+  // Enhanced occupancy fields
+  occupancy_type: z.enum(['beds', 'rooms', 'units']).optional(),
+  occupancy_available: z.number().optional(),
+  occupancy_total: z.number().optional(),
   
-  // Washroom options
-  washroom_type: z.enum(['inside', 'outside', 'shared'] as const).optional(),
+  // Room management fields
+  total_rooms: z.number().optional(),
+  rooms_available: z.number().optional(),
+  beds_per_room: z.number().optional(),
+  beds_available: z.number().optional(),
+  max_occupants: z.number().optional(),
+  
+  // Enhanced facility features
+  has_bedframes: z.boolean().optional(),
+  has_mattresses: z.boolean().optional(),
+  has_wardrobes: z.boolean().optional(),
+  has_fan: z.boolean().optional(),
+  has_tiled_room: z.boolean().optional(),
+  has_individual_meters: z.boolean().optional(),
+  
+  // Washroom and meter configurations
+  washroom_type: z.enum(['inside', 'outside', 'shared']).optional(),
   shared_washroom_count: z.number().optional(),
-  
-  // Meter options  
-  meter_type: z.enum(['self', 'shared'] as const).optional(),
+  meter_type: z.enum(['self', 'shared']).optional(),
   shared_meter_count: z.number().optional(),
   
-  has_individual_meters: z.boolean().default(false),
-  advance_payment_months: z.number().optional().default(12),
+  // Payment and occupancy details
+  advance_payment_months: z.number().optional(),
+  allow_bill_sharing: z.boolean().optional(),
+  all_inclusive: z.boolean().default(false),
+  utilities: z.string().optional(),
+  location: z.string().optional(),
+  landmark: z.string().optional(),
   
-  // Move allow_bill_sharing to property details section
-  allow_bill_sharing: z.boolean().default(false),
+  // Media fields
+  image_url: z.string().optional(),
+  images: z.array(z.string()).optional(),
+  
+  // New enhanced fields for verification and features
+  verification_status: z.enum(['pending', 'verified', 'rejected']).optional(),
+  emergency_contact_name: z.string().optional(),
+  emergency_contact_phone: z.string().optional(),
+  has_accessibility_features: z.boolean().optional(),
+  pet_policy: z.enum(['not_allowed', 'allowed', 'cats_only', 'small_pets']).optional(),
+  parking_available: z.boolean().optional(),
+  parking_cost: z.number().optional(),
+  security_features: z.array(z.string()).optional(),
+  internet_speed: z.enum(['basic', 'standard', 'high_speed', 'fiber']).optional(),
+  gender_restriction: z.enum(['male', 'female', 'mixed']).optional(),
+  semester_availability: z.array(z.enum(['semester_1', 'semester_2', 'year_round'])).optional(),
+  cancellation_policy: z.enum(['flexible', 'moderate', 'strict']).optional(),
+  virtual_tour_url: z.string().optional(),
+  
+  // Building structure fields (optional for non-subscription users)
+  buildings: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    description: z.string().optional(),
+    floors: z.array(z.object({
+      id: z.string(),
+      floorNumber: z.number(),
+      name: z.string(),
+      description: z.string().optional(),
+      rooms: z.array(z.object({
+        id: z.string(),
+        roomNumber: z.string(),
+        roomType: z.string(),
+        bedCount: z.number(),
+        bedsAvailable: z.number(),
+        maxOccupants: z.number(),
+        rentAmount: z.number(),
+        amenities: z.array(z.string()).optional(),
+        description: z.string().optional()
+      }))
+    }))
+  })).optional()
 });
 
-// Export the type for use throughout the application
 export type PropertyFormValues = z.infer<typeof propertyFormSchema>;
