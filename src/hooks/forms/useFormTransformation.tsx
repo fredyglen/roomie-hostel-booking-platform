@@ -11,10 +11,10 @@ export const useFormTransformation = () => {
       propertyCategory: (property.propertyCategory || property.property_category || 'Hostel') as 'Hostel' | 'Homestel' | 'Apartment',
       address: property.address || '',
       city: property.city || '',
-      state: property.state || '',
+      region: property.state || 'Greater Accra', // Map state to region for Ghana
       zip: property.zip || '',
       price: property.price || property.rent || 0,
-      price_unit: property.priceUnit || property.price_unit || 'month',
+      price_unit: (property.priceUnit || property.price_unit || 'week') as 'week' | 'month' | 'year' | 'semester',
       description: property.description || '',
       status: property.status || 'available',
       bedrooms: property.bedrooms || 1,
@@ -29,7 +29,12 @@ export const useFormTransformation = () => {
       house_rules: Array.isArray(property.house_rules) 
         ? property.house_rules.join('\n') 
         : property.house_rules || '',
-      occupancy: property.occupancy || '',
+      
+      // New occupancy fields
+      occupancy_type: undefined, // Will be derived from propertyCategory
+      occupancy_available: property.rooms_available || property.beds_available || 0,
+      occupancy_total: property.total_rooms || 0,
+      
       image_url: property.image_url || '',
       images: property.images || [],
       utilities: Array.isArray(property.utilities) 
@@ -45,8 +50,17 @@ export const useFormTransformation = () => {
       has_bedframes: property.has_bedframes || false,
       has_mattresses: property.has_mattresses || false,
       has_wardrobes: property.has_wardrobes || false,
+      
+      // New room features
+      has_fan: false, // New field, default to false
+      has_tiled_room: false, // New field, default to false
+      washroom_type: undefined,
+      shared_washroom_count: undefined,
+      meter_type: property.has_individual_meters ? 'self' : undefined,
+      shared_meter_count: undefined,
+      
       has_individual_meters: property.has_individual_meters || false,
-      advance_payment_months: property.advance_payment_months || 1,
+      advance_payment_months: property.advance_payment_months || 12,
       allow_bill_sharing: property.allow_bill_sharing || false,
     };
 
@@ -61,10 +75,10 @@ export const useFormTransformation = () => {
       propertyCategory: formData.propertyCategory || 'Hostel',
       address: formData.address || '',
       city: formData.city || '',
-      state: formData.state || '',
+      region: formData.region || 'Greater Accra',
       zip: formData.zip || '',
       price: Number(formData.price) || 0,
-      price_unit: formData.price_unit || 'month',
+      price_unit: formData.price_unit || 'week',
       description: formData.description || '',
       status: formData.status || 'available',
       bedrooms: Number(formData.bedrooms) || 1,
@@ -73,7 +87,12 @@ export const useFormTransformation = () => {
       distance_to_campus: formData.distance_to_campus || '',
       amenities: formData.amenities || '',
       house_rules: formData.house_rules || '',
-      occupancy: formData.occupancy || '',
+      
+      // New occupancy fields
+      occupancy_type: formData.occupancy_type,
+      occupancy_available: Number(formData.occupancy_available) || 0,
+      occupancy_total: Number(formData.occupancy_total) || 0,
+      
       image_url: formData.image_url || '',
       images: formData.images || [],
       utilities: formData.utilities || '',
@@ -87,8 +106,17 @@ export const useFormTransformation = () => {
       has_bedframes: Boolean(formData.has_bedframes),
       has_mattresses: Boolean(formData.has_mattresses),
       has_wardrobes: Boolean(formData.has_wardrobes),
+      
+      // New room features
+      has_fan: Boolean(formData.has_fan),
+      has_tiled_room: Boolean(formData.has_tiled_room),
+      washroom_type: formData.washroom_type,
+      shared_washroom_count: formData.shared_washroom_count ? Number(formData.shared_washroom_count) : undefined,
+      meter_type: formData.meter_type,
+      shared_meter_count: formData.shared_meter_count ? Number(formData.shared_meter_count) : undefined,
+      
       has_individual_meters: Boolean(formData.has_individual_meters),
-      advance_payment_months: Number(formData.advance_payment_months) || 1,
+      advance_payment_months: Number(formData.advance_payment_months) || 12,
       allow_bill_sharing: Boolean(formData.allow_bill_sharing),
     };
 
@@ -112,7 +140,7 @@ export const useFormTransformation = () => {
       rent: safeFormData.price,
       address: safeFormData.address,
       city: safeFormData.city,
-      state: safeFormData.state,
+      state: safeFormData.region, // Map region back to state for database
       zip: safeFormData.zip,
       bedrooms: safeFormData.bedrooms,
       bathrooms: safeFormData.bathrooms,

@@ -2,7 +2,6 @@
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
 import { Building, Home, Users } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
@@ -30,7 +29,15 @@ const PropertyTypeFields: React.FC<PropertyTypeFieldsProps> = ({ form, propertyC
                 if (value === "Hostel") {
                   form.setValue("price_unit", "semester");
                 } else {
-                  form.setValue("price_unit", "month");
+                  form.setValue("price_unit", "week");
+                }
+                // Set default occupancy type
+                if (value === "Hostel") {
+                  form.setValue("occupancy_type", "beds");
+                } else if (value === "Homestel") {
+                  form.setValue("occupancy_type", "rooms");
+                } else {
+                  form.setValue("occupancy_type", "units");
                 }
               }} 
               defaultValue={field.value}
@@ -130,27 +137,6 @@ const PropertyTypeFields: React.FC<PropertyTypeFieldsProps> = ({ form, propertyC
                 <SelectItem value="Fully Occupied">Fully Occupied</SelectItem>
               </SelectContent>
             </Select>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="occupancy"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Occupancy</FormLabel>
-            <FormControl>
-              <Input placeholder={propertyCategory === "Hostel" ? "e.g. 5/12 beds" : "e.g. 2/4 rooms"} {...field} />
-            </FormControl>
-            <FormDescription>
-              {propertyCategory === "Hostel" 
-                ? "Available beds / Total beds" 
-                : propertyCategory === "Homestel" 
-                  ? "Available rooms / Total rooms" 
-                  : "Maximum occupants allowed"}
-            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

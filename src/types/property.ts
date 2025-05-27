@@ -40,12 +40,13 @@ export interface Property {
   property_type?: string; 
   price?: number;
   rent?: number;
-  priceUnit?: 'month' | 'semester' | 'year' | 'week';
+  priceUnit?: 'week' | 'month' | 'year' | 'semester';
   price_unit?: string;
   
   // Location information
   city?: string;
   state?: string;
+  region?: string; // New field for Ghana regions
   zip?: string;
   location?: string;
   landmark?: string;
@@ -70,11 +71,24 @@ export interface Property {
   max_occupants?: number;
   availableUnits?: number;
   
+  // New occupancy tracking
+  occupancy_type?: 'beds' | 'rooms' | 'units';
+  occupancy_available?: number;
+  occupancy_total?: number;
+  
   // Facility features
   has_bedframes?: boolean;
   has_mattresses?: boolean;
   has_wardrobes?: boolean;
+  has_fan?: boolean; // New field
+  has_tiled_room?: boolean; // New field
   has_individual_meters?: boolean;
+  
+  // New washroom and meter configurations
+  washroom_type?: 'inside' | 'outside' | 'shared';
+  shared_washroom_count?: number;
+  meter_type?: 'self' | 'shared';
+  shared_meter_count?: number;
   
   // Property classification
   propertyCategory?: PropertyCategory;
@@ -124,16 +138,21 @@ export interface PropertyFormValues {
   propertyCategory: PropertyCategory;
   address: string;
   city: string;
-  state: string;
+  region: string; // Changed from state to region
   zip: string;
   price: number;
-  price_unit: string;
+  price_unit: 'week' | 'month' | 'year' | 'semester'; // Updated type
   description: string;
   distance_to_campus?: string;
   amenities?: string;
   house_rules?: string;
   status: string;
-  occupancy?: string;
+  
+  // New occupancy fields
+  occupancy_type?: 'beds' | 'rooms' | 'units';
+  occupancy_available?: number;
+  occupancy_total?: number;
+  
   image_url?: string;
   images?: string[];
   all_inclusive: boolean;
@@ -152,11 +171,19 @@ export interface PropertyFormValues {
   beds_available?: number;
   max_occupants?: number;
   
-  // Additional facility features
+  // Enhanced facility features
   has_bedframes?: boolean;
   has_mattresses?: boolean;
   has_wardrobes?: boolean;
+  has_fan?: boolean; // New field
+  has_tiled_room?: boolean; // New field
   has_individual_meters?: boolean;
+  
+  // New washroom and meter configurations
+  washroom_type?: 'inside' | 'outside' | 'shared';
+  shared_washroom_count?: number;
+  meter_type?: 'self' | 'shared';
+  shared_meter_count?: number;
   
   // Payment and occupancy details
   advance_payment_months?: number;
@@ -172,7 +199,7 @@ export interface PropertyInsert {
   rent: number;
   address: string;
   city: string;
-  state: string;
+  state: string; // Maps to region in form
   zip: string;
   bedrooms: number;
   bathrooms: number;

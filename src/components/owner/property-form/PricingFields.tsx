@@ -53,10 +53,10 @@ const PricingFields: React.FC<PricingFieldsProps> = ({ form, propertyCategory })
                   <SelectItem value="semester">Per Semester</SelectItem>
                 ) : (
                   <>
-                    <SelectItem value="month">Per Month</SelectItem>
-                    <SelectItem value="semester">Per Semester</SelectItem>
-                    <SelectItem value="year">Per Year</SelectItem>
                     <SelectItem value="week">Per Week</SelectItem>
+                    <SelectItem value="month">Per Month</SelectItem>
+                    <SelectItem value="year">Per Year</SelectItem>
+                    <SelectItem value="semester">Per Semester</SelectItem>
                   </>
                 )}
               </SelectContent>

@@ -21,6 +21,7 @@ import PropertyImageUpload from './PropertyImageUpload';
 import DescriptionFields from './DescriptionFields';
 import PricingFields from './PricingFields';
 import PropertyTypeFields from './PropertyTypeFields';
+import PropertyDetailsFields from './PropertyDetailsFields';
 
 interface PropertyFormProps {
   initialData?: Partial<PropertyFormValues>;
@@ -46,18 +47,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       type: initialData?.type || "",
       address: initialData?.address || "",
       city: initialData?.city || "Accra",
-      state: initialData?.state || "Greater Accra",
+      region: initialData?.region || "Greater Accra",
       zip: initialData?.zip || "00000",
       location: initialData?.location || "",
       landmark: initialData?.landmark || "",
       price: initialData?.price || 0,
-      price_unit: initialData?.price_unit || "semester",
+      price_unit: initialData?.price_unit || "week",
       description: initialData?.description || "",
       distance_to_campus: initialData?.distance_to_campus || "",
       amenities: initialData?.amenities || "",
       house_rules: initialData?.house_rules || "",
       status: initialData?.status || "Available",
-      occupancy: initialData?.occupancy || "0/1",
+      occupancy_type: initialData?.occupancy_type,
+      occupancy_available: initialData?.occupancy_available || 0,
+      occupancy_total: initialData?.occupancy_total || 0,
       image_url: initialData?.image_url || "",
       all_inclusive: initialData?.all_inclusive || false,
       utilities: initialData?.utilities || "",
@@ -71,6 +74,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       has_bedframes: initialData?.has_bedframes || false,
       has_mattresses: initialData?.has_mattresses || false,
       has_wardrobes: initialData?.has_wardrobes || false,
+      has_fan: initialData?.has_fan || false,
+      has_tiled_room: initialData?.has_tiled_room || false,
+      washroom_type: initialData?.washroom_type,
+      shared_washroom_count: initialData?.shared_washroom_count,
+      meter_type: initialData?.meter_type,
+      shared_meter_count: initialData?.shared_meter_count,
       has_individual_meters: initialData?.has_individual_meters || false,
       advance_payment_months: initialData?.advance_payment_months || 12,
       allow_bill_sharing: initialData?.allow_bill_sharing || false,
@@ -86,28 +95,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     const premiumFeatures = ['virtual_tours', 'priority_listing', 'analytics', 'multiple_images'];
     return user?.role === 'owner'; // Basic access control
   };
-  
-  // Calculate occupancy details based on property type
-  const updateOccupancyDetails = () => {
-    const category = form.getValues("propertyCategory");
-    const totalRooms = form.getValues("total_rooms") || 0;
-    const roomsAvailable = form.getValues("rooms_available") || 0;
-    const bedsPerRoom = form.getValues("beds_per_room") || 0;
-    const bedsAvailable = form.getValues("beds_available") || 0;
-    
-    let occupancyText = "";
-    
-    if (category === "Hostel") {
-      occupancyText = `${bedsAvailable}/${totalRooms * bedsPerRoom} beds`;
-    } else if (category === "Homestel") {
-      occupancyText = `${roomsAvailable}/${totalRooms} rooms`;
-    } else {
-      // Apartment
-      occupancyText = `${form.getValues("max_occupants") || 0} max occupants`;
-    }
-    
-    form.setValue("occupancy", occupancyText);
-  };
 
   const handleCancel = () => {
     if (onCancel) {
@@ -120,10 +107,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   return (
     <Card className="p-6">
       <Form {...form}>
-        <form onSubmit={form.handleSubmit((data) => {
-          updateOccupancyDetails();
-          onSubmit(data);
-        })} className="space-y-6">
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <FormField
               control={form.control}
@@ -145,13 +129,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               propertyCategory={propertyCategory} 
             />
 
+            {/* Property Details Section - NEW */}
+            <PropertyDetailsFields 
+              form={form} 
+              propertyCategory={propertyCategory} 
+            />
+
             {/* Conditional fields based on property category */}
             {propertyCategory === "Hostel" && (
-              <HostelFields form={form} updateOccupancyDetails={updateOccupancyDetails} />
+              <HostelFields form={form} />
             )}
 
             {propertyCategory === "Homestel" && (
-              <HomestelFields form={form} updateOccupancyDetails={updateOccupancyDetails} />
+              <HomestelFields form={form} />
             )}
 
             {propertyCategory === "Apartment" && (

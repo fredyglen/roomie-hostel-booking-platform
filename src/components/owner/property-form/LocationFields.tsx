@@ -2,8 +2,9 @@
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { UseFormReturn } from 'react-hook-form';
-import { PropertyFormValues } from './PropertyFormSchema';
+import { PropertyFormValues, GhanaRegions } from './PropertyFormSchema';
 
 interface LocationFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -92,13 +93,24 @@ const LocationFields: React.FC<LocationFieldsProps> = ({ form }) => {
 
         <FormField
           control={form.control}
-          name="state"
+          name="region"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>State/Region</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g. Greater Accra" {...field} />
-              </FormControl>
+              <FormLabel>Region</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select region" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {GhanaRegions.map((region) => (
+                    <SelectItem key={region} value={region}>
+                      {region}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
