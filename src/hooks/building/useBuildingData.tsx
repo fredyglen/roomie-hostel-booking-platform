@@ -14,7 +14,7 @@ export const useBuildingData = (buildingId?: string) => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Convert properties to buildings format for now
+  // Convert properties to buildings format for now (using existing properties table)
   const transformPropertyToBuilding = (property: any): Building => {
     return {
       id: property.id,
@@ -25,7 +25,7 @@ export const useBuildingData = (buildingId?: string) => {
       state: property.state,
       zip: property.zip,
       description: property.description,
-      total_floors: 1, // Default to 1 floor
+      total_floors: 1, // Default to 1 floor until buildings table is available
       amenities: property.amenities || [],
       house_rules: [],
       images: property.images || [],

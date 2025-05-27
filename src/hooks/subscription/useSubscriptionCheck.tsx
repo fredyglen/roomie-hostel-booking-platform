@@ -12,6 +12,35 @@ export interface SubscriptionStatus {
   expiresAt?: string;
 }
 
+// Default free tier features for fallback
+const FREE_STUDENT_FEATURES = {
+  basic_search: true,
+  advanced_filters: false,
+  unlimited_search_results: false,
+  ai_hostel_matching: false,
+  roommate_recommendations: false,
+  priority_booking: false,
+  future_semester_booking: false,
+  rent_financing_access: false,
+  property_alerts: false,
+  virtual_tours: false,
+  premium_support: false
+};
+
+const FREE_OWNER_FEATURES = {
+  basic_property_listing: true,
+  unlimited_property_listings: false,
+  advanced_analytics: false,
+  occupancy_real_time_tracking: false,
+  revenue_analytics: false,
+  export_data_csv: false,
+  export_data_excel: false,
+  export_financial_reports: false,
+  tenant_communication_tools: false,
+  automated_notifications: false,
+  pricing_optimization_suggestions: false
+};
+
 export const useSubscriptionCheck = () => {
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus>({
     isActive: false,
@@ -33,40 +62,53 @@ export const useSubscriptionCheck = () => {
 
   const checkSubscription = async () => {
     try {
-      const { data: subscription, error } = await supabase
-        .from('user_subscriptions')
-        .select(`
-          *,
-          tier:subscription_tiers(*)
-        `)
-        .eq('user_id', user?.id)
-        .eq('status', 'active')
+      // Since the subscription tables aren't in the current schema yet,
+      // we'll implement a fallback that uses the user's role from profiles
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user?.id)
         .single();
 
-      if (error || !subscription) {
-        // No active subscription, set to free tier
-        setSubscriptionStatus({
-          isActive: false,
-          isPremium: false,
-          tierName: 'Free',
-          features: {},
-          limits: {}
-        });
-      } else {
-        setSubscriptionStatus({
-          isActive: true,
-          isPremium: subscription.tier.price > 0,
-          tierName: subscription.tier.name,
-          features: subscription.tier.features,
-          limits: subscription.tier.limits,
-          expiresAt: subscription.expires_at
-        });
+      if (error || !profile) {
+        console.error('Error fetching user profile:', error);
+        setDefaultFreeStatus();
+        return;
       }
+
+      // For now, set default free tier based on user role
+      const isStudent = profile.role === 'student';
+      const features = isStudent ? FREE_STUDENT_FEATURES : FREE_OWNER_FEATURES;
+      
+      setSubscriptionStatus({
+        isActive: true,
+        isPremium: false,
+        tierName: isStudent ? 'Free Student' : 'Free Owner',
+        features,
+        limits: {
+          search_results_per_day: 10,
+          saved_properties: 3,
+          property_listings: isStudent ? 0 : 2,
+          booking_requests: 1
+        }
+      });
+
     } catch (error) {
       console.error('Error checking subscription:', error);
+      setDefaultFreeStatus();
     } finally {
       setLoading(false);
     }
+  };
+
+  const setDefaultFreeStatus = () => {
+    setSubscriptionStatus({
+      isActive: false,
+      isPremium: false,
+      tierName: 'Free',
+      features: FREE_STUDENT_FEATURES,
+      limits: {}
+    });
   };
 
   const hasFeature = (featureKey: string): boolean => {
