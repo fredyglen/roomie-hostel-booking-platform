@@ -96,6 +96,30 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     return user?.role === 'owner'; // Basic access control
   };
 
+  // Calculate occupancy details based on property type
+  const updateOccupancyDetails = () => {
+    const category = form.getValues("propertyCategory");
+    const totalRooms = form.getValues("total_rooms") || 0;
+    const roomsAvailable = form.getValues("rooms_available") || 0;
+    const bedsPerRoom = form.getValues("beds_per_room") || 0;
+    const bedsAvailable = form.getValues("beds_available") || 0;
+    
+    if (category === "Hostel") {
+      form.setValue("occupancy_type", "beds");
+      form.setValue("occupancy_available", bedsAvailable);
+      form.setValue("occupancy_total", totalRooms * bedsPerRoom);
+    } else if (category === "Homestel") {
+      form.setValue("occupancy_type", "rooms");
+      form.setValue("occupancy_available", roomsAvailable);
+      form.setValue("occupancy_total", totalRooms);
+    } else {
+      // Apartment
+      form.setValue("occupancy_type", "units");
+      form.setValue("occupancy_available", 1);
+      form.setValue("occupancy_total", 1);
+    }
+  };
+
   const handleCancel = () => {
     if (onCancel) {
       onCancel();
@@ -137,11 +161,17 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
             {/* Conditional fields based on property category */}
             {propertyCategory === "Hostel" && (
-              <HostelFields form={form} />
+              <HostelFields 
+                form={form} 
+                updateOccupancyDetails={updateOccupancyDetails}
+              />
             )}
 
             {propertyCategory === "Homestel" && (
-              <HomestelFields form={form} />
+              <HomestelFields 
+                form={form} 
+                updateOccupancyDetails={updateOccupancyDetails}
+              />
             )}
 
             {propertyCategory === "Apartment" && (

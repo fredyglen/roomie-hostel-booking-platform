@@ -1,5 +1,6 @@
 
 import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
+import { GhanaRegions } from '@/components/owner/property-form/PropertyFormSchema';
 
 export const useFormTransformation = () => {
   const transformDbToFormValues = (property: Property): PropertyFormValues => {
@@ -11,7 +12,10 @@ export const useFormTransformation = () => {
       propertyCategory: (property.propertyCategory || property.property_category || 'Hostel') as 'Hostel' | 'Homestel' | 'Apartment',
       address: property.address || '',
       city: property.city || '',
-      region: property.state || 'Greater Accra', // Map state to region for Ghana
+      // Ensure region is one of the valid Ghana regions
+      region: (property.state && GhanaRegions.includes(property.state as any)) 
+        ? property.state as typeof GhanaRegions[number]
+        : 'Greater Accra',
       zip: property.zip || '',
       price: property.price || property.rent || 0,
       price_unit: (property.priceUnit || property.price_unit || 'week') as 'week' | 'month' | 'year' | 'semester',
