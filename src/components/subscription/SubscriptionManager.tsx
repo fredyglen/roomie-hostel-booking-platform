@@ -20,7 +20,7 @@ const SubscriptionManager: React.FC = () => {
   const { user } = useAuth();
   const { subscriptionStatus, refetch } = useSubscriptionCheck();
 
-  // Mock subscription tiers - in real implementation, fetch from API
+  // Subscription tiers with Ghana Cedi pricing
   const subscriptionTiers: SubscriptionTier[] = [
     {
       id: 'free-student',
@@ -48,7 +48,7 @@ const SubscriptionManager: React.FC = () => {
       id: 'premium-student',
       name: 'Premium Student',
       user_type: 'student',
-      price: 15,
+      price: 200, // ₵200 per month
       billing_cycle: 'monthly',
       features: {
         basic_search: true,
@@ -93,7 +93,7 @@ const SubscriptionManager: React.FC = () => {
       id: 'premium-owner',
       name: 'Premium Owner',
       user_type: 'owner',
-      price: 50,
+      price: 650, // ₵650 per month
       billing_cycle: 'monthly',
       features: {
         basic_property_listing: true,

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { formatCurrency } from '@/utils/currency';
 
 interface PropertyCardProps {
   property: {
@@ -49,7 +50,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete }) => {
           <h3 className="font-semibold truncate">{property.title}</h3>
           <p className="text-sm text-gray-500 truncate">{property.address}</p>
           <div className="flex justify-between items-center">
-            <span className="font-bold text-lg">${property.price}</span>
+            <span className="font-bold text-lg">{formatCurrency(property.price)}</span>
             <span className="text-sm text-gray-500">per {property.price_unit}</span>
           </div>
           <div className="flex justify-between text-sm">

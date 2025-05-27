@@ -21,7 +21,7 @@ export const useFormTransformation = () => {
       bathrooms: property.bathrooms || 1,
       all_inclusive: property.allInclusive || property.all_inclusive || false,
       
-      // Optional fields
+      // Optional fields with defaults
       distance_to_campus: property.distanceToCampus || property.distance_to_campus || '',
       amenities: Array.isArray(property.amenities) 
         ? property.amenities.join('\n') 
@@ -53,72 +53,53 @@ export const useFormTransformation = () => {
     return formValues;
   };
 
-  const transformFormToDbFormat = (formData: any, ownerId: string): PropertyInsert => {
-    // Ensure we have all required fields with proper defaults
-    const safeFormData = {
-      title: formData.title || '',
-      type: formData.type || '',
-      propertyCategory: formData.propertyCategory || 'Hostel',
-      address: formData.address || '',
-      city: formData.city || '',
-      state: formData.state || '',
-      zip: formData.zip || '',
-      price: formData.price || 0,
-      price_unit: formData.price_unit || 'month',
-      description: formData.description || '',
-      status: formData.status || 'available',
-      bedrooms: formData.bedrooms || 1,
-      bathrooms: formData.bathrooms || 1,
-      all_inclusive: formData.all_inclusive || false,
-      ...formData // spread the rest of the optional fields
-    };
-
-    const amenitiesArray = safeFormData.amenities 
-      ? safeFormData.amenities.split('\n').map(item => item.trim()).filter(Boolean)
+  const transformFormToDbFormat = (formData: PropertyFormValues, ownerId: string): PropertyInsert => {
+    const amenitiesArray = formData.amenities 
+      ? formData.amenities.split('\n').map(item => item.trim()).filter(Boolean)
       : [];
     
-    const houseRulesArray = safeFormData.house_rules 
-      ? safeFormData.house_rules.split('\n').map(item => item.trim()).filter(Boolean)
+    const houseRulesArray = formData.house_rules 
+      ? formData.house_rules.split('\n').map(item => item.trim()).filter(Boolean)
       : [];
     
-    const utilitiesArray = safeFormData.utilities 
-      ? safeFormData.utilities.split('\n').map(item => item.trim()).filter(Boolean)
+    const utilitiesArray = formData.utilities 
+      ? formData.utilities.split('\n').map(item => item.trim()).filter(Boolean)
       : [];
 
     return {
       owner_id: ownerId,
-      title: safeFormData.title,
-      property_type: safeFormData.type,
-      property_category: safeFormData.propertyCategory,
-      rent: safeFormData.price,
-      address: safeFormData.address,
-      city: safeFormData.city,
-      state: safeFormData.state,
-      zip: safeFormData.zip,
-      bedrooms: safeFormData.bedrooms,
-      bathrooms: safeFormData.bathrooms,
+      title: formData.title,
+      property_type: formData.type,
+      property_category: formData.propertyCategory,
+      rent: formData.price,
+      address: formData.address,
+      city: formData.city,
+      state: formData.state,
+      zip: formData.zip,
+      bedrooms: formData.bedrooms,
+      bathrooms: formData.bathrooms,
       available_from: new Date().toISOString().split('T')[0],
-      description: safeFormData.description,
+      description: formData.description,
       amenities: amenitiesArray,
-      images: safeFormData.images || [],
-      is_available: safeFormData.status === 'available',
-      distance_to_campus: safeFormData.distance_to_campus,
+      images: formData.images || [],
+      is_available: formData.status === 'available',
+      distance_to_campus: formData.distance_to_campus,
       house_rules: houseRulesArray,
-      all_inclusive: safeFormData.all_inclusive,
+      all_inclusive: formData.all_inclusive,
       utilities: utilitiesArray,
-      location: safeFormData.location,
-      landmark: safeFormData.landmark,
-      total_rooms: safeFormData.total_rooms,
-      rooms_available: safeFormData.rooms_available,
-      beds_per_room: safeFormData.beds_per_room,
-      beds_available: safeFormData.beds_available,
-      max_occupants: safeFormData.max_occupants,
-      has_bedframes: safeFormData.has_bedframes || false,
-      has_mattresses: safeFormData.has_mattresses || false,
-      has_wardrobes: safeFormData.has_wardrobes || false,
-      has_individual_meters: safeFormData.has_individual_meters || false,
-      advance_payment_months: safeFormData.advance_payment_months,
-      allow_bill_sharing: safeFormData.allow_bill_sharing || false,
+      location: formData.location,
+      landmark: formData.landmark,
+      total_rooms: formData.total_rooms,
+      rooms_available: formData.rooms_available,
+      beds_per_room: formData.beds_per_room,
+      beds_available: formData.beds_available,
+      max_occupants: formData.max_occupants,
+      has_bedframes: formData.has_bedframes,
+      has_mattresses: formData.has_mattresses,
+      has_wardrobes: formData.has_wardrobes,
+      has_individual_meters: formData.has_individual_meters,
+      advance_payment_months: formData.advance_payment_months,
+      allow_bill_sharing: formData.allow_bill_sharing,
     };
   };
 

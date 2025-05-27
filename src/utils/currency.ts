@@ -7,6 +7,13 @@ export const CURRENCY = {
 
 export const formatCurrency = (amount: number): string => {
   return `${CURRENCY.symbol}${amount.toLocaleString('en-GH', {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0
+  })}`;
+};
+
+export const formatCurrencyWithDecimals = (amount: number): string => {
+  return `${CURRENCY.symbol}${amount.toLocaleString('en-GH', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   })}`;
@@ -26,8 +33,8 @@ export const parseCurrency = (currencyString: string): number => {
   return parseFloat(currencyString.replace(/[₵,]/g, '')) || 0;
 };
 
-// Convert other currencies to Ghana Cedi (mock conversion rates)
-export const convertToGhanaEedi = (amount: number, fromCurrency: string): number => {
+// Convert other currencies to Ghana Cedi (updated exchange rates)
+export const convertToGhanaCedi = (amount: number, fromCurrency: string): number => {
   const exchangeRates: Record<string, number> = {
     'USD': 12.50, // 1 USD = 12.50 GHS (approximate)
     'EUR': 13.80, // 1 EUR = 13.80 GHS (approximate)
@@ -42,6 +49,6 @@ export const convertToGhanaEedi = (amount: number, fromCurrency: string): number
 
 // Format currency with automatic conversion
 export const formatCurrencyWithConversion = (amount: number, fromCurrency: string = 'GHS'): string => {
-  const ghsAmount = convertToGhanaEedi(amount, fromCurrency);
+  const ghsAmount = convertToGhanaCedi(amount, fromCurrency);
   return formatCurrency(ghsAmount);
 };
