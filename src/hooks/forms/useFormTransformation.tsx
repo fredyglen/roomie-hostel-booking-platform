@@ -52,7 +52,7 @@ export const useFormTransformation = () => {
     return formValues;
   };
 
-  const transformFormToDbFormat = (formData: PropertyFormValues, ownerId: string): PropertyInsert => {
+  const transformFormToDbFormat = (formData: Partial<PropertyFormValues>, ownerId: string): PropertyInsert => {
     const amenitiesArray = formData.amenities 
       ? formData.amenities.split('\n').map(item => item.trim()).filter(Boolean)
       : [];
@@ -67,24 +67,24 @@ export const useFormTransformation = () => {
 
     return {
       owner_id: ownerId,
-      title: formData.title,
-      property_type: formData.type,
-      property_category: formData.propertyCategory,
-      rent: formData.price,
-      address: formData.address,
-      city: formData.city,
-      state: formData.state,
-      zip: formData.zip,
-      bedrooms: formData.bedrooms,
-      bathrooms: formData.bathrooms,
+      title: formData.title || '',
+      property_type: formData.type || '',
+      property_category: formData.propertyCategory || 'Hostel',
+      rent: formData.price || 0,
+      address: formData.address || '',
+      city: formData.city || '',
+      state: formData.state || '',
+      zip: formData.zip || '',
+      bedrooms: formData.bedrooms || 1,
+      bathrooms: formData.bathrooms || 1,
       available_from: new Date().toISOString().split('T')[0],
-      description: formData.description,
+      description: formData.description || '',
       amenities: amenitiesArray,
       images: formData.images || [],
       is_available: formData.status === 'available',
       distance_to_campus: formData.distance_to_campus,
       house_rules: houseRulesArray,
-      all_inclusive: formData.all_inclusive,
+      all_inclusive: formData.all_inclusive || false,
       utilities: utilitiesArray,
       location: formData.location,
       landmark: formData.landmark,
@@ -93,12 +93,12 @@ export const useFormTransformation = () => {
       beds_per_room: formData.beds_per_room,
       beds_available: formData.beds_available,
       max_occupants: formData.max_occupants,
-      has_bedframes: formData.has_bedframes,
-      has_mattresses: formData.has_mattresses,
-      has_wardrobes: formData.has_wardrobes,
-      has_individual_meters: formData.has_individual_meters,
+      has_bedframes: formData.has_bedframes || false,
+      has_mattresses: formData.has_mattresses || false,
+      has_wardrobes: formData.has_wardrobes || false,
+      has_individual_meters: formData.has_individual_meters || false,
       advance_payment_months: formData.advance_payment_months,
-      allow_bill_sharing: formData.allow_bill_sharing,
+      allow_bill_sharing: formData.allow_bill_sharing || false,
     };
   };
 
