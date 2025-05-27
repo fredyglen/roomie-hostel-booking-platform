@@ -22,6 +22,11 @@ export type PropertyCategory = 'Hostel' | 'Homestel' | 'Apartment';
 // Gender types
 export type GenderType = 'Girls' | 'Boys' | 'Mixed';
 
+// Ghana regions type - import from schema
+export type GhanaRegion = 'Greater Accra' | 'Ashanti' | 'Western' | 'Eastern' | 'Central' | 
+  'Northern' | 'Upper East' | 'Upper West' | 'Volta' | 'Brong-Ahafo' | 
+  'Western North' | 'Ahafo' | 'Bono East' | 'North East' | 'Savannah' | 'Oti';
+
 /**
  * Unified Property interface
  * - Required database fields are non-optional
@@ -138,7 +143,7 @@ export interface PropertyFormValues {
   propertyCategory: PropertyCategory;
   address: string;
   city: string;
-  region: string; // Changed from state to region
+  region: GhanaRegion; // Changed from string to GhanaRegion type
   zip: string;
   price: number;
   price_unit: 'week' | 'month' | 'year' | 'semester'; // Updated type
