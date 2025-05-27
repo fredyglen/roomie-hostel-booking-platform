@@ -3,7 +3,8 @@ import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
 
 export const useFormTransformation = () => {
   const transformDbToFormValues = (property: Property): PropertyFormValues => {
-    return {
+    // Explicitly construct the PropertyFormValues object with all required fields
+    const formValues: PropertyFormValues = {
       // Required fields with proper defaults
       title: property.title || '',
       type: property.type || property.property_type || '',
@@ -48,6 +49,8 @@ export const useFormTransformation = () => {
       advance_payment_months: property.advance_payment_months || 1,
       allow_bill_sharing: property.allow_bill_sharing || false,
     };
+
+    return formValues;
   };
 
   const transformFormToDbFormat = (formData: PropertyFormValues, ownerId: string): PropertyInsert => {
