@@ -5,6 +5,7 @@ import { Badge } from '@/components/ui/badge';
 import { PropertyCategory } from '@/types/property';
 import ImageWithFallback from '@/components/common/ImageWithFallback';
 import { toast } from 'sonner';
+import { formatCurrency } from '@/utils/currency';
 
 interface PropertyCardProps {
   property: {
@@ -109,7 +110,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
         
         <div className="flex items-center justify-between mt-auto">
           <div>
-            <span className="font-bold text-roomi-blue">₵{(property.price || 0).toLocaleString()}</span>
+            <span className="font-bold text-roomi-blue">{formatCurrency(property.price || 0)}</span>
             <span className="text-gray-600">/{property.priceUnit || 'semester'}</span>
           </div>
           {property.rating && (

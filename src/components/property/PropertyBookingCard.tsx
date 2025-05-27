@@ -2,6 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@iconify/react';
+import { formatCurrency } from '@/utils/currency';
 
 interface PropertyBookingCardProps {
   id: string;
@@ -19,7 +20,7 @@ const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
     <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
       <div className="flex justify-between items-center mb-4">
         <div>
-          <span className="text-2xl font-bold text-blue-600">₵{price.toLocaleString()}</span>
+          <span className="text-2xl font-bold text-blue-600">{formatCurrency(price)}</span>
           <span className="text-gray-600">/{priceUnit}</span>
         </div>
         {verified && (
