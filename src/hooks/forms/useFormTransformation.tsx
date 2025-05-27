@@ -1,13 +1,14 @@
+
 import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
 
 export const useFormTransformation = () => {
   const transformDbToFormValues = (property: Property): PropertyFormValues => {
     // Explicitly construct the PropertyFormValues object with all required fields
-    const formValues = {
+    return {
       // Required fields with proper defaults
       title: property.title || '',
       type: property.type || property.property_type || '',
-      propertyCategory: property.propertyCategory || property.property_category || 'Hostel',
+      propertyCategory: (property.propertyCategory || property.property_category || 'Hostel') as 'Hostel' | 'Homestel' | 'Apartment',
       address: property.address || '',
       city: property.city || '',
       state: property.state || '',
@@ -47,9 +48,7 @@ export const useFormTransformation = () => {
       has_individual_meters: property.has_individual_meters || false,
       advance_payment_months: property.advance_payment_months || 1,
       allow_bill_sharing: property.allow_bill_sharing || false,
-    } as PropertyFormValues;
-
-    return formValues;
+    };
   };
 
   const transformFormToDbFormat = (formData: PropertyFormValues, ownerId: string): PropertyInsert => {
