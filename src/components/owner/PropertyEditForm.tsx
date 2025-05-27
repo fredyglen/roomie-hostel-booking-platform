@@ -12,7 +12,7 @@ import { navigateBack } from '@/utils/navigation';
 
 interface PropertyEditFormProps {
   propertyId: string;
-  initialData?: PropertyFormValues;
+  initialData: PropertyFormValues;
 }
 
 const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ propertyId, initialData }) => {
