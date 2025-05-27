@@ -14,28 +14,81 @@ export const useBuildingData = (buildingId?: string) => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Polling for real-time occupancy updates (every 30 seconds)
-  useEffect(() => {
-    if (buildingId) {
-      const interval = setInterval(() => {
-        fetchOccupancyData(buildingId);
-      }, 30000);
+  // Convert properties to buildings format for now
+  const transformPropertyToBuilding = (property: any): Building => {
+    return {
+      id: property.id,
+      owner_id: property.owner_id,
+      title: property.title,
+      address: property.address,
+      city: property.city,
+      state: property.state,
+      zip: property.zip,
+      description: property.description,
+      total_floors: 1, // Default to 1 floor
+      amenities: property.amenities || [],
+      house_rules: [],
+      images: property.images || [],
+      is_available: property.is_available || true,
+      property_category: 'Hostel',
+      gender_type: 'Mixed',
+      all_inclusive: false,
+      utilities: [],
+      distance_to_campus: '',
+      created_at: property.created_at,
+      updated_at: property.updated_at,
+      floors: []
+    };
+  };
 
-      return () => clearInterval(interval);
+  // Create mock floor and room data from property
+  const createMockFloorsAndRooms = (property: any): { floors: Floor[], rooms: Room[] } => {
+    const floor: Floor = {
+      id: `${property.id}-floor-1`,
+      building_id: property.id,
+      floor_number: 1,
+      floor_name: 'Ground Floor',
+      total_rooms: property.bedrooms || 1,
+      amenities: property.amenities || [],
+      created_at: property.created_at,
+      rooms: []
+    };
+
+    const rooms: Room[] = [];
+    for (let i = 1; i <= (property.bedrooms || 1); i++) {
+      rooms.push({
+        id: `${property.id}-room-${i}`,
+        floor_id: floor.id,
+        room_number: `Room ${i}`,
+        room_name: `Room ${i}`,
+        occupancy_limit: 2, // Default 2 students per room
+        current_occupancy: 0,
+        price_per_student: property.rent || 0,
+        price_unit: 'semester',
+        room_type: 'standard',
+        amenities: property.amenities || [],
+        is_available: true,
+        created_at: property.created_at,
+        updated_at: property.updated_at
+      });
     }
-  }, [buildingId]);
+
+    return { floors: [floor], rooms };
+  };
 
   const fetchBuildings = async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from('buildings')
+        .from('properties')
         .select('*')
         .eq('is_available', true)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      setBuildings(data || []);
+      
+      const transformedBuildings = (data || []).map(transformPropertyToBuilding);
+      setBuildings(transformedBuildings);
     } catch (err) {
       setError('Failed to fetch buildings');
       toast({
@@ -51,41 +104,36 @@ export const useBuildingData = (buildingId?: string) => {
   const fetchBuildingDetails = async (id: string) => {
     setLoading(true);
     try {
-      // Fetch building
-      const { data: building, error: buildingError } = await supabase
-        .from('buildings')
+      // Fetch property as building
+      const { data: property, error: propertyError } = await supabase
+        .from('properties')
         .select('*')
         .eq('id', id)
         .single();
 
-      if (buildingError) throw buildingError;
+      if (propertyError) throw propertyError;
+      
+      const building = transformPropertyToBuilding(property);
       setSelectedBuilding(building);
 
-      // Fetch floors
-      const { data: floorsData, error: floorsError } = await supabase
-        .from('floors')
-        .select('*')
-        .eq('building_id', id)
-        .order('floor_number');
+      // Create mock floors and rooms
+      const { floors: mockFloors, rooms: mockRooms } = createMockFloorsAndRooms(property);
+      setFloors(mockFloors);
+      setRooms(mockRooms);
 
-      if (floorsError) throw floorsError;
-      setFloors(floorsData || []);
-
-      // Fetch rooms
-      const { data: roomsData, error: roomsError } = await supabase
-        .from('rooms')
-        .select(`
-          *,
-          floor:floors(*)
-        `)
-        .in('floor_id', (floorsData || []).map(f => f.id))
-        .order('room_number');
-
-      if (roomsError) throw roomsError;
-      setRooms(roomsData || []);
-
-      // Fetch occupancy data
-      await fetchOccupancyData(id);
+      // Create mock occupancy data
+      const mockOccupancy: OccupancyTracking[] = mockRooms.map(room => ({
+        id: `${room.id}-occupancy`,
+        room_id: room.id,
+        building_id: building.id,
+        floor_id: room.floor_id,
+        current_occupancy: 0,
+        available_spots: room.occupancy_limit,
+        last_updated: new Date().toISOString(),
+        updated_by: undefined
+      }));
+      
+      setOccupancy(mockOccupancy);
 
     } catch (err) {
       setError('Failed to fetch building details');
@@ -101,13 +149,19 @@ export const useBuildingData = (buildingId?: string) => {
 
   const fetchOccupancyData = async (id: string) => {
     try {
-      const { data, error } = await supabase
-        .from('occupancy_tracking')
-        .select('*')
-        .eq('building_id', id);
-
-      if (error) throw error;
-      setOccupancy(data || []);
+      // For now, return mock data since occupancy_tracking table doesn't exist yet
+      const mockOccupancy: OccupancyTracking[] = rooms.map(room => ({
+        id: `${room.id}-occupancy`,
+        room_id: room.id,
+        building_id: id,
+        floor_id: room.floor_id,
+        current_occupancy: Math.floor(Math.random() * room.occupancy_limit),
+        available_spots: room.occupancy_limit - Math.floor(Math.random() * room.occupancy_limit),
+        last_updated: new Date().toISOString(),
+        updated_by: undefined
+      }));
+      
+      setOccupancy(mockOccupancy);
     } catch (err) {
       console.error('Failed to fetch occupancy data:', err);
     }
@@ -117,7 +171,7 @@ export const useBuildingData = (buildingId?: string) => {
     const roomOccupancy = occupancy.find(o => o.room_id === roomId);
     return roomOccupancy || {
       current_occupancy: 0,
-      available_spots: 0,
+      available_spots: 2,
       last_updated: new Date().toISOString()
     };
   };
@@ -160,6 +214,17 @@ export const useBuildingData = (buildingId?: string) => {
       occupancy_percentage: totalCapacity > 0 ? (totalOccupancy / totalCapacity) * 100 : 0
     };
   };
+
+  // Polling for real-time occupancy updates (every 30 seconds)
+  useEffect(() => {
+    if (buildingId) {
+      const interval = setInterval(() => {
+        fetchOccupancyData(buildingId);
+      }, 30000);
+
+      return () => clearInterval(interval);
+    }
+  }, [buildingId, rooms]);
 
   return {
     buildings,

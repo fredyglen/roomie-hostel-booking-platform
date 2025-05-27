@@ -1,274 +1,491 @@
 
 import React, { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Icon } from '@iconify/react';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
-import { PlatformFeatures } from '@/types/subscription';
 
-interface FeatureItem {
-  key: string;
-  name: string;
+interface FeatureConfig {
+  id: string;
+  feature_key: string;
+  display_name: string;
   description: string;
   category: string;
-  defaultValue: boolean;
-  impact: 'low' | 'medium' | 'high';
+  user_type: 'student' | 'owner' | 'both';
+  is_premium: boolean;
+  impact_level: 'high' | 'medium' | 'low';
+  revenue_impact: 'high' | 'medium' | 'low';
 }
 
-const STUDENT_FEATURES: FeatureItem[] = [
-  { key: 'basic_search', name: 'Basic Property Search', description: 'Search for properties with basic filters', category: 'Search & Discovery', defaultValue: false, impact: 'low' },
-  { key: 'advanced_filters', name: 'Advanced Search Filters', description: 'Gender type, price range, amenities, proximity filters', category: 'Search & Discovery', defaultValue: true, impact: 'medium' },
-  { key: 'unlimited_search_results', name: 'Unlimited Search Results', description: 'View all search results (free users see limited results)', category: 'Search & Discovery', defaultValue: true, impact: 'medium' },
-  { key: 'ai_hostel_matching', name: 'AI Hostel Matching', description: 'Personalized property recommendations using AI algorithms', category: 'AI & Personalization', defaultValue: true, impact: 'high' },
-  { key: 'roommate_recommendations', name: 'AI Roommate Matching', description: 'Smart roommate compatibility suggestions', category: 'AI & Personalization', defaultValue: true, impact: 'high' },
-  { key: 'priority_booking', name: 'Priority Booking Access', description: 'Book popular properties before non-premium users', category: 'Booking & Reservations', defaultValue: true, impact: 'high' },
-  { key: 'future_semester_booking', name: 'Future Semester Booking', description: 'Reserve accommodation for upcoming semesters', category: 'Booking & Reservations', defaultValue: true, impact: 'high' },
-  { key: 'rent_financing_access', name: 'Rent Financing Options', description: 'Access to rent-now-pay-later services', category: 'Financial Services', defaultValue: true, impact: 'high' },
-  { key: 'property_alerts', name: 'Property Alerts & Notifications', description: 'Get notified about new properties and price changes', category: 'Communication', defaultValue: true, impact: 'medium' },
-  { key: 'virtual_tours', name: 'Virtual Property Tours', description: 'Access to 360° tours and video walkthroughs', category: 'Property Experience', defaultValue: true, impact: 'medium' },
-  { key: 'saved_properties_unlimited', name: 'Unlimited Saved Properties', description: 'Save unlimited properties to favorites', category: 'User Experience', defaultValue: true, impact: 'low' },
-  { key: 'booking_history', name: 'Detailed Booking History', description: 'View complete booking and payment history', category: 'Account Management', defaultValue: true, impact: 'low' },
-  { key: 'payment_tracking', name: 'Advanced Payment Tracking', description: 'Track payment schedules and get reminders', category: 'Financial Services', defaultValue: true, impact: 'medium' },
-  { key: 'premium_support', name: 'Priority Customer Support', description: '24/7 support with faster response times', category: 'Support', defaultValue: true, impact: 'medium' },
-  { key: 'mobile_app_access', name: 'Mobile App Access', description: 'Access to premium mobile app features', category: 'Platform Access', defaultValue: true, impact: 'medium' },
-  { key: 'offline_property_viewing', name: 'Offline Property Viewing', description: 'Download properties for offline viewing', category: 'User Experience', defaultValue: true, impact: 'low' }
-];
-
-const OWNER_FEATURES: FeatureItem[] = [
-  { key: 'basic_property_listing', name: 'Basic Property Listing', description: 'List up to 2 properties with basic information', category: 'Property Management', defaultValue: false, impact: 'low' },
-  { key: 'unlimited_property_listings', name: 'Unlimited Property Listings', description: 'List unlimited properties with full details', category: 'Property Management', defaultValue: true, impact: 'high' },
-  { key: 'advanced_analytics', name: 'Advanced Analytics Dashboard', description: 'Detailed insights on bookings, revenue, and trends', category: 'Analytics & Reporting', defaultValue: true, impact: 'high' },
-  { key: 'occupancy_real_time_tracking', name: 'Real-time Occupancy Tracking', description: 'Live updates on room occupancy across all properties', category: 'Property Management', defaultValue: true, impact: 'high' },
-  { key: 'revenue_analytics', name: 'Revenue Analytics', description: 'Detailed revenue tracking and forecasting', category: 'Analytics & Reporting', defaultValue: true, impact: 'high' },
-  { key: 'export_data_csv', name: 'CSV Data Export', description: 'Export booking and financial data as CSV files', category: 'Data Export', defaultValue: true, impact: 'medium' },
-  { key: 'export_data_excel', name: 'Excel Data Export', description: 'Export data with advanced Excel formatting', category: 'Data Export', defaultValue: true, impact: 'medium' },
-  { key: 'export_financial_reports', name: 'Financial Report Generation', description: 'Generate comprehensive financial reports', category: 'Data Export', defaultValue: true, impact: 'high' },
-  { key: 'tenant_communication_tools', name: 'Tenant Communication Tools', description: 'Messaging system and announcements', category: 'Communication', defaultValue: true, impact: 'medium' },
-  { key: 'automated_notifications', name: 'Automated Notifications', description: 'Auto-send booking confirmations and reminders', category: 'Communication', defaultValue: true, impact: 'medium' },
-  { key: 'booking_management', name: 'Advanced Booking Management', description: 'Comprehensive booking workflow management', category: 'Property Management', defaultValue: true, impact: 'high' },
-  { key: 'pricing_optimization_suggestions', name: 'AI Pricing Optimization', description: 'AI-powered pricing recommendations', category: 'AI & Optimization', defaultValue: true, impact: 'high' },
-  { key: 'marketing_boost', name: 'Marketing Boost', description: 'Featured listings and promotional opportunities', category: 'Marketing', defaultValue: true, impact: 'high' },
-  { key: 'priority_listing_placement', name: 'Priority Listing Placement', description: 'Properties appear higher in search results', category: 'Marketing', defaultValue: true, impact: 'high' },
-  { key: 'multi_property_management', name: 'Multi-Property Management', description: 'Manage multiple properties from single dashboard', category: 'Property Management', defaultValue: true, impact: 'medium' },
-  { key: 'staff_account_management', name: 'Staff Account Management', description: 'Add staff members with different permission levels', category: 'Account Management', defaultValue: true, impact: 'medium' },
-  { key: 'api_access', name: 'API Access', description: 'Integrate with external systems via API', category: 'Platform Access', defaultValue: true, impact: 'low' },
-  { key: 'white_label_options', name: 'White Label Options', description: 'Custom branding for large property managers', category: 'Branding', defaultValue: true, impact: 'low' }
-];
-
 const FeatureManagement: React.FC = () => {
-  const [studentFeatures, setStudentFeatures] = useState<Record<string, boolean>>({});
-  const [ownerFeatures, setOwnerFeatures] = useState<Record<string, boolean>>({});
+  const [features, setFeatures] = useState<FeatureConfig[]>([]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
+  // Default features configuration
+  const defaultFeatures: FeatureConfig[] = [
+    // Student Features - Search & Discovery
+    {
+      id: '1',
+      feature_key: 'basic_search',
+      display_name: 'Basic Property Search',
+      description: 'Simple search functionality with basic filters',
+      category: 'search',
+      user_type: 'student',
+      is_premium: false,
+      impact_level: 'high',
+      revenue_impact: 'low'
+    },
+    {
+      id: '2',
+      feature_key: 'advanced_filters',
+      display_name: 'Advanced Search Filters',
+      description: 'Detailed filtering by price, amenities, location radius',
+      category: 'search',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    {
+      id: '3',
+      feature_key: 'unlimited_search_results',
+      display_name: 'Unlimited Search Results',
+      description: 'View all available properties without pagination limits',
+      category: 'search',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'medium',
+      revenue_impact: 'medium'
+    },
+    {
+      id: '4',
+      feature_key: 'ai_hostel_matching',
+      display_name: 'AI-Powered Hostel Matching',
+      description: 'Personalized recommendations based on preferences and behavior',
+      category: 'ai',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    {
+      id: '5',
+      feature_key: 'roommate_recommendations',
+      display_name: 'Roommate Recommendations',
+      description: 'AI-driven roommate compatibility matching',
+      category: 'ai',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    
+    // Student Features - Booking
+    {
+      id: '6',
+      feature_key: 'basic_booking',
+      display_name: 'Basic Booking',
+      description: 'Standard room booking for current semester',
+      category: 'booking',
+      user_type: 'student',
+      is_premium: false,
+      impact_level: 'high',
+      revenue_impact: 'low'
+    },
+    {
+      id: '7',
+      feature_key: 'priority_booking',
+      display_name: 'Priority Booking',
+      description: 'Skip booking queues and get first preference',
+      category: 'booking',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    {
+      id: '8',
+      feature_key: 'future_semester_booking',
+      display_name: 'Future Semester Booking',
+      description: 'Book accommodations for upcoming semesters',
+      category: 'booking',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'medium',
+      revenue_impact: 'high'
+    },
+    {
+      id: '9',
+      feature_key: 'rent_financing_access',
+      display_name: 'Rent Financing Access',
+      description: 'Access to rent-now-pay-later services',
+      category: 'booking',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    
+    // Student Features - Communication & Support
+    {
+      id: '10',
+      feature_key: 'property_alerts',
+      display_name: 'Property Availability Alerts',
+      description: 'Real-time notifications for new listings and availability',
+      category: 'communication',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'medium',
+      revenue_impact: 'medium'
+    },
+    {
+      id: '11',
+      feature_key: 'virtual_tours',
+      display_name: 'Virtual Property Tours',
+      description: '360° virtual tours and video walkthroughs',
+      category: 'communication',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'medium',
+      revenue_impact: 'medium'
+    },
+    {
+      id: '12',
+      feature_key: 'premium_support',
+      display_name: 'Premium Customer Support',
+      description: '24/7 priority support with dedicated agents',
+      category: 'communication',
+      user_type: 'student',
+      is_premium: true,
+      impact_level: 'low',
+      revenue_impact: 'medium'
+    },
+    
+    // Owner Features - Property Management
+    {
+      id: '13',
+      feature_key: 'basic_property_listing',
+      display_name: 'Basic Property Listing',
+      description: 'List up to 2 properties with basic information',
+      category: 'analytics',
+      user_type: 'owner',
+      is_premium: false,
+      impact_level: 'high',
+      revenue_impact: 'low'
+    },
+    {
+      id: '14',
+      feature_key: 'unlimited_property_listings',
+      display_name: 'Unlimited Property Listings',
+      description: 'List unlimited properties with enhanced features',
+      category: 'analytics',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    {
+      id: '15',
+      feature_key: 'advanced_analytics',
+      display_name: 'Advanced Analytics Dashboard',
+      description: 'Detailed performance metrics and insights',
+      category: 'analytics',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    {
+      id: '16',
+      feature_key: 'occupancy_real_time_tracking',
+      display_name: 'Real-time Occupancy Tracking',
+      description: 'Live occupancy monitoring across all properties',
+      category: 'analytics',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    {
+      id: '17',
+      feature_key: 'revenue_analytics',
+      display_name: 'Revenue Analytics',
+      description: 'Comprehensive revenue tracking and forecasting',
+      category: 'analytics',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    
+    // Owner Features - Export & Reporting
+    {
+      id: '18',
+      feature_key: 'export_data_csv',
+      display_name: 'Export Data (CSV)',
+      description: 'Export booking and tenant data in CSV format',
+      category: 'export',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'medium',
+      revenue_impact: 'medium'
+    },
+    {
+      id: '19',
+      feature_key: 'export_data_excel',
+      display_name: 'Export Data (Excel)',
+      description: 'Export detailed reports in Excel format',
+      category: 'export',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'medium',
+      revenue_impact: 'medium'
+    },
+    {
+      id: '20',
+      feature_key: 'export_financial_reports',
+      display_name: 'Financial Reports Export',
+      description: 'Generate and export comprehensive financial reports',
+      category: 'export',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    },
+    
+    // Owner Features - Communication
+    {
+      id: '21',
+      feature_key: 'tenant_communication_tools',
+      display_name: 'Tenant Communication Tools',
+      description: 'Direct messaging and announcement system',
+      category: 'communication',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'medium',
+      revenue_impact: 'medium'
+    },
+    {
+      id: '22',
+      feature_key: 'automated_notifications',
+      display_name: 'Automated Notifications',
+      description: 'Automated alerts for bookings, payments, and maintenance',
+      category: 'communication',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'medium',
+      revenue_impact: 'medium'
+    },
+    {
+      id: '23',
+      feature_key: 'pricing_optimization_suggestions',
+      display_name: 'AI Pricing Optimization',
+      description: 'AI-powered pricing recommendations based on market data',
+      category: 'ai',
+      user_type: 'owner',
+      is_premium: true,
+      impact_level: 'high',
+      revenue_impact: 'high'
+    }
+  ];
+
   useEffect(() => {
-    loadCurrentSettings();
+    setFeatures(defaultFeatures);
   }, []);
 
-  const loadCurrentSettings = () => {
-    // Initialize with default values
-    const studentDefaults: Record<string, boolean> = {};
-    const ownerDefaults: Record<string, boolean> = {};
+  const toggleFeaturePremium = async (featureId: string) => {
+    setFeatures(prev => prev.map(feature => 
+      feature.id === featureId 
+        ? { ...feature, is_premium: !feature.is_premium }
+        : feature
+    ));
 
-    STUDENT_FEATURES.forEach(feature => {
-      studentDefaults[feature.key] = feature.defaultValue;
+    toast({
+      title: "Feature Updated",
+      description: "Feature premium status has been updated successfully.",
     });
-
-    OWNER_FEATURES.forEach(feature => {
-      ownerDefaults[feature.key] = feature.defaultValue;
-    });
-
-    setStudentFeatures(studentDefaults);
-    setOwnerFeatures(ownerDefaults);
   };
 
-  const handleStudentFeatureChange = (featureKey: string, checked: boolean) => {
-    setStudentFeatures(prev => ({
-      ...prev,
-      [featureKey]: checked
-    }));
-  };
-
-  const handleOwnerFeatureChange = (featureKey: string, checked: boolean) => {
-    setOwnerFeatures(prev => ({
-      ...prev,
-      [featureKey]: checked
-    }));
-  };
-
-  const saveSettings = async () => {
-    setLoading(true);
-    try {
-      // Here you would typically save to your backend
-      console.log('Saving feature settings:', {
-        student_features: studentFeatures,
-        owner_features: ownerFeatures
-      });
-
-      toast({
-        title: "Settings Saved",
-        description: "Feature management settings have been updated successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save settings. Please try again.",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
+  const getImpactIcon = (impact: string) => {
+    switch (impact) {
+      case 'high': return 'solar:arrow-up-bold';
+      case 'medium': return 'solar:minus-bold';
+      case 'low': return 'solar:arrow-down-bold';
+      default: return 'solar:minus-bold';
     }
   };
 
-  const resetToDefaults = () => {
-    loadCurrentSettings();
-    toast({
-      title: "Reset Complete",
-      description: "All features have been reset to default settings.",
-    });
+  const getImpactColor = (impact: string) => {
+    switch (impact) {
+      case 'high': return 'text-red-600';
+      case 'medium': return 'text-yellow-600';
+      case 'low': return 'text-green-600';
+      default: return 'text-gray-600';
+    }
   };
 
-  const getImpactBadge = (impact: string) => {
-    const colors = {
-      low: 'bg-green-100 text-green-800',
-      medium: 'bg-yellow-100 text-yellow-800',
-      high: 'bg-red-100 text-red-800'
-    };
-    return <Badge className={colors[impact as keyof typeof colors]}>{impact} impact</Badge>;
+  const getCategoryIcon = (category: string) => {
+    switch (category) {
+      case 'search': return 'solar:magnifer-bold';
+      case 'booking': return 'solar:calendar-bold';
+      case 'analytics': return 'solar:chart-bold';
+      case 'communication': return 'solar:chat-round-bold';
+      case 'ai': return 'solar:cpu-bolt-bold';
+      case 'export': return 'solar:download-bold';
+      default: return 'solar:settings-bold';
+    }
   };
 
-  const groupFeaturesByCategory = (features: FeatureItem[]) => {
-    return features.reduce((acc, feature) => {
-      if (!acc[feature.category]) {
-        acc[feature.category] = [];
-      }
-      acc[feature.category].push(feature);
-      return acc;
-    }, {} as Record<string, FeatureItem[]>);
+  const categories = Array.from(new Set(features.map(f => f.category)));
+  const userTypes = ['student', 'owner'];
+
+  const getFeaturesByCategory = (category: string, userType: string) => {
+    return features.filter(f => f.category === category && (f.user_type === userType || f.user_type === 'both'));
   };
 
-  const getPremiumFeatureCount = (userType: 'student' | 'owner') => {
-    const features = userType === 'student' ? studentFeatures : ownerFeatures;
-    return Object.values(features).filter(Boolean).length;
-  };
+  const premiumCount = features.filter(f => f.is_premium).length;
+  const freeCount = features.filter(f => !f.is_premium).length;
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Feature Management</h2>
-          <p className="text-gray-600 mt-1">Configure which features are behind the premium paywall</p>
+          <h1 className="text-2xl font-bold">Feature Management</h1>
+          <p className="text-gray-600">Configure which features are behind the paywall</p>
         </div>
-        <div className="flex space-x-2">
-          <Button variant="outline" onClick={resetToDefaults}>
-            Reset to Defaults
-          </Button>
-          <Button onClick={saveSettings} disabled={loading}>
-            {loading ? 'Saving...' : 'Save Settings'}
-          </Button>
+        <div className="flex gap-4">
+          <Badge variant="secondary">
+            <Icon icon="solar:lock-bold" className="mr-1" />
+            {premiumCount} Premium
+          </Badge>
+          <Badge variant="outline">
+            <Icon icon="solar:unlock-bold" className="mr-1" />
+            {freeCount} Free
+          </Badge>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Student Premium Features</CardTitle>
-            <CardDescription>
-              {getPremiumFeatureCount('student')} features are currently premium
-            </CardDescription>
-          </CardHeader>
-        </Card>
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-lg">Owner Premium Features</CardTitle>
-            <CardDescription>
-              {getPremiumFeatureCount('owner')} features are currently premium
-            </CardDescription>
-          </CardHeader>
-        </Card>
-      </div>
-
-      <Tabs defaultValue="student" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="student">Student Features</TabsTrigger>
-          <TabsTrigger value="owner">Owner Features</TabsTrigger>
+      <Tabs defaultValue="student" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="student">
+            <Icon icon="solar:user-bold" className="mr-2" />
+            Student Features
+          </TabsTrigger>
+          <TabsTrigger value="owner">
+            <Icon icon="solar:home-bold" className="mr-2" />
+            Owner Features
+          </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="student" className="space-y-6">
-          {Object.entries(groupFeaturesByCategory(STUDENT_FEATURES)).map(([category, features]) => (
-            <Card key={category}>
-              <CardHeader>
-                <CardTitle className="text-lg">{category}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {features.map((feature) => (
-                  <div key={feature.key} className="flex items-start space-x-3">
-                    <Checkbox
-                      id={`student-${feature.key}`}
-                      checked={studentFeatures[feature.key] || false}
-                      onCheckedChange={(checked) => 
-                        handleStudentFeatureChange(feature.key, checked as boolean)
-                      }
-                      className="mt-1"
-                    />
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <label
-                          htmlFor={`student-${feature.key}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                        >
-                          {feature.name}
-                        </label>
-                        {getImpactBadge(feature.impact)}
-                      </div>
-                      <p className="text-xs text-gray-500">{feature.description}</p>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
+        {userTypes.map(userType => (
+          <TabsContent key={userType} value={userType} className="space-y-6">
+            {categories.map(category => {
+              const categoryFeatures = getFeaturesByCategory(category, userType);
+              
+              if (categoryFeatures.length === 0) return null;
 
-        <TabsContent value="owner" className="space-y-6">
-          {Object.entries(groupFeaturesByCategory(OWNER_FEATURES)).map(([category, features]) => (
-            <Card key={category}>
-              <CardHeader>
-                <CardTitle className="text-lg">{category}</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {features.map((feature) => (
-                  <div key={feature.key} className="flex items-start space-x-3">
-                    <Checkbox
-                      id={`owner-${feature.key}`}
-                      checked={ownerFeatures[feature.key] || false}
-                      onCheckedChange={(checked) => 
-                        handleOwnerFeatureChange(feature.key, checked as boolean)
-                      }
-                      className="mt-1"
-                    />
-                    <div className="flex-1 space-y-1">
-                      <div className="flex items-center space-x-2">
-                        <label
-                          htmlFor={`owner-${feature.key}`}
-                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
-                        >
-                          {feature.name}
-                        </label>
-                        {getImpactBadge(feature.impact)}
-                      </div>
-                      <p className="text-xs text-gray-500">{feature.description}</p>
+              return (
+                <Card key={category}>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2 capitalize">
+                      <Icon icon={getCategoryIcon(category)} className="text-blue-600" />
+                      {category} Features
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      {categoryFeatures.map(feature => (
+                        <div key={feature.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex-1">
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="font-medium">{feature.display_name}</h3>
+                              <div className="flex gap-2">
+                                <Badge variant={feature.is_premium ? "default" : "secondary"}>
+                                  <Icon 
+                                    icon={feature.is_premium ? "solar:lock-bold" : "solar:unlock-bold"} 
+                                    className="mr-1" 
+                                    width={12} 
+                                  />
+                                  {feature.is_premium ? 'Premium' : 'Free'}
+                                </Badge>
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                  <Icon 
+                                    icon={getImpactIcon(feature.impact_level)} 
+                                    className={getImpactColor(feature.impact_level)}
+                                    width={12}
+                                  />
+                                  Impact: {feature.impact_level}
+                                </Badge>
+                                <Badge variant="outline" className="flex items-center gap-1">
+                                  <Icon 
+                                    icon="solar:dollar-bold" 
+                                    className={getImpactColor(feature.revenue_impact)}
+                                    width={12}
+                                  />
+                                  Revenue: {feature.revenue_impact}
+                                </Badge>
+                              </div>
+                            </div>
+                            <p className="text-sm text-gray-600">{feature.description}</p>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <span className="text-sm text-gray-500">
+                              {feature.is_premium ? 'Premium Only' : 'Free Access'}
+                            </span>
+                            <Switch
+                              checked={feature.is_premium}
+                              onCheckedChange={() => toggleFeaturePremium(feature.id)}
+                            />
+                          </div>
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
-          ))}
-        </TabsContent>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </TabsContent>
+        ))}
       </Tabs>
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Icon icon="solar:info-circle-bold" className="text-blue-600" />
+            Impact Guidelines
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div className="space-y-2">
+              <h4 className="font-medium flex items-center gap-1">
+                <Icon icon="solar:arrow-up-bold" className="text-red-600" width={16} />
+                High Impact
+              </h4>
+              <p className="text-gray-600">Core features that significantly affect user experience and conversion rates</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium flex items-center gap-1">
+                <Icon icon="solar:minus-bold" className="text-yellow-600" width={16} />
+                Medium Impact
+              </h4>
+              <p className="text-gray-600">Important features that enhance user experience but aren't critical</p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium flex items-center gap-1">
+                <Icon icon="solar:arrow-down-bold" className="text-green-600" width={16} />
+                Low Impact
+              </h4>
+              <p className="text-gray-600">Nice-to-have features that provide added value but low conversion impact</p>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 };
