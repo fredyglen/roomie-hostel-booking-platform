@@ -5,7 +5,6 @@ import { useAuth } from '@/context/AuthContext';
 import Logo from '@/components/common/Logo';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { supabase } from '@/integrations/supabase/client';
 
 const Index: React.FC = () => {
   const { user, loading } = useAuth();
@@ -17,9 +16,11 @@ const Index: React.FC = () => {
   useEffect(() => {
     if (!loading && user) {
       if (user.role === 'student') {
-        navigate('/student/dashboard');
-      } else if (user.role === 'owner' || user.role === 'admin') {
+        navigate('/student/properties');
+      } else if (user.role === 'owner') {
         navigate('/owner/dashboard');
+      } else if (user.role === 'admin') {
+        navigate('/admin/dashboard');
       }
     }
   }, [user, loading, navigate]);
@@ -27,11 +28,11 @@ const Index: React.FC = () => {
   const createDemoUsers = async () => {
     try {
       setCreatingDemoUsers(true);
-      const response = await fetch(`${SUPABASE_URL}/functions/v1/create-demo-users`, {
+      const response = await fetch(`https://ymqnbekeqarjmxftzvks.supabase.co/functions/v1/create-demo-users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+          'Authorization': `Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltcW5iZWtlcWFyam14ZnR6dmtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDQzOTgsImV4cCI6MjA2MzI4MDM5OH0.X9FeOLvG4zDQkFyHP7evIXXzAiWnw5UbfwFv1E9UEVY`
         }
       });
       
@@ -142,9 +143,5 @@ const Index: React.FC = () => {
     </div>
   );
 };
-
-// Replace with your actual values
-const SUPABASE_URL = "https://ymqnbekeqarjmxftzvks.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InltcW5iZWtlcWFyam14ZnR6dmtzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc3MDQzOTgsImV4cCI6MjA2MzI4MDM5OH0.X9FeOLvG4zDQkFyHP7evIXXzAiWnw5UbfwFv1E9UEVY";
 
 export default Index;

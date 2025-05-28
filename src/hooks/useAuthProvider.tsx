@@ -26,15 +26,22 @@ export const useAuthProvider = () => {
   const { toast } = useToast();
 
   useEffect(() => {
+    let mounted = true;
+
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
+        if (!mounted) return;
+        
         console.log("Auth state changed:", event);
         setSession(session);
+        
         if (session?.user) {
           // Defer data fetching to prevent deadlocks
           setTimeout(() => {
-            fetchUserProfile(session.user.id);
+            if (mounted) {
+              fetchUserProfile(session.user.id);
+            }
           }, 0);
         } else {
           setUser(null);
@@ -44,17 +51,39 @@ export const useAuthProvider = () => {
     );
 
     // THEN check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      console.log("Got session:", session ? "exists" : "none");
-      setSession(session);
-      if (session?.user) {
-        fetchUserProfile(session.user.id);
-      } else {
-        setLoading(false);
+    const initializeAuth = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) {
+          console.error("Error getting session:", error);
+          setLoading(false);
+          return;
+        }
+        
+        if (!mounted) return;
+        
+        console.log("Got session:", session ? "exists" : "none");
+        setSession(session);
+        
+        if (session?.user) {
+          await fetchUserProfile(session.user.id);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
+        if (mounted) {
+          setLoading(false);
+        }
       }
-    });
+    };
 
-    return () => subscription.unsubscribe();
+    initializeAuth();
+
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const fetchUserProfile = async (userId: string) => {
@@ -68,6 +97,11 @@ export const useAuthProvider = () => {
       
       if (error) {
         console.error('Error fetching user profile:', error);
+        // If profile doesn't exist, create a default one
+        if (error.code === 'PGRST116') {
+          await createDefaultProfile(userId);
+          return;
+        }
         throw error;
       }
       
@@ -76,53 +110,60 @@ export const useAuthProvider = () => {
       if (data) {
         const authUser: AuthUser = {
           id: data.id,
-          email: data.email,
-          role: data.role as 'owner' | 'student' | 'admin',
-          firstName: data.first_name,
-          lastName: data.last_name,
-          phone: data.phone,
-          avatarUrl: data.avatar_url,
-          createdAt: data.created_at,
+          email: data.email || session?.user?.email || '',
+          role: (data.role as 'owner' | 'student' | 'admin') || 'student',
+          firstName: data.first_name || '',
+          lastName: data.last_name || '',
+          phone: data.phone || '',
+          avatarUrl: data.avatar_url || '',
+          createdAt: data.created_at || new Date().toISOString(),
         };
         setUser(authUser);
-      } else {
-        // Handle case when profile isn't found - could be a new Google sign-in
-        const newUser = session?.user;
-        if (newUser) {
-          // Default to student role for new users
-          const defaultRole = 'student';
-          
-          // Try to create a new profile
-          const { error: insertError } = await supabase
-            .from('profiles')
-            .insert({
-              id: newUser.id,
-              email: newUser.email,
-              role: defaultRole,
-              first_name: newUser.user_metadata?.full_name?.split(' ')[0] || '',
-              last_name: newUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-              avatar_url: newUser.user_metadata?.avatar_url,
-            });
-            
-          if (insertError) {
-            console.error('Error creating user profile:', insertError);
-          } else {
-            // Set user with available data
-            const authUser: AuthUser = {
-              id: newUser.id,
-              email: newUser.email || '',
-              role: defaultRole,
-              firstName: newUser.user_metadata?.full_name?.split(' ')[0] || '',
-              lastName: newUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
-              avatarUrl: newUser.user_metadata?.avatar_url,
-              createdAt: new Date().toISOString(),
-            };
-            setUser(authUser);
-          }
-        }
       }
     } catch (error) {
       console.error('Error processing user profile:', error);
+      // Create default profile on error
+      await createDefaultProfile(userId);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const createDefaultProfile = async (userId: string) => {
+    try {
+      const newUser = session?.user;
+      if (!newUser) return;
+
+      const defaultRole = 'student';
+      
+      const { error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: newUser.id,
+          email: newUser.email || '',
+          role: defaultRole,
+          first_name: newUser.user_metadata?.full_name?.split(' ')[0] || '',
+          last_name: newUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          avatar_url: newUser.user_metadata?.avatar_url || '',
+        });
+        
+      if (insertError) {
+        console.error('Error creating user profile:', insertError);
+      } else {
+        // Set user with available data
+        const authUser: AuthUser = {
+          id: newUser.id,
+          email: newUser.email || '',
+          role: defaultRole,
+          firstName: newUser.user_metadata?.full_name?.split(' ')[0] || '',
+          lastName: newUser.user_metadata?.full_name?.split(' ').slice(1).join(' ') || '',
+          avatarUrl: newUser.user_metadata?.avatar_url || '',
+          createdAt: new Date().toISOString(),
+        };
+        setUser(authUser);
+      }
+    } catch (error) {
+      console.error('Error creating default profile:', error);
     } finally {
       setLoading(false);
     }

@@ -3,7 +3,6 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Icon } from '@iconify/react';
 import { useAuth } from '@/context/AuthContext';
-import { navigateToProfile } from '@/utils/navigation';
 
 const StudentNavBar: React.FC = () => {
   const location = useLocation();
@@ -36,15 +35,12 @@ const StudentNavBar: React.FC = () => {
       return location.pathname === path || 
              location.pathname.startsWith('/student/property/');
     }
-    if (path === '/student/dashboard') {
-      return location.pathname === path;
-    }
     return location.pathname === path;
   };
 
   const handleProfileClick = (e: React.MouseEvent) => {
     e.preventDefault();
-    navigateToProfile(navigate, user?.role || 'student');
+    navigate('/student/profile');
   };
 
   // Don't show navbar on certain pages
@@ -73,21 +69,8 @@ const StudentNavBar: React.FC = () => {
     >
       <div className="flex justify-around items-center h-16 px-2 max-w-md mx-auto">
         <Link 
-          to="/student/dashboard" 
-          className="flex flex-col items-center w-1/5 py-2 transition-colors hover:bg-gray-50 rounded-lg"
-        >
-          <Icon 
-            icon="solar:widget-2-linear" 
-            className={`text-2xl ${isActive('/student/dashboard') ? 'text-blue-500' : 'text-gray-500'}`}
-          />
-          <span className={`text-xs mt-1 ${isActive('/student/dashboard') ? 'text-blue-500' : 'text-gray-500'}`}>
-            Dashboard
-          </span>
-        </Link>
-
-        <Link 
           to="/student/properties" 
-          className="flex flex-col items-center w-1/5 py-2 transition-colors hover:bg-gray-50 rounded-lg"
+          className="flex flex-col items-center w-1/4 py-2 transition-colors hover:bg-gray-50 rounded-lg"
         >
           <Icon 
             icon="solar:home-2-linear" 
@@ -100,7 +83,7 @@ const StudentNavBar: React.FC = () => {
         
         <Link 
           to="/student/explore" 
-          className="flex flex-col items-center w-1/5 py-2 transition-colors hover:bg-gray-50 rounded-lg"
+          className="flex flex-col items-center w-1/4 py-2 transition-colors hover:bg-gray-50 rounded-lg"
         >
           <Icon 
             icon="solar:map-point-linear" 
@@ -113,7 +96,7 @@ const StudentNavBar: React.FC = () => {
         
         <Link 
           to="/student/favorites" 
-          className="flex flex-col items-center w-1/5 py-2 transition-colors hover:bg-gray-50 rounded-lg"
+          className="flex flex-col items-center w-1/4 py-2 transition-colors hover:bg-gray-50 rounded-lg"
         >
           <Icon 
             icon="solar:heart-linear" 
@@ -126,7 +109,7 @@ const StudentNavBar: React.FC = () => {
         
         <button
           onClick={handleProfileClick}
-          className="flex flex-col items-center w-1/5 py-2 transition-colors hover:bg-gray-50 rounded-lg"
+          className="flex flex-col items-center w-1/4 py-2 transition-colors hover:bg-gray-50 rounded-lg"
         >
           <Icon 
             icon="solar:user-rounded-linear" 
