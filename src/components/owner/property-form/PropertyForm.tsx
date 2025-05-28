@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Form } from '@/components/ui/form';
@@ -21,6 +21,7 @@ import FormSubmissionModal from './FormSubmissionModal';
 import BuildingStructureFields from './BuildingStructureFields';
 import EnhancedPropertyFields from './EnhancedPropertyFields';
 import BuildingStructureManager from '../BuildingStructureManager';
+import StructureTabModal from '../StructureTabModal';
 
 // Category-specific components
 import HostelFields from './HostelFields';
@@ -44,6 +45,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState('basic');
+  const [showStructureModal, setShowStructureModal] = useState(false);
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
@@ -74,6 +76,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   });
 
   const propertyCategory = form.watch('propertyCategory');
+
+  // Show structure modal when switching to structure tab
+  useEffect(() => {
+    if (activeTab === 'structure' && !showStructureModal) {
+      setShowStructureModal(true);
+    }
+  }, [activeTab]);
 
   // Calculate occupancy details based on property type
   const updateOccupancyDetails = () => {
@@ -301,6 +310,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
         formData={form.getValues()}
         isLoading={isLoading}
         isEdit={isEdit}
+      />
+
+      <StructureTabModal
+        isOpen={showStructureModal}
+        onClose={() => setShowStructureModal(false)}
       />
     </>
   );

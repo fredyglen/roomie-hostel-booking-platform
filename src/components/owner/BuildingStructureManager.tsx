@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -10,9 +9,10 @@ import { Textarea } from '@/components/ui/textarea';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Building, Plus, Trash2, Edit3, Users, Bed } from 'lucide-react';
+import { Building, Plus, Trash2, Edit3, Users, Bed, Pencil } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
+import IntelligentBuildingCreator from './IntelligentBuildingCreator';
 
 interface BuildingStructureManagerProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -53,6 +53,8 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
   const [selectedBuilding, setSelectedBuilding] = useState<string | null>(null);
   const [selectedFloor, setSelectedFloor] = useState<string | null>(null);
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
+  const [editingBuilding, setEditingBuilding] = useState<string | null>(null);
+  const [editingFloor, setEditingFloor] = useState<string | null>(null);
 
   const buildings = form.watch('buildings') || [];
 
@@ -70,6 +72,57 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
       description: '',
     },
   });
+
+  const addIntelligentBuilding = (buildingData: Building) => {
+    form.setValue('buildings', [...buildings, buildingData]);
+  };
+
+  const updateBuildingName = (buildingId: string, newName: string) => {
+    const updatedBuildings = buildings.map(building => 
+      building.id === buildingId ? { ...building, name: newName } : building
+    );
+    form.setValue('buildings', updatedBuildings);
+    setEditingBuilding(null);
+  };
+
+  const updateFloorName = (buildingId: string, floorId: string, newName: string) => {
+    const updatedBuildings = buildings.map(building => {
+      if (building.id === buildingId) {
+        return {
+          ...building,
+          floors: building.floors.map(floor => 
+            floor.id === floorId ? { ...floor, name: newName } : floor
+          )
+        };
+      }
+      return building;
+    });
+    form.setValue('buildings', updatedBuildings);
+    setEditingFloor(null);
+  };
+
+  const updateRoomNumber = (buildingId: string, floorId: string, roomId: string, newNumber: string) => {
+    const updatedBuildings = buildings.map(building => {
+      if (building.id === buildingId) {
+        return {
+          ...building,
+          floors: building.floors.map(floor => {
+            if (floor.id === floorId) {
+              return {
+                ...floor,
+                rooms: floor.rooms.map(room => 
+                  room.id === roomId ? { ...room, roomNumber: newNumber } : room
+                )
+              };
+            }
+            return floor;
+          })
+        };
+      }
+      return building;
+    });
+    form.setValue('buildings', updatedBuildings);
+  };
 
   const addBuilding = () => {
     const newBuilding: Building = {
@@ -173,10 +226,13 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
               <Building className="h-5 w-5" />
               <span>Building Structure</span>
             </span>
-            <Button onClick={addBuilding} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Building
-            </Button>
+            <div className="flex space-x-2">
+              <IntelligentBuildingCreator onCreateBuilding={addIntelligentBuilding} />
+              <Button onClick={addBuilding} size="sm" variant="outline">
+                <Plus className="h-4 w-4 mr-2" />
+                Manual Building
+              </Button>
+            </div>
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -202,8 +258,28 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
               <Card key={building.id} className="border-l-4 border-l-blue-500">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold">{building.name}</h3>
+                    <div className="flex items-center space-x-2">
+                      {editingBuilding === building.id ? (
+                        <Input
+                          value={building.name}
+                          onChange={(e) => updateBuildingName(building.id, e.target.value)}
+                          onBlur={() => setEditingBuilding(null)}
+                          onKeyDown={(e) => e.key === 'Enter' && setEditingBuilding(null)}
+                          className="font-semibold"
+                          autoFocus
+                        />
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <h3 className="font-semibold">{building.name}</h3>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => setEditingBuilding(building.id)}
+                          >
+                            <Pencil className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
                       <p className="text-sm text-gray-600">{building.floors.length} floors</p>
                     </div>
                     <div className="flex items-center space-x-2">
@@ -230,8 +306,28 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
                     {building.floors.map((floor) => (
                       <div key={floor.id} className="border rounded-lg p-3">
                         <div className="flex items-center justify-between mb-3">
-                          <div>
-                            <h4 className="font-medium">{floor.name}</h4>
+                          <div className="flex items-center space-x-2">
+                            {editingFloor === floor.id ? (
+                              <Input
+                                value={floor.name}
+                                onChange={(e) => updateFloorName(building.id, floor.id, e.target.value)}
+                                onBlur={() => setEditingFloor(null)}
+                                onKeyDown={(e) => e.key === 'Enter' && setEditingFloor(null)}
+                                className="font-medium"
+                                autoFocus
+                              />
+                            ) : (
+                              <div className="flex items-center space-x-2">
+                                <h4 className="font-medium">{floor.name}</h4>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => setEditingFloor(floor.id)}
+                                >
+                                  <Pencil className="h-3 w-3" />
+                                </Button>
+                              </div>
+                            )}
                             <p className="text-sm text-gray-600">{floor.rooms.length} rooms</p>
                           </div>
                           <div className="flex items-center space-x-2">
@@ -271,7 +367,11 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
                           {floor.rooms.map((room) => (
                             <div key={room.id} className="border rounded p-3 bg-gray-50">
                               <div className="flex items-center justify-between mb-2">
-                                <h5 className="font-medium">Room {room.roomNumber}</h5>
+                                <Input
+                                  value={room.roomNumber}
+                                  onChange={(e) => updateRoomNumber(building.id, floor.id, room.id, e.target.value)}
+                                  className="font-medium text-sm h-8"
+                                />
                                 <Button
                                   onClick={() => removeRoom(building.id, floor.id, room.id)}
                                   variant="ghost"
@@ -289,7 +389,7 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
                                   <Users className="h-3 w-3" />
                                   <span>Max {room.maxOccupants} occupants</span>
                                 </p>
-                                <p className="font-medium">GH₵{room.rentAmount}/month</p>
+                                <p className="font-medium">₵{room.rentAmount}/semester</p>
                                 <Badge variant="outline" className="text-xs">
                                   {room.roomType}
                                 </Badge>
@@ -321,7 +421,7 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
                           <FormItem>
                             <FormLabel>Room Number</FormLabel>
                             <FormControl>
-                              <Input placeholder="101, A1, etc." {...field} />
+                              <Input placeholder="101, A1, FK101, etc." {...field} />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -413,7 +513,7 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
                         name="rentAmount"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel>Rent Amount (GH₵)</FormLabel>
+                            <FormLabel>Rent Amount (₵)</FormLabel>
                             <FormControl>
                               <Input 
                                 type="number" 
