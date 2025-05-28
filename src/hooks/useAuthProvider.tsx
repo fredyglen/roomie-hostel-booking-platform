@@ -1,23 +1,10 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
 import { AuthUser } from '@/lib/supabase';
 import { cleanupAuthState } from '@/lib/auth-utils';
-
-type AuthContextType = {
-  session: Session | null;
-  user: AuthUser | null;
-  loading: boolean;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string, userData: Partial<AuthUser>) => Promise<{ error: any }>;
-  signOut: () => Promise<void>;
-  signInWithGoogle: () => Promise<void>;
-  updateProfile: (data: Partial<AuthUser>) => Promise<void>;
-};
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const useAuthProvider = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -361,5 +348,3 @@ export const useAuthProvider = () => {
     updateProfile,
   };
 };
-
-export { AuthContext };
