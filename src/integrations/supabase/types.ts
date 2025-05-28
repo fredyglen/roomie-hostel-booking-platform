@@ -9,6 +9,39 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_settings: {
+        Row: {
+          category: string | null
+          created_at: string
+          id: string
+          is_public: boolean | null
+          setting_description: string | null
+          setting_key: string
+          setting_value: Json
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          setting_description?: string | null
+          setting_key: string
+          setting_value: Json
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          id?: string
+          is_public?: boolean | null
+          setting_description?: string | null
+          setting_key?: string
+          setting_value?: Json
+          updated_at?: string
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           created_at: string
@@ -197,6 +230,128 @@ export type Database = {
             columns: ["building_id"]
             isOneToOne: false
             referencedRelation: "buildings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      owner_settings: {
+        Row: {
+          allow_pets: boolean | null
+          auto_accept_bookings: boolean | null
+          booking_advance_notice: number | null
+          business_address: string | null
+          business_email: string | null
+          business_name: string | null
+          business_phone: string | null
+          cancellation_policy: string | null
+          check_in_time: string | null
+          check_out_time: string | null
+          cleaning_fee: number | null
+          created_at: string
+          email_notifications: boolean | null
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          id: string
+          late_payment_fee: number | null
+          maintenance_contact_name: string | null
+          maintenance_contact_phone: string | null
+          maximum_stay_days: number | null
+          minimum_stay_days: number | null
+          notifications_enabled: boolean | null
+          owner_id: string
+          payment_methods: string[] | null
+          preferred_payment_method: string | null
+          privacy_policy: string | null
+          refund_policy: string | null
+          require_deposit: boolean | null
+          security_deposit_amount: number | null
+          smoking_allowed: boolean | null
+          sms_notifications: boolean | null
+          terms_and_conditions: string | null
+          updated_at: string
+          utilities_included: boolean | null
+          wifi_included: boolean | null
+        }
+        Insert: {
+          allow_pets?: boolean | null
+          auto_accept_bookings?: boolean | null
+          booking_advance_notice?: number | null
+          business_address?: string | null
+          business_email?: string | null
+          business_name?: string | null
+          business_phone?: string | null
+          cancellation_policy?: string | null
+          check_in_time?: string | null
+          check_out_time?: string | null
+          cleaning_fee?: number | null
+          created_at?: string
+          email_notifications?: boolean | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          late_payment_fee?: number | null
+          maintenance_contact_name?: string | null
+          maintenance_contact_phone?: string | null
+          maximum_stay_days?: number | null
+          minimum_stay_days?: number | null
+          notifications_enabled?: boolean | null
+          owner_id: string
+          payment_methods?: string[] | null
+          preferred_payment_method?: string | null
+          privacy_policy?: string | null
+          refund_policy?: string | null
+          require_deposit?: boolean | null
+          security_deposit_amount?: number | null
+          smoking_allowed?: boolean | null
+          sms_notifications?: boolean | null
+          terms_and_conditions?: string | null
+          updated_at?: string
+          utilities_included?: boolean | null
+          wifi_included?: boolean | null
+        }
+        Update: {
+          allow_pets?: boolean | null
+          auto_accept_bookings?: boolean | null
+          booking_advance_notice?: number | null
+          business_address?: string | null
+          business_email?: string | null
+          business_name?: string | null
+          business_phone?: string | null
+          cancellation_policy?: string | null
+          check_in_time?: string | null
+          check_out_time?: string | null
+          cleaning_fee?: number | null
+          created_at?: string
+          email_notifications?: boolean | null
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          id?: string
+          late_payment_fee?: number | null
+          maintenance_contact_name?: string | null
+          maintenance_contact_phone?: string | null
+          maximum_stay_days?: number | null
+          minimum_stay_days?: number | null
+          notifications_enabled?: boolean | null
+          owner_id?: string
+          payment_methods?: string[] | null
+          preferred_payment_method?: string | null
+          privacy_policy?: string | null
+          refund_policy?: string | null
+          require_deposit?: boolean | null
+          security_deposit_amount?: number | null
+          smoking_allowed?: boolean | null
+          sms_notifications?: boolean | null
+          terms_and_conditions?: string | null
+          updated_at?: string
+          utilities_included?: boolean | null
+          wifi_included?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "owner_settings_owner_id_fkey"
+            columns: ["owner_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -401,38 +556,56 @@ export type Database = {
       }
       property_verifications: {
         Row: {
+          admin_notes: string | null
           created_at: string
           documents: string[] | null
           id: string
           notes: string | null
+          priority_level: string | null
           property_id: string | null
+          rejection_reason: string | null
+          resubmission_count: number | null
           status: string
           updated_at: string
           verification_date: string | null
+          verification_deadline: string | null
+          verification_requirements: string[] | null
           verification_type: string
           verified_by: string | null
         }
         Insert: {
+          admin_notes?: string | null
           created_at?: string
           documents?: string[] | null
           id?: string
           notes?: string | null
+          priority_level?: string | null
           property_id?: string | null
+          rejection_reason?: string | null
+          resubmission_count?: number | null
           status?: string
           updated_at?: string
           verification_date?: string | null
+          verification_deadline?: string | null
+          verification_requirements?: string[] | null
           verification_type: string
           verified_by?: string | null
         }
         Update: {
+          admin_notes?: string | null
           created_at?: string
           documents?: string[] | null
           id?: string
           notes?: string | null
+          priority_level?: string | null
           property_id?: string | null
+          rejection_reason?: string | null
+          resubmission_count?: number | null
           status?: string
           updated_at?: string
           verification_date?: string | null
+          verification_deadline?: string | null
+          verification_requirements?: string[] | null
           verification_type?: string
           verified_by?: string | null
         }
@@ -555,6 +728,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      verification_requirements: {
+        Row: {
+          created_at: string
+          documents_required: string[] | null
+          id: string
+          is_mandatory: boolean | null
+          property_category: string
+          requirement_description: string | null
+          requirement_title: string
+          requirement_type: string
+        }
+        Insert: {
+          created_at?: string
+          documents_required?: string[] | null
+          id?: string
+          is_mandatory?: boolean | null
+          property_category: string
+          requirement_description?: string | null
+          requirement_title: string
+          requirement_type: string
+        }
+        Update: {
+          created_at?: string
+          documents_required?: string[] | null
+          id?: string
+          is_mandatory?: boolean | null
+          property_category?: string
+          requirement_description?: string | null
+          requirement_title?: string
+          requirement_type?: string
+        }
+        Relationships: []
       }
     }
     Views: {
