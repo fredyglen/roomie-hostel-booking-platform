@@ -50,6 +50,78 @@ export type Database = {
           },
         ]
       }
+      bookings_enhanced: {
+        Row: {
+          booking_reference: string
+          check_in_date: string
+          check_out_date: string
+          created_at: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
+          id: string
+          payment_status: string
+          property_id: string | null
+          room_id: string | null
+          special_requests: string | null
+          status: string
+          student_id: string | null
+          total_amount: number
+          updated_at: string
+        }
+        Insert: {
+          booking_reference?: string
+          check_in_date: string
+          check_out_date: string
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          id?: string
+          payment_status?: string
+          property_id?: string | null
+          room_id?: string | null
+          special_requests?: string | null
+          status?: string
+          student_id?: string | null
+          total_amount: number
+          updated_at?: string
+        }
+        Update: {
+          booking_reference?: string
+          check_in_date?: string
+          check_out_date?: string
+          created_at?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          id?: string
+          payment_status?: string
+          property_id?: string | null
+          room_id?: string | null
+          special_requests?: string | null
+          status?: string
+          student_id?: string | null
+          total_amount?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_enhanced_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_enhanced_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       buildings: {
         Row: {
           created_at: string
@@ -165,11 +237,15 @@ export type Database = {
       properties: {
         Row: {
           address: string
+          advance_payment_months: number | null
+          allow_bill_sharing: boolean | null
           amenities: string[] | null
           available_from: string
           available_to: string | null
           bathrooms: number
           bedrooms: number
+          beds_available: number | null
+          beds_per_room: number | null
           cancellation_policy: string | null
           city: string
           created_at: string
@@ -178,34 +254,52 @@ export type Database = {
           emergency_contact_phone: string | null
           gender_restriction: string | null
           has_accessibility_features: boolean | null
+          has_bedframes: boolean | null
+          has_fan: boolean | null
+          has_individual_meters: boolean | null
+          has_mattresses: boolean | null
+          has_tiled_room: boolean | null
+          has_wardrobes: boolean | null
           id: string
           images: string[] | null
           internet_speed: string | null
           is_available: boolean | null
           is_furnished: boolean | null
+          max_occupants: number | null
+          meter_type: string | null
           owner_id: string
           parking_available: boolean | null
           parking_cost: number | null
           pet_policy: string | null
+          property_category: string | null
           property_type: string
           rent: number
+          rooms_available: number | null
           security_features: string[] | null
           semester_availability: string[] | null
+          shared_meter_count: number | null
+          shared_washroom_count: number | null
           size: number | null
           state: string
           title: string
+          total_rooms: number | null
           updated_at: string
           verification_status: string | null
           virtual_tour_url: string | null
+          washroom_type: string | null
           zip: string
         }
         Insert: {
           address: string
+          advance_payment_months?: number | null
+          allow_bill_sharing?: boolean | null
           amenities?: string[] | null
           available_from: string
           available_to?: string | null
           bathrooms: number
           bedrooms: number
+          beds_available?: number | null
+          beds_per_room?: number | null
           cancellation_policy?: string | null
           city: string
           created_at?: string
@@ -214,34 +308,52 @@ export type Database = {
           emergency_contact_phone?: string | null
           gender_restriction?: string | null
           has_accessibility_features?: boolean | null
+          has_bedframes?: boolean | null
+          has_fan?: boolean | null
+          has_individual_meters?: boolean | null
+          has_mattresses?: boolean | null
+          has_tiled_room?: boolean | null
+          has_wardrobes?: boolean | null
           id?: string
           images?: string[] | null
           internet_speed?: string | null
           is_available?: boolean | null
           is_furnished?: boolean | null
+          max_occupants?: number | null
+          meter_type?: string | null
           owner_id: string
           parking_available?: boolean | null
           parking_cost?: number | null
           pet_policy?: string | null
+          property_category?: string | null
           property_type: string
           rent: number
+          rooms_available?: number | null
           security_features?: string[] | null
           semester_availability?: string[] | null
+          shared_meter_count?: number | null
+          shared_washroom_count?: number | null
           size?: number | null
           state: string
           title: string
+          total_rooms?: number | null
           updated_at?: string
           verification_status?: string | null
           virtual_tour_url?: string | null
+          washroom_type?: string | null
           zip: string
         }
         Update: {
           address?: string
+          advance_payment_months?: number | null
+          allow_bill_sharing?: boolean | null
           amenities?: string[] | null
           available_from?: string
           available_to?: string | null
           bathrooms?: number
           bedrooms?: number
+          beds_available?: number | null
+          beds_per_room?: number | null
           cancellation_policy?: string | null
           city?: string
           created_at?: string
@@ -250,28 +362,96 @@ export type Database = {
           emergency_contact_phone?: string | null
           gender_restriction?: string | null
           has_accessibility_features?: boolean | null
+          has_bedframes?: boolean | null
+          has_fan?: boolean | null
+          has_individual_meters?: boolean | null
+          has_mattresses?: boolean | null
+          has_tiled_room?: boolean | null
+          has_wardrobes?: boolean | null
           id?: string
           images?: string[] | null
           internet_speed?: string | null
           is_available?: boolean | null
           is_furnished?: boolean | null
+          max_occupants?: number | null
+          meter_type?: string | null
           owner_id?: string
           parking_available?: boolean | null
           parking_cost?: number | null
           pet_policy?: string | null
+          property_category?: string | null
           property_type?: string
           rent?: number
+          rooms_available?: number | null
           security_features?: string[] | null
           semester_availability?: string[] | null
+          shared_meter_count?: number | null
+          shared_washroom_count?: number | null
           size?: number | null
           state?: string
           title?: string
+          total_rooms?: number | null
           updated_at?: string
           verification_status?: string | null
           virtual_tour_url?: string | null
+          washroom_type?: string | null
           zip?: string
         }
         Relationships: []
+      }
+      property_verifications: {
+        Row: {
+          created_at: string
+          documents: string[] | null
+          id: string
+          notes: string | null
+          property_id: string | null
+          status: string
+          updated_at: string
+          verification_date: string | null
+          verification_type: string
+          verified_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          documents?: string[] | null
+          id?: string
+          notes?: string | null
+          property_id?: string | null
+          status?: string
+          updated_at?: string
+          verification_date?: string | null
+          verification_type: string
+          verified_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          documents?: string[] | null
+          id?: string
+          notes?: string | null
+          property_id?: string | null
+          status?: string
+          updated_at?: string
+          verification_date?: string | null
+          verification_type?: string
+          verified_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_verifications_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "property_verifications_verified_by_fkey"
+            columns: ["verified_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       room_occupancy: {
         Row: {

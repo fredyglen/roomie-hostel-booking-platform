@@ -6,71 +6,74 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import PropertyEditForm from '@/components/owner/PropertyEditForm';
+import PropertyVerificationStatus from '@/components/owner/PropertyVerificationStatus';
 import { useFormTransformation } from '@/hooks/forms/useFormTransformation';
-import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
-import { Loader } from 'lucide-react';
+import LoadingIndicator from '@/components/common/LoadingIndicator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const PropertyEdit: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+  const { id: propertyId } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { transformDbToFormValues } = useFormTransformation();
 
-  // Fetch property data
   const { data: property, isLoading, error } = useQuery({
-    queryKey: ['property', id],
+    queryKey: ['property', propertyId],
     queryFn: async () => {
-      if (!id || !user?.id) throw new Error('Property ID or user ID missing');
-
+      if (!propertyId) throw new Error('Property ID is required');
+      
       const { data, error } = await supabase
         .from('properties')
         .select('*')
-        .eq('id', id)
-        .eq('owner_id', user.id)
+        .eq('id', propertyId)
+        .eq('owner_id', user?.id)
         .single();
 
       if (error) throw error;
       return data;
     },
-    enabled: !!id && !!user?.id,
+    enabled: !!propertyId && !!user?.id,
   });
 
   if (isLoading) {
     return (
-      <OwnerLayout pageTitle="Edit Property" showBackButton>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="flex items-center space-x-2">
-            <Loader className="h-6 w-6 animate-spin text-[#9b87f5]" />
-            <span className="text-gray-600">Loading property details...</span>
-          </div>
-        </div>
+      <OwnerLayout pageTitle="Edit Property">
+        <LoadingIndicator />
       </OwnerLayout>
     );
   }
 
   if (error || !property) {
     return (
-      <OwnerLayout pageTitle="Edit Property" showBackButton>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <div className="text-center">
-            <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Property</h2>
-            <p className="text-gray-600 mb-4">
-              {error instanceof Error ? error.message : 'Property not found or access denied'}
-            </p>
-          </div>
+      <OwnerLayout pageTitle="Edit Property">
+        <div className="text-center py-8">
+          <p className="text-red-600">Property not found or you don't have permission to edit it.</p>
         </div>
       </OwnerLayout>
     );
   }
 
-  // Transform database data to form values
-  const initialData: Partial<PropertyFormValues> = transformDbToFormValues(property);
+  // Transform database data to form format
+  const initialData = transformDbToFormValues(property);
 
   return (
-    <OwnerLayout pageTitle="Edit Property" showBackButton backUrl="/owner/properties">
-      <PropertyEditForm 
-        propertyId={id!} 
-        initialData={initialData} 
-      />
+    <OwnerLayout pageTitle="Edit Property">
+      <Tabs defaultValue="details" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="details">Property Details</TabsTrigger>
+          <TabsTrigger value="verification">Verification Status</TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="details">
+          <PropertyEditForm 
+            propertyId={propertyId!} 
+            initialData={initialData}
+          />
+        </TabsContent>
+        
+        <TabsContent value="verification">
+          <PropertyVerificationStatus propertyId={propertyId!} />
+        </TabsContent>
+      </Tabs>
     </OwnerLayout>
   );
 };

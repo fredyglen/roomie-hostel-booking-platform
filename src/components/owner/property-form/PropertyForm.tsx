@@ -20,6 +20,7 @@ import MediaUploadTabs from './MediaUploadTabs';
 import FormSubmissionModal from './FormSubmissionModal';
 import BuildingStructureFields from './BuildingStructureFields';
 import EnhancedPropertyFields from './EnhancedPropertyFields';
+import BuildingStructureManager from '../BuildingStructureManager';
 
 // Category-specific components
 import HostelFields from './HostelFields';
@@ -122,7 +123,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     // Description
     if (formData.description && formData.description.length >= 10) completedSteps++;
     
-    return { completed: completedSteps, total: 7 };
+    return { completed: completedSteps, total: 8 };
   };
 
   const stepProgress = getCurrentStepCount();
@@ -147,13 +148,14 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-7">
+            <TabsList className="grid w-full grid-cols-8">
               <TabsTrigger value="basic">Basic Info</TabsTrigger>
               <TabsTrigger value="location">Location</TabsTrigger>
               <TabsTrigger value="details">Details</TabsTrigger>
               <TabsTrigger value="features">Features</TabsTrigger>
               <TabsTrigger value="amenities">Amenities</TabsTrigger>
               <TabsTrigger value="enhanced">Enhanced</TabsTrigger>
+              <TabsTrigger value="structure">Structure</TabsTrigger>
               <TabsTrigger value="media">Media</TabsTrigger>
             </TabsList>
 
@@ -201,21 +203,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             <TabsContent value="features" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Room Features & Structure</CardTitle>
+                  <CardTitle>Room Features</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <RoomFeaturesFields form={form} />
-                  
-                  {/* Multi-level building structure - Premium feature */}
-                  <div className="mt-8">
-                    <div className="border-t pt-6">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="text-lg font-semibold">Advanced Property Structure</h3>
-                        <Badge variant="secondary">Premium Feature</Badge>
-                      </div>
-                      <BuildingStructureFields form={form} propertyCategory={propertyCategory} />
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -233,6 +224,20 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
             <TabsContent value="enhanced" className="space-y-6">
               <EnhancedPropertyFields form={form} propertyCategory={propertyCategory} />
+            </TabsContent>
+
+            <TabsContent value="structure" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Building Structure</CardTitle>
+                  <p className="text-sm text-gray-600">
+                    Create detailed building layouts with multiple floors and rooms (Premium Feature)
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <BuildingStructureManager form={form} />
+                </CardContent>
+              </Card>
             </TabsContent>
 
             <TabsContent value="media" className="space-y-6">
@@ -257,9 +262,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'media'].indexOf(activeTab);
+                  const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'].indexOf(activeTab);
                   if (currentIndex > 0) {
-                    setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'media'][currentIndex - 1]);
+                    setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'][currentIndex - 1]);
                   }
                 }}
                 disabled={activeTab === 'basic'}
@@ -271,9 +276,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 <Button
                   type="button"
                   onClick={() => {
-                    const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'media'].indexOf(activeTab);
-                    if (currentIndex < 6) {
-                      setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'media'][currentIndex + 1]);
+                    const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'].indexOf(activeTab);
+                    if (currentIndex < 7) {
+                      setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'][currentIndex + 1]);
                     }
                   }}
                 >
