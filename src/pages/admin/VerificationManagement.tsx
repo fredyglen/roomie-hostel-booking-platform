@@ -26,21 +26,36 @@ const VerificationManagement: React.FC = () => {
         .from('property_verifications')
         .select(`
           *,
-          properties (
+          properties!inner (
+            id,
             title,
             property_category,
-            owner_id,
-            profiles:owner_id (
-              first_name,
-              last_name,
-              email
-            )
+            owner_id
           )
         `)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+
+      // Fetch owner profiles separately
+      const ownerIds = data?.map(v => v.properties?.owner_id).filter(Boolean) || [];
+      const { data: profiles, error: profilesError } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email')
+        .in('id', ownerIds);
+
+      if (profilesError) throw profilesError;
+
+      // Combine the data
+      const verificationsWithProfiles = data?.map(verification => ({
+        ...verification,
+        properties: {
+          ...verification.properties,
+          profile: profiles?.find(p => p.id === verification.properties?.owner_id)
+        }
+      }));
+
+      return verificationsWithProfiles;
     },
   });
 
@@ -114,8 +129,8 @@ const VerificationManagement: React.FC = () => {
   const filteredVerifications = verifications?.filter(verification => {
     const matchesStatus = selectedStatus === 'all' || verification.status === selectedStatus;
     const matchesSearch = searchTerm === '' || 
-      verification.properties?.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      verification.properties?.profiles?.email.toLowerCase().includes(searchTerm.toLowerCase());
+      verification.properties?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      verification.properties?.profile?.email?.toLowerCase().includes(searchTerm.toLowerCase());
     
     return matchesStatus && matchesSearch;
   });
@@ -187,11 +202,11 @@ const VerificationManagement: React.FC = () => {
                     {getStatusIcon(verification.status)}
                     <div>
                       <CardTitle className="text-lg">
-                        {verification.properties?.title}
+                        {verification.properties?.title || 'Property Title'}
                       </CardTitle>
                       <p className="text-sm text-gray-600">
-                        {verification.properties?.profiles?.email} • 
-                        {verification.properties?.property_category} • 
+                        {verification.properties?.profile?.email || 'No email'} • 
+                        {verification.properties?.property_category || 'Unknown'} • 
                         {verification.verification_type}
                       </p>
                     </div>
@@ -227,7 +242,7 @@ const VerificationManagement: React.FC = () => {
                         <h4 className="font-medium text-sm text-gray-700 mb-2">Property Details</h4>
                         <div className="space-y-1 text-sm">
                           <p><span className="text-gray-500">Category:</span> {verification.properties?.property_category}</p>
-                          <p><span className="text-gray-500">Owner:</span> {verification.properties?.profiles?.first_name} {verification.properties?.profiles?.last_name}</p>
+                          <p><span className="text-gray-500">Owner:</span> {verification.properties?.profile?.first_name} {verification.properties?.profile?.last_name}</p>
                         </div>
                       </div>
                     </div>
