@@ -21,12 +21,33 @@ const PropertyNew: React.FC = () => {
     mutationFn: async (formData: PropertyFormValues) => {
       if (!user?.id) throw new Error('User not authenticated');
 
-      // formData is already PropertyFormValues with all required fields
+      // Transform form data to database format
       const propertyData = transformFormToDbFormat(formData, user.id);
+
+      // Only include fields that exist in the database schema
+      const insertData = {
+        owner_id: propertyData.owner_id,
+        title: propertyData.title,
+        property_type: propertyData.property_type,
+        address: propertyData.address,
+        city: propertyData.city,
+        state: propertyData.state,
+        zip: propertyData.zip,
+        rent: propertyData.rent,
+        description: propertyData.description,
+        bedrooms: propertyData.bedrooms,
+        bathrooms: propertyData.bathrooms,
+        available_from: propertyData.available_from,
+        amenities: propertyData.amenities,
+        images: propertyData.images,
+        is_available: propertyData.is_available,
+        created_at: propertyData.created_at,
+        updated_at: propertyData.updated_at,
+      };
 
       const { data, error } = await supabase
         .from('properties')
-        .insert(propertyData)
+        .insert(insertData)
         .select();
 
       if (error) throw error;

@@ -27,15 +27,30 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ propertyId, initial
       if (!propertyId) throw new Error('Property ID is required');
       if (!user?.id) throw new Error('User not authenticated');
 
-      // Transform form data to database format - formData is already PropertyFormValues
+      // Transform form data to database format
       const propertyData = transformFormToDbFormat(formData, user.id);
+
+      // Only include fields that exist in the database schema
+      const updateData = {
+        title: propertyData.title,
+        property_type: propertyData.property_type,
+        address: propertyData.address,
+        city: propertyData.city,
+        state: propertyData.state,
+        zip: propertyData.zip,
+        rent: propertyData.rent,
+        description: propertyData.description,
+        bedrooms: propertyData.bedrooms,
+        bathrooms: propertyData.bathrooms,
+        amenities: propertyData.amenities,
+        images: propertyData.images,
+        is_available: propertyData.is_available,
+        updated_at: new Date().toISOString(),
+      };
 
       const { error } = await supabase
         .from('properties')
-        .update({
-          ...propertyData,
-          updated_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq('id', propertyId)
         .eq('owner_id', user.id);
 
