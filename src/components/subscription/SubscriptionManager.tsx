@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Icon } from '@iconify/react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/EnhancedAuthContext';
 import { useSubscriptionCheck } from '@/hooks/subscription/useSubscriptionCheck';
 import SubscriptionTierCard from './SubscriptionTierCard';
 import PaymentModal from './PaymentModal';
