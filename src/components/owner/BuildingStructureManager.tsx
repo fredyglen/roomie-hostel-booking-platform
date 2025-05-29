@@ -55,6 +55,9 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
   const [editingRoom, setEditingRoom] = useState<Room | null>(null);
   const [editingBuilding, setEditingBuilding] = useState<string | null>(null);
   const [editingFloor, setEditingFloor] = useState<string | null>(null);
+  const [editingBuildingName, setEditingBuildingName] = useState<string>('');
+  const [editingFloorName, setEditingFloorName] = useState<string>('');
+  const [editingRoomNumbers, setEditingRoomNumbers] = useState<{[key: string]: string}>({});
 
   const buildings = form.watch('buildings') || [];
 
@@ -77,15 +80,14 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
     form.setValue('buildings', [...buildings, buildingData]);
   };
 
-  const updateBuildingName = (buildingId: string, newName: string) => {
+  const handleBuildingNameEdit = (buildingId: string, newName: string) => {
     const updatedBuildings = buildings.map(building => 
       building.id === buildingId ? { ...building, name: newName } : building
     );
     form.setValue('buildings', updatedBuildings);
-    setEditingBuilding(null);
   };
 
-  const updateFloorName = (buildingId: string, floorId: string, newName: string) => {
+  const handleFloorNameEdit = (buildingId: string, floorId: string, newName: string) => {
     const updatedBuildings = buildings.map(building => {
       if (building.id === buildingId) {
         return {
@@ -98,10 +100,9 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
       return building;
     });
     form.setValue('buildings', updatedBuildings);
-    setEditingFloor(null);
   };
 
-  const updateRoomNumber = (buildingId: string, floorId: string, roomId: string, newNumber: string) => {
+  const handleRoomNumberEdit = (buildingId: string, floorId: string, roomId: string, newNumber: string) => {
     const updatedBuildings = buildings.map(building => {
       if (building.id === buildingId) {
         return {
@@ -122,6 +123,47 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
       return building;
     });
     form.setValue('buildings', updatedBuildings);
+  };
+
+  const startEditingBuilding = (buildingId: string, currentName: string) => {
+    setEditingBuilding(buildingId);
+    setEditingBuildingName(currentName);
+  };
+
+  const finishEditingBuilding = (buildingId: string) => {
+    if (editingBuildingName.trim()) {
+      handleBuildingNameEdit(buildingId, editingBuildingName.trim());
+    }
+    setEditingBuilding(null);
+    setEditingBuildingName('');
+  };
+
+  const startEditingFloor = (floorId: string, currentName: string) => {
+    setEditingFloor(floorId);
+    setEditingFloorName(currentName);
+  };
+
+  const finishEditingFloor = (buildingId: string, floorId: string) => {
+    if (editingFloorName.trim()) {
+      handleFloorNameEdit(buildingId, floorId, editingFloorName.trim());
+    }
+    setEditingFloor(null);
+    setEditingFloorName('');
+  };
+
+  const startEditingRoom = (roomId: string, currentNumber: string) => {
+    setEditingRoomNumbers(prev => ({ ...prev, [roomId]: currentNumber }));
+  };
+
+  const finishEditingRoom = (buildingId: string, floorId: string, roomId: string) => {
+    const newNumber = editingRoomNumbers[roomId];
+    if (newNumber && newNumber.trim()) {
+      handleRoomNumberEdit(buildingId, floorId, roomId, newNumber.trim());
+    }
+    setEditingRoomNumbers(prev => {
+      const { [roomId]: _, ...rest } = prev;
+      return rest;
+    });
   };
 
   const addBuilding = () => {
@@ -261,20 +303,29 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
                     <div className="flex items-center space-x-2">
                       {editingBuilding === building.id ? (
                         <Input
-                          value={building.name}
-                          onChange={(e) => updateBuildingName(building.id, e.target.value)}
-                          onBlur={() => setEditingBuilding(null)}
-                          onKeyDown={(e) => e.key === 'Enter' && setEditingBuilding(null)}
+                          value={editingBuildingName}
+                          onChange={(e) => setEditingBuildingName(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') {
+                              finishEditingBuilding(building.id);
+                            }
+                          }}
+                          onBlur={() => finishEditingBuilding(building.id)}
                           className="font-semibold"
                           autoFocus
                         />
                       ) : (
                         <div className="flex items-center space-x-2">
-                          <h3 className="font-semibold">{building.name}</h3>
+                          <h3 
+                            className="font-semibold cursor-pointer hover:text-blue-600"
+                            onClick={() => startEditingBuilding(building.id, building.name)}
+                          >
+                            {building.name}
+                          </h3>
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => setEditingBuilding(building.id)}
+                            onClick={() => startEditingBuilding(building.id, building.name)}
                           >
                             <Pencil className="h-3 w-3" />
                           </Button>
@@ -309,20 +360,29 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
                           <div className="flex items-center space-x-2">
                             {editingFloor === floor.id ? (
                               <Input
-                                value={floor.name}
-                                onChange={(e) => updateFloorName(building.id, floor.id, e.target.value)}
-                                onBlur={() => setEditingFloor(null)}
-                                onKeyDown={(e) => e.key === 'Enter' && setEditingFloor(null)}
+                                value={editingFloorName}
+                                onChange={(e) => setEditingFloorName(e.target.value)}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    finishEditingFloor(building.id, floor.id);
+                                  }
+                                }}
+                                onBlur={() => finishEditingFloor(building.id, floor.id)}
                                 className="font-medium"
                                 autoFocus
                               />
                             ) : (
                               <div className="flex items-center space-x-2">
-                                <h4 className="font-medium">{floor.name}</h4>
+                                <h4 
+                                  className="font-medium cursor-pointer hover:text-blue-600"
+                                  onClick={() => startEditingFloor(floor.id, floor.name)}
+                                >
+                                  {floor.name}
+                                </h4>
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => setEditingFloor(floor.id)}
+                                  onClick={() => startEditingFloor(floor.id, floor.name)}
                                 >
                                   <Pencil className="h-3 w-3" />
                                 </Button>
@@ -367,11 +427,30 @@ const BuildingStructureManager: React.FC<BuildingStructureManagerProps> = ({ for
                           {floor.rooms.map((room) => (
                             <div key={room.id} className="border rounded p-3 bg-gray-50">
                               <div className="flex items-center justify-between mb-2">
-                                <Input
-                                  value={room.roomNumber}
-                                  onChange={(e) => updateRoomNumber(building.id, floor.id, room.id, e.target.value)}
-                                  className="font-medium text-sm h-8"
-                                />
+                                {editingRoomNumbers[room.id] !== undefined ? (
+                                  <Input
+                                    value={editingRoomNumbers[room.id]}
+                                    onChange={(e) => setEditingRoomNumbers(prev => ({
+                                      ...prev,
+                                      [room.id]: e.target.value
+                                    }))}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        finishEditingRoom(building.id, floor.id, room.id);
+                                      }
+                                    }}
+                                    onBlur={() => finishEditingRoom(building.id, floor.id, room.id)}
+                                    className="font-medium text-sm h-8"
+                                    autoFocus
+                                  />
+                                ) : (
+                                  <span 
+                                    className="font-medium text-sm cursor-pointer hover:text-blue-600"
+                                    onClick={() => startEditingRoom(room.id, room.roomNumber)}
+                                  >
+                                    {room.roomNumber}
+                                  </span>
+                                )}
                                 <Button
                                   onClick={() => removeRoom(building.id, floor.id, room.id)}
                                   variant="ghost"
