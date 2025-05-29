@@ -25,7 +25,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   onPaymentSuccess,
   isLoading = false
 }) => {
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'momo'>('card');
+  const [paymentMethod, setPaymentMethod] = useState<'card' | 'mobile_money'>('card');
   const [formData, setFormData] = useState({
     email: '',
     phone: '',
@@ -50,9 +50,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
       {
         amount: totalAmount,
         email: formData.email,
-        phone: paymentMethod === 'momo' ? formData.momoNumber : undefined,
-        method: paymentMethod,
-        network: paymentMethod === 'momo' ? formData.momoNetwork : undefined,
+        phone: paymentMethod === 'mobile_money' ? formData.momoNumber : undefined,
+        method: paymentMethod === 'mobile_money' ? 'mobile_money' : 'card',
+        network: paymentMethod === 'mobile_money' ? formData.momoNetwork : undefined,
         metadata: {
           tier_id: tier.id,
           tier_name: tier.name,
@@ -102,8 +102,8 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
               Card
             </Button>
             <Button
-              variant={paymentMethod === 'momo' ? 'default' : 'outline'}
-              onClick={() => setPaymentMethod('momo')}
+              variant={paymentMethod === 'mobile_money' ? 'default' : 'outline'}
+              onClick={() => setPaymentMethod('mobile_money')}
               className="flex-1"
             >
               <Icon icon="solar:phone-bold" className="mr-2" width={16} />
