@@ -1,11 +1,10 @@
-
 import React, { useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import UniversitySelector from '@/components/UniversitySelector';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/EnhancedAuthContext';
 
 const Landing: React.FC = () => {
   const { user, loading } = useAuth();

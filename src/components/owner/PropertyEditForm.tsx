@@ -4,7 +4,7 @@ import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabase';
 import { useToast } from "@/components/ui/use-toast";
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/EnhancedAuthContext';
 import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
 import PropertyForm from '@/components/owner/property-form/PropertyForm';
 import { useFormTransformation } from '@/hooks/forms/useFormTransformation';

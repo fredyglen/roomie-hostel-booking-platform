@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -13,7 +12,7 @@ import {
   Bell
 } from "lucide-react";
 import Logo from '../common/Logo';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/EnhancedAuthContext';
 
 interface AdminLayoutProps {
   children: React.ReactNode;
