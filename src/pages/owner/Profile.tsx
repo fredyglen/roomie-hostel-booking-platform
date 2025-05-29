@@ -12,6 +12,8 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -31,7 +33,8 @@ const profileFormSchema = z.object({
 type ProfileFormValues = z.infer<typeof profileFormSchema>;
 
 const Profile: React.FC = () => {
-  const { user, updateProfile } = useAuth();
+  const { user, refreshAuth } = useAuth();
+  const { toast } = useToast();
   
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -48,14 +51,34 @@ const Profile: React.FC = () => {
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      await updateProfile({
-        firstName: data.firstName,
-        lastName: data.lastName,
-        phone: data.phone,
-        // Don't update email as that requires a separate auth flow
+      if (!user?.id) throw new Error('User not authenticated');
+
+      // Update the profile in the database
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          first_name: data.firstName,
+          last_name: data.lastName,
+          phone: data.phone,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      // Refresh the auth context to get updated user data
+      await refreshAuth();
+
+      toast({
+        title: "Profile updated",
+        description: "Your profile has been updated successfully.",
       });
     } catch (error) {
       console.error("Failed to update profile:", error);
+      toast({
+        title: "Update failed",
+        description: "Failed to update your profile. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
