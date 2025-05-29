@@ -93,13 +93,16 @@ export type Database = {
           emergency_contact_phone: string | null
           emergency_contact_relationship: string | null
           id: string
+          payment_method: string | null
           payment_status: string
+          paystack_reference: string | null
           property_id: string | null
           room_id: string | null
           special_requests: string | null
           status: string
           student_id: string | null
           total_amount: number
+          transaction_reference: string | null
           updated_at: string
         }
         Insert: {
@@ -111,13 +114,16 @@ export type Database = {
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
           id?: string
+          payment_method?: string | null
           payment_status?: string
+          paystack_reference?: string | null
           property_id?: string | null
           room_id?: string | null
           special_requests?: string | null
           status?: string
           student_id?: string | null
           total_amount: number
+          transaction_reference?: string | null
           updated_at?: string
         }
         Update: {
@@ -129,13 +135,16 @@ export type Database = {
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
           id?: string
+          payment_method?: string | null
           payment_status?: string
+          paystack_reference?: string | null
           property_id?: string | null
           room_id?: string | null
           special_requests?: string | null
           status?: string
           student_id?: string | null
           total_amount?: number
+          transaction_reference?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -356,6 +365,39 @@ export type Database = {
           },
         ]
       }
+      payment_webhooks: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          payload: Json
+          paystack_event_id: string | null
+          processed: boolean | null
+          reference: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          payload: Json
+          paystack_event_id?: string | null
+          processed?: boolean | null
+          reference?: string | null
+          status: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          payload?: Json
+          paystack_event_id?: string | null
+          processed?: boolean | null
+          reference?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           avatar_url: string | null
@@ -436,6 +478,8 @@ export type Database = {
           shared_washroom_count: number | null
           size: number | null
           state: string
+          subscription_expires_at: string | null
+          subscription_status: string | null
           title: string
           total_rooms: number | null
           updated_at: string
@@ -490,6 +534,8 @@ export type Database = {
           shared_washroom_count?: number | null
           size?: number | null
           state: string
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
           title: string
           total_rooms?: number | null
           updated_at?: string
@@ -544,6 +590,8 @@ export type Database = {
           shared_washroom_count?: number | null
           size?: number | null
           state?: string
+          subscription_expires_at?: string | null
+          subscription_status?: string | null
           title?: string
           total_rooms?: number | null
           updated_at?: string
@@ -728,6 +776,158 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      split_payments: {
+        Row: {
+          created_at: string
+          id: string
+          owner_amount: number
+          owner_id: string
+          platform_amount: number
+          split_code: string | null
+          split_type: string
+          status: string
+          transaction_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          owner_amount: number
+          owner_id: string
+          platform_amount: number
+          split_code?: string | null
+          split_type?: string
+          status?: string
+          transaction_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          owner_amount?: number
+          owner_id?: string
+          platform_amount?: number
+          split_code?: string | null
+          split_type?: string
+          status?: string
+          transaction_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_split_payments_owner"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_split_payments_transaction"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subaccounts: {
+        Row: {
+          account_number: string
+          bank_code: string
+          business_name: string
+          created_at: string
+          id: string
+          is_active: boolean | null
+          owner_id: string
+          percentage_charge: number | null
+          subaccount_code: string
+          updated_at: string
+        }
+        Insert: {
+          account_number: string
+          bank_code: string
+          business_name: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          owner_id: string
+          percentage_charge?: number | null
+          subaccount_code: string
+          updated_at?: string
+        }
+        Update: {
+          account_number?: string
+          bank_code?: string
+          business_name?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          owner_id?: string
+          percentage_charge?: number | null
+          subaccount_code?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_subaccounts_owner"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string
+          customer_email: string
+          customer_id: string | null
+          id: string
+          metadata: Json | null
+          payment_method: string | null
+          paystack_reference: string | null
+          paystack_response: Json | null
+          reference: string
+          status: string
+          updated_at: string
+          webhook_verified: boolean | null
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string
+          customer_email: string
+          customer_id?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          paystack_reference?: string | null
+          paystack_response?: Json | null
+          reference: string
+          status?: string
+          updated_at?: string
+          webhook_verified?: boolean | null
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string
+          customer_email?: string
+          customer_id?: string | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          paystack_reference?: string | null
+          paystack_response?: Json | null
+          reference?: string
+          status?: string
+          updated_at?: string
+          webhook_verified?: boolean | null
+        }
+        Relationships: []
       }
       verification_requirements: {
         Row: {

@@ -1,15 +1,19 @@
 
+import { supabase } from '@/lib/supabase';
 import { formatCurrency } from './currency';
 
 export interface PaystackConfig {
-  publicKey: string;
-  amount: number; // in Ghana pesewas (GHS * 100)
   email: string;
-  currency: 'GHS';
-  ref: string;
+  amount: number; // in GHS
+  currency?: 'GHS' | 'NGN' | 'USD';
   metadata?: Record<string, any>;
+  channels?: string[];
+  split_code?: string;
+  subaccount?: string;
+  callback_url?: string;
   onSuccess: (reference: any) => void;
   onCancel: () => void;
+  onError?: (error: any) => void;
 }
 
 export interface MobileMoneyConfig {
@@ -17,72 +21,133 @@ export interface MobileMoneyConfig {
   phoneNumber: string;
   network: 'mtn' | 'vodafone' | 'airtel';
   email: string;
-  ref: string;
+  metadata?: Record<string, any>;
   onSuccess: (reference: any) => void;
   onError: (error: any) => void;
 }
 
-// Paystack Integration Helper
-export const initializePaystackPayment = (config: PaystackConfig) => {
-  // In production, this would integrate with Paystack's JavaScript library
-  // For now, we'll simulate the payment process
-  
-  console.log('Initializing Paystack payment:', {
-    amount: formatCurrency(config.amount / 100),
-    email: config.email,
-    reference: config.ref
-  });
-  
-  // Simulate payment processing
-  setTimeout(() => {
-    const success = Math.random() > 0.1; // 90% success rate for demo
-    
-    if (success) {
-      config.onSuccess({
-        reference: config.ref,
-        status: 'success',
-        trans: `PSK_${Date.now()}`,
-        trxref: config.ref,
+// Initialize Paystack payment
+export const initializePaystackPayment = async (config: PaystackConfig) => {
+  try {
+    console.log('Initializing Paystack payment:', {
+      amount: formatCurrency(config.amount),
+      email: config.email,
+      currency: config.currency || 'GHS'
+    });
+
+    // Call our Supabase Edge Function to initialize payment
+    const { data, error } = await supabase.functions.invoke('initialize-payment', {
+      body: {
+        email: config.email,
         amount: config.amount,
-        currency: config.currency
+        currency: config.currency || 'GHS',
+        metadata: config.metadata,
+        channels: config.channels,
+        split_code: config.split_code,
+        subaccount: config.subaccount,
+        callback_url: config.callback_url
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    if (!data.status) {
+      throw new Error(data.message);
+    }
+
+    // Use Paystack Popup for frontend payment
+    if (typeof window !== 'undefined' && (window as any).PaystackPop) {
+      const popup = new (window as any).PaystackPop();
+      
+      popup.resumeTransaction(data.data.access_code, {
+        onSuccess: (transaction: any) => {
+          console.log('Payment successful:', transaction);
+          config.onSuccess(transaction);
+        },
+        onCancel: () => {
+          console.log('Payment cancelled');
+          config.onCancel();
+        }
       });
     } else {
-      config.onCancel();
+      // Fallback to redirect
+      window.location.href = data.data.authorization_url;
     }
-  }, 2000);
+
+  } catch (error) {
+    console.error('Payment initialization error:', error);
+    if (config.onError) {
+      config.onError(error);
+    }
+  }
 };
 
-// Mobile Money Integration Helper
-export const initializeMobileMoneyPayment = (config: MobileMoneyConfig) => {
-  console.log('Initializing Mobile Money payment:', {
-    amount: formatCurrency(config.amount),
-    network: config.network.toUpperCase(),
-    phone: config.phoneNumber
-  });
-  
-  // Simulate mobile money processing
-  setTimeout(() => {
-    const success = Math.random() > 0.15; // 85% success rate for demo
-    
-    if (success) {
-      config.onSuccess({
-        reference: config.ref,
-        status: 'success',
-        trans: `MOMO_${Date.now()}`,
+// Mobile Money Integration using Paystack Charge API
+export const initializeMobileMoneyPayment = async (config: MobileMoneyConfig) => {
+  try {
+    console.log('Initializing Mobile Money payment:', {
+      amount: formatCurrency(config.amount),
+      network: config.network.toUpperCase(),
+      phone: config.phoneNumber
+    });
+
+    // Initialize transaction first
+    const { data, error } = await supabase.functions.invoke('initialize-payment', {
+      body: {
+        email: config.email,
         amount: config.amount,
-        network: config.network
-      });
-    } else {
-      config.onError({
-        message: 'Payment failed. Please check your mobile money account and try again.',
-        code: 'PAYMENT_FAILED'
-      });
+        currency: 'GHS',
+        metadata: {
+          ...config.metadata,
+          payment_method: 'mobile_money',
+          mobile_money: {
+            phone: config.phoneNumber,
+            provider: config.network.toUpperCase()
+          }
+        },
+        channels: ['mobile_money']
+      }
+    });
+
+    if (error) {
+      throw new Error(error.message);
     }
-  }, 3000);
+
+    if (!data.status) {
+      throw new Error(data.message);
+    }
+
+    // For mobile money, we'll redirect to Paystack's mobile money flow
+    window.location.href = data.data.authorization_url;
+
+  } catch (error) {
+    console.error('Mobile Money payment error:', error);
+    config.onError(error);
+  }
+};
+
+// Verify payment status
+export const verifyPayment = async (reference: string) => {
+  try {
+    const { data, error } = await supabase.functions.invoke('verify-payment', {
+      body: { reference }
+    });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Payment verification error:', error);
+    throw error;
+  }
 };
 
 // Generate unique payment reference
-export const generatePaymentReference = (prefix: string = 'ROOMi'): string => {
+export const generatePaymentReference = (prefix: string = 'ROOMI'): string => {
   const timestamp = Date.now();
   const random = Math.random().toString(36).substring(2, 8).toUpperCase();
   return `${prefix}_${timestamp}_${random}`;
@@ -95,10 +160,32 @@ export const convertToPesewas = (amount: number): number => {
 
 // Validate payment amount
 export const validatePaymentAmount = (amount: number): boolean => {
-  return amount > 0 && amount <= 10000; // Max ₵10,000 per transaction
+  return amount > 0 && amount <= 50000; // Max ₵50,000 per transaction
 };
 
 // Format payment reference for display
 export const formatPaymentReference = (ref: string): string => {
   return ref.replace(/_/g, '-');
+};
+
+// Get supported mobile money providers
+export const getMobileMoneyProviders = () => [
+  { code: 'mtn', name: 'MTN Mobile Money', color: '#FFCC00' },
+  { code: 'vodafone', name: 'Vodafone Cash', color: '#E60000' },
+  { code: 'airtel', name: 'AirtelTigo Money', color: '#FF6600' }
+];
+
+// Check transaction status
+export const getTransactionStatus = async (reference: string) => {
+  const { data, error } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('reference', reference)
+    .single();
+
+  if (error) {
+    throw error;
+  }
+
+  return data;
 };
