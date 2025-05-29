@@ -11,23 +11,30 @@ Deno.serve(async (req) => {
     return new Response('ok', { headers: corsHeaders })
   }
 
-  if (req.method !== 'GET') {
-    return new Response('Method not allowed', { 
-      status: 405,
-      headers: corsHeaders
-    })
-  }
-
   try {
-    const url = new URL(req.url)
-    const reference = url.searchParams.get('reference')
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    
+    let reference: string | null = null
+
+    if (req.method === 'GET') {
+      const url = new URL(req.url)
+      reference = url.searchParams.get('reference')
+    } else if (req.method === 'POST') {
+      const body = await req.json()
+      reference = body.reference
+    }
     
     if (!reference) {
-      return new Response('Reference is required', { 
+      return new Response(JSON.stringify({
+        status: false,
+        message: 'Reference is required'
+      }), { 
         status: 400,
-        headers: corsHeaders
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
       })
     }
+
+    console.log('Verifying payment reference:', reference)
 
     // Verify with Paystack
     const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
@@ -41,10 +48,15 @@ Deno.serve(async (req) => {
     const paystackResult = await paystackResponse.json()
 
     if (!paystackResult.status) {
+      console.error('Paystack verification failed:', paystackResult)
       throw new Error(paystackResult.message || 'Payment verification failed')
     }
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey)
+    console.log('Paystack verification successful:', {
+      reference: paystackResult.data.reference,
+      status: paystackResult.data.status,
+      amount: paystackResult.data.amount
+    })
 
     // Update local transaction record
     const { error: updateError } = await supabase
@@ -52,12 +64,34 @@ Deno.serve(async (req) => {
       .update({
         status: paystackResult.data.status,
         paystack_response: paystackResult.data,
+        gateway_response: paystackResult.data.gateway_response,
         updated_at: new Date().toISOString()
       })
       .eq('reference', reference)
 
     if (updateError) {
       console.error('Error updating transaction:', updateError)
+    }
+
+    // If payment was successful, update any related booking
+    if (paystackResult.data.status === 'success' && paystackResult.data.metadata?.booking_id) {
+      const { error: bookingError } = await supabase
+        .from('bookings_enhanced')
+        .update({
+          payment_status: 'paid',
+          status: 'confirmed',
+          transaction_reference: reference,
+          paystack_reference: paystackResult.data.id?.toString(),
+          payment_method: paystackResult.data.channel,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', paystackResult.data.metadata.booking_id)
+
+      if (bookingError) {
+        console.error('Error updating booking:', bookingError)
+      } else {
+        console.log('Booking updated successfully:', paystackResult.data.metadata.booking_id)
+      }
     }
 
     return new Response(JSON.stringify({

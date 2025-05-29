@@ -13,8 +13,6 @@ interface PaymentInitRequest {
   metadata?: any
   callback_url?: string
   channels?: string[]
-  split_code?: string
-  subaccount?: string
 }
 
 Deno.serve(async (req) => {
@@ -41,7 +39,6 @@ Deno.serve(async (req) => {
       }
     })
 
-    // Verify user authentication
     const { data: { user }, error: authError } = await supabase.auth.getUser()
     if (authError || !user) {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
@@ -49,24 +46,35 @@ Deno.serve(async (req) => {
 
     const paymentData: PaymentInitRequest = await req.json()
     
-    // Generate unique reference
+    // Generate unique reference with business context
     const reference = `ROOMI_${Date.now()}_${Math.random().toString(36).substring(7)}`
     
+    // Set callback URL to our payment success page
+    const callbackUrl = paymentData.callback_url || 
+      `${supabaseUrl.replace('/supabase', '')}/payment-success`
+    
+    console.log('Initializing payment:', {
+      amount: paymentData.amount,
+      email: paymentData.email,
+      reference,
+      metadata: paymentData.metadata
+    })
+
     // Prepare Paystack payload
     const paystackPayload = {
       email: paymentData.email,
       amount: Math.round(paymentData.amount * 100), // Convert to pesewas
       currency: paymentData.currency || 'GHS',
       reference,
-      callback_url: paymentData.callback_url || `${supabaseUrl}/functions/v1/payment-callback`,
+      callback_url: callbackUrl,
       metadata: {
         ...paymentData.metadata,
         user_id: user.id,
-        reference
+        reference,
+        platform: 'roomi',
+        payment_type: 'booking'
       },
-      channels: paymentData.channels || ['card', 'mobile_money', 'bank'],
-      split_code: paymentData.split_code,
-      subaccount: paymentData.subaccount
+      channels: paymentData.channels || ['card', 'mobile_money', 'bank']
     }
 
     // Initialize transaction with Paystack
@@ -82,8 +90,11 @@ Deno.serve(async (req) => {
     const paystackResult = await paystackResponse.json()
 
     if (!paystackResult.status) {
+      console.error('Paystack initialization failed:', paystackResult)
       throw new Error(paystackResult.message || 'Payment initialization failed')
     }
+
+    console.log('Paystack initialization successful:', paystackResult.data.reference)
 
     // Store transaction in database
     const { error: dbError } = await supabase.from('transactions').insert({
@@ -93,7 +104,9 @@ Deno.serve(async (req) => {
       status: 'pending',
       customer_email: paymentData.email,
       customer_id: user.id,
-      metadata: paymentData.metadata
+      metadata: paymentData.metadata,
+      paystack_reference: paystackResult.data.access_code,
+      created_at: new Date().toISOString()
     })
 
     if (dbError) {
