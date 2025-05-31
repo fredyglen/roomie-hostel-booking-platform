@@ -1,24 +1,75 @@
 
 import React from 'react';
+import { Helmet } from 'react-helmet-async';
 import Header from '@/components/layout/Header';
-import StudentNavBar from '@/components/navigation/StudentNavBar';
+import Footer from '@/components/layout/Footer';
 import PropertyListContainer from '@/components/properties/PropertyListContainer';
-import { sampleProperties } from '@/data/sampleProperties';
+import { usePropertyData } from '@/hooks/property/usePropertyData';
+import { Loader2 } from 'lucide-react';
 
 const Properties: React.FC = () => {
+  const { properties, loading, error } = usePropertyData();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading properties...</p>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error loading properties: {error}</p>
+            <button 
+              onClick={() => window.location.reload()} 
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+            >
+              Retry
+            </button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex flex-col font-space-grotesk pb-16">
-      <Header />
-      <main className="flex-grow py-6 px-1 sm:px-2 md:px-4">
-        <div className="container mx-auto max-w-[2000px]">
-          <h1 className="text-2xl md:text-3xl font-bold mb-6 px-1">Find Your Perfect Student Accommodation</h1>
+    <>
+      <Helmet>
+        <title>Student Properties - ROOMi</title>
+        <meta name="description" content="Browse available student accommodation properties" />
+      </Helmet>
+      
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Available Properties</h1>
+            <p className="text-gray-600">
+              {properties.length} properties available for student accommodation
+            </p>
+          </div>
           
-          {/* Property List Container - handles filtering and displaying properties */}
-          <PropertyListContainer properties={sampleProperties} />
-        </div>
-      </main>
-      <StudentNavBar />
-    </div>
+          <PropertyListContainer 
+            properties={properties} 
+            isLoading={loading}
+          />
+        </main>
+        <Footer />
+      </div>
+    </>
   );
 };
 

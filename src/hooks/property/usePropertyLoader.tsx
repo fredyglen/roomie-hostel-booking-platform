@@ -1,88 +1,95 @@
 
-import { useQuery } from '@tanstack/react-query';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { useAuth } from '@/context/EnhancedAuthContext';
 import { Property } from '@/types/property';
-import { normalizePropertyData, getSampleProperties } from './usePropertyData';
 import { logger } from '@/utils/logger';
 
-interface UsePropertyLoaderOptions {
-  propertyId: string;
-  enabled?: boolean;
-  forOwner?: boolean;
-}
+export const usePropertyLoader = (propertyId: string | undefined) => {
+  const [property, setProperty] = useState<Property | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false }: UsePropertyLoaderOptions) => {
-  const { user } = useAuth();
-
-  return useQuery({
-    queryKey: ['property', propertyId],
-    queryFn: async (): Promise<Property> => {
-      if (!propertyId) throw new Error('Property ID is required');
-      
-      // For owner view, we require owner authentication
-      if (forOwner && !user?.id) throw new Error('User not authenticated');
+  useEffect(() => {
+    const loadProperty = async () => {
+      if (!propertyId) {
+        setError('Property ID is required');
+        setLoading(false);
+        return;
+      }
 
       try {
-        logger.info("Fetching property", { propertyId, forOwner });
+        setLoading(true);
+        setError(null);
         
-        // First check if the ID is a valid UUID format (required for Supabase query)
-        const isUuid = propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+        logger.info('Loading property', { propertyId });
         
-        if (isUuid) {
-          let query = supabase
-            .from('properties')
-            .select('*')
-            .eq('id', propertyId);
-          
-          // Add owner check if this is for owner view
-          if (forOwner) {
-            query = query.eq('owner_id', user!.id);
-          }
+        const { data, error: fetchError } = await supabase
+          .from('properties')
+          .select(`
+            *,
+            profiles!owner_id (
+              first_name,
+              last_name,
+              email,
+              phone
+            )
+          `)
+          .eq('id', propertyId)
+          .eq('is_available', true)
+          .single();
 
-          const { data, error } = await query.maybeSingle();
-
-          if (error) {
-            logger.error("Error fetching property from database", { error, propertyId });
-            throw error;
-          }
-          
-          if (data) {
-            logger.info("Found property in database", { propertyId, title: data.title });
-            // Convert database property to our frontend property format
-            const normalizedProperty = normalizePropertyData(data);
-            return normalizedProperty;
-          }
+        if (fetchError) {
+          logger.error('Error fetching property', { error: fetchError, propertyId });
+          throw new Error('Property not found or unavailable');
         }
 
-        // If no UUID match or no data found in database, check the sample properties
-        logger.debug("Checking sample data", { propertyId });
-        const sampleProperties = getSampleProperties();
-        
-        // Handle different ID formats consistently (string vs number)
-        const sampleProperty = sampleProperties.find(p => 
-          p.id === propertyId || 
-          p.id === String(propertyId) || 
-          String(p.id) === propertyId
-        );
-        
-        if (!sampleProperty) {
-          logger.error("Property not found", { propertyId });
+        if (!data) {
           throw new Error('Property not found');
         }
+
+        // Transform database property to match our Property type
+        const transformedProperty: Property = {
+          id: data.id,
+          title: data.title,
+          description: data.description,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          rent: data.rent,
+          type: data.property_type,
+          bedrooms: data.bedrooms,
+          bathrooms: data.bathrooms,
+          images: data.images || [],
+          amenities: data.amenities || [],
+          owner: data.profiles ? {
+            id: data.owner_id,
+            name: `${data.profiles.first_name || ''} ${data.profiles.last_name || ''}`.trim(),
+            email: data.profiles.email,
+            phone: data.profiles.phone
+          } : undefined,
+          distance: '1.2 km', // This would be calculated based on user location
+          rating: 4.5, // This would come from reviews table
+          available_from: data.available_from,
+          available_to: data.available_to,
+          created_at: data.created_at,
+          updated_at: data.updated_at
+        };
+
+        setProperty(transformedProperty);
+        logger.info('Property loaded successfully', { propertyId });
         
-        logger.info("Found property in sample data", { propertyId, title: sampleProperty.title });
-        return sampleProperty;
-      } catch (error) {
-        logger.error("Error loading property", { error, propertyId });
-        throw error;
+      } catch (err) {
+        const errorMessage = err instanceof Error ? err.message : 'Failed to load property';
+        logger.error('Property loading error', { error: errorMessage, propertyId });
+        setError(errorMessage);
+        setProperty(null);
+      } finally {
+        setLoading(false);
       }
-    },
-    enabled: !!propertyId && (!!user?.id || !forOwner) && enabled,
-    staleTime: 1000 * 60 * 5, // Cache for 5 minutes
-    retry: 1, // Only retry once to avoid infinite retries on 404
-    meta: {
-      errorMessage: 'Failed to load property details'
-    }
-  });
+    };
+
+    loadProperty();
+  }, [propertyId]);
+
+  return { property, loading, error };
 };

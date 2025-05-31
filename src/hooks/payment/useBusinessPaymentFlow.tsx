@@ -1,15 +1,11 @@
 
 import { useState } from 'react';
-import { useToast } from '@/components/ui/use-toast';
+import { useAuth } from '@/context/EnhancedAuthContext';
 import { supabase } from '@/lib/supabase';
-import { 
-  calculatePaymentDistribution, 
-  createBookingWithPayment,
-  BOOKING_PACKAGES 
-} from '@/utils/paymentSplitting';
-import { calculatePaymentBreakdown } from '@/utils/paymentCalculations';
+import { toast } from '@/components/ui/sonner';
+import { logger } from '@/utils/logger';
 
-interface PaymentFlowData {
+interface PaymentData {
   propertyId: string;
   studentId: string;
   propertyOwnerId: string;
@@ -18,240 +14,100 @@ interface PaymentFlowData {
   startDate: string;
   endDate: string;
   studentEmail: string;
-  metadata?: any;
+  metadata?: Record<string, any>;
+}
+
+interface PaymentResult {
+  success: boolean;
+  paymentData?: {
+    reference: string;
+    access_code: string;
+    authorization_url: string;
+  };
+  error?: string;
 }
 
 export const useBusinessPaymentFlow = () => {
   const [processing, setProcessing] = useState(false);
-  const [verifying, setVerifying] = useState(false);
-  const { toast } = useToast();
+  const { user } = useAuth();
 
-  const initializePayment = async (paymentData: PaymentFlowData) => {
+  const initializePayment = async (paymentData: PaymentData): Promise<PaymentResult> => {
+    if (!user) {
+      const error = 'User must be authenticated to initialize payment';
+      logger.error(error);
+      toast.error('Authentication required');
+      return { success: false, error };
+    }
+
     setProcessing(true);
-    
+    logger.info('Initializing business payment flow', { paymentData });
+
     try {
-      console.log('Initializing payment flow for package:', paymentData.packageType);
-      
-      // Create booking record first
-      const { booking, distribution } = await createBookingWithPayment(paymentData);
-      
-      console.log('Created booking:', booking.id);
-      console.log('Payment distribution:', distribution);
+      // Calculate amount based on package type
+      const packagePricing = {
+        standard: 2700,
+        premium: 3600,
+        luxury: 4000
+      };
 
-      // Calculate breakdown for Paystack amount
-      const breakdown = calculatePaymentBreakdown(BOOKING_PACKAGES[paymentData.packageType].totalPrice);
-
-      // Initialize payment with Paystack
-      const { data: paymentInit, error: paymentError } = await supabase.functions.invoke('initialize-payment', {
+      const amount = packagePricing[paymentData.packageType];
+      
+      const { data, error } = await supabase.functions.invoke('initialize-payment', {
         body: {
           email: paymentData.studentEmail,
-          amount: BOOKING_PACKAGES[paymentData.packageType].totalPrice,
+          amount,
           currency: 'GHS',
           metadata: {
-            booking_id: booking.id,
+            ...paymentData.metadata,
             property_id: paymentData.propertyId,
             student_id: paymentData.studentId,
             property_owner_id: paymentData.propertyOwnerId,
             agent_id: paymentData.agentId,
             package_type: paymentData.packageType,
-            payment_distribution: {
-              property_owner_amount: breakdown.propertyOwnerAmount,
-              agent_amount: breakdown.agentCommission,
-              platform_amount: breakdown.platformFee,
-              paystack_fees: breakdown.paystackFee,
-              platform_net: breakdown.platformNet
-            },
-            ...paymentData.metadata
+            start_date: paymentData.startDate,
+            end_date: paymentData.endDate,
+            payment_type: 'property_booking'
           },
-          channels: ['card', 'mobile_money', 'bank']
+          channels: ['card', 'mobile_money']
         }
       });
 
-      if (paymentError) {
-        throw new Error(paymentError.message || 'Payment initialization failed');
+      if (error) {
+        logger.error('Payment initialization failed', { error });
+        toast.error('Payment initialization failed');
+        return { success: false, error: error.message };
       }
 
-      if (!paymentInit.status) {
-        throw new Error(paymentInit.message || 'Payment initialization failed');
+      if (!data.status) {
+        logger.error('Payment service returned error', { data });
+        toast.error(data.message || 'Payment initialization failed');
+        return { success: false, error: data.message };
       }
 
-      // Update booking with payment reference
-      await supabase
-        .from('bookings_enhanced')
-        .update({ 
-          payment_reference: paymentInit.data.reference,
-          paystack_access_code: paymentInit.data.access_code 
-        })
-        .eq('id', booking.id);
-
-      console.log('Payment initialized successfully:', paymentInit.data.reference);
+      logger.info('Payment initialized successfully', { reference: data.data.reference });
       
+      // Redirect to Paystack checkout
+      if (data.data.authorization_url) {
+        window.location.href = data.data.authorization_url;
+      }
+
       return {
         success: true,
-        booking,
-        paymentData: paymentInit.data
+        paymentData: data.data
       };
 
     } catch (error) {
-      console.error('Payment initialization error:', error);
-      toast({
-        title: "Payment Initialization Failed",
-        description: error instanceof Error ? error.message : "Please try again",
-        variant: "destructive"
-      });
-      
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      };
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      logger.error('Payment initialization error', { error: errorMessage });
+      toast.error('Payment initialization failed');
+      return { success: false, error: errorMessage };
     } finally {
       setProcessing(false);
     }
   };
 
-  const verifyAndProcessPayment = async (reference: string) => {
-    setVerifying(true);
-    
-    try {
-      console.log('Verifying payment:', reference);
-      
-      // Verify payment with our edge function
-      const { data: verification, error: verifyError } = await supabase.functions.invoke('verify-payment', {
-        body: { reference }
-      });
-
-      if (verifyError) {
-        throw new Error(verifyError.message || 'Payment verification failed');
-      }
-
-      if (!verification.status) {
-        throw new Error(verification.message || 'Payment verification failed');
-      }
-
-      console.log('Payment verified successfully:', verification.data);
-
-      // Get the booking to process payment distribution
-      const { data: booking, error: bookingError } = await supabase
-        .from('bookings_enhanced')
-        .select('*')
-        .eq('payment_reference', reference)
-        .single();
-
-      if (bookingError || !booking) {
-        throw new Error('Booking not found');
-      }
-
-      // Process payment splitting
-      await processPaymentSplitting(booking, verification.data);
-
-      toast({
-        title: "Payment Successful",
-        description: `Your booking has been confirmed. Reference: ${reference}`,
-      });
-
-      return {
-        success: true,
-        verification: verification.data,
-        booking
-      };
-
-    } catch (error) {
-      console.error('Payment verification error:', error);
-      toast({
-        title: "Payment Verification Failed",
-        description: error instanceof Error ? error.message : "Please contact support",
-        variant: "destructive"
-      });
-      
-      return {
-        success: false,
-        error: error instanceof Error ? error.message : 'Verification failed'
-      };
-    } finally {
-      setVerifying(false);
-    }
-  };
-
-  const processPaymentSplitting = async (booking: any, paymentData: any) => {
-    try {
-      console.log('Processing payment splitting for booking:', booking.id);
-      
-      // Calculate breakdown based on actual payment amount
-      const breakdown = calculatePaymentBreakdown(booking.total_amount);
-
-      // Store payment distribution in the payment_distributions table
-      const { error: distributionError } = await supabase
-        .from('payment_distributions')
-        .insert({
-          booking_id: booking.id,
-          payment_reference: booking.payment_reference,
-          property_owner_id: booking.property_owner_id,
-          agent_id: booking.agent_id,
-          property_owner_amount: breakdown.propertyOwnerAmount,
-          agent_amount: breakdown.agentCommission,
-          platform_amount: breakdown.platformFee,
-          paystack_fees: breakdown.paystackFee,
-          platform_net: breakdown.platformNet,
-          total_amount: booking.total_amount,
-          status: 'pending_distribution'
-        });
-
-      if (distributionError) {
-        console.error('Error storing payment distribution:', distributionError);
-        throw distributionError;
-      }
-
-      // Store in transactions table for payment tracking
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert({
-          reference: booking.payment_reference,
-          amount: booking.total_amount,
-          customer_email: paymentData.customer?.email || '',
-          customer_id: booking.student_id,
-          status: 'success',
-          currency: 'GHS',
-          metadata: {
-            booking_id: booking.id,
-            package_type: booking.package_type,
-            payment_breakdown: {
-              total_amount: breakdown.totalAmount,
-              property_owner_amount: breakdown.propertyOwnerAmount,
-              agent_commission: breakdown.agentCommission,
-              platform_fee: breakdown.platformFee,
-              paystack_fee: breakdown.paystackFee,
-              platform_net: breakdown.platformNet
-            }
-          } as any
-        });
-
-      if (transactionError) {
-        console.error('Error storing transaction:', transactionError);
-        throw transactionError;
-      }
-
-      // Update booking status
-      await supabase
-        .from('bookings_enhanced')
-        .update({
-          payment_status: 'paid',
-          status: 'confirmed',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', booking.id);
-
-      console.log('Payment splitting processed successfully');
-
-    } catch (error) {
-      console.error('Payment splitting error:', error);
-      throw error;
-    }
-  };
-
   return {
     initializePayment,
-    verifyAndProcessPayment,
-    processing,
-    verifying
+    processing
   };
 };

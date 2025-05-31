@@ -1,54 +1,40 @@
 
-export const CURRENCY = {
-  symbol: '₵',
-  code: 'GHS',
-  name: 'Ghana Cedi'
-};
+// Currency formatting utilities
 
-export const formatCurrency = (amount: number): string => {
-  return `${CURRENCY.symbol}${amount.toLocaleString('en-GH', {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0
-  })}`;
-};
+export const formatCurrency = (amount: number, currency: string = 'GHS'): string => {
+  const currencySymbols: Record<string, string> = {
+    GHS: '₵',
+    USD: '$',
+    EUR: '€',
+    GBP: '£'
+  };
 
-export const formatCurrencyWithDecimals = (amount: number): string => {
-  return `${CURRENCY.symbol}${amount.toLocaleString('en-GH', {
+  const symbol = currencySymbols[currency] || currency;
+  
+  // Format with proper thousand separators
+  const formattedAmount = amount.toLocaleString('en-US', {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
-  })}`;
+  });
+
+  return `${symbol}${formattedAmount}`;
 };
 
-export const formatCurrencyCompact = (amount: number): string => {
-  if (amount >= 1000000) {
-    return `${CURRENCY.symbol}${(amount / 1000000).toFixed(1)}M`;
+export const parseCurrencyAmount = (currencyString: string): number => {
+  // Remove currency symbols and parse the number
+  const numericString = currencyString.replace(/[^\d.-]/g, '');
+  return parseFloat(numericString) || 0;
+};
+
+export const convertCurrency = (
+  amount: number,
+  fromCurrency: string,
+  toCurrency: string,
+  exchangeRate: number
+): number => {
+  if (fromCurrency === toCurrency) {
+    return amount;
   }
-  if (amount >= 1000) {
-    return `${CURRENCY.symbol}${(amount / 1000).toFixed(1)}K`;
-  }
-  return `${CURRENCY.symbol}${amount.toLocaleString('en-GH')}`;
-};
-
-export const parseCurrency = (currencyString: string): number => {
-  return parseFloat(currencyString.replace(/[₵,]/g, '')) || 0;
-};
-
-// Convert other currencies to Ghana Cedi (updated exchange rates)
-export const convertToGhanaCedi = (amount: number, fromCurrency: string): number => {
-  const exchangeRates: Record<string, number> = {
-    'USD': 12.50, // 1 USD = 12.50 GHS (approximate)
-    'EUR': 13.80, // 1 EUR = 13.80 GHS (approximate)
-    'GBP': 15.90, // 1 GBP = 15.90 GHS (approximate)
-    'NGN': 0.025, // 1 NGN = 0.025 GHS (approximate)
-    'GHS': 1.00   // 1 GHS = 1 GHS
-  };
   
-  const rate = exchangeRates[fromCurrency.toUpperCase()] || 1;
-  return amount * rate;
-};
-
-// Format currency with automatic conversion
-export const formatCurrencyWithConversion = (amount: number, fromCurrency: string = 'GHS'): string => {
-  const ghsAmount = convertToGhanaCedi(amount, fromCurrency);
-  return formatCurrency(ghsAmount);
+  return amount * exchangeRate;
 };

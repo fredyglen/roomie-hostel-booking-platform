@@ -1,121 +1,71 @@
 
-import { supabase } from '@/lib/supabase';
-import { calculatePaymentBreakdown, PaymentBreakdown } from './paymentCalculations';
+// Payment splitting utilities for booking packages
 
 export interface BookingPackage {
-  type: 'standard' | 'premium' | 'luxury';
+  id: string;
+  name: string;
+  description: string;
   totalPrice: number;
-  propertyRent: number;
-  platformFee: number;
-  agentFee: number;
-  additionalServices?: number;
+  duration: string;
+  features: string[];
 }
 
-export interface PaymentDistribution {
-  propertyOwnerId: string;
-  agentId: string;
-  propertyOwnerAmount: number;
-  agentAmount: number;
-  platformAmount: number;
-  paystackFees: number;
-  platformNet: number;
-}
-
-// Updated packages based on new commission structure
 export const BOOKING_PACKAGES: Record<string, BookingPackage> = {
   standard: {
-    type: 'standard',
+    id: 'standard',
+    name: '4-in-room Package',
+    description: 'Shared accommodation with 3 other students',
     totalPrice: 2700,
-    propertyRent: 2700,
-    platformFee: 113,  // 4.2% of 2700
-    agentFee: 100,     // 3.7% minimum GHS 100
+    duration: 'Per Semester',
+    features: [
+      'Shared room with 4 beds',
+      'Basic amenities',
+      'Shared bathroom',
+      'Wi-Fi included',
+      'Security deposit required'
+    ]
   },
   premium: {
-    type: 'premium', 
+    id: 'premium',
+    name: '3-in-room Package',
+    description: 'Shared accommodation with 2 other students',
     totalPrice: 3600,
-    propertyRent: 3600,
-    platformFee: 151,  // 4.2% of 3600
-    agentFee: 133,     // 3.7% of 3600
-    additionalServices: 100,
+    duration: 'Per Semester',
+    features: [
+      'Shared room with 3 beds',
+      'Enhanced amenities',
+      'Shared bathroom',
+      'Wi-Fi included',
+      'Study area access',
+      'Security deposit required'
+    ]
   },
   luxury: {
-    type: 'luxury',
+    id: 'luxury',
+    name: '2-in-room Package',
+    description: 'Shared accommodation with 1 other student',
     totalPrice: 4000,
-    propertyRent: 4000,
-    platformFee: 168,  // 4.2% of 4000
-    agentFee: 148,     // 3.7% of 4000
-    additionalServices: 200,
+    duration: 'Per Semester',
+    features: [
+      'Shared room with 2 beds',
+      'Premium amenities',
+      'Private bathroom',
+      'High-speed Wi-Fi',
+      'Study area access',
+      'Laundry service',
+      'Security deposit required'
+    ]
   }
 };
 
-// Calculate payment distribution using new commission structure
-export const calculatePaymentDistribution = (
-  packageType: string,
-  propertyOwnerId: string,
-  agentId: string
-): PaymentDistribution => {
-  const pkg = BOOKING_PACKAGES[packageType];
-  if (!pkg) throw new Error('Invalid package type');
-
-  // Use the new payment calculation logic
-  const breakdown = calculatePaymentBreakdown(pkg.totalPrice);
-
-  return {
-    propertyOwnerId,
-    agentId,
-    propertyOwnerAmount: breakdown.propertyOwnerAmount,
-    agentAmount: breakdown.agentCommission,
-    platformAmount: breakdown.platformFee,
-    paystackFees: breakdown.paystackFee,
-    platformNet: breakdown.platformNet,
-  };
+export const getPackageById = (packageId: string): BookingPackage | null => {
+  return BOOKING_PACKAGES[packageId] || null;
 };
 
-// Create booking with payment details
-export const createBookingWithPayment = async (bookingData: {
-  propertyId: string;
-  studentId: string;
-  propertyOwnerId: string;
-  agentId: string;
-  packageType: string;
-  startDate: string;
-  endDate: string;
-  metadata?: any;
-}) => {
-  const distribution = calculatePaymentDistribution(
-    bookingData.packageType,
-    bookingData.propertyOwnerId,
-    bookingData.agentId
-  );
+export const getAllPackages = (): BookingPackage[] => {
+  return Object.values(BOOKING_PACKAGES);
+};
 
-  const pkg = BOOKING_PACKAGES[bookingData.packageType];
-
-  // Create booking record using existing schema
-  const { data: booking, error: bookingError } = await supabase
-    .from('bookings_enhanced')
-    .insert({
-      property_id: bookingData.propertyId,
-      student_id: bookingData.studentId,
-      property_owner_id: bookingData.propertyOwnerId,
-      agent_id: bookingData.agentId,
-      start_date: bookingData.startDate,
-      end_date: bookingData.endDate,
-      total_price: pkg.totalPrice,
-      property_rent: pkg.propertyRent,
-      platform_fee: pkg.platformFee,
-      agent_fee: pkg.agentFee,
-      package_type: bookingData.packageType,
-      payment_status: 'pending',
-      status: 'pending_payment',
-      metadata: bookingData.metadata,
-      check_in_date: bookingData.startDate,
-      check_out_date: bookingData.endDate,
-      total_amount: pkg.totalPrice,
-    })
-    .select()
-    .single();
-
-  if (bookingError) throw bookingError;
-
-  return { booking, distribution };
+export const formatPackagePrice = (price: number): string => {
+  return `GHS ${price.toLocaleString()}`;
 };
