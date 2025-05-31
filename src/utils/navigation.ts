@@ -30,6 +30,28 @@ export const navigateToProperty = (
   });
 };
 
+export const navigateToBooking = (
+  navigate: NavigateFunction,
+  propertyId: string,
+  state?: NavigationState
+): void => {
+  if (!propertyId) {
+    logger.error("Cannot navigate to booking: Invalid property ID");
+    return;
+  }
+
+  const path = `/student/book/${propertyId}`;
+  logger.debug("Navigating to booking", { propertyId, path });
+  
+  navigate(path, { 
+    state: { 
+      from: state?.from || window.location.pathname,
+      ...state 
+    },
+    replace: state?.replace || false
+  });
+};
+
 export const navigateToStory = (
   navigate: NavigateFunction,
   propertyId: string,
@@ -119,4 +141,20 @@ export const navigateToDashboard = (
   const path = dashboardPaths[userRole as keyof typeof dashboardPaths] || dashboardPaths.student;
   logger.debug('Navigating to dashboard', { userRole, path });
   navigate(path);
+};
+
+export const enhancedNavigate = (
+  navigate: NavigateFunction,
+  path: string,
+  state?: NavigationState
+): void => {
+  logger.debug('Enhanced navigation', { path, state });
+  
+  navigate(path, {
+    state: state?.replace ? undefined : {
+      from: state?.from || window.location.pathname,
+      ...state
+    },
+    replace: state?.replace || false
+  });
 };
