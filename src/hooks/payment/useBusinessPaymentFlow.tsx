@@ -172,8 +172,30 @@ export const useBusinessPaymentFlow = () => {
         booking.agent_id
       );
 
-      // Store payment distribution in transactions table with metadata
+      // Store payment distribution in the new payment_distributions table
       const { error: distributionError } = await supabase
+        .from('payment_distributions')
+        .insert({
+          booking_id: booking.id,
+          payment_reference: booking.payment_reference,
+          property_owner_id: booking.property_owner_id,
+          agent_id: booking.agent_id,
+          property_owner_amount: distribution.propertyOwnerAmount,
+          agent_amount: distribution.agentAmount,
+          platform_amount: distribution.platformAmount,
+          paystack_fees: distribution.paystackFees,
+          platform_net: distribution.platformNet,
+          total_amount: booking.total_amount,
+          status: 'pending_distribution'
+        });
+
+      if (distributionError) {
+        console.error('Error storing payment distribution:', distributionError);
+        throw distributionError;
+      }
+
+      // Also store in transactions table for payment tracking
+      const { error: transactionError } = await supabase
         .from('transactions')
         .insert({
           reference: booking.payment_reference,
@@ -184,22 +206,14 @@ export const useBusinessPaymentFlow = () => {
           currency: 'GHS',
           metadata: {
             booking_id: booking.id,
-            payment_distribution: {
-              property_owner_id: booking.property_owner_id,
-              agent_id: booking.agent_id,
-              property_owner_amount: distribution.propertyOwnerAmount,
-              agent_amount: distribution.agentAmount,
-              platform_amount: distribution.platformAmount,
-              paystack_fees: distribution.paystackFees,
-              platform_net: distribution.platformNet,
-              total_amount: booking.total_amount
-            }
+            package_type: booking.package_type,
+            payment_distribution_id: distribution
           }
         });
 
-      if (distributionError) {
-        console.error('Error storing payment distribution:', distributionError);
-        throw distributionError;
+      if (transactionError) {
+        console.error('Error storing transaction:', transactionError);
+        throw transactionError;
       }
 
       // Update booking status
