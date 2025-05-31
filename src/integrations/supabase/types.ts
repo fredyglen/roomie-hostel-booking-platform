@@ -85,6 +85,8 @@ export type Database = {
       }
       bookings_enhanced: {
         Row: {
+          agent_fee: number | null
+          agent_id: string | null
           booking_reference: string
           check_in_date: string
           check_out_date: string
@@ -92,20 +94,32 @@ export type Database = {
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
           emergency_contact_relationship: string | null
+          end_date: string | null
           id: string
+          metadata: Json | null
+          package_type: string | null
           payment_method: string | null
+          payment_reference: string | null
           payment_status: string
+          paystack_access_code: string | null
           paystack_reference: string | null
+          platform_fee: number | null
           property_id: string | null
+          property_owner_id: string | null
+          property_rent: number | null
           room_id: string | null
           special_requests: string | null
+          start_date: string | null
           status: string
           student_id: string | null
           total_amount: number
+          total_price: number | null
           transaction_reference: string | null
           updated_at: string
         }
         Insert: {
+          agent_fee?: number | null
+          agent_id?: string | null
           booking_reference?: string
           check_in_date: string
           check_out_date: string
@@ -113,20 +127,32 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
+          end_date?: string | null
           id?: string
+          metadata?: Json | null
+          package_type?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           payment_status?: string
+          paystack_access_code?: string | null
           paystack_reference?: string | null
+          platform_fee?: number | null
           property_id?: string | null
+          property_owner_id?: string | null
+          property_rent?: number | null
           room_id?: string | null
           special_requests?: string | null
+          start_date?: string | null
           status?: string
           student_id?: string | null
           total_amount: number
+          total_price?: number | null
           transaction_reference?: string | null
           updated_at?: string
         }
         Update: {
+          agent_fee?: number | null
+          agent_id?: string | null
           booking_reference?: string
           check_in_date?: string
           check_out_date?: string
@@ -134,16 +160,26 @@ export type Database = {
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
           emergency_contact_relationship?: string | null
+          end_date?: string | null
           id?: string
+          metadata?: Json | null
+          package_type?: string | null
           payment_method?: string | null
+          payment_reference?: string | null
           payment_status?: string
+          paystack_access_code?: string | null
           paystack_reference?: string | null
+          platform_fee?: number | null
           property_id?: string | null
+          property_owner_id?: string | null
+          property_rent?: number | null
           room_id?: string | null
           special_requests?: string | null
+          start_date?: string | null
           status?: string
           student_id?: string | null
           total_amount?: number
+          total_price?: number | null
           transaction_reference?: string | null
           updated_at?: string
         }
@@ -361,6 +397,65 @@ export type Database = {
             columns: ["owner_id"]
             isOneToOne: true
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_distributions: {
+        Row: {
+          agent_amount: number
+          agent_id: string
+          booking_id: string | null
+          created_at: string | null
+          id: string
+          payment_reference: string
+          paystack_fees: number
+          platform_amount: number
+          platform_net: number
+          property_owner_amount: number
+          property_owner_id: string
+          status: string
+          total_amount: number
+          updated_at: string | null
+        }
+        Insert: {
+          agent_amount: number
+          agent_id: string
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          payment_reference: string
+          paystack_fees: number
+          platform_amount: number
+          platform_net: number
+          property_owner_amount: number
+          property_owner_id: string
+          status?: string
+          total_amount: number
+          updated_at?: string | null
+        }
+        Update: {
+          agent_amount?: number
+          agent_id?: string
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          payment_reference?: string
+          paystack_fees?: number
+          platform_amount?: number
+          platform_net?: number
+          property_owner_amount?: number
+          property_owner_id?: string
+          status?: string
+          total_amount?: number
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_distributions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings_enhanced"
             referencedColumns: ["id"]
           },
         ]

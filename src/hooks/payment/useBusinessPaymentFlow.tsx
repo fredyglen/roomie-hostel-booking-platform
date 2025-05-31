@@ -172,25 +172,33 @@ export const useBusinessPaymentFlow = () => {
         booking.agent_id
       );
 
-      // Create payment distribution record
+      // Store payment distribution in transactions table with metadata
       const { error: distributionError } = await supabase
-        .from('payment_distributions')
+        .from('transactions')
         .insert({
-          booking_id: booking.id,
-          payment_reference: booking.payment_reference,
-          property_owner_id: booking.property_owner_id,
-          agent_id: booking.agent_id,
-          property_owner_amount: distribution.propertyOwnerAmount,
-          agent_amount: distribution.agentAmount,
-          platform_amount: distribution.platformAmount,
-          paystack_fees: distribution.paystackFees,
-          platform_net: distribution.platformNet,
-          status: 'pending_distribution',
-          total_amount: booking.total_price
+          reference: booking.payment_reference,
+          amount: booking.total_amount,
+          customer_email: paymentData.customer?.email || '',
+          customer_id: booking.student_id,
+          status: 'success',
+          currency: 'GHS',
+          metadata: {
+            booking_id: booking.id,
+            payment_distribution: {
+              property_owner_id: booking.property_owner_id,
+              agent_id: booking.agent_id,
+              property_owner_amount: distribution.propertyOwnerAmount,
+              agent_amount: distribution.agentAmount,
+              platform_amount: distribution.platformAmount,
+              paystack_fees: distribution.paystackFees,
+              platform_net: distribution.platformNet,
+              total_amount: booking.total_amount
+            }
+          }
         });
 
       if (distributionError) {
-        console.error('Error creating payment distribution:', distributionError);
+        console.error('Error storing payment distribution:', distributionError);
         throw distributionError;
       }
 

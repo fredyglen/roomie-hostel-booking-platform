@@ -93,7 +93,7 @@ export const createBookingWithPayment = async (bookingData: {
 
   const pkg = BOOKING_PACKAGES[bookingData.packageType];
 
-  // Create booking record
+  // Create booking record using existing schema
   const { data: booking, error: bookingError } = await supabase
     .from('bookings_enhanced')
     .insert({
@@ -111,6 +111,9 @@ export const createBookingWithPayment = async (bookingData: {
       payment_status: 'pending',
       status: 'pending_payment',
       metadata: bookingData.metadata,
+      check_in_date: bookingData.startDate,
+      check_out_date: bookingData.endDate,
+      total_amount: pkg.totalPrice,
     })
     .select()
     .single();
