@@ -1,19 +1,12 @@
 
 import { NavigateFunction } from 'react-router-dom';
 
-/**
- * Enhanced navigation utility functions with proper state management and browser history respect
- */
-
 export interface NavigationState {
   from?: string;
   preserveHistory?: boolean;
   replace?: boolean;
 }
 
-/**
- * Navigate to a property detail page with proper state
- */
 export const navigateToProperty = (
   navigate: NavigateFunction,
   propertyId: string,
@@ -33,9 +26,6 @@ export const navigateToProperty = (
   });
 };
 
-/**
- * Navigate to the property booking page with state preservation
- */
 export const navigateToBooking = (
   navigate: NavigateFunction,
   propertyId: string,
@@ -55,9 +45,6 @@ export const navigateToBooking = (
   });
 };
 
-/**
- * Navigate to a property story view with context preservation
- */
 export const navigateToStory = (
   navigate: NavigateFunction,
   propertyId: string,
@@ -77,9 +64,6 @@ export const navigateToStory = (
   });
 };
 
-/**
- * Navigate to the properties listing page with optional filter parameters
- */
 export const navigateToProperties = (
   navigate: NavigateFunction,
   filters?: Record<string, string>,
@@ -107,9 +91,6 @@ export const navigateToProperties = (
   });
 };
 
-/**
- * Enhanced back navigation that respects browser history
- */
 export const navigateBack = (
   navigate: NavigateFunction,
   fallbackPath: string = '/student/properties',
@@ -117,7 +98,6 @@ export const navigateBack = (
 ): void => {
   console.log('Navigation back called with state:', locationState);
   
-  // If we have a referrer in the state, use it
   const previousPath = locationState?.from;
   
   if (previousPath && previousPath !== window.location.pathname) {
@@ -126,21 +106,16 @@ export const navigateBack = (
     return;
   }
 
-  // Check if we can go back in browser history
   if (window.history.length > 1) {
     console.log('Using browser back navigation');
     navigate(-1);
     return;
   }
 
-  // Fallback to default path
   console.log('Using fallback path:', fallbackPath);
   navigate(fallbackPath);
 };
 
-/**
- * Navigate to the dashboard based on user role
- */
 export const navigateToDashboard = (
   navigate: NavigateFunction,
   userRole: string = 'student'
@@ -160,9 +135,6 @@ export const navigateToDashboard = (
   }
 };
 
-/**
- * Navigate to subscription page based on user role
- */
 export const navigateToSubscription = (
   navigate: NavigateFunction,
   userRole: string = 'student'
@@ -182,9 +154,6 @@ export const navigateToSubscription = (
   }
 };
 
-/**
- * Navigate to profile page based on user role
- */
 export const navigateToProfile = (
   navigate: NavigateFunction,
   userRole: string = 'student'
@@ -201,9 +170,6 @@ export const navigateToProfile = (
   }
 };
 
-/**
- * Handle modal/sheet close with proper navigation
- */
 export const handleModalClose = (
   navigate: NavigateFunction,
   onClose?: () => void,
@@ -216,9 +182,6 @@ export const handleModalClose = (
   }
 };
 
-/**
- * Enhanced navigation helper that preserves browser navigation behavior
- */
 export const enhancedNavigate = (
   navigate: NavigateFunction,
   to: string,
