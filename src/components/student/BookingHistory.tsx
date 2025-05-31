@@ -16,6 +16,7 @@ interface Booking {
   id: string;
   booking_reference: string;
   property_id: string;
+  student_id: string;
   check_in_date: string;
   check_out_date: string;
   total_amount: number;
