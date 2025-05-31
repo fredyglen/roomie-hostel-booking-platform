@@ -1,5 +1,6 @@
 
 import { supabase } from '@/lib/supabase';
+import { calculatePaymentBreakdown, PaymentBreakdown } from './paymentCalculations';
 
 export interface BookingPackage {
   type: 'standard' | 'premium' | 'luxury';
@@ -20,38 +21,34 @@ export interface PaymentDistribution {
   platformNet: number;
 }
 
+// Updated packages based on new commission structure
 export const BOOKING_PACKAGES: Record<string, BookingPackage> = {
   standard: {
     type: 'standard',
-    totalPrice: 2900,
+    totalPrice: 2700,
     propertyRent: 2700,
-    platformFee: 100,
-    agentFee: 100,
+    platformFee: 113,  // 4.2% of 2700
+    agentFee: 100,     // 3.7% minimum GHS 100
   },
   premium: {
-    type: 'premium',
-    totalPrice: 3100,
-    propertyRent: 2700,
-    platformFee: 200,
-    agentFee: 150,
-    additionalServices: 50,
+    type: 'premium', 
+    totalPrice: 3600,
+    propertyRent: 3600,
+    platformFee: 151,  // 4.2% of 3600
+    agentFee: 133,     // 3.7% of 3600
+    additionalServices: 100,
   },
   luxury: {
     type: 'luxury',
-    totalPrice: 3400,
-    propertyRent: 2700,
-    platformFee: 300,
-    agentFee: 200,
+    totalPrice: 4000,
+    propertyRent: 4000,
+    platformFee: 168,  // 4.2% of 4000
+    agentFee: 148,     // 3.7% of 4000
     additionalServices: 200,
   }
 };
 
-// Calculate Paystack fees (1.95% for Ghana)
-export const calculatePaystackFees = (amount: number): number => {
-  return Math.round(amount * 0.0195);
-};
-
-// Calculate payment distribution
+// Calculate payment distribution using new commission structure
 export const calculatePaymentDistribution = (
   packageType: string,
   propertyOwnerId: string,
@@ -60,17 +57,17 @@ export const calculatePaymentDistribution = (
   const pkg = BOOKING_PACKAGES[packageType];
   if (!pkg) throw new Error('Invalid package type');
 
-  const paystackFees = calculatePaystackFees(pkg.totalPrice);
-  const platformNet = pkg.platformFee - paystackFees;
+  // Use the new payment calculation logic
+  const breakdown = calculatePaymentBreakdown(pkg.totalPrice);
 
   return {
     propertyOwnerId,
     agentId,
-    propertyOwnerAmount: pkg.propertyRent,
-    agentAmount: pkg.agentFee,
-    platformAmount: pkg.platformFee,
-    paystackFees,
-    platformNet: Math.max(0, platformNet), // Ensure non-negative
+    propertyOwnerAmount: breakdown.propertyOwnerAmount,
+    agentAmount: breakdown.agentCommission,
+    platformAmount: breakdown.platformFee,
+    paystackFees: breakdown.paystackFee,
+    platformNet: breakdown.platformNet,
   };
 };
 

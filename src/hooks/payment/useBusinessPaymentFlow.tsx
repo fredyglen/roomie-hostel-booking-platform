@@ -7,6 +7,7 @@ import {
   createBookingWithPayment,
   BOOKING_PACKAGES 
 } from '@/utils/paymentSplitting';
+import { calculatePaymentBreakdown } from '@/utils/paymentCalculations';
 
 interface PaymentFlowData {
   propertyId: string;
@@ -37,6 +38,9 @@ export const useBusinessPaymentFlow = () => {
       console.log('Created booking:', booking.id);
       console.log('Payment distribution:', distribution);
 
+      // Calculate breakdown for Paystack amount
+      const breakdown = calculatePaymentBreakdown(BOOKING_PACKAGES[paymentData.packageType].totalPrice);
+
       // Initialize payment with Paystack
       const { data: paymentInit, error: paymentError } = await supabase.functions.invoke('initialize-payment', {
         body: {
@@ -50,7 +54,13 @@ export const useBusinessPaymentFlow = () => {
             property_owner_id: paymentData.propertyOwnerId,
             agent_id: paymentData.agentId,
             package_type: paymentData.packageType,
-            payment_distribution: distribution,
+            payment_distribution: {
+              property_owner_amount: breakdown.propertyOwnerAmount,
+              agent_amount: breakdown.agentCommission,
+              platform_amount: breakdown.platformFee,
+              paystack_fees: breakdown.paystackFee,
+              platform_net: breakdown.platformNet
+            },
             ...paymentData.metadata
           },
           channels: ['card', 'mobile_money', 'bank']
@@ -166,13 +176,10 @@ export const useBusinessPaymentFlow = () => {
     try {
       console.log('Processing payment splitting for booking:', booking.id);
       
-      const distribution = calculatePaymentDistribution(
-        booking.package_type,
-        booking.property_owner_id,
-        booking.agent_id
-      );
+      // Calculate breakdown based on actual payment amount
+      const breakdown = calculatePaymentBreakdown(booking.total_amount);
 
-      // Store payment distribution in the new payment_distributions table
+      // Store payment distribution in the payment_distributions table
       const { error: distributionError } = await supabase
         .from('payment_distributions')
         .insert({
@@ -180,11 +187,11 @@ export const useBusinessPaymentFlow = () => {
           payment_reference: booking.payment_reference,
           property_owner_id: booking.property_owner_id,
           agent_id: booking.agent_id,
-          property_owner_amount: distribution.propertyOwnerAmount,
-          agent_amount: distribution.agentAmount,
-          platform_amount: distribution.platformAmount,
-          paystack_fees: distribution.paystackFees,
-          platform_net: distribution.platformNet,
+          property_owner_amount: breakdown.propertyOwnerAmount,
+          agent_amount: breakdown.agentCommission,
+          platform_amount: breakdown.platformFee,
+          paystack_fees: breakdown.paystackFee,
+          platform_net: breakdown.platformNet,
           total_amount: booking.total_amount,
           status: 'pending_distribution'
         });
@@ -194,7 +201,7 @@ export const useBusinessPaymentFlow = () => {
         throw distributionError;
       }
 
-      // Also store in transactions table for payment tracking
+      // Store in transactions table for payment tracking
       const { error: transactionError } = await supabase
         .from('transactions')
         .insert({
@@ -207,7 +214,7 @@ export const useBusinessPaymentFlow = () => {
           metadata: {
             booking_id: booking.id,
             package_type: booking.package_type,
-            payment_distribution_id: distribution
+            payment_breakdown: breakdown
           }
         });
 
