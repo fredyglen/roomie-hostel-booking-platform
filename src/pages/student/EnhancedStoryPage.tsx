@@ -42,11 +42,7 @@ const EnhancedStoryPage: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-black">
-      <StoryContainerEnhanced
-        property={property}
-        onClose={handleGoBack}
-        onNavigateToBooking={() => navigate(`/student/book/${property.id}`)}
-      />
+      <StoryContainerEnhanced />
     </div>
   );
 };

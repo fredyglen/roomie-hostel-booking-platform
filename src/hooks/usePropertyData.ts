@@ -181,6 +181,7 @@ export function getSampleProperties(): Property[] {
       availableUnits: 3,
       owner: {
         name: 'Prestige Housing Ltd',
+        email: 'prestige@example.com',
         phone: '+233 24 567 8901',
         responseRate: '98%',
         verified: true
@@ -237,6 +238,7 @@ export function getSampleProperties(): Property[] {
       availableUnits: 8,
       owner: {
         name: 'Mr. Makasella',
+        email: 'makasella@example.com',
         phone: '+233 55 234 5678',
         responseRate: '90%',
         verified: true
@@ -293,6 +295,7 @@ export function getSampleProperties(): Property[] {
       availableUnits: 4,
       owner: {
         name: 'MB3 Properties Ltd',
+        email: 'mb3@example.com',
         phone: '+233 27 345 6789',
         responseRate: '95%',
         verified: true
@@ -349,6 +352,7 @@ export function getSampleProperties(): Property[] {
       availableUnits: 12,
       owner: {
         name: 'Joy Hostels Ltd',
+        email: 'joy@example.com',
         phone: '+233 20 456 7890',
         responseRate: '85%',
         verified: true
@@ -405,6 +409,7 @@ export function getSampleProperties(): Property[] {
       availableUnits: 6,
       owner: {
         name: 'Heavens Gate Ltd',
+        email: 'heavensgate@example.com',
         phone: '+233 23 567 8901',
         responseRate: '92%',
         verified: true
