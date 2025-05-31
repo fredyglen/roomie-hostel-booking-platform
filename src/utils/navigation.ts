@@ -1,5 +1,6 @@
 
 import { NavigateFunction } from 'react-router-dom';
+import { logger } from './logger';
 
 export interface NavigationState {
   from?: string;
@@ -13,30 +14,14 @@ export const navigateToProperty = (
   state?: NavigationState
 ): void => {
   if (!propertyId) {
-    console.error("Cannot navigate to property: Invalid ID");
+    logger.error("Cannot navigate to property: Invalid ID");
     return;
   }
 
-  navigate(`/student/property/${propertyId}`, { 
-    state: { 
-      from: state?.from || window.location.pathname,
-      ...state 
-    },
-    replace: state?.replace || false
-  });
-};
-
-export const navigateToBooking = (
-  navigate: NavigateFunction,
-  propertyId: string,
-  state?: NavigationState
-): void => {
-  if (!propertyId) {
-    console.error("Cannot navigate to booking: Invalid property ID");
-    return;
-  }
-
-  navigate(`/student/property/${propertyId}/book`, { 
+  const path = `/student/property/${propertyId}`;
+  logger.debug("Navigating to property", { propertyId, path });
+  
+  navigate(path, { 
     state: { 
       from: state?.from || window.location.pathname,
       ...state 
@@ -51,11 +36,14 @@ export const navigateToStory = (
   state?: NavigationState
 ): void => {
   if (!propertyId) {
-    console.error("Cannot navigate to story: Invalid property ID");
+    logger.error("Cannot navigate to story: Invalid property ID");
     return;
   }
 
-  navigate(`/student/property/${propertyId}/enhanced-story`, { 
+  const path = `/student/property/${propertyId}/enhanced-story`;
+  logger.debug("Navigating to story", { propertyId, path });
+  
+  navigate(path, { 
     state: { 
       from: state?.from || window.location.pathname,
       ...state 
@@ -82,6 +70,8 @@ export const navigateToProperties = (
     if (searchString) url += `?${searchString}`;
   }
   
+  logger.debug("Navigating to properties", { url, filters });
+  
   navigate(url, { 
     state: state?.replace ? undefined : { 
       from: state?.from || window.location.pathname,
@@ -96,23 +86,23 @@ export const navigateBack = (
   fallbackPath: string = '/student/properties',
   locationState?: any
 ): void => {
-  console.log('Navigation back called with state:', locationState);
+  logger.debug('Navigation back called', { locationState, fallbackPath });
   
   const previousPath = locationState?.from;
   
   if (previousPath && previousPath !== window.location.pathname) {
-    console.log('Navigating to previous path:', previousPath);
+    logger.debug('Using previous path', { previousPath });
     navigate(previousPath);
     return;
   }
 
   if (window.history.length > 1) {
-    console.log('Using browser back navigation');
+    logger.debug('Using browser back navigation');
     navigate(-1);
     return;
   }
 
-  console.log('Using fallback path:', fallbackPath);
+  logger.debug('Using fallback path', { fallbackPath });
   navigate(fallbackPath);
 };
 
@@ -120,87 +110,13 @@ export const navigateToDashboard = (
   navigate: NavigateFunction,
   userRole: string = 'student'
 ): void => {
-  switch (userRole) {
-    case 'student':
-      navigate('/student/dashboard');
-      break;
-    case 'owner':
-      navigate('/owner/dashboard');
-      break;
-    case 'admin':
-      navigate('/admin/dashboard');
-      break;
-    default:
-      navigate('/student/dashboard');
-  }
-};
-
-export const navigateToSubscription = (
-  navigate: NavigateFunction,
-  userRole: string = 'student'
-): void => {
-  switch (userRole) {
-    case 'student':
-      navigate('/student/subscription');
-      break;
-    case 'owner':
-      navigate('/owner/subscription');
-      break;
-    case 'admin':
-      navigate('/admin/subscriptions');
-      break;
-    default:
-      navigate('/student/subscription');
-  }
-};
-
-export const navigateToProfile = (
-  navigate: NavigateFunction,
-  userRole: string = 'student'
-): void => {
-  switch (userRole) {
-    case 'student':
-      navigate('/student/profile');
-      break;
-    case 'owner':
-      navigate('/owner/profile');
-      break;
-    default:
-      navigate('/student/profile');
-  }
-};
-
-export const handleModalClose = (
-  navigate: NavigateFunction,
-  onClose?: () => void,
-  fallbackPath?: string
-): void => {
-  if (onClose) {
-    onClose();
-  } else {
-    navigateBack(navigate, fallbackPath);
-  }
-};
-
-export const enhancedNavigate = (
-  navigate: NavigateFunction,
-  to: string,
-  options?: {
-    replace?: boolean;
-    state?: any;
-    preserveHistory?: boolean;
-  }
-): void => {
-  const navigationOptions: any = {
-    replace: options?.replace || false
+  const dashboardPaths = {
+    student: '/student/dashboard',
+    owner: '/owner/dashboard',
+    admin: '/admin/dashboard'
   };
-
-  if (options?.state || options?.preserveHistory) {
-    navigationOptions.state = {
-      from: window.location.pathname,
-      ...options?.state
-    };
-  }
-
-  navigate(to, navigationOptions);
+  
+  const path = dashboardPaths[userRole as keyof typeof dashboardPaths] || dashboardPaths.student;
+  logger.debug('Navigating to dashboard', { userRole, path });
+  navigate(path);
 };

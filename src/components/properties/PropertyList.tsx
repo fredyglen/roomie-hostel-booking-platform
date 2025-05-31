@@ -2,25 +2,27 @@
 import React from 'react';
 import PropertyCard from './PropertyCard';
 import { Property } from '@/types/property';
+import { logger } from '@/utils/logger';
 
 interface PropertyListProps {
   properties: Property[];
   onPropertyClick?: (property: Property) => void;
-  isLoading?: boolean;
   onResetFilters?: () => void;
   onViewProperty?: (id: string) => void;
   onViewStory?: (id: string) => void;
+  isLoading?: boolean;
 }
 
 const PropertyList: React.FC<PropertyListProps> = ({ 
   properties, 
   onPropertyClick,
-  isLoading = false,
   onResetFilters,
   onViewProperty,
-  onViewStory
+  onViewStory,
+  isLoading = false
 }) => {
   const handleViewDetails = (property: Property) => {
+    logger.debug('Property card clicked', { propertyId: property.id });
     if (onPropertyClick) {
       onPropertyClick(property);
     } else if (onViewProperty) {
@@ -29,6 +31,7 @@ const PropertyList: React.FC<PropertyListProps> = ({
   };
 
   const handleViewStory = (property: Property) => {
+    logger.debug('View story clicked', { propertyId: property.id });
     if (onViewStory) {
       onViewStory(property.id);
     }
@@ -81,7 +84,7 @@ const PropertyList: React.FC<PropertyListProps> = ({
           maxOccupants={property.max_occupants || 1}
           images={property.images}
           amenities={property.amenities || []}
-          propertyType={property.type || property.property_type || 'Hostel'}
+          propertyType={property.propertyCategory || property.property_type || 'Hostel'}
           genderRestriction={property.genderType}
           isAvailable={property.status === 'Available'}
           onViewDetails={() => handleViewDetails(property)}

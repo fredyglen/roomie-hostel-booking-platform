@@ -4,6 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Property } from '@/types/property';
 import { normalizePropertyData, getSampleProperties } from './usePropertyData';
+import { logger } from '@/utils/logger';
 
 interface UsePropertyLoaderOptions {
   propertyId: string;
@@ -23,24 +24,9 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
       if (forOwner && !user?.id) throw new Error('User not authenticated');
 
       try {
-        console.log("Fetching property with ID:", propertyId);
+        logger.info("Fetching property", { propertyId, forOwner });
         
-        // First check sample properties since they're readily available
-        const sampleProperties = getSampleProperties();
-        
-        // Handle different ID formats consistently (string vs number)
-        const sampleProperty = sampleProperties.find(p => 
-          p.id === propertyId || 
-          p.id === String(propertyId) || 
-          String(p.id) === propertyId
-        );
-        
-        if (sampleProperty) {
-          console.log("Found property in sample data:", sampleProperty.title);
-          return sampleProperty;
-        }
-        
-        // If not found in sample data, check database (for UUID format only)
+        // First check if the ID is a valid UUID format (required for Supabase query)
         const isUuid = propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
         
         if (isUuid) {
@@ -57,27 +43,46 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
           const { data, error } = await query.maybeSingle();
 
           if (error) {
-            console.error("Error fetching property from database:", error);
+            logger.error("Error fetching property from database", { error, propertyId });
             throw error;
           }
           
           if (data) {
-            console.log("Found property in database:", data.title);
+            logger.info("Found property in database", { propertyId, title: data.title });
             // Convert database property to our frontend property format
             const normalizedProperty = normalizePropertyData(data);
             return normalizedProperty;
           }
         }
 
-        console.error("Property not found anywhere");
-        throw new Error('Property not found');
+        // If no UUID match or no data found in database, check the sample properties
+        logger.debug("Checking sample data", { propertyId });
+        const sampleProperties = getSampleProperties();
+        
+        // Handle different ID formats consistently (string vs number)
+        const sampleProperty = sampleProperties.find(p => 
+          p.id === propertyId || 
+          p.id === String(propertyId) || 
+          String(p.id) === propertyId
+        );
+        
+        if (!sampleProperty) {
+          logger.error("Property not found", { propertyId });
+          throw new Error('Property not found');
+        }
+        
+        logger.info("Found property in sample data", { propertyId, title: sampleProperty.title });
+        return sampleProperty;
       } catch (error) {
-        console.error("Error in property loader:", error);
+        logger.error("Error loading property", { error, propertyId });
         throw error;
       }
     },
     enabled: !!propertyId && (!!user?.id || !forOwner) && enabled,
     staleTime: 1000 * 60 * 5, // Cache for 5 minutes
     retry: 1, // Only retry once to avoid infinite retries on 404
+    meta: {
+      errorMessage: 'Failed to load property details'
+    }
   });
 };

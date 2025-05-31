@@ -5,8 +5,9 @@ import PropertyList from './PropertyList';
 import PropertiesFiltersPanel from './PropertiesFiltersPanel';
 import { Property } from '@/types/property';
 import { usePropertiesFilter } from '@/hooks/filters';
-import { toast } from 'sonner';
+import { toast } from '@/components/ui/sonner';
 import { navigateToProperty, navigateToStory } from '@/utils/navigation';
+import { logger } from '@/utils/logger';
 
 interface PropertyListContainerProps {
   properties: Property[];
@@ -39,6 +40,7 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
   } = usePropertiesFilter({ properties });
   
   const handleViewProperty = (id: string) => {
+    logger.debug('Navigating to property detail', { id });
     navigateToProperty(navigate, id, { 
       from: location.pathname + location.search,
       preserveHistory: true 
@@ -46,6 +48,7 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
   };
 
   const handleViewStory = (id: string) => {
+    logger.debug('Navigating to property story', { id });
     navigateToStory(navigate, id, { 
       from: location.pathname + location.search,
       preserveHistory: true 
@@ -53,15 +56,14 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
   };
 
   const handleError = (error: any) => {
-    console.error('Error in PropertyListContainer:', error);
+    logger.error('Error in PropertyListContainer:', error);
     toast.error("Something went wrong", {
       description: "Please try again later"
     });
   };
   
   return (
-    <>
-      {/* Search and Filter Controls */}
+    <div className="property-list-container">
       <PropertiesFiltersPanel
         searchQuery={searchQuery}
         setSearchQuery={setSearchQuery}
@@ -87,7 +89,7 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
         onViewProperty={handleViewProperty}
         onViewStory={handleViewStory}
       />
-    </>
+    </div>
   );
 };
 

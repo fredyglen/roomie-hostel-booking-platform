@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { usePropertyLoader } from '@/hooks/property/usePropertyLoader';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -9,15 +9,26 @@ import EnhancedStoryView from '@/components/story/EnhancedStoryView';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { logger } from '@/utils/logger';
 
 const EnhancedStoryPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  
+  logger.debug('EnhancedStoryPage rendered', { id, location });
+  
   const { data: property, isLoading, error } = usePropertyLoader({
     propertyId: id || '',
     enabled: !!id,
     forOwner: false
   });
+
+  const handleBackClick = () => {
+    logger.debug('Back to property button clicked');
+    navigate(`/student/property/${id}`);
+  };
 
   if (isLoading) {
     return (
@@ -36,6 +47,7 @@ const EnhancedStoryPage: React.FC = () => {
   }
 
   if (error || !property) {
+    logger.error('Property not found or error loading property', { error, id });
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -69,7 +81,7 @@ const EnhancedStoryPage: React.FC = () => {
       <main className="flex-grow">
         <div className="mb-4 px-4 pt-4">
           <Button 
-            onClick={() => navigate(`/student/property/${id}`)}
+            onClick={handleBackClick}
             variant="ghost"
             className="flex items-center"
           >
@@ -77,7 +89,9 @@ const EnhancedStoryPage: React.FC = () => {
             Back to Property
           </Button>
         </div>
-        <EnhancedStoryView property={property} />
+        <ErrorBoundary>
+          <EnhancedStoryView property={property} />
+        </ErrorBoundary>
       </main>
       <Footer />
       <StudentNavBar />
