@@ -1,9 +1,8 @@
-
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { EnhancedAuthProvider } from '@/context/EnhancedAuthContext';
+import { AuthProvider } from '@/context/EnhancedAuthContext';
 
 // Pages
 import Index from '@/pages/Index';
@@ -67,7 +66,7 @@ const queryClient = new QueryClient({
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <EnhancedAuthProvider>
+      <AuthProvider>
         <Router>
           <div className="min-h-screen bg-gray-50">
             <Routes>
@@ -122,7 +121,7 @@ function App() {
           </div>
           <Toaster />
         </Router>
-      </EnhancedAuthProvider>
+      </AuthProvider>
     </QueryClientProvider>
   );
 }
