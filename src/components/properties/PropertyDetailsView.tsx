@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Property } from '@/types/property';
 import { Button } from '@/components/ui/button';

@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { usePropertyLoader } from '@/hooks/property';
+import { usePropertyData } from '@/hooks/property/usePropertyData';
 import { useBookingState } from '@/hooks/booking/useBookingState';
 import BookingSteps from './BookingSteps';
 import StepDisplay from './StepDisplay';
@@ -25,12 +25,22 @@ const BookingStepsContainer: React.FC = () => {
     'Payment'
   ];
   
-  // Property data
-  const { data: property, isLoading: propertyLoading } = usePropertyLoader({
-    propertyId: id || '',
-    forOwner: false,
-    enabled: !!id
-  });
+  // Property data - using the correct hook
+  const { getPropertyById } = usePropertyData();
+  const [property, setProperty] = React.useState(null);
+  const [propertyLoading, setPropertyLoading] = React.useState(true);
+  
+  React.useEffect(() => {
+    const loadProperty = async () => {
+      if (id) {
+        setPropertyLoading(true);
+        const propertyData = await getPropertyById(id);
+        setProperty(propertyData);
+        setPropertyLoading(false);
+      }
+    };
+    loadProperty();
+  }, [id, getPropertyById]);
   
   // Centralized booking state
   const {

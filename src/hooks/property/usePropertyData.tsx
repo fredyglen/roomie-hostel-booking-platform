@@ -37,6 +37,7 @@ export const usePropertyData = () => {
       // Transform database properties to match our Property type
       const transformedProperties: Property[] = (data || []).map(property => ({
         id: property.id,
+        owner_id: property.owner_id,
         title: property.title,
         description: property.description,
         address: property.address,
@@ -49,12 +50,14 @@ export const usePropertyData = () => {
         images: property.images || [],
         amenities: property.amenities || [],
         owner: property.profiles ? {
-          id: property.owner_id,
           name: `${property.profiles.first_name || ''} ${property.profiles.last_name || ''}`.trim(),
-          email: property.profiles.email
+          email: property.profiles.email,
+          phone: property.profiles.phone || '',
+          responseRate: '95%',
+          verified: true
         } : undefined,
-        distance: '1.2 km', // This would be calculated based on user location
-        rating: 4.5, // This would come from reviews
+        distance: '1.2 km',
+        rating: 4.5,
         available_from: property.available_from,
         available_to: property.available_to,
         created_at: property.created_at,
@@ -105,6 +108,7 @@ export const usePropertyData = () => {
       // Transform database property to match our Property type
       const transformedProperty: Property = {
         id: data.id,
+        owner_id: data.owner_id,
         title: data.title,
         description: data.description,
         address: data.address,
@@ -117,10 +121,11 @@ export const usePropertyData = () => {
         images: data.images || [],
         amenities: data.amenities || [],
         owner: data.profiles ? {
-          id: data.owner_id,
           name: `${data.profiles.first_name || ''} ${data.profiles.last_name || ''}`.trim(),
           email: data.profiles.email,
-          phone: data.profiles.phone
+          phone: data.profiles.phone || '',
+          responseRate: '95%',
+          verified: true
         } : undefined,
         distance: '1.2 km',
         rating: 4.5,

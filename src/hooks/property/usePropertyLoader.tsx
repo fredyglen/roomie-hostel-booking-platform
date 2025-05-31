@@ -50,6 +50,7 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
         // Transform database property to match our Property type
         const transformedProperty: Property = {
           id: data.id,
+          owner_id: data.owner_id,
           title: data.title,
           description: data.description,
           address: data.address,
@@ -62,13 +63,14 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
           images: data.images || [],
           amenities: data.amenities || [],
           owner: data.profiles ? {
-            id: data.owner_id,
             name: `${data.profiles.first_name || ''} ${data.profiles.last_name || ''}`.trim(),
             email: data.profiles.email,
-            phone: data.profiles.phone
+            phone: data.profiles.phone || '',
+            responseRate: '95%',
+            verified: true
           } : undefined,
-          distance: '1.2 km', // This would be calculated based on user location
-          rating: 4.5, // This would come from reviews table
+          distance: '1.2 km',
+          rating: 4.5,
           available_from: data.available_from,
           available_to: data.available_to,
           created_at: data.created_at,

@@ -24,6 +24,8 @@ interface PaymentResult {
     access_code: string;
     authorization_url: string;
   };
+  booking?: any;
+  verification?: any;
   error?: string;
 }
 
@@ -106,8 +108,56 @@ export const useBusinessPaymentFlow = () => {
     }
   };
 
+  const verifyAndProcessPayment = async (reference: string): Promise<PaymentResult> => {
+    if (!user) {
+      const error = 'User must be authenticated to verify payment';
+      logger.error(error);
+      toast.error('Authentication required');
+      return { success: false, error };
+    }
+
+    setProcessing(true);
+    logger.info('Verifying payment', { reference });
+
+    try {
+      const { data, error } = await supabase.functions.invoke('verify-payment', {
+        body: { reference }
+      });
+
+      if (error) {
+        logger.error('Payment verification failed', { error });
+        toast.error('Payment verification failed');
+        return { success: false, error: error.message };
+      }
+
+      if (!data.success) {
+        logger.error('Payment verification unsuccessful', { data });
+        toast.error(data.message || 'Payment verification failed');
+        return { success: false, error: data.message };
+      }
+
+      logger.info('Payment verified successfully', { reference });
+      toast.success('Payment verified successfully');
+
+      return {
+        success: true,
+        verification: data.verification,
+        booking: data.booking
+      };
+
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      logger.error('Payment verification error', { error: errorMessage });
+      toast.error('Payment verification failed');
+      return { success: false, error: errorMessage };
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   return {
     initializePayment,
+    verifyAndProcessPayment,
     processing
   };
 };

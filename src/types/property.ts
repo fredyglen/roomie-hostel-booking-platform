@@ -130,6 +130,7 @@ export interface Property {
   // Owner information (presentation only)
   owner?: {
     name: string;
+    email: string;
     phone: string;
     responseRate: string;
     verified: boolean;
