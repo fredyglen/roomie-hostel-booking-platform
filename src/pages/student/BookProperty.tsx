@@ -13,9 +13,13 @@ import { Button } from '@/components/ui/button';
 const BookProperty: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { property, loading, error } = usePropertyLoader(id);
+  const { data: property, isLoading, error } = usePropertyLoader({
+    propertyId: id || '',
+    enabled: !!id,
+    forOwner: false
+  });
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -40,7 +44,7 @@ const BookProperty: React.FC = () => {
             <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                {error || 'Property not found. The property may have been removed or the URL is incorrect.'}
+                {error?.message || 'Property not found. The property may have been removed or the URL is incorrect.'}
               </AlertDescription>
             </Alert>
             <Button 

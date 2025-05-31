@@ -10,53 +10,64 @@ describe('ImageWithFallback', () => {
       <ImageWithFallback 
         src="https://example.com/image.jpg"
         alt="Test image"
-        data-testid="test-image"
+        className="test-image"
       />
     );
     
-    const image = screen.getByTestId('test-image');
+    const image = screen.getByAltText('Test image');
     expect(image).toBeInTheDocument();
     expect(image).toHaveAttribute('src', 'https://example.com/image.jpg');
     expect(image).toHaveAttribute('alt', 'Test image');
   });
   
-  it('renders with fallback image when primary image fails to load', () => {
+  it('renders fallback when primary image fails to load', () => {
     render(
       <ImageWithFallback 
         src="https://example.com/invalid-image.jpg"
         alt="Test image"
-        fallbackSrc="https://example.com/fallback.jpg"
-        fallbackAlt="Fallback image"
-        data-testid="test-image"
+        className="test-image"
       />
     );
     
-    const image = screen.getByTestId('test-image');
+    const image = screen.getByAltText('Test image');
     
     // Simulate image load error
     fireEvent.error(image);
     
-    // Check that fallback image is used
-    expect(image).toHaveAttribute('src', 'https://example.com/fallback.jpg');
-    expect(image).toHaveAttribute('alt', 'Fallback image');
+    // Check that fallback content is displayed
+    const fallbackContent = screen.getByText('Image not available');
+    expect(fallbackContent).toBeInTheDocument();
   });
   
-  it('uses default fallback image when fallbackSrc is not provided', () => {
+  it('shows loading state initially', () => {
+    render(
+      <ImageWithFallback 
+        src="https://example.com/image.jpg"
+        alt="Test image"
+        className="test-image"
+      />
+    );
+    
+    // Check for loading state (image should be hidden initially)
+    const image = screen.getByAltText('Test image');
+    expect(image).toHaveStyle({ display: 'none' });
+  });
+
+  it('calls onError callback when image fails to load', () => {
+    const onErrorMock = vi.fn();
+    
     render(
       <ImageWithFallback 
         src="https://example.com/invalid-image.jpg"
         alt="Test image"
-        data-testid="test-image"
+        onError={onErrorMock}
+        className="test-image"
       />
     );
     
-    const image = screen.getByTestId('test-image');
-    
-    // Simulate image load error
+    const image = screen.getByAltText('Test image');
     fireEvent.error(image);
     
-    // Check that default fallback image is used
-    expect(image).toHaveAttribute('src', 'https://via.placeholder.com/800x450?text=No+Image+Available');
-    expect(image).toHaveAttribute('alt', 'Image not available');
+    expect(onErrorMock).toHaveBeenCalledTimes(1);
   });
 });
