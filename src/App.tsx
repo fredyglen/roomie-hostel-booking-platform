@@ -15,6 +15,7 @@ import StudentDashboard from "./pages/student/Dashboard";
 import StudentProperties from "./pages/student/Properties";
 import PropertyDetail from "./pages/student/PropertyDetail";
 import BookProperty from "./pages/student/BookProperty";
+import BookingHistory from "./pages/student/BookingHistory";
 import Explore from "./pages/student/Explore";
 import Favorites from "./pages/student/Favorites";
 import StudentProfile from "./pages/student/Profile";
@@ -22,6 +23,7 @@ import StudentSubscription from "./pages/student/Subscription";
 import StoryView from "./pages/student/StoryView";
 import StoryViewEnhanced from "./pages/student/StoryViewEnhanced";
 import EnhancedStoryPage from "./pages/student/EnhancedStoryPage";
+import TestPayment from "./pages/TestPayment";
 import OwnerDashboard from "./pages/owner/Dashboard";
 import OwnerProperties from "./pages/owner/Properties";
 import PropertyNew from "./pages/owner/PropertyNew";
@@ -62,6 +64,7 @@ const App = () => (
             <Route path="/welcome" element={<Welcome />} />
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
+            <Route path="/test-payment" element={<TestPayment />} />
             <Route path="*" element={<NotFound />} />
 
             {/* Student Routes */}
@@ -73,14 +76,15 @@ const App = () => (
                     <Route path="dashboard" element={<StudentDashboard />} />
                     <Route path="properties" element={<StudentProperties />} />
                     <Route path="property/:id" element={<PropertyDetail />} />
-                    <Route path="book/:id" element={<BookProperty />} />
+                    <Route path="property/:id/book" element={<BookProperty />} />
+                    <Route path="property/:id/enhanced-story" element={<EnhancedStoryPage />} />
+                    <Route path="booking-history" element={<BookingHistory />} />
                     <Route path="explore" element={<Explore />} />
                     <Route path="favorites" element={<Favorites />} />
                     <Route path="profile" element={<StudentProfile />} />
                     <Route path="subscription" element={<StudentSubscription />} />
                     <Route path="story/:id" element={<StoryView />} />
                     <Route path="stories/:id" element={<StoryViewEnhanced />} />
-                    <Route path="enhanced-story/:id" element={<EnhancedStoryPage />} />
                   </Routes>
                 </ProtectedRoute>
               }

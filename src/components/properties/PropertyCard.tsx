@@ -1,125 +1,153 @@
 
 import React from 'react';
-import { Icon } from '@iconify/react';
 import { Badge } from '@/components/ui/badge';
-import { PropertyCategory } from '@/types/property';
-import ImageWithFallback from '@/components/common/ImageWithFallback';
-import { toast } from 'sonner';
+import { Star, MapPin, Wifi, Car, Zap } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
+import ImageWithFallback from '@/components/common/ImageWithFallback';
 
 interface PropertyCardProps {
   property: {
     id: string;
     title: string;
-    type?: string;
-    price?: number;
-    priceUnit?: 'month' | 'semester' | 'year' | 'week';
+    type: string;
+    price: number;
+    priceUnit: string;
     address: string;
-    distanceToCampus?: string;
-    images?: string[];
+    distanceToCampus: string;
+    images: string[];
     rating?: number;
     reviewCount?: number;
     verified?: boolean;
-    propertyCategory?: PropertyCategory;
-    genderType?: 'Girls' | 'Boys' | 'Mixed';
+    propertyCategory?: string;
+    genderType?: string;
     onViewStory?: () => void;
     onViewDetails?: () => void;
   };
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
-  const getCategoryIcon = () => {
-    switch (property.propertyCategory) {
-      case 'Apartment':
-        return <Icon icon="solar:building-2-linear" className="h-4 w-4 mr-1 text-roomi-blue" />;
-      case 'Homestel':
-        return <Icon icon="solar:home-linear" className="h-4 w-4 mr-1 text-roomi-blue" />;
-      default: // Hostel
-        return <Icon icon="solar:building-linear" className="h-4 w-4 mr-1 text-roomi-blue" />;
-    }
-  };
+  const {
+    title,
+    type,
+    price,
+    priceUnit,
+    address,
+    distanceToCampus,
+    images,
+    rating,
+    reviewCount,
+    verified,
+    propertyCategory,
+    genderType,
+    onViewStory,
+    onViewDetails
+  } = property;
 
-  const getGenderBadgeColor = () => {
-    switch (property.genderType) {
-      case 'Girls':
-        return "bg-pink-100 text-pink-800";
-      case 'Boys':
-        return "bg-blue-100 text-blue-800";
-      default: // Mixed
-        return "bg-purple-100 text-purple-800";
-    }
-  };
-
-  const handleImageError = () => {
-    toast.error("Failed to load image", {
-      id: `image-error-${property.id}`,
-      duration: 2000,
-    });
-  };
+  const primaryImage = images && images.length > 0 ? images[0] : '';
 
   return (
-    <div 
-      className="bg-white rounded-lg overflow-hidden shadow-md h-full flex flex-col cursor-pointer transform hover:scale-[1.02] transition-transform duration-200"
-      onClick={property.onViewDetails}
-      role="button"
-      tabIndex={0}
-      aria-label={`View details for ${property.title}`}
-    >
-      {/* Property Image */}
-      <div className="relative">
-        <ImageWithFallback 
-          src={(property.images && property.images[0]) || "/placeholder.svg"} 
-          alt={property.title} 
-          className="w-full h-48 object-cover"
-          onError={handleImageError}
+    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow relative group">
+      {/* Image Section */}
+      <div className="relative h-48 bg-gray-200">
+        <ImageWithFallback
+          src={primaryImage}
+          alt={title}
+          className="w-full h-full object-cover"
         />
         
-        {/* Story View Button */}
-        <button 
-          onClick={(e) => {
-            e.stopPropagation();
-            property.onViewStory && property.onViewStory();
-          }}
-          className="absolute top-3 left-3 bg-white rounded-full w-10 h-10 flex items-center justify-center shadow-md"
-          aria-label="View story"
-        >
-          <Icon icon="solar:video-frame-play-linear" className="text-roomi-blue h-5 w-5" />
-        </button>
-        
-        {/* Gender Type Badge */}
-        <div className={`absolute top-3 right-3 text-xs px-2 py-1 rounded-full flex items-center ${getGenderBadgeColor()}`}>
-          <span>{property.genderType || 'Mixed'}</span>
+        {/* Overlay Buttons */}
+        <div className="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-2">
+          {onViewStory && (
+            <button
+              onClick={onViewStory}
+              className="bg-white text-black px-3 py-1 rounded-md text-sm font-medium hover:bg-gray-100 transition-colors"
+            >
+              View Story
+            </button>
+          )}
+          {onViewDetails && (
+            <button
+              onClick={onViewDetails}
+              className="bg-blue-500 text-white px-3 py-1 rounded-md text-sm font-medium hover:bg-blue-600 transition-colors"
+            >
+              View Details
+            </button>
+          )}
         </div>
-        
-        {/* Property Type Badge */}
-        <div className="absolute bottom-3 left-3 bg-white/80 backdrop-blur-sm text-roomi-dark text-xs px-2 py-1 rounded flex items-center">
-          {getCategoryIcon()}
-          <span>{property.propertyCategory || 'Hostel'}</span>
-        </div>
-      </div>
-      
-      {/* Property Details */}
-      <div className="p-4 flex-grow flex flex-col">
-        <h3 className="font-semibold mb-1 truncate" title={property.title}>{property.title}</h3>
-        <p className="text-sm text-gray-500 mb-2 truncate" title={property.address}>{property.address}</p>
-        
-        <div className="flex items-center text-sm mb-3">
-          <Icon icon="solar:map-point-linear" className="h-4 w-4 text-roomi-teal mr-1" />
-          <span>{property.distanceToCampus || '10 min'} to campus</span>
-        </div>
-        
-        <div className="flex items-center justify-between mt-auto">
-          <div>
-            <span className="font-bold text-roomi-blue">{formatCurrency(property.price || 0)}</span>
-            <span className="text-gray-600">/{property.priceUnit || 'semester'}</span>
+
+        {/* Verification Badge */}
+        {verified && (
+          <div className="absolute top-2 right-2">
+            <Badge className="bg-green-500 text-white text-xs">
+              Verified
+            </Badge>
           </div>
-          {property.rating && (
-            <div className="flex items-center">
-              <Icon icon="solar:star-bold" className="h-4 w-4 text-yellow-400" />
-              <span className="text-sm ml-1">{property.rating}</span>
-              <span className="text-xs text-gray-500 ml-1">({property.reviewCount || 0})</span>
+        )}
+
+        {/* Property Category Badge */}
+        {propertyCategory && (
+          <div className="absolute top-2 left-2">
+            <Badge variant="secondary" className="text-xs">
+              {propertyCategory}
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      {/* Content Section */}
+      <div className="p-4">
+        {/* Title and Rating */}
+        <div className="flex justify-between items-start mb-2">
+          <h3 className="font-semibold text-gray-900 line-clamp-1">{title}</h3>
+          {rating && (
+            <div className="flex items-center text-yellow-500 text-sm">
+              <Star className="w-4 h-4 fill-current" />
+              <span className="ml-1">{rating}</span>
+              {reviewCount && (
+                <span className="text-gray-500 ml-1">({reviewCount})</span>
+              )}
             </div>
           )}
+        </div>
+
+        {/* Type and Gender */}
+        <div className="flex items-center space-x-2 mb-2">
+          <Badge variant="outline" className="text-xs">
+            {type}
+          </Badge>
+          {genderType && (
+            <Badge variant="outline" className="text-xs capitalize">
+              {genderType}
+            </Badge>
+          )}
+        </div>
+
+        {/* Location */}
+        <div className="flex items-center text-gray-600 text-sm mb-2">
+          <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+          <span className="line-clamp-1">{address}</span>
+        </div>
+
+        {/* Distance to Campus */}
+        <div className="text-gray-600 text-sm mb-3">
+          📍 {distanceToCampus} to campus
+        </div>
+
+        {/* Basic Amenities Icons */}
+        <div className="flex items-center space-x-3 mb-3 text-gray-600">
+          <Wifi className="w-4 h-4" title="WiFi" />
+          <Zap className="w-4 h-4" title="Electricity" />
+          <Car className="w-4 h-4" title="Parking" />
+        </div>
+
+        {/* Price */}
+        <div className="flex justify-between items-center">
+          <div>
+            <span className="text-xl font-bold text-blue-600">
+              {formatCurrency(price)}
+            </span>
+            <span className="text-gray-600 text-sm">/{priceUnit}</span>
+          </div>
         </div>
       </div>
     </div>

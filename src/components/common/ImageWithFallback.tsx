@@ -1,41 +1,40 @@
 
 import React, { useState } from 'react';
-import { cn } from '@/lib/utils';
 
 interface ImageWithFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
+  src: string;
   fallbackSrc?: string;
   fallbackAlt?: string;
-  onError?: () => void;
 }
 
-/**
- * A component that renders an image with a fallback image when the main image fails to load
- */
 const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   src,
   alt,
-  fallbackSrc = "/placeholder.svg",
-  fallbackAlt = "Image not available",
-  className,
-  onError: onErrorProp,
+  fallbackSrc = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&q=80&w=800&h=450',
+  fallbackAlt = 'Property image',
+  onError,
   ...props
 }) => {
-  const [imgSrc, setImgSrc] = useState(src);
-  const [imgAlt, setImgAlt] = useState(alt);
-  
-  const handleError = () => {
-    setImgSrc(fallbackSrc);
-    setImgAlt(fallbackAlt);
-    if (onErrorProp) onErrorProp();
+  const [imageError, setImageError] = useState(false);
+  const [currentSrc, setCurrentSrc] = useState(src);
+
+  const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    if (!imageError && currentSrc !== fallbackSrc) {
+      setImageError(true);
+      setCurrentSrc(fallbackSrc);
+    }
+    
+    if (onError) {
+      onError(e);
+    }
   };
 
   return (
     <img
-      src={imgSrc}
-      alt={imgAlt}
-      onError={handleError}
-      className={cn(className)}
       {...props}
+      src={currentSrc}
+      alt={imageError ? fallbackAlt : alt}
+      onError={handleError}
     />
   );
 };

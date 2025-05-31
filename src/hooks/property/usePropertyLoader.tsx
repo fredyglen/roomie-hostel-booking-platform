@@ -25,7 +25,22 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
       try {
         console.log("Fetching property with ID:", propertyId);
         
-        // First check if the ID is a valid UUID format (required for Supabase query)
+        // First check sample properties since they're readily available
+        const sampleProperties = getSampleProperties();
+        
+        // Handle different ID formats consistently (string vs number)
+        const sampleProperty = sampleProperties.find(p => 
+          p.id === propertyId || 
+          p.id === String(propertyId) || 
+          String(p.id) === propertyId
+        );
+        
+        if (sampleProperty) {
+          console.log("Found property in sample data:", sampleProperty.title);
+          return sampleProperty;
+        }
+        
+        // If not found in sample data, check database (for UUID format only)
         const isUuid = propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
         
         if (isUuid) {
@@ -54,24 +69,8 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
           }
         }
 
-        // If no UUID match or no data found in database, check the sample properties
-        console.log("Checking sample data for ID:", propertyId);
-        const sampleProperties = getSampleProperties();
-        
-        // Handle different ID formats consistently (string vs number)
-        const sampleProperty = sampleProperties.find(p => 
-          p.id === propertyId || 
-          p.id === String(propertyId) || 
-          String(p.id) === propertyId
-        );
-        
-        if (!sampleProperty) {
-          console.error("Property not found in sample data either");
-          throw new Error('Property not found');
-        }
-        
-        console.log("Found property in sample data:", sampleProperty.title);
-        return sampleProperty;
+        console.error("Property not found anywhere");
+        throw new Error('Property not found');
       } catch (error) {
         console.error("Error in property loader:", error);
         throw error;

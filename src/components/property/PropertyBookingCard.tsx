@@ -45,9 +45,10 @@ const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
       
       <Button 
         variant="outline" 
-        className="w-full"
+        className="w-full text-gray-400 border-gray-300 cursor-not-allowed"
+        disabled
       >
-        Request a Tour
+        Request a Tour (Coming Soon)
       </Button>
     </div>
   );

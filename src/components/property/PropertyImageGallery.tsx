@@ -1,7 +1,6 @@
 
 import React from 'react';
 import ImageWithFallback from '@/components/common/ImageWithFallback';
-import { toast } from 'sonner';
 
 interface PropertyImageGalleryProps {
   images: string[];
@@ -10,27 +9,26 @@ interface PropertyImageGalleryProps {
 }
 
 const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({ images, title, onError }) => {
+  // Ensure we always have at least one image
+  const validImages = images && images.length > 0 ? images : [
+    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800&h=600'
+  ];
+
   const handleImageError = () => {
-    toast.error("Failed to load image", {
-      id: "property-gallery-error",
-      duration: 2000,
-    });
-    
-    // Call the parent's onError handler if provided
+    console.log('Image failed to load in PropertyImageGallery');
     if (onError) onError();
   };
 
   return (
     <div className="mb-8">
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {images.map((image, index) => (
+        {validImages.slice(0, 4).map((image, index) => (
           <div key={index} className="rounded-lg overflow-hidden h-64 bg-gray-100">
             <ImageWithFallback 
               src={image} 
               alt={`${title} - Image ${index + 1}`} 
               className="w-full h-full object-cover"
               onError={handleImageError}
-              fallbackSrc="/placeholder.svg"
             />
           </div>
         ))}
