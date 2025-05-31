@@ -36,39 +36,42 @@ export const usePropertyData = () => {
       }
 
       // Transform database properties to match our Property type
-      const transformedProperties: Property[] = (data || []).map(property => ({
-        id: property.id,
-        owner_id: property.owner_id,
-        title: property.title,
-        description: property.description,
-        address: property.address,
-        city: property.city,
-        state: property.state,
-        rent: property.rent,
-        type: property.property_type,
-        bedrooms: property.bedrooms,
-        bathrooms: property.bathrooms,
-        images: property.images || [],
-        amenities: property.amenities || [],
-        owner: property.profiles ? {
-          name: `${property.profiles.first_name || ''} ${property.profiles.last_name || ''}`.trim(),
-          email: property.profiles.email,
-          phone: property.profiles.phone || '',
-          responseRate: '95%',
-          verified: true
-        } : {
-          name: 'Property Owner',
-          email: 'owner@example.com',
-          phone: '+233 50 123 4567',
-          responseRate: '95%',
-          verified: true
-        },
-        rating: 4.5,
-        available_from: property.available_from,
-        available_to: property.available_to,
-        created_at: property.created_at,
-        updated_at: property.updated_at
-      }));
+      const transformedProperties: Property[] = (data || []).map(property => {
+        const profile = property.profiles;
+        return {
+          id: property.id,
+          owner_id: property.owner_id,
+          title: property.title,
+          description: property.description,
+          address: property.address,
+          city: property.city,
+          state: property.state,
+          rent: property.rent,
+          type: property.property_type,
+          bedrooms: property.bedrooms,
+          bathrooms: property.bathrooms,
+          images: property.images || [],
+          amenities: property.amenities || [],
+          owner: profile ? {
+            name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+            email: profile.email,
+            phone: profile.phone || '',
+            responseRate: '95%',
+            verified: true
+          } : {
+            name: 'Property Owner',
+            email: 'owner@example.com',
+            phone: '+233 50 123 4567',
+            responseRate: '95%',
+            verified: true
+          },
+          rating: 4.5,
+          available_from: property.available_from,
+          available_to: property.available_to,
+          created_at: property.created_at,
+          updated_at: property.updated_at
+        };
+      });
 
       setProperties(transformedProperties);
       logger.info(`Successfully loaded ${transformedProperties.length} properties`);
@@ -112,6 +115,7 @@ export const usePropertyData = () => {
       }
 
       // Transform database property to match our Property type
+      const profile = data.profiles;
       const transformedProperty: Property = {
         id: data.id,
         owner_id: data.owner_id,
@@ -126,10 +130,10 @@ export const usePropertyData = () => {
         bathrooms: data.bathrooms,
         images: data.images || [],
         amenities: data.amenities || [],
-        owner: data.profiles ? {
-          name: `${data.profiles.first_name || ''} ${data.profiles.last_name || ''}`.trim(),
-          email: data.profiles.email,
-          phone: data.profiles.phone || '',
+        owner: profile ? {
+          name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
+          email: profile.email,
+          phone: profile.phone || '',
           responseRate: '95%',
           verified: true
         } : {
