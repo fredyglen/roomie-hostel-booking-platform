@@ -214,8 +214,15 @@ export const useBusinessPaymentFlow = () => {
           metadata: {
             booking_id: booking.id,
             package_type: booking.package_type,
-            payment_breakdown: breakdown
-          }
+            payment_breakdown: {
+              total_amount: breakdown.totalAmount,
+              property_owner_amount: breakdown.propertyOwnerAmount,
+              agent_commission: breakdown.agentCommission,
+              platform_fee: breakdown.platformFee,
+              paystack_fee: breakdown.paystackFee,
+              platform_net: breakdown.platformNet
+            }
+          } as any
         });
 
       if (transactionError) {
