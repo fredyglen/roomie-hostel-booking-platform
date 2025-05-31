@@ -1,36 +1,27 @@
 
-import React, { useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React from 'react';
+import { useParams } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import StudentNavBar from '@/components/navigation/StudentNavBar';
-import BookingWizard from '@/components/booking/BookingWizard';
+import BookingStepsContainer from '@/components/booking/BookingStepsContainer';
 import { usePropertyLoader } from '@/hooks/property/usePropertyLoader';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle, ArrowLeft } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 const BookProperty: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { data: property, isLoading, error } = usePropertyLoader({
-    propertyId: id || '',
-    enabled: !!id,
-    forOwner: false
-  });
+  const { property, loading, error } = usePropertyLoader(id);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-grow container mx-auto px-4 py-8">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div className="h-64 bg-gray-200 rounded"></div>
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+            <p className="text-gray-600">Loading property...</p>
           </div>
         </main>
         <Footer />
-        <StudentNavBar />
       </div>
     );
   }
@@ -39,26 +30,18 @@ const BookProperty: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-grow container mx-auto px-4 py-8">
-          <div className="max-w-2xl mx-auto text-center space-y-4">
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                {error?.message || 'Property not found. The property may have been removed or the URL is incorrect.'}
-              </AlertDescription>
-            </Alert>
-            <Button 
-              onClick={() => navigate('/student/properties')}
-              variant="outline"
-              className="flex items-center"
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center">
+            <p className="text-red-600 mb-4">Error: {error || 'Property not found'}</p>
+            <button 
+              onClick={() => window.history.back()} 
+              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
             >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Properties
-            </Button>
+              Go Back
+            </button>
           </div>
         </main>
         <Footer />
-        <StudentNavBar />
       </div>
     );
   }
@@ -66,26 +49,10 @@ const BookProperty: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-6">
-            <Button 
-              onClick={() => navigate(`/student/property/${id}`)}
-              variant="ghost"
-              className="flex items-center mb-4"
-            >
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Property Details
-            </Button>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Book Property</h1>
-            <p className="text-gray-600">{property.title}</p>
-          </div>
-          
-          <BookingWizard property={property} />
-        </div>
+      <main className="flex-grow">
+        <BookingStepsContainer />
       </main>
       <Footer />
-      <StudentNavBar />
     </div>
   );
 };

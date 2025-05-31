@@ -68,8 +68,13 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
             phone: data.profiles.phone || '',
             responseRate: '95%',
             verified: true
-          } : undefined,
-          distance: '1.2 km',
+          } : {
+            name: 'Property Owner',
+            email: 'owner@example.com',
+            phone: '+233 50 123 4567',
+            responseRate: '95%',
+            verified: true
+          },
           rating: 4.5,
           available_from: data.available_from,
           available_to: data.available_to,

@@ -1,3 +1,4 @@
+
 import { Property, Story } from '@/types/property';
 
 // Convert images to stories if no stories are defined
@@ -83,6 +84,7 @@ export function normalizePropertyData(propertyData: any): Property {
     // Add default owner information for display
     owner: propertyData.owner || {
       name: 'Property Owner',
+      email: 'owner@example.com',
       phone: '+233 50 123 4567',
       responseRate: '90%',
       verified: true
@@ -98,10 +100,12 @@ export function getSampleProperties(): Property[] {
   return [
     {
       id: '1',
+      owner_id: 'sample-owner-1',
       title: 'Kitatsu Hostel (All Girls Hostel)',
       type: 'Hostel',
       property_type: 'Hostel',
       price: 8500,
+      rent: 8500,
       price_unit: 'semester',
       priceUnit: 'semester',
       address: 'Near UPSA, Madina, Accra',
@@ -121,6 +125,7 @@ export function getSampleProperties(): Property[] {
       availableUnits: 5,
       owner: {
         name: 'Mrs. Kitatsu',
+        email: 'kitatsu@example.com',
         phone: '+233 50 123 4567',
         responseRate: '95%',
         verified: true
@@ -129,8 +134,6 @@ export function getSampleProperties(): Property[] {
       propertyCategory: 'Hostel',
       property_category: 'Hostel',
       genderType: 'Girls',
-      // Required properties for the Property type
-      owner_id: '',
       city: 'Accra',
       state: 'Greater Accra',
       zip: '00000',
