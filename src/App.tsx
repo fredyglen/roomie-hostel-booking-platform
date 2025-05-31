@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./context/EnhancedAuthContext";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
@@ -48,6 +48,7 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
       retry: 1,
+      refetchOnWindowFocus: false,
     },
   },
 });
@@ -67,7 +68,6 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/test-payment" element={<TestPayment />} />
-            <Route path="*" element={<NotFound />} />
 
             {/* Student Routes */}
             <Route
@@ -87,6 +87,8 @@ const App = () => (
                     <Route path="subscription" element={<StudentSubscription />} />
                     <Route path="story/:id" element={<StoryView />} />
                     <Route path="stories/:id" element={<StoryViewEnhanced />} />
+                    {/* Redirect any unmatched student routes to dashboard */}
+                    <Route path="*" element={<Navigate to="/student/dashboard" replace />} />
                   </Routes>
                 </ProtectedRoute>
               }
@@ -106,6 +108,8 @@ const App = () => (
                     <Route path="profile" element={<OwnerProfile />} />
                     <Route path="settings" element={<OwnerSettings />} />
                     <Route path="subscription" element={<OwnerSubscription />} />
+                    {/* Redirect any unmatched owner routes to dashboard */}
+                    <Route path="*" element={<Navigate to="/owner/dashboard" replace />} />
                   </Routes>
                 </ProtectedRoute>
               }
@@ -126,10 +130,15 @@ const App = () => (
                     <Route path="owner-settings" element={<AdminOwnerSettings />} />
                     <Route path="features" element={<AdminFeatureManagement />} />
                     <Route path="subscriptions" element={<AdminSubscriptionManagement />} />
+                    {/* Redirect any unmatched admin routes to dashboard */}
+                    <Route path="*" element={<Navigate to="/admin/dashboard" replace />} />
                   </Routes>
                 </ProtectedRoute>
               }
             />
+
+            {/* Catch all route - redirect to 404 */}
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </TooltipProvider>

@@ -6,31 +6,35 @@ import { useBusinessPaymentFlow } from '@/hooks/payment/useBusinessPaymentFlow';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { calculatePaymentBreakdown } from '@/utils/paymentCalculations';
 import { BOOKING_PACKAGES } from '@/utils/paymentSplitting';
-import { formatCurrency } from '@/utils/currency';
-import { CreditCard, Smartphone } from 'lucide-react';
+import { CreditCard, Smartphone, AlertCircle } from 'lucide-react';
 import PaymentTestConfiguration from './PaymentTestConfiguration';
 import PaymentBreakdownDisplay from './PaymentBreakdownDisplay';
 import TestPaymentMethods from './TestPaymentMethods';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const PaymentTestPanel: React.FC = () => {
   const { user } = useAuth();
   const { initializePayment, processing } = useBusinessPaymentFlow();
+  const [error, setError] = useState<string | null>(null);
   
+  // Use proper UUIDs for test data
   const [testData, setTestData] = useState({
     packageType: 'standard' as 'standard' | 'premium' | 'luxury',
     studentEmail: user?.email || 'test@example.com',
-    propertyOwnerId: 'test-owner-id',
-    agentId: 'test-agent-id'
+    propertyOwnerId: '550e8400-e29b-41d4-a716-446655440001', // Valid UUID format
+    agentId: '550e8400-e29b-41d4-a716-446655440002' // Valid UUID format
   });
 
   const handleTestPayment = async () => {
     if (!user) {
-      alert('Please log in to test payments');
+      setError('Please log in to test payments');
       return;
     }
 
+    setError(null);
+
     const paymentData = {
-      propertyId: 'test-property-id',
+      propertyId: '550e8400-e29b-41d4-a716-446655440000', // Valid UUID for test property
       studentId: user.id,
       propertyOwnerId: testData.propertyOwnerId,
       agentId: testData.agentId,
@@ -40,23 +44,28 @@ const PaymentTestPanel: React.FC = () => {
       studentEmail: testData.studentEmail,
       metadata: {
         test_mode: true,
-        test_timestamp: new Date().toISOString()
+        test_timestamp: new Date().toISOString(),
+        source: 'payment_test_panel'
       }
     };
 
     try {
+      console.log('Initializing test payment with data:', paymentData);
       const result = await initializePayment(paymentData);
       
       if (result.success) {
         console.log('Payment initialized successfully:', result);
-        alert(`Payment initialized! Reference: ${result.paymentData.reference}`);
+        setError(null);
+        // Show success message
+        alert(`Payment initialized successfully! Reference: ${result.paymentData.reference}`);
       } else {
         console.error('Payment initialization failed:', result.error);
-        alert(`Payment failed: ${result.error}`);
+        setError(`Payment failed: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
       console.error('Test payment error:', error);
-      alert('Test payment failed. Check console for details.');
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+      setError(`Test payment failed: ${errorMessage}`);
     }
   };
 
@@ -73,6 +82,13 @@ const PaymentTestPanel: React.FC = () => {
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+
           <PaymentTestConfiguration 
             testData={testData} 
             onTestDataChange={setTestData} 

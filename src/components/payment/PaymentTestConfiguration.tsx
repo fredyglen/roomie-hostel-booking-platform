@@ -55,6 +55,7 @@ const PaymentTestConfiguration: React.FC<PaymentTestConfigurationProps> = ({
           type="email"
           value={testData.studentEmail}
           onChange={(e) => updateTestData('studentEmail', e.target.value)}
+          placeholder="test@example.com"
         />
       </div>
 
@@ -64,7 +65,9 @@ const PaymentTestConfiguration: React.FC<PaymentTestConfigurationProps> = ({
           id="propertyOwnerId"
           value={testData.propertyOwnerId}
           onChange={(e) => updateTestData('propertyOwnerId', e.target.value)}
+          placeholder="550e8400-e29b-41d4-a716-446655440001"
         />
+        <p className="text-xs text-gray-500">Use valid UUID format for testing</p>
       </div>
 
       <div className="space-y-2">
@@ -73,7 +76,9 @@ const PaymentTestConfiguration: React.FC<PaymentTestConfigurationProps> = ({
           id="agentId"
           value={testData.agentId}
           onChange={(e) => updateTestData('agentId', e.target.value)}
+          placeholder="550e8400-e29b-41d4-a716-446655440002"
         />
+        <p className="text-xs text-gray-500">Use valid UUID format for testing</p>
       </div>
     </div>
   );
