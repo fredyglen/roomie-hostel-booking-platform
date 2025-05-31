@@ -37,7 +37,9 @@ export const usePropertyData = () => {
 
       // Transform database properties to match our Property type
       const transformedProperties: Property[] = (data || []).map(property => {
-        const profile = property.profiles;
+        // Handle profiles - it might be an array or a single object
+        const profileData = Array.isArray(property.profiles) ? property.profiles[0] : property.profiles;
+        
         return {
           id: property.id,
           owner_id: property.owner_id,
@@ -52,10 +54,10 @@ export const usePropertyData = () => {
           bathrooms: property.bathrooms,
           images: property.images || [],
           amenities: property.amenities || [],
-          owner: profile ? {
-            name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
-            email: profile.email,
-            phone: profile.phone || '',
+          owner: profileData ? {
+            name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
+            email: profileData.email,
+            phone: profileData.phone || '',
             responseRate: '95%',
             verified: true
           } : {
@@ -115,7 +117,9 @@ export const usePropertyData = () => {
       }
 
       // Transform database property to match our Property type
-      const profile = data.profiles;
+      // Handle profiles - it might be an array or a single object
+      const profileData = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
+      
       const transformedProperty: Property = {
         id: data.id,
         owner_id: data.owner_id,
@@ -130,10 +134,10 @@ export const usePropertyData = () => {
         bathrooms: data.bathrooms,
         images: data.images || [],
         amenities: data.amenities || [],
-        owner: profile ? {
-          name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
-          email: profile.email,
-          phone: profile.phone || '',
+        owner: profileData ? {
+          name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
+          email: profileData.email,
+          phone: profileData.phone || '',
           responseRate: '95%',
           verified: true
         } : {

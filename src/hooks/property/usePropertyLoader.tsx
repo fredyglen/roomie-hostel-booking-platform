@@ -48,7 +48,9 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
         }
 
         // Transform database property to match our Property type
-        const profile = data.profiles;
+        // Handle profiles - it might be an array or a single object
+        const profileData = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
+        
         const transformedProperty: Property = {
           id: data.id,
           owner_id: data.owner_id,
@@ -63,10 +65,10 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
           bathrooms: data.bathrooms,
           images: data.images || [],
           amenities: data.amenities || [],
-          owner: profile ? {
-            name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim(),
-            email: profile.email,
-            phone: profile.phone || '',
+          owner: profileData ? {
+            name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
+            email: profileData.email,
+            phone: profileData.phone || '',
             responseRate: '95%',
             verified: true
           } : {
