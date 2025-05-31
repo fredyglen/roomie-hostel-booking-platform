@@ -15,7 +15,7 @@ export const sampleProperties: Property[] = [
     priceUnit: 'semester',
     type: 'Apartment',
     propertyCategory: 'Apartment',
-    genderType: 'mixed',
+    genderType: 'Mixed',
     distanceToCampus: '5 min walk',
     rating: 4.5,
     reviewCount: 12,
@@ -25,7 +25,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-1',
     stories: [
       {
-        id: 'story-1-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000
@@ -45,7 +44,7 @@ export const sampleProperties: Property[] = [
     priceUnit: 'semester',
     type: 'Hostel',
     propertyCategory: 'Hostel',
-    genderType: 'male',
+    genderType: 'Boys',
     distanceToCampus: '10 min walk',
     rating: 4.2,
     reviewCount: 8,
@@ -55,7 +54,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-2',
     stories: [
       {
-        id: 'story-2-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000
@@ -75,7 +73,7 @@ export const sampleProperties: Property[] = [
     priceUnit: 'semester',
     type: 'Apartment',
     propertyCategory: 'Apartment',
-    genderType: 'female',
+    genderType: 'Girls',
     distanceToCampus: '8 min walk',
     rating: 4.7,
     reviewCount: 15,
@@ -85,7 +83,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-3',
     stories: [
       {
-        id: 'story-3-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1571624436279-b272aff752b5?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000
@@ -103,9 +100,9 @@ export const sampleProperties: Property[] = [
     ],
     price: 10000,
     priceUnit: 'semester',
-    type: 'Executive',
-    propertyCategory: 'Executive',
-    genderType: 'mixed',
+    type: 'Apartment',
+    propertyCategory: 'Apartment',
+    genderType: 'Mixed',
     distanceToCampus: '15 min drive',
     rating: 4.9,
     reviewCount: 20,
@@ -115,7 +112,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-4',
     stories: [
       {
-        id: 'story-4-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000
@@ -135,7 +131,7 @@ export const sampleProperties: Property[] = [
     priceUnit: 'semester',
     type: 'Hostel',
     propertyCategory: 'Hostel',
-    genderType: 'male',
+    genderType: 'Boys',
     distanceToCampus: '2 min walk',
     rating: 4.0,
     reviewCount: 25,
@@ -145,7 +141,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-5',
     stories: [
       {
-        id: 'story-5-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000
@@ -165,7 +160,7 @@ export const sampleProperties: Property[] = [
     priceUnit: 'semester',
     type: 'Apartment',
     propertyCategory: 'Apartment',
-    genderType: 'female',
+    genderType: 'Girls',
     distanceToCampus: '20 min drive',
     rating: 4.6,
     reviewCount: 18,
@@ -175,7 +170,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-6',
     stories: [
       {
-        id: 'story-6-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000
@@ -195,7 +189,7 @@ export const sampleProperties: Property[] = [
     priceUnit: 'semester',
     type: 'Shared Apartment',
     propertyCategory: 'Apartment',
-    genderType: 'mixed',
+    genderType: 'Mixed',
     distanceToCampus: '25 min drive',
     rating: 4.1,
     reviewCount: 10,
@@ -205,7 +199,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-7',
     stories: [
       {
-        id: 'story-7-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000
@@ -225,7 +218,7 @@ export const sampleProperties: Property[] = [
     priceUnit: 'semester',
     type: 'Hostel',
     propertyCategory: 'Hostel',
-    genderType: 'mixed',
+    genderType: 'Mixed',
     distanceToCampus: '3 min walk',
     rating: 4.4,
     reviewCount: 22,
@@ -235,7 +228,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-8',
     stories: [
       {
-        id: 'story-8-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000
@@ -253,9 +245,9 @@ export const sampleProperties: Property[] = [
     ],
     price: 6000,
     priceUnit: 'semester',
-    type: 'Studio',
-    propertyCategory: 'Studio',
-    genderType: 'mixed',
+    type: 'Apartment',
+    propertyCategory: 'Apartment',
+    genderType: 'Mixed',
     distanceToCampus: '30 min drive',
     rating: 4.8,
     reviewCount: 14,
@@ -265,7 +257,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-9',
     stories: [
       {
-        id: 'story-9-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1571624436279-b272aff752b5?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000
@@ -285,7 +276,7 @@ export const sampleProperties: Property[] = [
     priceUnit: 'semester',
     type: 'Hostel',
     propertyCategory: 'Hostel',
-    genderType: 'male',
+    genderType: 'Boys',
     distanceToCampus: '15 min walk',
     rating: 3.8,
     reviewCount: 30,
@@ -295,7 +286,6 @@ export const sampleProperties: Property[] = [
     owner_id: 'sample-owner-10',
     stories: [
       {
-        id: 'story-10-1',
         type: 'image',
         url: 'https://images.unsplash.com/photo-1567767292278-a4f21aa2d36e?auto=format&fit=crop&q=80&w=800&h=600',
         duration: 5000

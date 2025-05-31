@@ -135,9 +135,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property }) => {
 
         {/* Basic Amenities Icons */}
         <div className="flex items-center space-x-3 mb-3 text-gray-600">
-          <Wifi className="w-4 h-4" title="WiFi" />
-          <Zap className="w-4 h-4" title="Electricity" />
-          <Car className="w-4 h-4" title="Parking" />
+          <Wifi className="w-4 h-4" />
+          <Zap className="w-4 h-4" />
+          <Car className="w-4 h-4" />
         </div>
 
         {/* Price */}
