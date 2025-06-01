@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -27,11 +26,17 @@ const sampleProperties: Property[] = [
     distanceToCampus: '5 min walk',
     images: ['https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80'],
     roomTypes: [
-      { name: '1 in a room', price: 1700, unit: 'month' },
-      { name: '2 in a room', price: 1200, unit: 'month' }
+      { id: '1', name: '1 in a room', price: 1700, unit: 'month', capacity: 1 },
+      { id: '2', name: '2 in a room', price: 1200, unit: 'month', capacity: 2 }
     ],
     occupancy: '1-2 students',
-    propertyCategory: 'Homestel'
+    propertyCategory: 'Homestel',
+    city: 'Accra',
+    state: 'Greater Accra',
+    rent: 850,
+    bedrooms: 1,
+    bathrooms: 1,
+    amenities: []
   },
   {
     id: '2',
@@ -44,12 +49,18 @@ const sampleProperties: Property[] = [
     distanceToCampus: '10 min walk',
     images: ['https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80'],
     roomTypes: [
-      { name: '2 in a room', price: 4000, unit: 'semester' },
-      { name: '3 in a room', price: 3600, unit: 'semester' }
+      { id: '3', name: '2 in a room', price: 4000, unit: 'semester', capacity: 2 },
+      { id: '4', name: '3 in a room', price: 3600, unit: 'semester', capacity: 3 }
     ],
     occupancy: '2-3 students',
     propertyCategory: 'Hostel',
-    allInclusive: true
+    allInclusive: true,
+    city: 'Accra',
+    state: 'Greater Accra',
+    rent: 4000,
+    bedrooms: 2,
+    bathrooms: 1,
+    amenities: []
   },
   {
     id: '3',
@@ -62,11 +73,17 @@ const sampleProperties: Property[] = [
     distanceToCampus: '2 min walk',
     images: ['https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80'],
     roomTypes: [
-      { name: 'Entire apartment', price: 2600, unit: 'month' },
-      { name: 'Shared apartment (per student)', price: 950, unit: 'month' }
+      { id: '5', name: 'Entire apartment', price: 2600, unit: 'month', capacity: 1 },
+      { id: '6', name: 'Shared apartment (per student)', price: 950, unit: 'month', capacity: 1 }
     ],
     occupancy: '2-4 students',
-    propertyCategory: 'Apartment'
+    propertyCategory: 'Apartment',
+    city: 'Kumasi',
+    state: 'Ashanti',
+    rent: 2600,
+    bedrooms: 1,
+    bathrooms: 1,
+    amenities: []
   }
 ];
 

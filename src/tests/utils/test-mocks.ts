@@ -12,13 +12,19 @@ export const mockProperties: Property[] = [
     owner_id: 'owner-1',
     type: 'Hostel',
     property_type: 'Hostel',
+    city: 'Accra',
+    state: 'Greater Accra',
+    rent: 1500,
+    bedrooms: 2,
+    bathrooms: 1,
     price: 1500,
     priceUnit: 'semester',
     address: '123 Test Street, Campus Area',
     distanceToCampus: '5 min walk',
     images: ['https://example.com/image1.jpg'],
     propertyCategory: 'Hostel',
-    description: 'A test hostel property'
+    description: 'A test hostel property',
+    amenities: []
   },
   {
     id: 'test-property-2',
@@ -26,13 +32,19 @@ export const mockProperties: Property[] = [
     owner_id: 'owner-2',
     type: 'Homestel',
     property_type: 'Homestel',
+    city: 'Kumasi',
+    state: 'Ashanti',
+    rent: 900,
+    bedrooms: 1,
+    bathrooms: 1,
     price: 900,
     priceUnit: 'month',
     address: '456 Test Avenue, Near University',
     distanceToCampus: '10 min walk',
     images: ['https://example.com/image2.jpg'],
     propertyCategory: 'Homestel',
-    description: 'A test homestel property'
+    description: 'A test homestel property',
+    amenities: []
   }
 ];
 

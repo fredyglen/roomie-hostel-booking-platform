@@ -1,4 +1,3 @@
-
 import { NavigateFunction } from 'react-router-dom';
 
 interface NavigationOptions {
@@ -61,4 +60,21 @@ export const navigateBack = (
   } else {
     navigate(fallbackPath);
   }
+};
+
+export const navigateToProperties = (navigate: (path: string) => void, filters?: Record<string, string>) => {
+  if (!filters || Object.keys(filters).length === 0) {
+    navigate('/student/properties');
+    return;
+  }
+  
+  const queryParams = new URLSearchParams();
+  Object.entries(filters).forEach(([key, value]) => {
+    if (value && value.trim() !== '') {
+      queryParams.append(key, value);
+    }
+  });
+  
+  const queryString = queryParams.toString();
+  navigate(`/student/properties${queryString ? `?${queryString}` : ''}`);
 };

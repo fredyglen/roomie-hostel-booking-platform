@@ -1,40 +1,27 @@
 
-import { usePropertyFilters } from './usePropertyFilters';
+import { useState } from 'react';
 import { useFilteredProperties } from './useFilteredProperties';
 import { Property } from '@/types/property';
 
-interface UsePropertiesFilterOptions {
-  properties: Property[];
-  initialFilters?: {
-    searchQuery?: string;
-    propertyType?: string;
-    genderType?: string;
-    priceRange?: [number, number];
-    maxDistance?: number;
-  };
+interface FilterOptions {
+  search?: string;
+  priceRange?: [number, number];
+  propertyType?: string;
+  genderType?: string;
+  location?: string;
+  amenities?: string[];
 }
 
-export const usePropertiesFilter = ({ 
-  properties, 
-  initialFilters = {} 
-}: UsePropertiesFilterOptions) => {
-  // Get filter state and actions
-  const filterState = usePropertyFilters(properties, initialFilters);
+export const useFilters = (properties: Property[]) => {
+  const [filters, setFilters] = useState<FilterOptions>({});
   
-  // Get filtered properties based on filter state
-  const { filteredProperties, isLoading } = useFilteredProperties(properties, {
-    searchQuery: filterState.searchQuery,
-    selectedPropertyType: filterState.selectedPropertyType,
-    selectedGenderType: filterState.selectedGenderType,
-    priceRange: filterState.priceRange,
-    maxDistance: filterState.maxDistance
-  });
+  const filteredProperties = useFilteredProperties(properties, filters);
   
   return {
-    ...filterState,
     filteredProperties,
-    isLoading
+    isLoading: false,
+    filters,
+    setFilters,
+    resetFilters: () => setFilters({})
   };
 };
-
-export { usePropertyFilters, useFilteredProperties };

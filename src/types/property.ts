@@ -1,4 +1,3 @@
-
 export type PropertyCategory = 'Hostel' | 'Apartment' | 'Shared' | 'Studio' | 'House' | 'Homestel';
 
 export interface Story {
@@ -14,6 +13,7 @@ export interface RoomType {
   description?: string;
   capacity: number;
   price: number;
+  unit?: string;
 }
 
 export interface PropertyOwner {

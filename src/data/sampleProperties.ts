@@ -1,12 +1,17 @@
-
 import { Property } from '@/types/property';
 
 export const sampleProperties: Property[] = [
   {
     id: '1',
+    owner_id: 'sample-owner-1',
     title: 'Modern Student Apartment - Action School Area',
     description: 'A comfortable 4-in-room accommodation perfect for students. Located in a secure area with easy access to campus facilities.',
     address: '123 Action School Road, Accra',
+    city: 'Accra',
+    state: 'Greater Accra',
+    rent: 2700,
+    bedrooms: 4,
+    bathrooms: 2,
     images: [
       'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800&h=600',
       'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800&h=600'
@@ -22,7 +27,6 @@ export const sampleProperties: Property[] = [
     verified: true,
     availableUnits: 3,
     amenities: ['WiFi', 'Air Conditioning', 'Security', 'Water'],
-    owner_id: 'sample-owner-1',
     stories: [
       {
         type: 'image',
@@ -33,9 +37,15 @@ export const sampleProperties: Property[] = [
   },
   {
     id: '2',
+    owner_id: 'sample-owner-2',
     title: 'Cozy 3-in-room - Rawlings Circle',
     description: 'Well-maintained 3-in-room accommodation with modern amenities in the heart of Rawlings Circle.',
     address: '456 Rawlings Circle, Accra',
+    city: 'Accra',
+    state: 'Greater Accra',
+    rent: 3600,
+    bedrooms: 3,
+    bathrooms: 1,
     images: [
       'https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?auto=format&fit=crop&q=80&w=800&h=600',
       'https://images.unsplash.com/photo-1571624436279-b272aff752b5?auto=format&fit=crop&q=80&w=800&h=600'
@@ -51,7 +61,6 @@ export const sampleProperties: Property[] = [
     verified: true,
     availableUnits: 2,
     amenities: ['WiFi', 'Security', 'Water', 'Electricity'],
-    owner_id: 'sample-owner-2',
     stories: [
       {
         type: 'image',
