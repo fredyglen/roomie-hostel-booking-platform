@@ -42,16 +42,15 @@ export const useBusinessPaymentFlow = () => {
 
       const totalAmount = packagePrices[data.packageType];
 
-      // Create booking record first
+      // Create booking record first - using correct field names for the database
       const { data: booking, error: bookingError } = await supabase
         .from('bookings_enhanced')
         .insert({
-          property_id: data.propertyId,
           student_id: data.studentId,
           property_owner_id: data.propertyOwnerId,
           agent_id: data.agentId,
-          start_date: data.startDate,
-          end_date: data.endDate,
+          check_in_date: data.startDate,  // Using check_in_date instead of start_date
+          check_out_date: data.endDate,   // Using check_out_date instead of end_date
           total_amount: totalAmount,
           package_type: data.packageType,
           payment_status: 'pending',
@@ -74,7 +73,6 @@ export const useBusinessPaymentFlow = () => {
           currency: 'GHS',
           metadata: {
             booking_id: booking.id,
-            property_id: data.propertyId,
             student_id: data.studentId,
             property_owner_id: data.propertyOwnerId,
             agent_id: data.agentId,
