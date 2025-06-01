@@ -1,78 +1,100 @@
 
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import React, { Suspense } from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/context/EnhancedAuthContext';
 import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { LoadingSpinner } from '@/components/common/LoadingSpinner';
+import { logger } from '@/utils/enhanced-logger';
 
-// Pages
-import Index from '@/pages/Index';
-import Landing from '@/pages/Landing';
-import Welcome from '@/pages/Welcome';
-import NotFound from '@/pages/NotFound';
-import PaymentSuccess from '@/pages/PaymentSuccess';
-import TestPayment from '@/pages/TestPayment';
+// Lazy load all pages for better performance
+const Index = React.lazy(() => import('@/pages/Index'));
+const Landing = React.lazy(() => import('@/pages/Landing'));
+const Welcome = React.lazy(() => import('@/pages/Welcome'));
+const NotFound = React.lazy(() => import('@/pages/NotFound'));
+const PaymentSuccess = React.lazy(() => import('@/pages/PaymentSuccess'));
+const TestPayment = React.lazy(() => import('@/pages/TestPayment'));
 
 // Auth Pages
-import Login from '@/pages/auth/Login';
-import Register from '@/pages/auth/Register';
+const Login = React.lazy(() => import('@/pages/auth/Login'));
+const Register = React.lazy(() => import('@/pages/auth/Register'));
 
 // Student Pages
-import StudentDashboard from '@/pages/student/Dashboard';
-import Properties from '@/pages/student/Properties';
-import PropertyDetail from '@/pages/student/PropertyDetail';
-import BookProperty from '@/pages/student/BookProperty';
-import BookingHistory from '@/pages/student/BookingHistory';
-import StudentProfile from '@/pages/student/Profile';
-import StudentSubscription from '@/pages/student/Subscription';
-import Explore from '@/pages/student/Explore';
-import Favorites from '@/pages/student/Favorites';
-import StoryView from '@/pages/student/StoryView';
-import StoryViewEnhanced from '@/pages/student/StoryViewEnhanced';
-import EnhancedStoryPage from '@/pages/student/EnhancedStoryPage';
+const StudentDashboard = React.lazy(() => import('@/pages/student/Dashboard'));
+const Properties = React.lazy(() => import('@/pages/student/Properties'));
+const PropertyDetail = React.lazy(() => import('@/pages/student/PropertyDetail'));
+const BookProperty = React.lazy(() => import('@/pages/student/BookProperty'));
+const BookingHistory = React.lazy(() => import('@/pages/student/BookingHistory'));
+const StudentProfile = React.lazy(() => import('@/pages/student/Profile'));
+const StudentSubscription = React.lazy(() => import('@/pages/student/Subscription'));
+const Explore = React.lazy(() => import('@/pages/student/Explore'));
+const Favorites = React.lazy(() => import('@/pages/student/Favorites'));
+const StoryView = React.lazy(() => import('@/pages/student/StoryView'));
+const StoryViewEnhanced = React.lazy(() => import('@/pages/student/StoryViewEnhanced'));
+const EnhancedStoryPage = React.lazy(() => import('@/pages/student/EnhancedStoryPage'));
 
 // Owner Pages
-import OwnerDashboard from '@/pages/owner/Dashboard';
-import OwnerProperties from '@/pages/owner/Properties';
-import PropertyNew from '@/pages/owner/PropertyNew';
-import PropertyEdit from '@/pages/owner/PropertyEdit';
-import OwnerBookings from '@/pages/owner/Bookings';
-import OwnerProfile from '@/pages/owner/Profile';
-import OwnerSettings from '@/pages/owner/Settings';
-import OwnerSubscription from '@/pages/owner/Subscription';
+const OwnerDashboard = React.lazy(() => import('@/pages/owner/Dashboard'));
+const OwnerProperties = React.lazy(() => import('@/pages/owner/Properties'));
+const PropertyNew = React.lazy(() => import('@/pages/owner/PropertyNew'));
+const PropertyEdit = React.lazy(() => import('@/pages/owner/PropertyEdit'));
+const OwnerBookings = React.lazy(() => import('@/pages/owner/Bookings'));
+const OwnerProfile = React.lazy(() => import('@/pages/owner/Profile'));
+const OwnerSettings = React.lazy(() => import('@/pages/owner/Settings'));
+const OwnerSubscription = React.lazy(() => import('@/pages/owner/Subscription'));
 
 // Admin Pages
-import AdminDashboard from '@/pages/admin/Dashboard';
-import AdminProperties from '@/pages/admin/Properties';
-import AdminBookings from '@/pages/admin/Bookings';
-import AdminUsers from '@/pages/admin/Users';
-import AdminSettings from '@/pages/admin/Settings';
-import FeatureManagement from '@/pages/admin/FeatureManagement';
-import SubscriptionManagement from '@/pages/admin/SubscriptionManagement';
-import VerificationManagement from '@/pages/admin/VerificationManagement';
-import OwnerSettingsAdmin from '@/pages/admin/OwnerSettings';
+const AdminDashboard = React.lazy(() => import('@/pages/admin/Dashboard'));
+const AdminProperties = React.lazy(() => import('@/pages/admin/Properties'));
+const AdminBookings = React.lazy(() => import('@/pages/admin/Bookings'));
+const AdminUsers = React.lazy(() => import('@/pages/admin/Users'));
+const AdminSettings = React.lazy(() => import('@/pages/admin/Settings'));
+const FeatureManagement = React.lazy(() => import('@/pages/admin/FeatureManagement'));
+const SubscriptionManagement = React.lazy(() => import('@/pages/admin/SubscriptionManagement'));
+const VerificationManagement = React.lazy(() => import('@/pages/admin/VerificationManagement'));
+const OwnerSettingsAdmin = React.lazy(() => import('@/pages/admin/OwnerSettings'));
 
 // Booking Components
-import BookingStepsContainer from '@/components/booking/BookingStepsContainer';
+const BookingStepsContainer = React.lazy(() => import('@/components/booking/BookingStepsContainer'));
 
-// Configure QueryClient with better error handling
+// Configure QueryClient with enhanced error handling
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 1000 * 60 * 5, // 5 minutes
-      retry: 1
+      retry: (failureCount, error) => {
+        logger.warn('Query retry attempt', { 
+          failureCount, 
+          error: error instanceof Error ? error.message : String(error) 
+        });
+        return failureCount < 2;
+      },
+      onError: (error) => {
+        logger.error('Query error', error instanceof Error ? error : new Error(String(error)));
+      }
+    },
+    mutations: {
+      onError: (error) => {
+        logger.error('Mutation error', error instanceof Error ? error : new Error(String(error)));
+      }
     }
   },
 });
 
-// Wrap route components with ErrorBoundary
+// Enhanced route wrapper with error boundary and loading
 const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => (
-  <ErrorBoundary>{element}</ErrorBoundary>
+  <ErrorBoundary>
+    <Suspense fallback={<LoadingSpinner />}>
+      {element}
+    </Suspense>
+  </ErrorBoundary>
 );
 
 function App() {
+  logger.info('Application started');
+
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

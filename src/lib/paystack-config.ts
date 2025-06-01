@@ -1,42 +1,56 @@
 
 import { PaystackPop } from '@paystack/inline-js';
+import { APP_CONFIG } from '@/config/constants';
+import { logger } from '@/utils/enhanced-logger';
+import type { PaymentData } from '@/types/common';
 
 export const PAYSTACK_CONFIG = {
-  publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder',
-  currency: 'GHS' as const,
-  channels: ['card', 'mobile_money', 'bank', 'ussd', 'qr'] as const,
-};
+  publicKey: APP_CONFIG.PAYSTACK.PUBLIC_KEY,
+  currency: APP_CONFIG.PAYSTACK.CURRENCY,
+  channels: APP_CONFIG.PAYSTACK.CHANNELS,
+} as const;
 
-export interface PaystackPaymentData {
-  email: string;
-  amount: number; // Amount in kobo (GHS * 100)
+export interface PaystackPaymentData extends PaymentData {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  reference?: string;
-  metadata?: Record<string, any>;
-  onSuccess: (transaction: any) => void;
+  onSuccess: (transaction: unknown) => void;
   onCancel: () => void;
   onClose?: () => void;
 }
 
-export const validatePaystackConfig = () => {
+export const validatePaystackConfig = (): string => {
   const publicKey = PAYSTACK_CONFIG.publicKey;
   
   if (!publicKey || publicKey === 'pk_test_placeholder') {
-    throw new Error('VITE_PAYSTACK_PUBLIC_KEY is not set in environment variables');
+    const error = 'VITE_PAYSTACK_PUBLIC_KEY is not set in environment variables';
+    logger.error('Paystack configuration error', { error });
+    throw new Error(error);
   }
   
   if (!publicKey.startsWith('pk_test_') && !publicKey.startsWith('pk_live_')) {
-    throw new Error('Invalid Paystack public key format');
+    const error = 'Invalid Paystack public key format';
+    logger.error('Paystack configuration error', { error, keyPrefix: publicKey.substring(0, 8) });
+    throw new Error(error);
   }
+  
+  logger.debug('Paystack configuration validated', { 
+    isTestMode: publicKey.startsWith('pk_test_'),
+    keyPrefix: publicKey.substring(0, 8)
+  });
   
   return publicKey;
 };
 
-export const initializePaystackPayment = (paymentData: PaystackPaymentData) => {
+export const initializePaystackPayment = (paymentData: PaystackPaymentData): void => {
   try {
     const publicKey = validatePaystackConfig();
+    
+    logger.info('Initializing Paystack payment', {
+      amount: paymentData.amount,
+      email: paymentData.email,
+      currency: PAYSTACK_CONFIG.currency
+    });
     
     const paystack = PaystackPop.setup({
       key: publicKey,
@@ -49,14 +63,26 @@ export const initializePaystackPayment = (paymentData: PaystackPaymentData) => {
       phone: paymentData.phone,
       ref: paymentData.reference || `txn_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
       metadata: paymentData.metadata,
-      onSuccess: paymentData.onSuccess,
-      onCancel: paymentData.onCancel,
-      onClose: paymentData.onClose || (() => console.log('Payment modal closed')),
+      onSuccess: (transaction) => {
+        logger.info('Payment successful', { 
+          reference: transaction?.reference || 'unknown',
+          amount: paymentData.amount 
+        });
+        paymentData.onSuccess(transaction);
+      },
+      onCancel: () => {
+        logger.info('Payment cancelled by user');
+        paymentData.onCancel();
+      },
+      onClose: () => {
+        logger.debug('Payment modal closed');
+        paymentData.onClose?.();
+      },
     });
     
     paystack.openIframe();
   } catch (error) {
-    console.error('Payment initialization error:', error);
+    logger.error('Payment initialization failed', error instanceof Error ? error : new Error(String(error)));
     throw error;
   }
 };
