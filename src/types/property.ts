@@ -1,5 +1,20 @@
 
-export type PropertyCategory = 'Hostel' | 'Apartment' | 'Shared' | 'Studio' | 'House';
+export type PropertyCategory = 'Hostel' | 'Apartment' | 'Shared' | 'Studio' | 'House' | 'Homestel';
+
+export interface Story {
+  type: 'image' | 'video';
+  url: string;
+  caption?: string;
+  duration: number;
+}
+
+export interface RoomType {
+  id: string;
+  name: string;
+  description?: string;
+  capacity: number;
+  price: number;
+}
 
 export interface PropertyOwner {
   name: string;
@@ -55,16 +70,20 @@ export interface Property {
   // Additional frontend properties
   price?: number;
   priceUnit?: string;
+  price_unit?: string;
   location?: string;
   distance_to_campus?: string;
   distanceToCampus?: string;
   propertyCategory?: PropertyCategory;
   genderType?: string;
+  gender_type?: string;
   status?: string;
   verified?: boolean;
   availableUnits?: number;
   reviewCount?: number;
   house_rules?: string[];
+  stories?: Story[];
+  roomTypes?: RoomType[];
 }
 
 export interface PropertyFormValues {

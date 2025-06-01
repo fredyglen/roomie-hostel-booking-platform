@@ -1,7 +1,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Property } from '@/types/property';
+import { Property, PropertyCategory } from '@/types/property';
 
 export const useDemoProperties = () => {
   return useQuery({
@@ -43,7 +43,7 @@ export const useDemoProperties = () => {
             state: property.state,
             rent: property.rent,
             type: property.property_type,
-            property_category: property.property_category as 'Hostel' | 'Homestel' | 'Apartment',
+            property_category: property.property_category as PropertyCategory,
             bedrooms: property.bedrooms,
             bathrooms: property.bathrooms,
             images: property.images || [],

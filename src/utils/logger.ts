@@ -8,32 +8,36 @@ interface LogContext {
 class Logger {
   private isDevelopment = process.env.NODE_ENV === 'development';
 
-  private log(level: LogLevel, message: string, context?: LogContext) {
+  private log(level: LogLevel, message: string, context?: LogContext | string) {
     if (!this.isDevelopment && level === 'debug') return;
 
     const timestamp = new Date().toISOString();
     const logMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
     
     if (context) {
-      console[level](logMessage, context);
+      if (typeof context === 'string') {
+        console[level](`${logMessage} - ${context}`);
+      } else {
+        console[level](logMessage, context);
+      }
     } else {
       console[level](logMessage);
     }
   }
 
-  debug(message: string, context?: LogContext) {
+  debug(message: string, context?: LogContext | string) {
     this.log('debug', message, context);
   }
 
-  info(message: string, context?: LogContext) {
+  info(message: string, context?: LogContext | string) {
     this.log('info', message, context);
   }
 
-  warn(message: string, context?: LogContext) {
+  warn(message: string, context?: LogContext | string) {
     this.log('warn', message, context);
   }
 
-  error(message: string, context?: LogContext) {
+  error(message: string, context?: LogContext | string) {
     this.log('error', message, context);
   }
 }

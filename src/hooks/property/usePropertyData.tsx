@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Property } from '@/types/property';
+import { Property, PropertyCategory } from '@/types/property';
 import { logger } from '@/utils/logger';
 
 export const usePropertyData = () => {
@@ -53,8 +53,8 @@ export const usePropertyData = () => {
           price: property.rent, // Map rent to price for consistency
           type: property.property_type,
           property_type: property.property_type,
-          property_category: property.property_category,
-          propertyCategory: property.property_category,
+          property_category: property.property_category as PropertyCategory,
+          propertyCategory: property.property_category as PropertyCategory,
           bedrooms: property.bedrooms,
           bathrooms: property.bathrooms,
           size: property.size,
@@ -66,6 +66,7 @@ export const usePropertyData = () => {
           amenities: property.amenities || [],
           gender_restriction: property.gender_restriction,
           genderType: property.gender_restriction,
+          gender_type: property.gender_restriction,
           parking_available: property.parking_available,
           total_rooms: property.total_rooms,
           rooms_available: property.rooms_available,
@@ -84,7 +85,10 @@ export const usePropertyData = () => {
           status: property.is_available ? 'Available' : 'Not Available',
           verified: property.verification_status === 'verified',
           priceUnit: 'month',
+          price_unit: 'month',
           location: `${property.address}, ${property.city}`,
+          distanceToCampus: '10 min walk',
+          distance_to_campus: '10 min walk',
           owner: profileData ? {
             name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
             email: profileData.email,
@@ -107,6 +111,16 @@ export const usePropertyData = () => {
             'No loud music after 10 PM',
             'Keep common areas clean',
             'Visitors must be registered'
+          ],
+          stories: property.images ? property.images.map(image => ({
+            type: 'image' as const,
+            url: image,
+            duration: 5000
+          })) : [],
+          roomTypes: [
+            { id: '1', name: 'Single Room', capacity: 1, price: property.rent },
+            { id: '2', name: 'Double Room', capacity: 2, price: property.rent * 0.8 },
+            { id: '3', name: 'Triple Room', capacity: 3, price: property.rent * 0.7 }
           ]
         };
       });
@@ -168,8 +182,8 @@ export const usePropertyData = () => {
         price: data.rent,
         type: data.property_type,
         property_type: data.property_type,
-        property_category: data.property_category,
-        propertyCategory: data.property_category,
+        property_category: data.property_category as PropertyCategory,
+        propertyCategory: data.property_category as PropertyCategory,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
         size: data.size,
@@ -181,6 +195,7 @@ export const usePropertyData = () => {
         amenities: data.amenities || [],
         gender_restriction: data.gender_restriction,
         genderType: data.gender_restriction,
+        gender_type: data.gender_restriction,
         parking_available: data.parking_available,
         total_rooms: data.total_rooms,
         rooms_available: data.rooms_available,
@@ -199,7 +214,10 @@ export const usePropertyData = () => {
         status: data.is_available ? 'Available' : 'Not Available',
         verified: data.verification_status === 'verified',
         priceUnit: 'month',
+        price_unit: 'month',
         location: `${data.address}, ${data.city}`,
+        distanceToCampus: '10 min walk',
+        distance_to_campus: '10 min walk',
         owner: profileData ? {
           name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
           email: profileData.email,
@@ -222,6 +240,16 @@ export const usePropertyData = () => {
           'No loud music after 10 PM',
           'Keep common areas clean',
           'Visitors must be registered'
+        ],
+        stories: data.images ? data.images.map(image => ({
+          type: 'image' as const,
+          url: image,
+          duration: 5000
+        })) : [],
+        roomTypes: [
+          { id: '1', name: 'Single Room', capacity: 1, price: data.rent },
+          { id: '2', name: 'Double Room', capacity: 2, price: data.rent * 0.8 },
+          { id: '3', name: 'Triple Room', capacity: 3, price: data.rent * 0.7 }
         ]
       };
 

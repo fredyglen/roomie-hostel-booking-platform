@@ -8,6 +8,7 @@ interface ImageWithFallbackProps {
   className?: string;
   fallbackSrc?: string;
   priority?: boolean;
+  onError?: () => void;
 }
 
 const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
@@ -15,7 +16,8 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
   alt,
   className,
   fallbackSrc = '/placeholder.svg',
-  priority = false
+  priority = false,
+  onError
 }) => {
   const [imgSrc, setImgSrc] = useState(src || fallbackSrc);
   const [hasError, setHasError] = useState(false);
@@ -24,6 +26,9 @@ const ImageWithFallback: React.FC<ImageWithFallbackProps> = ({
     if (!hasError && imgSrc !== fallbackSrc) {
       setHasError(true);
       setImgSrc(fallbackSrc);
+    }
+    if (onError) {
+      onError();
     }
   };
 
