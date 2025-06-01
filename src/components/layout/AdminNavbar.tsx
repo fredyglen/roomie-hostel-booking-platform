@@ -12,9 +12,18 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Logo from '@/components/common/Logo';
-import { User, Settings, LayoutDashboard, LogOut, Building, Calendar } from 'lucide-react';
+import { 
+  User, 
+  Settings, 
+  LayoutDashboard, 
+  LogOut, 
+  Users, 
+  Building, 
+  Calendar,
+  Shield
+} from 'lucide-react';
 
-const OwnerNavbar: React.FC = () => {
+const AdminNavbar: React.FC = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -23,7 +32,7 @@ const OwnerNavbar: React.FC = () => {
     if (user?.firstName && user?.lastName) {
       return `${user.firstName[0]}${user.lastName[0]}`.toUpperCase();
     }
-    return user?.email?.substring(0, 2).toUpperCase() || 'NA';
+    return user?.email?.substring(0, 2).toUpperCase() || 'AD';
   };
 
   const handleSignOut = async () => {
@@ -36,42 +45,56 @@ const OwnerNavbar: React.FC = () => {
   };
 
   return (
-    <header className="bg-white shadow-sm">
+    <header className="bg-white shadow-sm border-b">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/owner/dashboard">
+            <Link to="/admin/dashboard">
               <Logo />
             </Link>
             <nav className="hidden md:ml-10 md:flex space-x-8">
               <Link 
-                to="/owner/dashboard" 
-                className={`${isActive('/owner/dashboard') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center`}
+                to="/admin/dashboard" 
+                className={`${isActive('/admin/dashboard') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center`}
               >
                 <LayoutDashboard className="h-4 w-4 mr-1" />
                 Dashboard
               </Link>
               <Link 
-                to="/owner/properties" 
-                className={`${isActive('/owner/properties') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center`}
+                to="/admin/users" 
+                className={`${isActive('/admin/users') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center`}
+              >
+                <Users className="h-4 w-4 mr-1" />
+                Users
+              </Link>
+              <Link 
+                to="/admin/properties" 
+                className={`${isActive('/admin/properties') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center`}
               >
                 <Building className="h-4 w-4 mr-1" />
                 Properties
               </Link>
               <Link 
-                to="/owner/bookings" 
-                className={`${isActive('/owner/bookings') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center`}
+                to="/admin/bookings" 
+                className={`${isActive('/admin/bookings') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center`}
               >
                 <Calendar className="h-4 w-4 mr-1" />
                 Bookings
+              </Link>
+              <Link 
+                to="/admin/verification" 
+                className={`${isActive('/admin/verification') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center`}
+              >
+                <Shield className="h-4 w-4 mr-1" />
+                Verification
               </Link>
             </nav>
           </div>
           
           <div className="flex items-center">
-            {/* Owner Badge */}
-            <div className="mr-4 px-2 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded">
-              OWNER
+            {/* Admin Badge */}
+            <div className="mr-4 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">
+              ADMIN
             </div>
             
             {/* User Menu */}
@@ -94,11 +117,7 @@ const OwnerNavbar: React.FC = () => {
                   </div>
                 </div>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/owner/profile')}>
-                  <User className="mr-2 h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate('/owner/settings')}>
+                <DropdownMenuItem onClick={() => navigate('/admin/settings')}>
                   <Settings className="mr-2 h-4 w-4" />
                   <span>Settings</span>
                 </DropdownMenuItem>
@@ -116,4 +135,4 @@ const OwnerNavbar: React.FC = () => {
   );
 };
 
-export default OwnerNavbar;
+export default AdminNavbar;

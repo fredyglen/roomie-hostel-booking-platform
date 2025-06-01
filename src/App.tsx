@@ -106,7 +106,7 @@ function App() {
               {/* Owner Routes */}
               <Route path="/owner/dashboard" element={<SafeRoute element={<OwnerDashboard />} />} />
               <Route path="/owner/properties" element={<SafeRoute element={<OwnerProperties />} />} />
-              <Route path="/owner/properties/new" element={<SafeRoute element={<PropertyNew />} />} />
+              <Route path="/owner/property/new" element={<SafeRoute element={<PropertyNew />} />} />
               <Route path="/owner/properties/:id/edit" element={<SafeRoute element={<PropertyEdit />} />} />
               <Route path="/owner/bookings" element={<SafeRoute element={<OwnerBookings />} />} />
               <Route path="/owner/profile" element={<SafeRoute element={<OwnerProfile />} />} />

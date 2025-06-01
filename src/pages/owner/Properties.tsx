@@ -8,6 +8,8 @@ import { useToast } from "@/components/ui/use-toast";
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import { Button } from '@/components/ui/button';
 import PropertiesGrid from '@/components/owner/PropertiesGrid';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ErrorDisplay from '@/components/common/ErrorDisplay';
 import { Plus } from 'lucide-react';
 
 // Define a local PropertyDisplay type that matches what we'll display in the UI
@@ -95,8 +97,8 @@ const Properties: React.FC = () => {
     }
   };
 
-  // Show mock data if no properties or still loading
-  const propertyList = properties && properties.length > 0 ? properties : [
+  // Mock data for demonstration
+  const mockProperties: PropertyDisplay[] = [
     {
       id: '1',
       title: 'Cozy Studio Apartment Near UPSA',
@@ -138,9 +140,28 @@ const Properties: React.FC = () => {
     }
   ];
 
-  if (error) {
-    console.error('Properties loading error:', error);
+  if (isLoading) {
+    return (
+      <OwnerLayout pageTitle="My Properties">
+        <LoadingSpinner message="Loading your properties..." />
+      </OwnerLayout>
+    );
   }
+
+  if (error) {
+    return (
+      <OwnerLayout pageTitle="My Properties">
+        <ErrorDisplay 
+          error={error} 
+          title="Failed to load properties"
+          onRetry={() => queryClient.invalidateQueries({ queryKey: ['properties', user?.id] })}
+        />
+      </OwnerLayout>
+    );
+  }
+
+  // Show mock data if no properties or use actual data
+  const propertyList = properties && properties.length > 0 ? properties : mockProperties;
 
   return (
     <OwnerLayout pageTitle="My Properties">
@@ -158,18 +179,11 @@ const Properties: React.FC = () => {
           </Link>
         </div>
 
-        {error ? (
-          <div className="p-4 bg-red-50 rounded-md text-red-800">
-            <p>Error loading properties. Please try again.</p>
-            <pre className="text-xs mt-2">{JSON.stringify(error, null, 2)}</pre>
-          </div>
-        ) : (
-          <PropertiesGrid 
-            properties={propertyList} 
-            isLoading={isLoading}
-            onDeleteProperty={handleDeleteProperty} 
-          />
-        )}
+        <PropertiesGrid 
+          properties={propertyList} 
+          isLoading={isLoading}
+          onDeleteProperty={handleDeleteProperty} 
+        />
       </div>
     </OwnerLayout>
   );
