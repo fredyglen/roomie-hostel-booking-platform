@@ -116,6 +116,9 @@ export interface Property {
   available_from?: string;
   available_to?: string;
   
+  // Verification status - NEW FIELD
+  verification_status?: 'pending' | 'verified' | 'rejected';
+  
   // Timestamps
   created_at?: string;
   updated_at?: string;

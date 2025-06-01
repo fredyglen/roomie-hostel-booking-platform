@@ -4,8 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useDemoProperties } from '@/hooks/property/useDemoProperties';
-import { LoadingIndicator } from '@/components/common/LoadingIndicator';
-import { EmptyState } from '@/components/common/EmptyState';
+import LoadingIndicator from '@/components/common/LoadingIndicator';
+import EmptyState from '@/components/common/EmptyState';
 import { formatCurrency } from '@/utils/currency';
 import { MapPin, Users, Bed, Bath, Shield, Wifi, Car } from 'lucide-react';
 

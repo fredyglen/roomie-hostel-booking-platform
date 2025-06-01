@@ -56,7 +56,6 @@ export const normalizePropertyData = (dbProperty: any): Property => {
     bathrooms: dbProperty.bathrooms,
     images: dbProperty.images || [],
     amenities: dbProperty.amenities || [],
-    verification_status: dbProperty.verification_status,
     gender_restriction: dbProperty.gender_restriction,
     parking_available: dbProperty.parking_available,
     total_rooms: dbProperty.total_rooms,
