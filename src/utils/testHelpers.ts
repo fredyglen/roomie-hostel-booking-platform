@@ -42,6 +42,7 @@ export function generateTestProperty(overrides: Partial<Property> = {}): Propert
     images: ['/placeholder.svg'],
     amenities: ['Test Amenity 1', 'Test Amenity 2'],
     property_type: 'Hostel',
+    type: 'Hostel',
     ...overrides
   };
 }

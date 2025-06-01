@@ -17,7 +17,7 @@ export const STEP_LABELS = [
 const sampleProperties: Property[] = [
   {
     id: '1',
-    owner_id: 'sample-owner-1', // Added required owner_id
+    owner_id: 'sample-owner-1',
     title: 'Cozy Studio Apartment Near UPSA',
     type: 'Homestel',
     price: 850,
@@ -29,7 +29,6 @@ const sampleProperties: Property[] = [
       { id: '1', name: '1 in a room', price: 1700, unit: 'month', capacity: 1 },
       { id: '2', name: '2 in a room', price: 1200, unit: 'month', capacity: 2 }
     ],
-    occupancy: '1-2 students',
     propertyCategory: 'Homestel',
     city: 'Accra',
     state: 'Greater Accra',
@@ -40,7 +39,7 @@ const sampleProperties: Property[] = [
   },
   {
     id: '2',
-    owner_id: 'sample-owner-2', // Added required owner_id
+    owner_id: 'sample-owner-2',
     title: 'Shared 2-Bedroom Apartment',
     type: 'Hostel',
     price: 4000,
@@ -52,7 +51,6 @@ const sampleProperties: Property[] = [
       { id: '3', name: '2 in a room', price: 4000, unit: 'semester', capacity: 2 },
       { id: '4', name: '3 in a room', price: 3600, unit: 'semester', capacity: 3 }
     ],
-    occupancy: '2-3 students',
     propertyCategory: 'Hostel',
     allInclusive: true,
     city: 'Accra',
@@ -64,7 +62,7 @@ const sampleProperties: Property[] = [
   },
   {
     id: '3',
-    owner_id: 'sample-owner-3', // Added required owner_id
+    owner_id: 'sample-owner-3',
     title: 'Premium Single Room in Hostel',
     type: 'Apartment',
     price: 2600,
@@ -76,7 +74,6 @@ const sampleProperties: Property[] = [
       { id: '5', name: 'Entire apartment', price: 2600, unit: 'month', capacity: 1 },
       { id: '6', name: 'Shared apartment (per student)', price: 950, unit: 'month', capacity: 1 }
     ],
-    occupancy: '2-4 students',
     propertyCategory: 'Apartment',
     city: 'Kumasi',
     state: 'Ashanti',
