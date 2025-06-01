@@ -43,7 +43,7 @@ export const useDemoProperties = () => {
             state: property.state,
             rent: property.rent,
             type: property.property_type,
-            property_category: property.property_category,
+            property_category: property.property_category as 'Hostel' | 'Homestel' | 'Apartment',
             bedrooms: property.bedrooms,
             bathrooms: property.bathrooms,
             images: property.images || [],

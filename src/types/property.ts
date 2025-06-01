@@ -100,6 +100,7 @@ export interface Property {
   property_category?: PropertyCategory;
   genderType?: GenderType;
   gender_type?: string;
+  gender_restriction?: string;
   
   // Payment and occupancy details
   advance_payment_months?: number;
@@ -118,6 +119,9 @@ export interface Property {
   
   // Verification status - NEW FIELD
   verification_status?: 'pending' | 'verified' | 'rejected';
+  
+  // Additional property fields
+  parking_available?: boolean;
   
   // Timestamps
   created_at?: string;
