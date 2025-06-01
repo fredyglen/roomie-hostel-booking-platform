@@ -1,6 +1,9 @@
 
 import React from 'react';
-import RoomOptionsStep from '../RoomOptionsStep';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
 
 interface RoomSelectionStepProps {
   selectedRoomType: string;
@@ -29,20 +32,76 @@ const RoomSelectionStep: React.FC<RoomSelectionStepProps> = ({
   onNext,
   availableRoomTypes
 }) => {
+  const isValid = selectedRoomType && selectedFurnishing;
+
   return (
-    <RoomOptionsStep
-      selectedRoomType={selectedRoomType}
-      selectedFurnishing={selectedFurnishing}
-      selectedFloor={selectedFloor}
-      extraRequests={extraRequests}
-      onRoomTypeChange={onRoomTypeChange}
-      onFurnishingChange={onFurnishingChange}
-      onFloorChange={onFloorChange}
-      onRequestsChange={onRequestsChange}
-      onPrevious={onPrevious}
-      onNext={onNext}
-      availableRoomTypes={availableRoomTypes}
-    />
+    <div className="space-y-6">
+      <h2 className="text-xl font-bold">Room Selection</h2>
+      
+      <div>
+        <Label htmlFor="roomType">Room Type</Label>
+        <Select value={selectedRoomType} onValueChange={onRoomTypeChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select room type" />
+          </SelectTrigger>
+          <SelectContent>
+            {availableRoomTypes.map((type) => (
+              <SelectItem key={type} value={type}>{type}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <Label htmlFor="furnishing">Furnishing Option</Label>
+        <Select value={selectedFurnishing} onValueChange={onFurnishingChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select furnishing option" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="furnished">Fully Furnished</SelectItem>
+            <SelectItem value="semi_furnished">Semi Furnished</SelectItem>
+            <SelectItem value="unfurnished">Unfurnished</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <Label htmlFor="floor">Preferred Floor</Label>
+        <Select value={selectedFloor} onValueChange={onFloorChange}>
+          <SelectTrigger>
+            <SelectValue placeholder="Select preferred floor" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="ground">Ground Floor</SelectItem>
+            <SelectItem value="first">First Floor</SelectItem>
+            <SelectItem value="second">Second Floor</SelectItem>
+            <SelectItem value="third">Third Floor</SelectItem>
+            <SelectItem value="any">Any Floor</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      
+      <div>
+        <Label htmlFor="extraRequests">Special Requests (Optional)</Label>
+        <Textarea
+          id="extraRequests"
+          value={extraRequests}
+          onChange={(e) => onRequestsChange(e.target.value)}
+          placeholder="Any special requests or requirements..."
+          rows={3}
+        />
+      </div>
+      
+      <div className="flex justify-between">
+        <Button variant="outline" onClick={onPrevious}>
+          Previous
+        </Button>
+        <Button onClick={onNext} disabled={!isValid}>
+          Next
+        </Button>
+      </div>
+    </div>
   );
 };
 

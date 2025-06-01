@@ -1,56 +1,40 @@
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogEntry {
-  level: LogLevel;
-  message: string;
-  data?: any;
-  timestamp: Date;
+interface LogContext {
+  [key: string]: any;
 }
 
 class Logger {
-  private isDevelopment = import.meta.env.MODE === 'development';
-  
-  private log(level: LogLevel, message: string, data?: any) {
-    if (!this.isDevelopment && level === 'debug') {
-      return;
+  private isDevelopment = process.env.NODE_ENV === 'development';
+
+  private log(level: LogLevel, message: string, context?: LogContext) {
+    if (!this.isDevelopment && level === 'debug') return;
+
+    const timestamp = new Date().toISOString();
+    const logMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}`;
+    
+    if (context) {
+      console[level](logMessage, context);
+    } else {
+      console[level](logMessage);
     }
-
-    const entry: LogEntry = {
-      level,
-      message,
-      data,
-      timestamp: new Date()
-    };
-
-    // In development, use console methods
-    if (this.isDevelopment) {
-      const logMethod = console[level] || console.log;
-      if (data) {
-        logMethod(`[${level.toUpperCase()}] ${message}`, data);
-      } else {
-        logMethod(`[${level.toUpperCase()}] ${message}`);
-      }
-    }
-
-    // In production, you could send to a logging service here
-    // Example: this.sendToLoggingService(entry);
   }
 
-  debug(message: string, data?: any) {
-    this.log('debug', message, data);
+  debug(message: string, context?: LogContext) {
+    this.log('debug', message, context);
   }
 
-  info(message: string, data?: any) {
-    this.log('info', message, data);
+  info(message: string, context?: LogContext) {
+    this.log('info', message, context);
   }
 
-  warn(message: string, data?: any) {
-    this.log('warn', message, data);
+  warn(message: string, context?: LogContext) {
+    this.log('warn', message, context);
   }
 
-  error(message: string, data?: any) {
-    this.log('error', message, data);
+  error(message: string, context?: LogContext) {
+    this.log('error', message, context);
   }
 }
 

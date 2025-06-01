@@ -1,5 +1,6 @@
 
 import React from 'react';
+import { CheckCircle } from 'lucide-react';
 
 interface BookingStepsProps {
   currentStep: number;
@@ -7,43 +8,56 @@ interface BookingStepsProps {
   stepLabels: string[];
 }
 
-const BookingSteps: React.FC<BookingStepsProps> = ({ 
-  currentStep, 
-  totalSteps, 
-  stepLabels 
+const BookingSteps: React.FC<BookingStepsProps> = ({
+  currentStep,
+  totalSteps,
+  stepLabels
 }) => {
   return (
     <div className="mb-8">
-      <div className="flex justify-between">
-        {Array.from({ length: totalSteps }).map((_, step) => (
-          <div key={step} className="flex flex-col items-center">
-            <div 
-              className={`w-10 h-10 rounded-full flex items-center justify-center ${
-                step === currentStep - 1 ? 'bg-roomi-blue text-white' : 
-                step < currentStep - 1 ? 'bg-roomi-teal text-white' : 
-                'bg-gray-200 text-gray-600'
-              }`}
-            >
-              {step < currentStep - 1 ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                </svg>
-              ) : (
-                step + 1
+      <div className="flex items-center justify-between">
+        {stepLabels.map((label, index) => {
+          const stepNumber = index + 1;
+          const isCompleted = stepNumber < currentStep;
+          const isCurrent = stepNumber === currentStep;
+          
+          return (
+            <div key={stepNumber} className="flex flex-col items-center">
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
+                ${isCompleted 
+                  ? 'bg-green-500 text-white' 
+                  : isCurrent 
+                    ? 'bg-blue-500 text-white' 
+                    : 'bg-gray-200 text-gray-600'
+                }
+              `}>
+                {isCompleted ? (
+                  <CheckCircle className="h-5 w-5" />
+                ) : (
+                  stepNumber
+                )}
+              </div>
+              <span className={`
+                mt-2 text-xs text-center
+                ${isCurrent ? 'text-blue-600 font-medium' : 'text-gray-500'}
+              `}>
+                {label}
+              </span>
+              
+              {stepNumber < totalSteps && (
+                <div className={`
+                  w-16 h-0.5 mt-5 absolute
+                  ${isCompleted ? 'bg-green-500' : 'bg-gray-200'}
+                `} 
+                style={{ 
+                  left: `calc(${(stepNumber / totalSteps) * 100}% + 20px)`,
+                  zIndex: -1
+                }} />
               )}
             </div>
-            <span className={`text-xs mt-1 ${step === currentStep - 1 ? 'text-roomi-blue font-medium' : ''}`}>
-              {stepLabels[step]}
-            </span>
-          </div>
-        ))}
-      </div>
-      <div className="relative mt-2">
-        <div className="absolute top-0 h-1 bg-gray-200 w-full"></div>
-        <div 
-          className="absolute top-0 h-1 bg-roomi-blue transition-all duration-300"
-          style={{ width: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
-        ></div>
+          );
+        })}
       </div>
     </div>
   );

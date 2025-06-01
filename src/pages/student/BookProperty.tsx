@@ -1,25 +1,54 @@
 
 import React from 'react';
 import { useParams } from 'react-router-dom';
+import { Helmet } from 'react-helmet-async';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import BookingStepsContainer from '@/components/booking/BookingStepsContainer';
-import { usePropertyLoader } from '@/hooks/property/usePropertyLoader';
-import { Loader2 } from 'lucide-react';
+import BookingWizard from '@/components/booking/BookingWizard';
+import { usePropertyData } from '@/hooks/property/usePropertyData';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ErrorDisplay from '@/components/common/ErrorDisplay';
 
 const BookProperty: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { property, loading, error } = usePropertyLoader(id);
+  const { getPropertyById } = usePropertyData();
+  
+  const [property, setProperty] = React.useState(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    const loadProperty = async () => {
+      if (!id) {
+        setError('Property ID is required');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        const propertyData = await getPropertyById(id);
+        if (propertyData) {
+          setProperty(propertyData);
+        } else {
+          setError('Property not found');
+        }
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to load property');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProperty();
+  }, [id, getPropertyById]);
 
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading property...</p>
-          </div>
+        <main className="flex-grow">
+          <LoadingSpinner message="Loading property details..." />
         </main>
         <Footer />
       </div>
@@ -30,16 +59,11 @@ const BookProperty: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">Error: {error || 'Property not found'}</p>
-            <button 
-              onClick={() => window.history.back()} 
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Go Back
-            </button>
-          </div>
+        <main className="flex-grow">
+          <ErrorDisplay 
+            error={error || 'Property not found'} 
+            title="Unable to load property"
+          />
         </main>
         <Footer />
       </div>
@@ -47,13 +71,20 @@ const BookProperty: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <main className="flex-grow">
-        <BookingStepsContainer />
-      </main>
-      <Footer />
-    </div>
+    <>
+      <Helmet>
+        <title>Book {property.title} - ROOMi</title>
+        <meta name="description" content={`Book ${property.title} - ${property.description}`} />
+      </Helmet>
+      
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-8">
+          <BookingWizard property={property} />
+        </main>
+        <Footer />
+      </div>
+    </>
   );
 };
 
