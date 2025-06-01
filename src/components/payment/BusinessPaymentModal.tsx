@@ -10,11 +10,11 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useBusinessPaymentFlow } from '@/hooks/payment/useBusinessPaymentFlow';
+import { ModernPaystackPayment } from './ModernPaystackPayment';
 import { BOOKING_PACKAGES } from '@/utils/paymentSplitting';
 import { calculatePaymentBreakdown } from '@/utils/paymentCalculations';
 import { formatCurrency } from '@/utils/currency';
-import { Calendar, MapPin, User, CreditCard, Building, Info } from 'lucide-react';
+import { Calendar, MapPin, User, Info } from 'lucide-react';
 
 interface BusinessPaymentModalProps {
   isOpen: boolean;
@@ -44,26 +44,16 @@ const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
   metadata
 }) => {
   const [selectedPackage, setSelectedPackage] = useState<'standard' | 'premium' | 'luxury'>('standard');
-  const { initializePayment, processing } = useBusinessPaymentFlow();
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
 
-  const handlePayment = async () => {
-    const result = await initializePayment({
-      propertyId,
-      studentId,
-      propertyOwnerId,
-      agentId,
-      packageType: selectedPackage,
-      startDate,
-      endDate,
-      studentEmail,
-      metadata
-    });
+  const handlePaymentSuccess = (result: any) => {
+    console.log('Payment successful:', result);
+    onSuccess(result);
+    onClose();
+  };
 
-    if (result.success && result.paymentData) {
-      // Open Paystack payment page in new tab
-      window.open(result.paymentData.authorization_url, '_blank');
-      onSuccess(result.booking);
-    }
+  const handlePaymentError = (error: string) => {
+    console.error('Payment error:', error);
   };
 
   const formatDateRange = (start: string, end: string) => {
@@ -76,6 +66,52 @@ const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
     const pkg = BOOKING_PACKAGES[packageType];
     return calculatePaymentBreakdown(pkg.totalPrice);
   };
+
+  const selectedPackageData = BOOKING_PACKAGES[selectedPackage];
+  const breakdown = getPackageBreakdown(selectedPackage);
+
+  if (showPaymentForm) {
+    return (
+      <Dialog open={isOpen} onOpenChange={onClose}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogDescription>
+              {selectedPackageData.type} Package - {formatCurrency(selectedPackageData.totalPrice)}
+            </DialogDescription>
+          </DialogHeader>
+
+          <ModernPaystackPayment
+            amount={selectedPackageData.totalPrice}
+            email={studentEmail}
+            metadata={{
+              booking_source: 'property_listing',
+              property_id: propertyId,
+              student_id: studentId,
+              property_owner_id: propertyOwnerId,
+              agent_id: agentId,
+              package_type: selectedPackage,
+              start_date: startDate,
+              end_date: endDate,
+              ...metadata
+            }}
+            onSuccess={handlePaymentSuccess}
+            onError={handlePaymentError}
+            title={`${selectedPackageData.type} Package Payment`}
+            description={`Complete your ${selectedPackageData.type.toLowerCase()} booking`}
+          />
+
+          <Button 
+            variant="outline" 
+            onClick={() => setShowPaymentForm(false)}
+            className="w-full mt-4"
+          >
+            Back to Package Selection
+          </Button>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -92,7 +128,7 @@ const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center space-x-2">
-                <Building className="h-5 w-5" />
+                <Calendar className="h-5 w-5" />
                 <span>Booking Summary</span>
               </CardTitle>
             </CardHeader>
@@ -226,34 +262,14 @@ const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
             </CardContent>
           </Card>
 
-          {/* Transparency Notice */}
-          <Card className="bg-blue-50 border-blue-200">
-            <CardContent className="p-4">
-              <div className="flex items-start space-x-3">
-                <Info className="h-5 w-5 text-blue-600 mt-0.5" />
-                <div className="text-sm text-blue-800">
-                  <div className="font-medium mb-1">Transparent Pricing</div>
-                  <div>Your payment is automatically distributed: Property owner receives 98% of the amount, agent gets their commission, and our platform fee covers payment processing, customer support, and platform maintenance.</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Payment Button */}
-          <div className="flex justify-between items-center pt-4">
-            <Button variant="outline" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handlePayment}
-              disabled={processing}
-              size="lg"
-              className="bg-[#9b87f5] hover:bg-[#8b77f0]"
-            >
-              <CreditCard className="mr-2 h-4 w-4" />
-              {processing ? 'Processing...' : `Pay ${formatCurrency(BOOKING_PACKAGES[selectedPackage].totalPrice)}`}
-            </Button>
-          </div>
+          {/* Proceed to Payment Button */}
+          <Button 
+            onClick={() => setShowPaymentForm(true)}
+            className="w-full bg-[#9b87f5] hover:bg-[#8b77f0]"
+            size="lg"
+          >
+            Proceed to Payment - {formatCurrency(selectedPackageData.totalPrice)}
+          </Button>
         </div>
       </DialogContent>
     </Dialog>

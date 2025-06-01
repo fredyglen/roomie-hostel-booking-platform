@@ -1,11 +1,10 @@
 
 import { useState } from 'react';
-import { useAuth } from '@/context/EnhancedAuthContext';
 import { supabase } from '@/lib/supabase';
-import { toast } from '@/components/ui/sonner';
-import { logger } from '@/utils/logger';
+import { verifyPaystackPayment } from '@/utils/paystack-verification';
+import { useToast } from '@/hooks/use-toast';
 
-interface PaymentData {
+interface PaymentInitializationData {
   propertyId: string;
   studentId: string;
   propertyOwnerId: string;
@@ -14,144 +13,153 @@ interface PaymentData {
   startDate: string;
   endDate: string;
   studentEmail: string;
-  metadata?: Record<string, any>;
+  metadata?: any;
 }
 
-interface PaymentResult {
+interface PaymentInitializationResult {
   success: boolean;
-  paymentData?: {
-    reference: string;
-    access_code: string;
-    authorization_url: string;
-  };
   booking?: any;
-  verification?: any;
+  paymentData?: any;
   error?: string;
 }
 
 export const useBusinessPaymentFlow = () => {
   const [processing, setProcessing] = useState(false);
-  const { user } = useAuth();
+  const { toast } = useToast();
 
-  const initializePayment = async (paymentData: PaymentData): Promise<PaymentResult> => {
-    if (!user) {
-      const error = 'User must be authenticated to initialize payment';
-      logger.error(error);
-      toast.error('Authentication required');
-      return { success: false, error };
-    }
-
+  const initializePayment = async (data: PaymentInitializationData): Promise<PaymentInitializationResult> => {
     setProcessing(true);
-    logger.info('Initializing business payment flow', { paymentData });
-
+    
     try {
-      // Calculate amount based on package type
-      const packagePricing = {
-        standard: 2700,
-        premium: 3600,
-        luxury: 4000
+      console.log('Initializing business payment flow:', data);
+
+      // Get package pricing (simplified for now)
+      const packagePrices = {
+        standard: 1200,
+        premium: 1800,
+        luxury: 2500
       };
 
-      const amount = packagePricing[paymentData.packageType];
-      
-      const { data, error } = await supabase.functions.invoke('initialize-payment', {
+      const totalAmount = packagePrices[data.packageType];
+
+      // Create booking record first
+      const { data: booking, error: bookingError } = await supabase
+        .from('bookings_enhanced')
+        .insert({
+          property_id: data.propertyId,
+          student_id: data.studentId,
+          property_owner_id: data.propertyOwnerId,
+          agent_id: data.agentId,
+          start_date: data.startDate,
+          end_date: data.endDate,
+          total_amount: totalAmount,
+          package_type: data.packageType,
+          payment_status: 'pending',
+          status: 'pending',
+          metadata: data.metadata
+        })
+        .select()
+        .single();
+
+      if (bookingError) {
+        console.error('Error creating booking:', bookingError);
+        throw new Error('Failed to create booking');
+      }
+
+      // Initialize payment with Supabase Edge Function
+      const { data: paymentInit, error: paymentError } = await supabase.functions.invoke('initialize-payment', {
         body: {
-          email: paymentData.studentEmail,
-          amount,
+          email: data.studentEmail,
+          amount: totalAmount,
           currency: 'GHS',
           metadata: {
-            ...paymentData.metadata,
-            property_id: paymentData.propertyId,
-            student_id: paymentData.studentId,
-            property_owner_id: paymentData.propertyOwnerId,
-            agent_id: paymentData.agentId,
-            package_type: paymentData.packageType,
-            start_date: paymentData.startDate,
-            end_date: paymentData.endDate,
-            payment_type: 'property_booking'
-          },
-          channels: ['card', 'mobile_money']
+            booking_id: booking.id,
+            property_id: data.propertyId,
+            student_id: data.studentId,
+            property_owner_id: data.propertyOwnerId,
+            agent_id: data.agentId,
+            package_type: data.packageType,
+            ...data.metadata
+          }
         }
       });
 
-      if (error) {
-        logger.error('Payment initialization failed', { error });
-        toast.error('Payment initialization failed');
-        return { success: false, error: error.message };
-      }
-
-      if (!data.status) {
-        logger.error('Payment service returned error', { data });
-        toast.error(data.message || 'Payment initialization failed');
-        return { success: false, error: data.message };
-      }
-
-      logger.info('Payment initialized successfully', { reference: data.data.reference });
-      
-      // Redirect to Paystack checkout
-      if (data.data.authorization_url) {
-        window.location.href = data.data.authorization_url;
+      if (paymentError) {
+        console.error('Payment initialization error:', paymentError);
+        throw new Error('Failed to initialize payment');
       }
 
       return {
         success: true,
-        paymentData: data.data
+        booking,
+        paymentData: paymentInit.data
       };
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      logger.error('Payment initialization error', { error: errorMessage });
-      toast.error('Payment initialization failed');
-      return { success: false, error: errorMessage };
+      console.error('Business payment flow error:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
+      
+      toast({
+        title: "Payment Error",
+        description: errorMessage,
+        variant: "destructive"
+      });
+
+      return {
+        success: false,
+        error: errorMessage
+      };
     } finally {
       setProcessing(false);
     }
   };
 
-  const verifyAndProcessPayment = async (reference: string): Promise<PaymentResult> => {
-    if (!user) {
-      const error = 'User must be authenticated to verify payment';
-      logger.error(error);
-      toast.error('Authentication required');
-      return { success: false, error };
-    }
-
-    setProcessing(true);
-    logger.info('Verifying payment', { reference });
-
+  const verifyAndProcessPayment = async (reference: string) => {
     try {
-      const { data, error } = await supabase.functions.invoke('verify-payment', {
-        body: { reference }
-      });
+      console.log('Verifying and processing payment:', reference);
+      
+      const verification = await verifyPaystackPayment(reference);
+      
+      if (verification.success && verification.data) {
+        // Update booking status
+        const bookingId = verification.data.metadata?.booking_id;
+        
+        if (bookingId) {
+          const { error: updateError } = await supabase
+            .from('bookings_enhanced')
+            .update({
+              payment_status: 'paid',
+              status: 'confirmed',
+              transaction_reference: reference,
+              paystack_reference: verification.data.id?.toString(),
+              payment_method: verification.data.channel,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', bookingId);
 
-      if (error) {
-        logger.error('Payment verification failed', { error });
-        toast.error('Payment verification failed');
-        return { success: false, error: error.message };
+          if (updateError) {
+            console.error('Error updating booking:', updateError);
+          }
+        }
+
+        return {
+          success: true,
+          verification: verification.data,
+          booking: bookingId ? { id: bookingId } : null
+        };
       }
-
-      if (!data.success) {
-        logger.error('Payment verification unsuccessful', { data });
-        toast.error(data.message || 'Payment verification failed');
-        return { success: false, error: data.message };
-      }
-
-      logger.info('Payment verified successfully', { reference });
-      toast.success('Payment verified successfully');
 
       return {
-        success: true,
-        verification: data.verification,
-        booking: data.booking
+        success: false,
+        error: verification.message || 'Payment verification failed'
       };
 
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      logger.error('Payment verification error', { error: errorMessage });
-      toast.error('Payment verification failed');
-      return { success: false, error: errorMessage };
-    } finally {
-      setProcessing(false);
+      console.error('Payment verification error:', error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : 'Verification failed'
+      };
     }
   };
 
