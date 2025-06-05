@@ -1,6 +1,6 @@
 
 import React, { Suspense, ComponentType } from 'react';
-import { LoadingSpinner } from './LoadingSpinner';
+import LoadingSpinner from './LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
 
 interface LazyLoadWrapperProps {
