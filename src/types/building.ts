@@ -1,53 +1,31 @@
+import { BaseEntity, Amenity } from './common';
+import { PropertyStatus } from './property';
 
-export interface Building {
-  id: string;
-  owner_id: string;
-  title: string;
-  address: string;
-  city: string;
-  state: string;
-  zip?: string;
-  description: string;
+export interface Building extends BaseEntity {
+  property_id: string;
+  name: string;
+  floors: Floor[];
+  rooms: Room[];
   total_floors: number;
-  amenities: string[];
-  house_rules: string[];
-  images: string[];
-  is_available: boolean;
-  property_category: 'Hostel' | 'Homestel' | 'Apartment';
-  gender_type: 'Girls' | 'Boys' | 'Mixed';
-  all_inclusive: boolean;
-  utilities: string[];
-  distance_to_campus?: string;
-  created_at: string;
-  updated_at: string;
-  floors?: Floor[];
-}
-
-export interface Floor {
-  id: string;
-  building_id: string;
-  floor_number: number;
-  floor_name?: string;
   total_rooms: number;
-  amenities: string[];
-  created_at: string;
-  rooms?: Room[];
 }
 
-export interface Room {
-  id: string;
+export interface Floor extends BaseEntity {
+  building_id: string;
+  number: number;
+  name: string;
+  description?: string;
+}
+
+export interface Room extends BaseEntity {
   floor_id: string;
-  room_number: string;
-  room_name?: string;
-  occupancy_limit: number;
-  current_occupancy: number;
-  price_per_student: number;
-  price_unit: 'semester' | 'month' | 'year' | 'week';
-  room_type: string;
-  amenities: string[];
-  is_available: boolean;
-  created_at: string;
-  updated_at: string;
+  number: string;
+  type: string;
+  capacity: number;
+  price: number;
+  status: PropertyStatus;
+  amenities: Amenity[];
+  images: string[];
 }
 
 export interface RoomBooking {

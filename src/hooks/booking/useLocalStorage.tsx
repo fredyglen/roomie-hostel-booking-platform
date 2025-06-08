@@ -1,5 +1,5 @@
-
 import { useState, useEffect } from 'react';
+import { ErrorHandler } from '../../utils/ErrorHandler';
 
 export const useLocalStorage = <T,>(
   key: string, 
@@ -11,7 +11,7 @@ export const useLocalStorage = <T,>(
       const item = localStorage.getItem(key);
       return item ? JSON.parse(item) : initialValue;
     } catch (error) {
-      console.error(`Error reading localStorage key "${key}":`, error);
+      ErrorHandler.handle(error, `useLocalStorage error reading key "${key}"`);
       return initialValue;
     }
   });
@@ -23,8 +23,8 @@ export const useLocalStorage = <T,>(
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
       localStorage.setItem(key, JSON.stringify(valueToStore));
-    } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
+    } catch (error: unknown) {
+      ErrorHandler.handle(error, `useLocalStorage error setting key "${key}"`);
     }
   };
 
@@ -32,8 +32,8 @@ export const useLocalStorage = <T,>(
   useEffect(() => {
     try {
       localStorage.setItem(key, JSON.stringify(storedValue));
-    } catch (error) {
-      console.error(`Error setting localStorage key "${key}":`, error);
+    } catch (error: unknown) {
+      ErrorHandler.handle(error, `useLocalStorage error setting key in useEffect "${key}"`);
     }
   }, [key, storedValue]);
 

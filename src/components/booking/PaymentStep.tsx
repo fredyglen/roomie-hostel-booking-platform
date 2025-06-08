@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
 import Button from '@/components/common/Button';
@@ -89,7 +88,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         <Checkbox 
           id="termsAgreed" 
           checked={termsAgreed}
-          onCheckedChange={(checked) => onTermsChange(checked as boolean)} 
+          onCheckedChange={(checked: boolean | "indeterminate") => onTermsChange(Boolean(checked))} 
         />
         <div className="space-y-1">
           <label

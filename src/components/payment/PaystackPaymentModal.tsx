@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,16 +9,17 @@ import { usePaystackIntegration } from '@/hooks/payment/usePaystackIntegration';
 import { getMobileMoneyProviders } from '@/utils/paystackIntegration';
 import { formatCurrency } from '@/utils/currency';
 import { Loader2, CreditCard, Smartphone, Building2 } from 'lucide-react';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface PaystackPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (reference: any) => void;
+  onSuccess: (reference: string) => void;
   amount: number;
   email: string;
   title: string;
   description?: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   split_code?: string;
   subaccount?: string;
 }
@@ -74,7 +74,7 @@ const PaystackPaymentModal: React.FC<PaystackPaymentModalProps> = ({
         onClose();
       },
       (error) => {
-        console.error('Payment error:', error);
+        ErrorHandler.handle(error, 'PaystackPaymentModal payment error');
       }
     );
   };

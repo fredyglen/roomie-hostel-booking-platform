@@ -1,5 +1,4 @@
-
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -11,22 +10,11 @@ const Landing: React.FC = () => {
   const { user, loading } = useAuth();
   const navigate = useNavigate();
 
-  // Redirect authenticated users to their dashboard
-  useEffect(() => {
-    if (!loading && user) {
-      if (user.role === 'student') {
-        navigate('/student/dashboard');
-      } else if (user.role === 'owner' || user.role === 'admin') {
-        navigate('/owner/dashboard');
-      }
-    }
-  }, [user, loading, navigate]);
-
   return (
     <div className="min-h-screen flex flex-col">
       <Header transparent={false} />
       <div className="flex-grow">
-        <div className="container mx-auto px-4 py-12">
+        <div className="container mx-auto px-4 py-8">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Find Your Perfect Student Accommodation
@@ -44,9 +32,7 @@ const Landing: React.FC = () => {
               </Link>
             </div>
           </div>
-          
           <UniversitySelector />
-          
           <div className="mt-16 text-center">
             <h2 className="text-3xl font-bold text-gray-900 mb-6">How It Works</h2>
             <div className="grid md:grid-cols-3 gap-8">

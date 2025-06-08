@@ -1,7 +1,6 @@
-
 import React, { Suspense, ComponentType } from 'react';
-import { LoadingSpinner } from './LoadingSpinner';
-import { logger } from '@/utils/enhanced-logger';
+import LoadingSpinner from './LoadingSpinner';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface LazyLoadWrapperProps {
   children: React.ReactNode;
@@ -44,11 +43,8 @@ class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundarySta
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    logger.error('Lazy loading error', {
-      error: error.message,
-      stack: error.stack,
-      componentStack: errorInfo.componentStack
-    });
+    // Use ErrorHandler to log and handle the error
+    ErrorHandler.handle(error, 'Lazy loading error');
   }
 
   render() {
@@ -79,9 +75,12 @@ export const withLazyLoading = <P extends object>(
 ) => {
   const LazyComponent = React.lazy(() => Promise.resolve({ default: Component }));
   
+  // Type the component returned by React.lazy more explicitly for prop spreading
+  const TypedLazyComponent = LazyComponent as React.ComponentType<P & React.RefAttributes<any>>;
+
   return (props: P) => (
     <LazyLoadWrapper fallback={fallback}>
-      <LazyComponent {...props} />
+      <TypedLazyComponent {...props} />
     </LazyLoadWrapper>
   );
 };

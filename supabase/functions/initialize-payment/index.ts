@@ -1,19 +1,24 @@
-
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { ErrorHandler } from '../../../src/utils/ErrorHandler'
+
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')!
 
-interface PaymentInitRequest {
-  email: string
-  amount: number
-  currency?: string
-  metadata?: any
-  callback_url?: string
-  channels?: string[]
-}
+// Define schema for incoming payment initialization request
+const PaymentInitRequestSchema = z.object({
+  email: z.string().email('Invalid email format'),
+  amount: z.number().positive('Amount must be a positive number'),
+  currency: z.string().optional().default('GHS'),
+  metadata: z.record(z.unknown()).optional(),
+  callback_url: z.string().url('Invalid callback URL format').optional(),
+  channels: z.array(z.string()).optional(),
+});
+
+type PaymentInitRequest = z.infer<typeof PaymentInitRequestSchema>;
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -44,21 +49,53 @@ Deno.serve(async (req) => {
       return new Response('Unauthorized', { status: 401, headers: corsHeaders })
     }
 
-    const paymentData: PaymentInitRequest = await req.json()
-    
-    // Generate unique reference with business context
-    const reference = `ROOMI_${Date.now()}_${Math.random().toString(36).substring(7)}`
-    
+    // Validate incoming request body
+    let paymentData: PaymentInitRequest;
+    try {
+      const body = await req.json();
+      paymentData = PaymentInitRequestSchema.parse(body);
+    } catch (error) {
+      console.error('Payment data validation error:', error);
+      return new Response(JSON.stringify({ status: false, message: 'Invalid request data' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Basic authorization check: ensure the user has a profile (can be expanded)
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('id, role')
+      .eq('id', user.id)
+      .single();
+
+    if (profileError || !profile) {
+      console.error('User profile not found or error fetching profile:', profileError);
+      return new Response(JSON.stringify({ status: false, message: 'User profile not found' }), {
+        status: 404,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // Example authorization: only allow certain roles to initiate payments
+    const allowedRoles = ['student', 'owner', 'admin']; // Define roles allowed to initiate payments
+    if (!allowedRoles.includes(profile.role)) {
+       console.error(`User ${user.id} with role ${profile.role} attempted to initiate payment.`);
+       return new Response(JSON.stringify({ status: false, message: 'Unauthorized to initiate payment' }), {
+         status: 403,
+         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+       });
+    }
+
+    // Generate unique reference with business context (ensure uniqueness in DB)
+    // Consider adding a check against existing references if collisions are a concern
+    const reference = `ROOMI_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
     // Set callback URL to our payment success page
-    const callbackUrl = paymentData.callback_url || 
-      `${supabaseUrl.replace('/supabase', '')}/payment-success`
-    
-    console.log('Initializing payment:', {
-      amount: paymentData.amount,
-      email: paymentData.email,
-      reference,
-      metadata: paymentData.metadata
-    })
+    const callbackUrl = paymentData.callback_url ||
+      `${supabaseUrl.replace('/supabase', '')}/payment-success`;
+
+    ErrorHandler.log('Payment initialization requested:', JSON.stringify({ userId: user?.id, amount: paymentData.amount, currency: paymentData.currency }));
 
     // Prepare Paystack payload
     const paystackPayload = {
@@ -75,7 +112,7 @@ Deno.serve(async (req) => {
         payment_type: 'booking'
       },
       channels: paymentData.channels || ['card', 'mobile_money', 'bank']
-    }
+    };
 
     // Initialize transaction with Paystack
     const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
@@ -85,16 +122,16 @@ Deno.serve(async (req) => {
         'Content-Type': 'application/json'
       },
       body: JSON.stringify(paystackPayload)
-    })
+    });
 
-    const paystackResult = await paystackResponse.json()
+    const paystackResult = await paystackResponse.json();
 
     if (!paystackResult.status) {
-      console.error('Paystack initialization failed:', paystackResult)
-      throw new Error(paystackResult.message || 'Payment initialization failed')
+      console.error('Paystack initialization failed:', paystackResult);
+      throw new Error(paystackResult.message || 'Payment initialization failed');
     }
 
-    console.log('Paystack initialization successful:', paystackResult.data.reference)
+    ErrorHandler.log(`Paystack initialization successful: ${paystackResult.data.reference}`);
 
     // Store transaction in database
     const { error: dbError } = await supabase.from('transactions').insert({
@@ -107,11 +144,11 @@ Deno.serve(async (req) => {
       metadata: paymentData.metadata,
       paystack_reference: paystackResult.data.access_code,
       created_at: new Date().toISOString()
-    })
+    });
 
     if (dbError) {
-      console.error('Database error:', dbError)
-      throw new Error('Failed to store transaction')
+      console.error('Database error:', dbError);
+      throw new Error('Failed to store transaction');
     }
 
     return new Response(JSON.stringify({
@@ -125,16 +162,16 @@ Deno.serve(async (req) => {
     }), {
       status: 200,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    });
 
   } catch (error) {
-    console.error('Payment initialization error:', error)
+    console.error('Payment initialization error:', error);
     return new Response(JSON.stringify({
       status: false,
-      message: error.message || 'Payment initialization failed'
+      message: error instanceof Error ? error.message : 'Payment initialization failed'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
+    });
   }
 })

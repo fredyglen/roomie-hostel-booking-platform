@@ -1,4 +1,3 @@
-
 import { z } from 'zod';
 
 // Ghana regions enum
@@ -10,17 +9,20 @@ export const ghanaRegions = [
 
 export type GhanaRegion = typeof ghanaRegions[number];
 
+// Add string sanitization helper
+const sanitizeString = (val: unknown) => typeof val === 'string' ? val.trim().replace(/<[^>]*>?/gm, '') : val;
+
 export const propertyFormSchema = z.object({
-  title: z.string().min(1, "Title is required"),
-  type: z.string().min(1, "Property type is required"),
+  title: z.preprocess(sanitizeString, z.string().min(1, 'Title is required')),
+  type: z.preprocess(sanitizeString, z.string().min(1, 'Property type is required')),
   propertyCategory: z.enum(['Hostel', 'Homestel', 'Apartment']),
-  address: z.string().min(1, "Address is required"),
-  city: z.string().min(1, "City is required"),
+  address: z.preprocess(sanitizeString, z.string().min(1, 'Address is required')),
+  city: z.preprocess(sanitizeString, z.string().min(1, 'City is required')),
   region: z.enum(ghanaRegions),
-  zip: z.string().optional(),
-  price: z.number().min(1, "Price must be greater than 0"),
+  zip: z.preprocess(sanitizeString, z.string().optional()),
+  price: z.number().min(1, 'Price must be greater than 0'),
   price_unit: z.enum(['week', 'month', 'year', 'semester']),
-  description: z.string().min(10, "Description must be at least 10 characters"),
+  description: z.preprocess(sanitizeString, z.string().min(10, 'Description must be at least 10 characters')),
   distance_to_campus: z.string().optional(),
   amenities: z.string().optional(),
   house_rules: z.string().optional(),
@@ -65,8 +67,8 @@ export const propertyFormSchema = z.object({
   landmark: z.string().optional(),
   
   // Media fields
-  image_url: z.string().optional(),
-  images: z.array(z.string()).optional(),
+  image_url: z.preprocess(sanitizeString, z.string().optional()),
+  images: z.array(z.preprocess(sanitizeString, z.string())).optional(),
   
   // New enhanced fields for verification and features
   verification_status: z.enum(['pending', 'verified', 'rejected']).optional(),

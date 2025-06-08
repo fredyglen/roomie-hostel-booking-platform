@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import {
   Dialog,
@@ -15,11 +14,22 @@ import { BOOKING_PACKAGES } from '@/utils/paymentSplitting';
 import { calculatePaymentBreakdown } from '@/utils/paymentCalculations';
 import { formatCurrency } from '@/utils/currency';
 import { Calendar, MapPin, User, Info } from 'lucide-react';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { PaymentData } from '@/types/common';
+
+// Define interface for confirmed booking data passed to onSuccess
+interface ConfirmedBookingData { // TODO: Refine this interface based on actual booking object structure
+  id?: string; // Assuming booking object has an id
+  package_type?: string; // Assuming booking object has package_type
+  start_date?: string; // Assuming booking object has start_date
+  end_date?: string; // Assuming booking object has end_date
+  [key: string]: unknown; // Allow other properties
+}
 
 interface BusinessPaymentModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess: (booking: any) => void;
+  onSuccess: (booking: ConfirmedBookingData) => void;
   propertyId: string;
   studentId: string;
   studentEmail: string;
@@ -27,7 +37,7 @@ interface BusinessPaymentModalProps {
   agentId: string;
   startDate: string;
   endDate: string;
-  metadata?: any;
+  metadata?: Record<string, unknown>;
 }
 
 const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
@@ -46,14 +56,14 @@ const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
   const [selectedPackage, setSelectedPackage] = useState<'standard' | 'premium' | 'luxury'>('standard');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
 
-  const handlePaymentSuccess = (result: any) => {
-    console.log('Payment successful:', result);
+  const handlePaymentSuccess = (result: ConfirmedBookingData) => {
+    ErrorHandler.log('Payment successful:', result);
     onSuccess(result);
     onClose();
   };
 
   const handlePaymentError = (error: string) => {
-    console.error('Payment error:', error);
+    ErrorHandler.handle('Payment error:', error);
   };
 
   const formatDateRange = (start: string, end: string) => {
@@ -69,6 +79,16 @@ const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
 
   const selectedPackageData = BOOKING_PACKAGES[selectedPackage];
   const breakdown = getPackageBreakdown(selectedPackage);
+
+  const handlePayment = async (paymentData: PaymentData) => {
+    try {
+      // ... payment logic ...
+      // logger.info('Payment data', paymentData);
+    } catch (error) {
+      // console.log('Payment error:', error);
+      ErrorHandler.handle(error, 'BusinessPaymentModal.handlePayment');
+    }
+  };
 
   if (showPaymentForm) {
     return (

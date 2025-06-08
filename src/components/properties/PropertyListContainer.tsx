@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import PropertyList from './PropertyList';
@@ -7,6 +6,7 @@ import { Property } from '@/types/property';
 import { usePropertiesFilter } from '@/hooks/filters';
 import { toast } from '@/components/ui/sonner';
 import { navigateToProperty, navigateToStory } from '@/utils/navigation';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 import { logger } from '@/utils/logger';
 
 interface PropertyListContainerProps {
@@ -55,8 +55,8 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
     });
   };
 
-  const handleError = (error: any) => {
-    logger.error('Error in PropertyListContainer:', error);
+  const handleError = (error: unknown) => {
+    ErrorHandler.handle(error, 'Error in PropertyListContainer:');
     toast.error("Something went wrong", {
       description: "Please try again later"
     });

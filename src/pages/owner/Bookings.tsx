@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,6 +15,8 @@ import {
   XCircle,
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { BaseLoading } from '@/components/ui/BaseLoading';
+import { BaseError } from '@/components/ui/BaseError';
 
 // Mock bookings data
 const bookingsData = [
@@ -98,6 +99,23 @@ const Bookings: React.FC = () => {
       description: `Booking #${bookingId} has been rejected`,
     });
   };
+  
+  const isLoading = false; // Replace with actual loading state when data fetching is implemented
+  const bookings = bookingsData; // Replace with actual data when implemented
+
+  if (isLoading) {
+    return <BaseLoading message="Loading bookings..." />;
+  }
+
+  if (!isLoading && bookings.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 transition-all duration-500">
+        <img src="/empty-state.svg" alt="No bookings" className="w-32 h-32 mb-4 opacity-80" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings found</h3>
+        <p className="text-gray-600">No bookings have been made yet.</p>
+      </div>
+    );
+  }
   
   return (
     <OwnerLayout pageTitle="Bookings">

@@ -1,8 +1,49 @@
-
 import React from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface AdminUserDisplayData {
+  name: string;
+  email: string;
+  role: string;
+  status: string;
+}
 
 const AdminUsers: React.FC = () => {
+  const isLoading = false; // Replace with actual loading state when data fetching is implemented
+  const users: AdminUserDisplayData[] = []; // Replace with actual data when implemented
+
+  if (isLoading) {
+    return (
+      <AdminLayout pageTitle="Users Management">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">All Users</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            {[...Array(8)].map((_, index) => (
+              <div key={index} className="space-y-2 animate-pulse transition-all duration-500">
+                <Skeleton className="h-48 w-full mb-4" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (users.length === 0) {
+    return (
+      <AdminLayout pageTitle="Users Management">
+        <div className="flex flex-col items-center justify-center py-12 transition-all duration-500">
+          <img src="/empty-state.svg" alt="No users" className="w-32 h-32 mb-4 opacity-80" />
+          <p className="text-gray-500 text-lg mb-4">No users found</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout pageTitle="Users Management">
       <div className="bg-white rounded-lg shadow-sm p-6">

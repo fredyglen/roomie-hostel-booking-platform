@@ -71,3 +71,30 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and fill in all required values for your environment.
+
+### Required Variables
+- SUPABASE_URL
+- SUPABASE_ANON_KEY
+- SUPABASE_SERVICE_ROLE_KEY
+- PAYSTACK_PUBLIC_KEY
+- PAYSTACK_SECRET_KEY
+- PAYSTACK_BASE_URL
+- APP_BASE_URL
+- IMAGE_CDN_URL (optional)
+- DEFAULT_PAGE_SIZE
+- MAX_PAGE_SIZE
+- PLATFORM_COMMISSION_RATE
+- AGENT_COMMISSION_RATE
+- AGENT_MINIMUM_FEE
+- PAYSTACK_FEE_RATE
+- BOOKING_FEE_RATE
+- MAX_IMAGE_SIZE
+
+### Deployment Notes
+- Ensure all required environment variables are set in your deployment pipeline (Vercel, Netlify, Docker, etc.).
+- For CI/CD, add these variables to your environment configuration panel or secrets manager.
+- The app will throw an error on startup if any required variable is missing.

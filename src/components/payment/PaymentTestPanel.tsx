@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,6 +10,7 @@ import PaymentTestConfiguration from './PaymentTestConfiguration';
 import PaymentBreakdownDisplay from './PaymentBreakdownDisplay';
 import TestPaymentMethods from './TestPaymentMethods';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 const PaymentTestPanel: React.FC = () => {
   const { user } = useAuth();
@@ -48,22 +48,21 @@ const PaymentTestPanel: React.FC = () => {
         source: 'payment_test_panel'
       }
     };
-
     try {
-      console.log('Initializing test payment with data:', paymentData);
+      ErrorHandler.log('Initializing test payment with data:', JSON.stringify(paymentData));
       const result = await initializePayment(paymentData);
       
       if (result.success) {
-        console.log('Payment initialized successfully:', result);
+        ErrorHandler.log('Payment initialized successfully:', JSON.stringify(result));
         setError(null);
         // Show success message
         alert(`Payment initialized successfully! Reference: ${result.paymentData.reference}`);
       } else {
-        console.error('Payment initialization failed:', result.error);
+        ErrorHandler.log('Payment initialization failed:', result.error);
         setError(`Payment failed: ${result.error || 'Unknown error'}`);
       }
     } catch (error) {
-      console.error('Test payment error:', error);
+      ErrorHandler.log('Test payment error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
       setError(`Test payment failed: ${errorMessage}`);
     }

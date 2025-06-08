@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,9 @@ import BookingFilters from './BookingFilters';
 import BookingCard from './BookingCard';
 import BookingConfirmation from '@/components/booking/BookingConfirmation';
 import PaymentStatusTracker from '@/components/payment/PaymentStatusTracker';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { BaseLoading } from '@/components/ui/BaseLoading';
+import { BaseError } from '@/components/ui/BaseError';
 
 interface Booking {
   id: string;
@@ -55,7 +57,7 @@ const BookingHistory: React.FC = () => {
       if (error) throw error;
       setBookings(data || []);
     } catch (error) {
-      console.error('Error fetching bookings:', error);
+      ErrorHandler.handle('Error fetching bookings:', error);
     } finally {
       setLoading(false);
     }
@@ -69,11 +71,11 @@ const BookingHistory: React.FC = () => {
   });
 
   const handleDownloadReceipt = (booking: Booking) => {
-    console.log('Downloading receipt for booking:', booking.id);
+    ErrorHandler.log('Downloading receipt for booking:', booking.id);
   };
 
   const handleContactSupport = () => {
-    console.log('Contacting support');
+    ErrorHandler.log('Contacting support');
   };
 
   if (selectedBooking) {
@@ -91,6 +93,24 @@ const BookingHistory: React.FC = () => {
           onDownloadReceipt={() => handleDownloadReceipt(selectedBooking)}
           onContactSupport={handleContactSupport}
         />
+      </div>
+    );
+  }
+
+  if (loading) {
+    return <BaseLoading message="Loading your bookings..." />;
+  }
+
+  if (!loading && filteredBookings.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 transition-all duration-500">
+        <img src="/empty-state.svg" alt="No bookings" className="w-32 h-32 mb-4 opacity-80" />
+        <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings found</h3>
+        <p className="text-gray-600">
+          {searchTerm || statusFilter !== 'all' 
+            ? 'Try adjusting your search or filter criteria.'
+            : 'You haven\'t made any bookings yet. Start exploring properties!'}
+        </p>
       </div>
     );
   }

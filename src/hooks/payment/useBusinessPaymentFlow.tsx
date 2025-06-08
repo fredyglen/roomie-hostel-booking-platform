@@ -1,8 +1,9 @@
-
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { verifyPaystackPayment } from '@/utils/paystack-verification';
 import { useToast } from '@/hooks/use-toast';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { PaymentData } from '@/types/common';
 
 interface PaymentInitializationData {
   propertyId: string;
@@ -31,7 +32,7 @@ export const useBusinessPaymentFlow = () => {
     setProcessing(true);
     
     try {
-      console.log('Initializing business payment flow:', data);
+      ErrorHandler.log('Initializing business payment flow:', JSON.stringify(data));
 
       // Get package pricing (simplified for now)
       const packagePrices = {
@@ -61,7 +62,7 @@ export const useBusinessPaymentFlow = () => {
         .single();
 
       if (bookingError) {
-        console.error('Error creating booking:', bookingError);
+        ErrorHandler.log('Error creating booking:', bookingError.message);
         throw new Error('Failed to create booking');
       }
 
@@ -83,7 +84,7 @@ export const useBusinessPaymentFlow = () => {
       });
 
       if (paymentError) {
-        console.error('Payment initialization error:', paymentError);
+        ErrorHandler.log('Payment initialization error:', paymentError);
         throw new Error('Failed to initialize payment');
       }
 
@@ -94,7 +95,7 @@ export const useBusinessPaymentFlow = () => {
       };
 
     } catch (error) {
-      console.error('Business payment flow error:', error);
+      ErrorHandler.log('Business payment flow error:', error);
       const errorMessage = error instanceof Error ? error.message : 'Payment initialization failed';
       
       toast({
@@ -114,7 +115,7 @@ export const useBusinessPaymentFlow = () => {
 
   const verifyAndProcessPayment = async (reference: string) => {
     try {
-      console.log('Verifying and processing payment:', reference);
+      ErrorHandler.log('Verifying and processing payment:', reference);
       
       const verification = await verifyPaystackPayment(reference);
       
@@ -136,7 +137,7 @@ export const useBusinessPaymentFlow = () => {
             .eq('id', bookingId);
 
           if (updateError) {
-            console.error('Error updating booking:', updateError);
+            ErrorHandler.log('Error updating booking:', updateError.message);
           }
         }
 
@@ -153,11 +154,19 @@ export const useBusinessPaymentFlow = () => {
       };
 
     } catch (error) {
-      console.error('Payment verification error:', error);
+      ErrorHandler.log('Payment verification error:', error);
       return {
         success: false,
         error: error instanceof Error ? error.message : 'Verification failed'
       };
+    }
+  };
+
+  const handlePayment = async (paymentData: PaymentData) => {
+    try {
+      // ... payment logic ...
+    } catch (error) {
+      ErrorHandler.handle(error, 'useBusinessPaymentFlow.handlePayment');
     }
   };
 

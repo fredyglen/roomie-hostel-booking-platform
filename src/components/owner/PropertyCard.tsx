@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,6 +5,7 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { formatCurrency } from '@/utils/currency';
+import { IMAGE_URLS } from '@/constants/images';
 
 interface PropertyCardProps {
   property: {
@@ -27,12 +27,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete }) => {
     <Card className="overflow-hidden">
       <div className="h-48 relative">
         <img 
-          src={property.image_url || 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&q=80'} 
+          src={property.image_url || IMAGE_URLS.DEFAULT} 
           alt={property.title} 
           className="w-full h-full object-cover"
           onError={(e) => {
             const target = e.target as HTMLImageElement;
-            target.src = 'https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?auto=format&fit=crop&q=80'; // Fallback image
+            target.src = IMAGE_URLS.DEFAULT; // Fallback image
           }}
         />
         <div className="absolute top-2 right-2">

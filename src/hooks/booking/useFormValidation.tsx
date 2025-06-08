@@ -1,4 +1,3 @@
-
 import { useToast } from '@/hooks/use-toast';
 
 // Define types for form data
@@ -12,7 +11,7 @@ interface FormData {
   emergencyContact: string;
   emergencyPhone: string;
   termsAgreed: boolean;
-  [key: string]: any;
+  [key: string]: unknown; // Allow additional properties, but require unknown type for safety
 }
 
 export const useFormValidation = () => {

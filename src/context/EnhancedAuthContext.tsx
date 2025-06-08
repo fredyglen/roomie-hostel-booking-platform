@@ -1,8 +1,10 @@
-
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { cleanupAuthState } from '@/lib/auth-utils';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { useNavigate } from 'react-router-dom';
+import { logger } from '@/utils/enhanced-logger';
 
 interface AuthUser extends User {
   role: 'owner' | 'student' | 'admin';
@@ -40,199 +42,116 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
-    try {
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching user profile:', error);
-        return null;
-      }
-
-      return {
-        id: userId,
-        email: profile.email,
-        role: profile.role as 'owner' | 'student' | 'admin',
-        firstName: profile.first_name,
-        lastName: profile.last_name,
-        phone: profile.phone,
-        avatarUrl: profile.avatar_url,
-        aud: 'authenticated',
-        created_at: profile.created_at,
-        app_metadata: {},
-        user_metadata: {},
-        identities: [],
-        updated_at: profile.created_at
-      };
-    } catch (error) {
-      console.error('Error in fetchUserProfile:', error);
+  // Robust profile fetcher/creator
+  const fetchOrCreateUserProfile = async (userId: string, email: string): Promise<AuthUser | null> => {
+    // Try to fetch profile
+    let { data: profile, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    if (error && error.code !== 'PGRST116') {
+      // Not found error is ok, others are not
       return null;
     }
+    // If not found, create a default profile (for demo/dev)
+    if (!profile) {
+      const { data: newProfile, error: insertError } = await supabase
+        .from('profiles')
+        .insert({
+          id: userId,
+          email: email,
+          role: 'student', // Default to student for demo, adjust as needed
+        })
+        .select()
+        .single();
+      if (insertError) return null;
+      profile = newProfile;
+    }
+    return {
+      id: userId,
+      email: profile.email,
+      role: profile.role as 'owner' | 'student' | 'admin',
+      firstName: profile.first_name,
+      lastName: profile.last_name,
+      phone: profile.phone,
+      avatarUrl: profile.avatar_url,
+      aud: 'authenticated',
+      created_at: profile.created_at,
+      app_metadata: {},
+      user_metadata: {},
+      identities: [],
+      updated_at: profile.created_at
+    };
   };
 
   const handleAuthStateChange = async (event: string, session: Session | null) => {
-    console.log('Auth state changed:', event, session ? 'session exists' : 'no session');
-    
+    setLoading(true);
     setSession(session);
-    
     if (session?.user) {
-      // Defer profile fetching to prevent deadlocks
-      setTimeout(async () => {
-        try {
-          const userProfile = await fetchUserProfile(session.user.id);
-          setUser(userProfile);
-        } catch (error) {
-          console.error('Error fetching user profile:', error);
-          setUser(null);
-        } finally {
-          setLoading(false);
-        }
-      }, 0);
+      const userProfile = await fetchOrCreateUserProfile(session.user.id, session.user.email!);
+      setUser(userProfile);
     } else {
       setUser(null);
-      setLoading(false);
     }
+    setLoading(false);
   };
 
   const signIn = async (email: string, password: string): Promise<void> => {
-    try {
-      setLoading(true);
-      
-      // Clean up any existing auth state
-      cleanupAuthState();
-      
-      // Attempt global sign out first
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        // Continue even if this fails
-        console.log('Global signout failed, continuing...');
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-
-      if (error) throw error;
-
-      if (data.user) {
-        // Force page reload for clean state
-        window.location.href = '/';
-      }
-    } catch (error) {
-      setLoading(false);
-      throw error;
-    }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    // Auth state change will handle navigation
+    setLoading(false);
   };
 
   const signUp = async (email: string, password: string, role: string): Promise<void> => {
-    try {
-      setLoading(true);
-      
-      // Clean up any existing auth state
-      cleanupAuthState();
-
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          data: {
-            role: role,
-          }
-        }
+    setLoading(true);
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { role } }
+    });
+    if (error) throw error;
+    // Create profile
+    if (data.user) {
+      await supabase.from('profiles').insert({
+        id: data.user.id,
+        email: data.user.email!,
+        role: role,
       });
-
-      if (error) throw error;
-
-      if (data.user) {
-        // Create profile record
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: data.user.email!,
-            role: role,
-          });
-
-        if (profileError) {
-          console.error('Error creating profile:', profileError);
-        }
-
-        // Force page reload for clean state
-        window.location.href = '/';
-      }
-    } catch (error) {
-      setLoading(false);
-      throw error;
     }
+    setLoading(false);
   };
 
   const signOut = async (): Promise<void> => {
-    try {
-      // Clean up auth state first
-      cleanupAuthState();
-      
-      // Attempt global sign out
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        console.log('Sign out error:', err);
-      }
-      
-      // Clear local state
-      setUser(null);
-      setSession(null);
-      
-      // Force page reload for clean state
-      window.location.href = '/';
-    } catch (error) {
-      console.error('Sign out error:', error);
-      // Still clear local state and redirect
-      setUser(null);
-      setSession(null);
-      window.location.href = '/';
-    }
+    setLoading(true);
+    await supabase.auth.signOut();
+    setUser(null);
+    setSession(null);
+    setLoading(false);
+    navigate('/', { replace: true });
   };
 
   const refreshAuth = async (): Promise<void> => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const userProfile = await fetchUserProfile(session.user.id);
-        setUser(userProfile);
-        setSession(session);
-      }
-    } catch (error) {
-      console.error('Error refreshing auth:', error);
-    }
+    setLoading(true);
+    const { data: { session } } = await supabase.auth.getSession();
+    await handleAuthStateChange('REFRESH', session);
+    setLoading(false);
   };
 
   useEffect(() => {
-    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
-
-    // Then check for existing session
-    const initializeAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        await handleAuthStateChange('INITIAL_SESSION', session);
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        setLoading(false);
-      }
-    };
-
-    initializeAuth();
-
-    return () => {
-      subscription.unsubscribe();
-    };
+    // Initial session check
+    (async () => {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      await handleAuthStateChange('INITIAL_SESSION', session);
+      setLoading(false);
+    })();
+    return () => subscription.unsubscribe();
   }, []);
 
   const value: AuthContextType = {

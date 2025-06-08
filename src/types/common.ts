@@ -1,9 +1,27 @@
-
 // Enhanced type definitions to fix TypeScript issues
+export type UserRole = 'student' | 'owner' | 'admin';
+
 export interface BaseEntity {
   id: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface User extends BaseEntity {
+  email: string;
+  role: UserRole;
+  full_name: string;
+  phone_number?: string;
+  avatar_url?: string;
+  university_id?: string;
+  is_verified: boolean;
+}
+
+export interface University extends BaseEntity {
+  name: string;
+  location: string;
+  code: string;
+  logo_url?: string;
 }
 
 export interface ApiResponse<T = unknown> {
@@ -134,4 +152,11 @@ export interface PaymentVerificationResult {
   customer?: unknown;
   message?: string;
   error?: string;
+}
+
+export interface Amenity {
+  id: string;
+  name: string;
+  icon?: string;
+  description?: string;
 }

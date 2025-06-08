@@ -1,8 +1,8 @@
-
 import { PaystackPop } from '@paystack/inline-js';
 import { APP_CONFIG } from '@/config/constants';
 import { logger } from '@/utils/enhanced-logger';
 import type { PaymentData } from '@/types/common';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 export const PAYSTACK_CONFIG = {
   publicKey: APP_CONFIG.PAYSTACK.PUBLIC_KEY,
@@ -24,13 +24,13 @@ export const validatePaystackConfig = (): string => {
   
   if (!publicKey || publicKey === 'pk_test_placeholder') {
     const error = 'VITE_PAYSTACK_PUBLIC_KEY is not set in environment variables';
-    logger.error('Paystack configuration error', { error });
+    ErrorHandler.handle(new Error(error), 'Paystack configuration error');
     throw new Error(error);
   }
   
   if (!publicKey.startsWith('pk_test_') && !publicKey.startsWith('pk_live_')) {
     const error = 'Invalid Paystack public key format';
-    logger.error('Paystack configuration error', { error, keyPrefix: publicKey.substring(0, 8) });
+    ErrorHandler.handle(new Error(error), 'Paystack configuration error');
     throw new Error(error);
   }
   
@@ -82,7 +82,7 @@ export const initializePaystackPayment = (paymentData: PaystackPaymentData): voi
     
     paystack.openIframe();
   } catch (error) {
-    logger.error('Payment initialization failed', error instanceof Error ? error : new Error(String(error)));
+    ErrorHandler.handle(error, 'Paystack initialization failed');
     throw error;
   }
 };

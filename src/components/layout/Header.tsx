@@ -1,8 +1,8 @@
-
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../common/Logo';
 import Button from '../common/Button';
+import { useAuth } from '@/context/EnhancedAuthContext';
 
 interface HeaderProps {
   transparent?: boolean;
@@ -10,6 +10,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const { user, loading } = useAuth();
 
   return (
     <header className={`w-full ${transparent ? 'absolute top-0 z-10' : 'bg-white shadow-sm'}`}>
@@ -26,10 +27,12 @@ const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
                 <li><Link to="/contact" className="hover:text-roomi-blue transition-colors">Contact</Link></li>
               </ul>
             </nav>
-            <div className="flex space-x-4">
-              <Button variant="outline" size="sm">Sign In</Button>
-              <Button variant="primary" size="sm">Sign Up</Button>
-            </div>
+            {!loading && !user && (
+              <div className="flex space-x-4">
+                <Link to="/login"><Button variant="outline" size="sm">Sign In</Button></Link>
+                <Link to="/register"><Button variant="primary" size="sm">Sign Up</Button></Link>
+              </div>
+            )}
           </div>
           
           {/* Mobile menu button */}
@@ -51,10 +54,12 @@ const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
               <Link to="/about" className="px-4 py-2 hover:bg-gray-100 rounded-md">About Us</Link>
               <Link to="/contact" className="px-4 py-2 hover:bg-gray-100 rounded-md">Contact</Link>
               <hr className="my-2" />
-              <div className="flex flex-col space-y-2 px-4">
-                <Button variant="outline" fullWidth>Sign In</Button>
-                <Button variant="primary" fullWidth>Sign Up</Button>
-              </div>
+              {!loading && !user && (
+                <div className="flex flex-col space-y-2 px-4">
+                  <Link to="/login"><Button variant="outline" fullWidth>Sign In</Button></Link>
+                  <Link to="/register"><Button variant="primary" fullWidth>Sign Up</Button></Link>
+                </div>
+              )}
             </nav>
           </div>
         )}

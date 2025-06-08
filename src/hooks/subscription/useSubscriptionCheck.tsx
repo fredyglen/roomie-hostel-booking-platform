@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/EnhancedAuthContext';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 export interface SubscriptionStatus {
   isActive: boolean;
@@ -70,7 +71,7 @@ export const useSubscriptionCheck = () => {
         .single();
 
       if (error || !profile) {
-        console.error('Error fetching user profile:', error);
+        ErrorHandler.handle(error, 'useSubscriptionCheck error fetching user profile');
         setDefaultFreeStatus();
         return;
       }
@@ -93,7 +94,7 @@ export const useSubscriptionCheck = () => {
       });
 
     } catch (error) {
-      console.error('Error checking subscription:', error);
+      ErrorHandler.handle(error, 'useSubscriptionCheck error checking subscription');
       setDefaultFreeStatus();
     } finally {
       setLoading(false);

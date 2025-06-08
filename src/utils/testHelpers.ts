@@ -1,4 +1,4 @@
-
+import { Amenity } from '@/types/common';
 import { Property } from '@/types/property';
 
 /**
@@ -29,20 +29,22 @@ export function normalizePropertyId(id: string | number): string {
 export function generateTestProperty(overrides: Partial<Property> = {}): Property {
   return {
     id: 'test-id-1',
-    title: 'Test Property',
-    address: '123 Test Street',
-    city: 'Accra',
-    state: 'Greater Accra',
-    rent: 1000,
-    bedrooms: 2,
-    bathrooms: 1,
     owner_id: 'test-owner-1',
-    price: 1000,
+    name: 'Test Property',
     description: 'A test property description',
+    type: 'apartment',
+    status: 'available',
+    price: 1000,
+    location: {
+      address: '123 Test St',
+      city: 'Test City',
+      state: 'Test State',
+      country: 'Test Country',
+    },
+    university_id: 'test-uni-1',
     images: ['/placeholder.svg'],
-    amenities: ['Test Amenity 1', 'Test Amenity 2'],
-    property_type: 'Hostel',
-    type: 'Hostel',
-    ...overrides
+    amenities: ['WIFI', 'PARKING', 'SECURITY'] as Amenity[],
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
   };
 }

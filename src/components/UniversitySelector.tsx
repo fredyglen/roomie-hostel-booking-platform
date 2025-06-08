@@ -1,7 +1,8 @@
-
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { IMAGE_URLS } from '@/constants/images';
 
 interface University {
   id: string;
@@ -16,28 +17,28 @@ const universities: University[] = [
     id: 'upsa',
     name: 'University of Professional Studies',
     abbreviation: 'UPSA',
-    image: 'https://images.unsplash.com/photo-1487958449943-2429e8be8625?auto=format&fit=crop&q=80',
+    image: IMAGE_URLS.SAMPLE_1,
     location: 'Accra'
   },
   {
     id: 'knust',
     name: 'Kwame Nkrumah University of Science and Technology',
     abbreviation: 'KNUST',
-    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
+    image: IMAGE_URLS.SAMPLE_2,
     location: 'Kumasi'
   },
   {
     id: 'legon',
     name: 'University of Ghana',
     abbreviation: 'Legon',
-    image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80',
+    image: IMAGE_URLS.SAMPLE_3,
     location: 'Accra'
   },
   {
     id: 'central',
     name: 'University of Cape Coast',
     abbreviation: 'UCC',
-    image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80',
+    image: IMAGE_URLS.SAMPLE_4,
     location: 'Cape Coast'
   }
 ];
@@ -47,7 +48,7 @@ const UniversitySelector: React.FC = () => {
 
   const handleSelect = (universityId: string) => {
     // In a real app, we would store this selection
-    console.log(`Selected university: ${universityId}`);
+    ErrorHandler.log(`Selected university: ${universityId}`);
     // For now, just navigate to the student properties page
     navigate('/student/properties');
   };

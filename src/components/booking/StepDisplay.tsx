@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { 
   PersonalInfoStep,
@@ -8,10 +7,12 @@ import {
   EmergencyContactStep,
   VerificationStep
 } from './steps';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { Property } from '@/types/property';
 
 interface StepDisplayProps {
   currentStep: number;
-  property: any;
+  property: Property;
   formData: {
     personalInfo: {
       firstName: string;
@@ -135,7 +136,7 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
         onRequestsChange={(value) => handleRoomOptionChange('extraRequests', value)}
         onPrevious={handlePreviousStep}
         onNext={handleNextStep}
-        availableRoomTypes={property?.roomTypes?.map((rt: any) => rt.name) || ['single', 'double', 'triple']}
+        availableRoomTypes={property?.features?.map((feature: string) => feature) || ['single', 'double', 'triple']}
       />
     ),
     4: (
@@ -175,6 +176,14 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
         onNext={handleNextStep}
       />
     )
+  };
+
+  const handleStepChange = (step: number) => {
+    try {
+      // Implement the logic to handle step change
+    } catch (error) {
+      ErrorHandler.handle(error, 'StepDisplay.handleStepChange');
+    }
   };
 
   return stepComponents[currentStep as keyof typeof stepComponents] || <div>Invalid step</div>;

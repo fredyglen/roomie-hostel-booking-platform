@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { ModernPaystackPayment } from './ModernPaystackPayment';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,9 +12,17 @@ export const PaystackTest: React.FC = () => {
     setTestResults(prev => [...prev, `${new Date().toLocaleTimeString()}: ${message}`]);
   };
   
-  const handleTestPayment = (result: any) => {
+  interface TestPaymentResult {
+    reference: string;
+    verification?: { amount: number }; // Assuming verification has an amount property
+    amount?: number; // Also allow amount directly if verification is not present
+  }
+
+  const handleTestPayment = (result: TestPaymentResult) => {
     addTestResult(`✅ Payment successful with reference: ${result.reference}`);
-    addTestResult(`✅ Amount verified: GH₵${result.verification?.amount || result.amount}`);
+    // Safely access verification amount or fallback to direct amount
+    const verifiedAmount = result.verification?.amount ?? result.amount;
+    addTestResult(`✅ Amount verified: GH₵${verifiedAmount}`);
     setShowPayment(false);
   };
   

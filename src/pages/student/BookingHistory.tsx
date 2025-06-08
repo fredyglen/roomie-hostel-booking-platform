@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
@@ -6,12 +5,13 @@ import { useAuth } from '@/context/EnhancedAuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
-import ErrorDisplay from '@/components/common/ErrorDisplay';
+import { ErrorDisplay } from '@/components/common/ErrorDisplay';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Calendar, MapPin, DollarSign, Eye, MessageCircle } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 const BookingHistory: React.FC = () => {
   const { user } = useAuth();
@@ -82,7 +82,7 @@ const BookingHistory: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('Error fetching bookings:', error);
+        ErrorHandler.handle(error, 'BookingHistory error fetching bookings');
         return mockBookings; // Fallback to mock data
       }
 
@@ -152,7 +152,6 @@ const BookingHistory: React.FC = () => {
         <main className="flex-grow">
           <ErrorDisplay 
             error={error} 
-            title="Failed to load booking history"
             onRetry={() => window.location.reload()}
           />
         </main>

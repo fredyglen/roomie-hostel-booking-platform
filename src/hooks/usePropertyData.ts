@@ -2,99 +2,77 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Property } from '@/types/property';
 import { logger } from '@/utils/logger';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 // Sample properties data as fallback (keeping existing implementation)
 const getSampleProperties = (): Property[] => {
   return [
     {
-      id: "1",
-      owner_id: "owner1",
-      title: "Modern Student Apartment near Legon",
-      description: "A beautiful 2-bedroom apartment perfect for students, located just 10 minutes walk from University of Ghana main campus.",
-      type: "2 bedroom",
-      address: "East Legon, Accra",
-      city: "Accra",
-      state: "Greater Accra",
-      rent: 1800,
-      bedrooms: 2,
-      bathrooms: 1,
-      images: [
-        "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800&h=600",
-        "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?auto=format&fit=crop&q=80&w=800&h=600"
-      ],
-      amenities: ["WiFi", "Air Conditioning", "Kitchen", "Parking", "Security"],
-      rating: 4.5,
-      owner: {
-        name: "Kwame Asante",
-        email: "kwame@example.com",
-        phone: "+233 24 123 4567",
-        responseRate: "95%",
-        verified: true
+      id: '1',
+      name: 'Modern Apartment',
+      description: 'A modern apartment in Accra.',
+      type: 'apartment',
+      status: 'available',
+      price: 1200,
+      location: {
+        address: '123 Main St',
+        city: 'Accra',
+        state: 'Greater Accra',
+        country: 'Ghana',
       },
-      available_from: "2024-08-01",
-      created_at: "2024-01-15T00:00:00Z"
+      owner_id: 'owner1',
+      university_id: 'uni1',
+      amenities: [
+        { id: 'wifi', name: 'WiFi' },
+        { id: 'ac', name: 'AC' },
+        { id: 'parking', name: 'Parking' }
+      ],
+      images: [],
+      created_at: '',
+      updated_at: '',
+      rating: 4.5,
+      review_count: 10,
+      rules: ['No smoking', 'No pets'],
+      features: ['balcony', 'ensuite']
     }
     // ... other sample properties
   ];
 };
 
-export const normalizePropertyData = (dbProperty: any): Property => {
+export const normalizePropertyData = (dbProperty: Record<string, unknown>): Property => {
   const profileData = Array.isArray(dbProperty.profiles) ? dbProperty.profiles[0] : dbProperty.profiles;
   
   return {
-    id: dbProperty.id,
-    owner_id: dbProperty.owner_id,
-    title: dbProperty.title,
-    description: dbProperty.description,
-    address: dbProperty.address,
-    city: dbProperty.city,
-    state: dbProperty.state,
-    rent: dbProperty.rent,
-    type: dbProperty.property_type,
-    property_category: dbProperty.property_category,
-    bedrooms: dbProperty.bedrooms,
-    bathrooms: dbProperty.bathrooms,
-    images: dbProperty.images || [],
-    amenities: dbProperty.amenities || [],
-    gender_restriction: dbProperty.gender_restriction,
-    parking_available: dbProperty.parking_available,
-    total_rooms: dbProperty.total_rooms,
-    rooms_available: dbProperty.rooms_available,
-    beds_per_room: dbProperty.beds_per_room,
-    beds_available: dbProperty.beds_available,
-    max_occupants: dbProperty.max_occupants,
-    has_bedframes: dbProperty.has_bedframes,
-    has_mattresses: dbProperty.has_mattresses,
-    has_wardrobes: dbProperty.has_wardrobes,
-    has_fan: dbProperty.has_fan,
-    has_tiled_room: dbProperty.has_tiled_room,
-    has_individual_meters: dbProperty.has_individual_meters,
-    washroom_type: dbProperty.washroom_type,
-    meter_type: dbProperty.meter_type,
-    owner: profileData ? {
-      name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
-      email: profileData.email,
-      phone: profileData.phone || '',
-      responseRate: '95%',
-      verified: true
-    } : {
-      name: 'Property Owner',
-      email: 'owner@example.com',
-      phone: '+233 50 123 4567',
-      responseRate: '95%',
-      verified: true
-    },
-    rating: 4.5,
-    available_from: dbProperty.available_from,
-    created_at: dbProperty.created_at,
-    updated_at: dbProperty.updated_at,
-    is_available: dbProperty.is_available
+    id: String(dbProperty.id ?? ''),
+    owner_id: String(dbProperty.owner_id ?? ''),
+    name: String(dbProperty.name ?? dbProperty.title ?? ''),
+    description: String(dbProperty.description ?? ''),
+    type: dbProperty.property_type as Property['type'] ?? 'apartment',
+    status: dbProperty.status as Property['status'] ?? 'available',
+    price: Number(dbProperty.price ?? dbProperty.rent ?? 0),
+    location: typeof dbProperty.location === 'object' && dbProperty.location !== null
+      ? dbProperty.location as Property['location']
+      : {
+          address: String(dbProperty.address ?? ''),
+          city: String(dbProperty.city ?? ''),
+          state: String(dbProperty.state ?? ''),
+          country: String(dbProperty.country ?? 'Ghana'),
+        },
+    university_id: String(dbProperty.university_id ?? ''),
+    amenities: Array.isArray(dbProperty.amenities) ? dbProperty.amenities as Property['amenities'] : [],
+    images: Array.isArray(dbProperty.images) ? dbProperty.images as string[] : [],
+    created_at: String(dbProperty.created_at ?? ''),
+    updated_at: String(dbProperty.updated_at ?? ''),
+    rating: Number(dbProperty.rating ?? 0),
+    review_count: Number(dbProperty.review_count ?? 0),
+    rules: Array.isArray(dbProperty.rules) ? dbProperty.rules as string[] : [],
+    features: Array.isArray(dbProperty.features) ? dbProperty.features as string[] : [],
   };
 };
 
-export const usePropertyData = () => {
+export const usePropertyData = (): [Property[], boolean, string | null] => {
   const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   const fetchProperties = async () => {
@@ -120,9 +98,9 @@ export const usePropertyData = () => {
         .order('created_at', { ascending: false });
 
       if (fetchError) {
-        logger.error('Error fetching properties from database:', fetchError);
+        ErrorHandler.handle(fetchError, 'usePropertyData error fetching properties from database');
         // Fall back to sample data
-        logger.info('Falling back to sample properties');
+        logger.info('Falling back to sample properties after fetch error');
         setProperties(getSampleProperties());
         return;
       }
@@ -139,11 +117,10 @@ export const usePropertyData = () => {
       }
       
     } catch (err) {
+      ErrorHandler.handle(err, 'usePropertyData.fetchProperties');
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch properties';
-      logger.error('Property fetch error:', errorMessage);
       setError(errorMessage);
-      // Fall back to sample data on error
-      setProperties(getSampleProperties());
+      setProperties([]);
     } finally {
       setLoading(false);
     }
@@ -169,28 +146,42 @@ export const usePropertyData = () => {
         .single();
 
       if (error) {
-        logger.error('Error fetching property by ID from database:', error);
+        ErrorHandler.handle(error, 'usePropertyData error fetching property by ID from database');
         // Fall back to sample data
         const sampleProperties = getSampleProperties();
-        return sampleProperties.find(p => p.id === id) || null;
+        const sampleProperty = sampleProperties.find(p => p.id === id);
+        if (sampleProperty) {
+          ErrorHandler.log(`Found property in sample data: ${sampleProperty.name}`);
+          return sampleProperty;
+        }
+        return null;
       }
 
       if (data) {
         const transformedProperty = normalizePropertyData(data);
-        logger.info('Successfully loaded property from database:', transformedProperty.title);
+        logger.info('Successfully loaded property from database:', transformedProperty.name);
         return transformedProperty;
       }
 
       // Fall back to sample data
       const sampleProperties = getSampleProperties();
-      return sampleProperties.find(p => p.id === id) || null;
+      const sampleProperty = sampleProperties.find(p => p.id === id);
+      if (sampleProperty) {
+        ErrorHandler.log(`Found property in sample data: ${sampleProperty.name}`);
+        return sampleProperty;
+      }
+      return null;
       
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch property';
-      logger.error('Property fetch by ID error:', errorMessage);
+      ErrorHandler.handle(err, 'usePropertyData property fetch by ID error');
       // Fall back to sample data
       const sampleProperties = getSampleProperties();
-      return sampleProperties.find(p => p.id === id) || null;
+      const sampleProperty = sampleProperties.find(p => p.id === id);
+      if (sampleProperty) {
+        ErrorHandler.log(`Found property in sample data: ${sampleProperty.name}`);
+        return sampleProperty;
+      }
+      return null;
     }
   };
 
@@ -198,13 +189,7 @@ export const usePropertyData = () => {
     fetchProperties();
   }, []);
 
-  return {
-    properties,
-    loading,
-    error,
-    refreshProperties: fetchProperties,
-    getPropertyById
-  };
+  return [properties, loading, error];
 };
 
 // Export the getSampleProperties for use in other components

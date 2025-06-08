@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +10,8 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import Logo from '@/components/common/Logo';
 import { toast } from "@/components/ui/use-toast";
 import { Loader } from 'lucide-react';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { useStandardizedErrorHandler } from '@/hooks/common/useStandardizedErrorHandler';
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -22,6 +23,7 @@ const Login: React.FC = () => {
   const { signIn, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCreatingDemoUsers, setIsCreatingDemoUsers] = useState(false);
+  const { handleError } = useStandardizedErrorHandler();
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -31,21 +33,10 @@ const Login: React.FC = () => {
     },
   });
 
-  // If user is already logged in, redirect to appropriate dashboard
-  React.useEffect(() => {
-    if (user) {
-      if (user.role === 'student') {
-        navigate('/student/properties');
-      } else if (user.role === 'owner' || user.role === 'admin') {
-        navigate('/owner/dashboard');
-      }
-    }
-  }, [user, navigate]);
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      console.log("Login form submitted:", values);
+      ErrorHandler.log('Login form submitted', JSON.stringify(values));
       await signIn(values.email, values.password);
       
       toast({
@@ -53,13 +44,9 @@ const Login: React.FC = () => {
         description: "You have been signed in",
       });
       // The redirection will be handled by the useEffect above when the user state updates
-    } catch (error: any) {
-      console.error("Login submission error:", error);
-      toast({
-        title: "Login failed",
-        description: error.message || "Failed to sign in",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      ErrorHandler.handle(error, 'Login submission error');
+      handleError(error, 'Login submission error');
     } finally {
       setIsSubmitting(false);
     }
@@ -68,10 +55,11 @@ const Login: React.FC = () => {
   const createDemoUsers = async () => {
     setIsCreatingDemoUsers(true);
     try {
-      const response = await fetch('https://ymqnbekeqarjmxftzvks.supabase.co/functions/v1/create-demo-users', {
+      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-demo-users`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_DEMO_API_KEY,
         }
       });
       
@@ -85,13 +73,9 @@ const Login: React.FC = () => {
       } else {
         throw new Error(data.error || 'Failed to create demo users');
       }
-    } catch (error) {
-      console.error("Error creating demo users:", error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to create demo users",
-        variant: "destructive",
-      });
+    } catch (error: unknown) {
+      ErrorHandler.handle(error, 'Login create demo users error');
+      handleError(error, 'Login create demo users error');
     } finally {
       setIsCreatingDemoUsers(false);
     }

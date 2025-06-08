@@ -1,8 +1,51 @@
-
 import React from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
+import { Skeleton } from '@/components/ui/skeleton';
+
+interface AdminBookingDisplayData {
+  id: string | number;
+  studentName: string;
+  property: string;
+  date: string;
+  amount: number;
+  status: 'Pending' | 'Confirmed' | 'Cancelled'; // Using literal types based on current usage
+}
 
 const AdminBookings: React.FC = () => {
+  const isLoading = false; // Replace with actual loading state when data fetching is implemented
+  const bookings: AdminBookingDisplayData[] = []; // Replace with actual data when implemented
+
+  if (isLoading) {
+    return (
+      <AdminLayout pageTitle="Bookings Management">
+        <div className="bg-white rounded-lg shadow-sm p-6">
+          <h3 className="text-lg font-medium text-gray-900 mb-4">All Bookings</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+            {[...Array(8)].map((_, index) => (
+              <div key={index} className="space-y-2 animate-pulse transition-all duration-500">
+                <Skeleton className="h-48 w-full mb-4" />
+                <Skeleton className="h-4 w-3/4" />
+                <Skeleton className="h-4 w-1/2" />
+                <Skeleton className="h-4 w-1/4" />
+              </div>
+            ))}
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (bookings.length === 0) {
+    return (
+      <AdminLayout pageTitle="Bookings Management">
+        <div className="flex flex-col items-center justify-center py-12 transition-all duration-500">
+          <img src="/empty-state.svg" alt="No bookings" className="w-32 h-32 mb-4 opacity-80" />
+          <p className="text-gray-500 text-lg mb-4">No bookings found</p>
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout pageTitle="Bookings Management">
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -22,29 +65,29 @@ const AdminBookings: React.FC = () => {
               </tr>
             </thead>
             <tbody className="bg-white divide-y divide-gray-200">
-              {[1, 2, 3, 4, 5].map((booking) => (
-                <tr key={booking}>
+              {bookings.map((booking) => (
+                <tr key={booking.id}>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-900">BOOK-{booking}000{booking}</div>
+                    <div className="text-sm text-gray-900">{booking.id}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">Student Name {booking}</div>
+                    <div className="text-sm text-gray-500">{booking.studentName}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">Property {booking}</div>
+                    <div className="text-sm text-gray-500">{booking.property}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">2023-05-{booking < 10 ? '0' + booking : booking}</div>
+                    <div className="text-sm text-gray-500">{booking.date}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">${(booking * 100) + 500}</div>
+                    <div className="text-sm text-gray-500">${booking.amount}</div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                      booking % 3 === 0 ? 'bg-yellow-100 text-yellow-800' : 
-                      booking % 3 === 1 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                      booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 
+                      booking.status === 'Confirmed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
                     }`}>
-                      {booking % 3 === 0 ? 'Pending' : booking % 3 === 1 ? 'Confirmed' : 'Cancelled'}
+                      {booking.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">

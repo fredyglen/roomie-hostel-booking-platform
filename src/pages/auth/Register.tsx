@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,6 +10,7 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Logo from '@/components/common/Logo';
 import { toast } from "@/components/ui/use-toast";
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -59,7 +59,7 @@ const Register: React.FC = () => {
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     setIsSubmitting(true);
     try {
-      console.log("Register form submitted:", values);
+      ErrorHandler.log('Register form submitted', JSON.stringify(values));
       
       await signUp(values.email, values.password, values.role);
       
@@ -68,11 +68,11 @@ const Register: React.FC = () => {
         description: "Your account has been created successfully. Please log in.",
       });
       navigate('/login');
-    } catch (error: any) {
-      console.error("Registration submission error:", error);
+    } catch (error: unknown) {
+      ErrorHandler.handle(error, "Registration submission error");
       toast({
         title: "Registration failed",
-        description: error.message || "Failed to create account",
+        description: error instanceof Error ? error.message : "Failed to create account",
         variant: "destructive",
       });
     } finally {

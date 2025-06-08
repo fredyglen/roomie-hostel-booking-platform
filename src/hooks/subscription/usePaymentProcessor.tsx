@@ -1,8 +1,9 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { usePaystackIntegration } from '@/hooks/payment/usePaystackIntegration';
 import { validatePaymentAmount } from '@/utils/paystackIntegration';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { useStandardizedErrorHandler } from '@/hooks/common/useStandardizedErrorHandler';
 
 interface PaymentData {
   amount: number;
@@ -10,7 +11,7 @@ interface PaymentData {
   phone?: string;
   method: 'card' | 'mobile_money' | 'bank';
   network?: 'mtn' | 'vodafone' | 'airtel';
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   split_code?: string;
   subaccount?: string;
 }
@@ -19,18 +20,15 @@ export const usePaymentProcessor = () => {
   const [processing, setProcessing] = useState(false);
   const { toast } = useToast();
   const { processPayment: paystackProcess } = usePaystackIntegration();
+  const { handleError } = useStandardizedErrorHandler();
 
   const processPayment = async (
     paymentData: PaymentData,
-    onSuccess: (reference: any) => void,
-    onError?: (error: any) => void
+    onSuccess: (reference: string) => void,
+    onError?: (error: unknown) => void
   ) => {
     if (!validatePaymentAmount(paymentData.amount)) {
-      toast({
-        title: "Invalid Amount",
-        description: "Payment amount must be between ₵0.10 and ₵50,000",
-        variant: "destructive"
-      });
+      handleError(new Error("Payment amount must be between ₵0.10 and ₵50,000"), "Invalid payment amount");
       return;
     }
 
@@ -60,22 +58,15 @@ export const usePaymentProcessor = () => {
         },
         (error) => {
           setProcessing(false);
-          toast({
-            title: "Payment Failed",
-            description: error.message || "Payment failed. Please try again.",
-            variant: "destructive"
-          });
           if (onError) onError(error);
         }
       );
     } catch (error) {
       setProcessing(false);
-      toast({
-        title: "Payment Error",
-        description: "An error occurred while processing your payment.",
-        variant: "destructive"
-      });
-      if (onError) onError(error);
+      ErrorHandler.handle(error, 'usePaymentProcessor payment processing error');
+      if (onError) {
+        onError(error);
+      }
     }
   };
 

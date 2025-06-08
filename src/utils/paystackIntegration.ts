@@ -1,6 +1,8 @@
-
 import { supabase } from '@/lib/supabase';
 import { formatCurrency } from './currency';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { config } from '@/config';
+import { PAYMENT_CONSTANTS } from '@/constants/payment';
 
 export interface PaystackConfig {
   email: string;
@@ -11,9 +13,10 @@ export interface PaystackConfig {
   split_code?: string;
   subaccount?: string;
   callback_url?: string;
-  onSuccess: (reference: any) => void;
+  onSuccess: (reference: string) => void;
   onCancel: () => void;
-  onError?: (error: any) => void;
+  onError?: (error: unknown) => void;
+  onClose?: () => void;
 }
 
 export interface MobileMoneyConfig {
@@ -26,14 +29,24 @@ export interface MobileMoneyConfig {
   onError: (error: any) => void;
 }
 
+export interface PaystackPaymentOptions {
+  amount: number;
+  email: string;
+  reference?: string;
+  metadata?: Record<string, unknown>;
+  onSuccess: (reference: string) => void;
+  onClose?: () => void;
+  onError?: (error: unknown) => void;
+}
+
 // Initialize Paystack payment
 export const initializePaystackPayment = async (config: PaystackConfig) => {
   try {
-    console.log('Initializing Paystack payment:', {
+    ErrorHandler.log('Initializing Paystack payment: ' + JSON.stringify({
       amount: formatCurrency(config.amount),
       email: config.email,
       currency: config.currency || 'GHS'
-    });
+    }));
 
     // Call our Supabase Edge Function to initialize payment
     const { data, error } = await supabase.functions.invoke('initialize-payment', {
@@ -62,13 +75,18 @@ export const initializePaystackPayment = async (config: PaystackConfig) => {
       const popup = new (window as any).PaystackPop();
       
       popup.resumeTransaction(data.data.access_code, {
-        onSuccess: (transaction: any) => {
-          console.log('Payment successful:', transaction);
-          config.onSuccess(transaction);
+        onSuccess: (transaction: { reference: string }) => {
+          ErrorHandler.log('Payment successful:', JSON.stringify(transaction));
+          config.onSuccess(transaction.reference);
         },
         onCancel: () => {
-          console.log('Payment cancelled');
+          ErrorHandler.log('Payment cancelled');
           config.onCancel();
+        },
+        onClose: config.onClose,
+        onError: (error: unknown) => {
+          ErrorHandler.handle(error, 'Paystack payment error');
+          config.onError && config.onError(error);
         }
       });
     } else {
@@ -77,21 +95,18 @@ export const initializePaystackPayment = async (config: PaystackConfig) => {
     }
 
   } catch (error) {
-    console.error('Payment initialization error:', error);
-    if (config.onError) {
-      config.onError(error);
-    }
+    ErrorHandler.handle('Payment initialization error:', error);
   }
 };
 
 // Mobile Money Integration using Paystack Charge API
 export const initializeMobileMoneyPayment = async (config: MobileMoneyConfig) => {
   try {
-    console.log('Initializing Mobile Money payment:', {
+    ErrorHandler.log('Initializing Mobile Money payment: ' + JSON.stringify({
       amount: formatCurrency(config.amount),
       network: config.network.toUpperCase(),
       phone: config.phoneNumber
-    });
+    }));
 
     // Initialize transaction first
     const { data, error } = await supabase.functions.invoke('initialize-payment', {
@@ -123,8 +138,7 @@ export const initializeMobileMoneyPayment = async (config: MobileMoneyConfig) =>
     window.location.href = data.data.authorization_url;
 
   } catch (error) {
-    console.error('Mobile Money payment error:', error);
-    config.onError(error);
+    ErrorHandler.handle('Mobile Money payment error:', error);
   }
 };
 
@@ -141,7 +155,7 @@ export const verifyPayment = async (reference: string) => {
 
     return data;
   } catch (error) {
-    console.error('Payment verification error:', error);
+    ErrorHandler.handle('Payment verification error:', error);
     throw error;
   }
 };

@@ -1,44 +1,23 @@
-
 import React from 'react';
-import { AlertCircle, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface ErrorDisplayProps {
-  error: string | Error;
+  error: unknown;
   onRetry?: () => void;
-  title?: string;
 }
 
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
-  error,
-  onRetry,
-  title = "Something went wrong"
-}) => {
-  const errorMessage = typeof error === 'string' ? error : error.message;
-
-  return (
-    <div className="flex items-center justify-center p-8">
-      <Alert className="max-w-md">
-        <AlertCircle className="h-4 w-4" />
-        <AlertTitle>{title}</AlertTitle>
-        <AlertDescription className="mt-2">
-          {errorMessage}
-        </AlertDescription>
-        {onRetry && (
-          <Button 
-            onClick={onRetry} 
-            variant="outline" 
-            size="sm" 
-            className="mt-4"
-          >
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Try Again
-          </Button>
-        )}
-      </Alert>
-    </div>
-  );
-};
+export const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ error, onRetry }) => (
+  <div className="p-4 bg-red-100 text-red-800 rounded flex flex-col items-start">
+    <div className="font-semibold mb-2">Error</div>
+    <div className="mb-2">{error instanceof Error ? error.message : 'An unknown error occurred.'}</div>
+    {onRetry && (
+      <button
+        className="mt-2 px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+        onClick={onRetry}
+      >
+        Try Again
+      </button>
+    )}
+  </div>
+);
 
 export default ErrorDisplay;
