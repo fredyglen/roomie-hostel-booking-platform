@@ -22,13 +22,8 @@ const PaymentBreakdownDisplay: React.FC<PaymentBreakdownDisplayProps> = ({ break
         
         <div className="border-t pt-3 space-y-2 text-sm">
           <div className="flex justify-between text-gray-600">
-            <span>Property Owner Amount</span>
-            <span>{formatCurrency(breakdown.propertyOwnerAmount)}</span>
-          </div>
-          
-          <div className="flex justify-between text-gray-600">
-            <span>Agent Commission</span>
-            <span>{formatCurrency(breakdown.agentCommission)}</span>
+            <span>Property Rent</span>
+            <span>{formatCurrency(breakdown.propertyRent)}</span>
           </div>
           
           <div className="flex justify-between text-gray-600">
@@ -37,15 +32,25 @@ const PaymentBreakdownDisplay: React.FC<PaymentBreakdownDisplayProps> = ({ break
           </div>
           
           <div className="flex justify-between text-gray-600">
-            <span>Paystack Fee</span>
-            <span>{formatCurrency(breakdown.paystackFee)}</span>
+            <span>Payment Processor Fee</span>
+            <span>{formatCurrency(breakdown.paymentProcessorFee)}</span>
+          </div>
+          
+          <div className="flex justify-between text-gray-600">
+            <span>Agent Fee</span>
+            <span>{formatCurrency(breakdown.agentFee)}</span>
+          </div>
+          
+          <div className="flex justify-between text-gray-600">
+            <span>VAT</span>
+            <span>{formatCurrency(breakdown.vat)}</span>
           </div>
         </div>
         
         <div className="border-t pt-3">
           <div className="flex justify-between font-semibold">
-            <span>Platform Net</span>
-            <span className="text-green-600">{formatCurrency(breakdown.platformNet)}</span>
+            <span>Owner Receives</span>
+            <span className="text-green-600">{formatCurrency(breakdown.ownerReceives)}</span>
           </div>
         </div>
       </CardContent>

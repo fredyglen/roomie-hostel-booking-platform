@@ -7,7 +7,7 @@ export const mockProperty: Property = {
   name: 'Test Property',
   title: 'Test Property',
   description: 'A test property',
-  type: 'hostel', // Fix: use lowercase
+  type: 'hostel',
   status: 'available',
   price: 1000,
   rent: 1000,
@@ -42,8 +42,14 @@ export const mockProperty: Property = {
 export const mockProperty2: Property = {
   ...mockProperty,
   id: '2',
-  type: 'homestel', // Fix: use lowercase
+  type: 'homestel',
   propertyCategory: 'Homestel',
   name: 'Test Homestel',
   title: 'Test Homestel'
 };
+
+export const mockProperties = [mockProperty, mockProperty2];
+
+// Mock functions for navigation
+export const mockNavigate = vi.fn();
+export const mockUseNavigate = () => mockNavigate;

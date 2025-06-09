@@ -1,258 +1,162 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Property, PropertyType, PropertyStatus, PropertyCategory } from '@/types/property';
-import { logger } from '@/utils/logger';
+import { Property, PropertyType, PropertyStatus } from '@/types/property';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
-// Sample properties data as fallback (keeping existing implementation)
-const getSampleProperties = (): Property[] => {
-  return [
-    {
-      id: '1',
-      name: 'Modern Apartment',
-      title: 'Modern Apartment',
-      description: 'A modern apartment in Accra.',
-      type: 'apartment' as PropertyType,
-      status: 'available' as PropertyStatus,
-      price: 1200,
-      rent: 1200,
-      location: {
-        address: '123 Main St',
-        city: 'Accra',
-        state: 'Greater Accra',
-      },
-      address: '123 Main St',
-      city: 'Accra',
-      state: 'Greater Accra',
-      zip: '00233',
-      owner_id: 'owner1',
-      propertyCategory: 'Apartment',
-      verified: true,
-      is_available: true,
-      bedrooms: 2,
-      bathrooms: 1,
-      available_from: '2024-01-01',
-      amenities: ['WiFi', 'AC', 'Parking'],
-      images: ['/placeholder.svg'],
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-      owner: {
-        id: 'owner1',
-        name: 'John Owner',
-        email: 'owner@example.com',
-        phone: '+233123456789',
-        verified: true,
-        responseRate: '95%'
-      },
-      house_rules: 'No smoking, no pets',
-      stories: [
-        { id: 'story1', type: 'image', url: '/placeholder.svg', duration: 5 }
-      ],
-      features: ['balcony', 'ensuite']
-    }
-  ];
-};
-
-export const normalizePropertyData = (dbProperty: Record<string, unknown>): Property => {
-  const profileData = Array.isArray(dbProperty.profiles) ? dbProperty.profiles[0] : dbProperty.profiles;
-  
-  return {
-    id: String(dbProperty.id ?? ''),
-    owner_id: String(dbProperty.owner_id ?? ''),
-    name: String(dbProperty.name ?? dbProperty.title ?? ''),
-    title: String(dbProperty.title ?? dbProperty.name ?? ''),
-    description: String(dbProperty.description ?? ''),
-    type: (dbProperty.property_type as PropertyType) ?? 'apartment',
-    status: (dbProperty.status === 'Available' ? 'available' : dbProperty.status as PropertyStatus) ?? 'available',
-    price: Number(dbProperty.price ?? dbProperty.rent ?? 0),
-    rent: Number(dbProperty.price ?? dbProperty.rent ?? 0),
-    location: typeof dbProperty.location === 'object' && dbProperty.location !== null
-      ? dbProperty.location as Property['location']
-      : {
-          address: String(dbProperty.address ?? ''),
-          city: String(dbProperty.city ?? ''),
-          state: String(dbProperty.state ?? ''),
-        },
-    address: String(dbProperty.address ?? ''),
-    city: String(dbProperty.city ?? ''),
-    state: String(dbProperty.state ?? ''),
-    zip: String(dbProperty.zip ?? ''),
-    propertyCategory: (dbProperty.property_category as PropertyCategory) ?? 'Hostel',
-    verified: Boolean(dbProperty.verified ?? true),
-    is_available: Boolean(dbProperty.is_available ?? true),
-    bedrooms: Number(dbProperty.bedrooms ?? 1),
-    bathrooms: Number(dbProperty.bathrooms ?? 1),
-    available_from: String(dbProperty.available_from ?? ''),
-    amenities: Array.isArray(dbProperty.amenities) ? dbProperty.amenities as string[] : [],
-    images: Array.isArray(dbProperty.images) ? dbProperty.images as string[] : ['/placeholder.svg'],
-    created_at: String(dbProperty.created_at ?? ''),
-    updated_at: String(dbProperty.updated_at ?? ''),
-    owner: profileData ? {
-      id: 'unknown', // Database profiles don't have id field
-      name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
-      email: profileData.email || 'owner@example.com',
-      phone: profileData.phone || '+233123456789',
-      responseRate: '95%',
-      verified: true
-    } : {
-      id: 'unknown',
-      name: 'Property Owner',
-      email: 'owner@example.com',
-      phone: '+233123456789',
-      responseRate: '95%',
-      verified: true
-    },
-    house_rules: String(dbProperty.house_rules ?? ''),
-    stories: [
-      { id: 'story1', type: 'image', url: '/placeholder.svg', duration: 5 }
-    ],
-    features: Array.isArray(dbProperty.features) ? dbProperty.features as string[] : ['balcony', 'ensuite']
+interface PropertyQueryOptions {
+  limit?: number;
+  offset?: number;
+  filters?: {
+    type?: PropertyType;
+    status?: PropertyStatus;
+    minPrice?: number;
+    maxPrice?: number;
+    city?: string;
   };
-};
+}
+
+interface PropertyData {
+  properties: Property[];
+  totalCount: number;
+  hasMore: boolean;
+}
 
 export const usePropertyData = () => {
-  const [properties, setProperties] = useState<Property[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchProperties = async () => {
+  const getProperties = useCallback(async (options: PropertyQueryOptions = {}): Promise<PropertyData> => {
     try {
       setLoading(true);
       setError(null);
-      
-      logger.info('Fetching properties from database');
-      
-      const { data, error: fetchError } = await supabase
+
+      let query = supabase
         .from('properties')
         .select(`
           *,
-          profiles!owner_id (
+          profiles!properties_owner_id_fkey (
+            id,
             first_name,
             last_name,
             email,
             phone
           )
-        `)
-        .eq('is_available', true)
-        .order('created_at', { ascending: false });
+        `, { count: 'exact' });
 
-      if (fetchError) {
-        logger.error('Error fetching properties', { error: fetchError });
-        throw fetchError;
+      // Apply filters
+      if (options.filters) {
+        const { type, status, minPrice, maxPrice, city } = options.filters;
+        
+        if (type) {
+          query = query.eq('property_type', type);
+        }
+        
+        if (status) {
+          query = query.eq('status', status);
+        }
+        
+        if (minPrice) {
+          query = query.gte('rent', minPrice);
+        }
+        
+        if (maxPrice) {
+          query = query.lte('rent', maxPrice);
+        }
+        
+        if (city) {
+          query = query.ilike('city', `%${city}%`);
+        }
       }
 
-      // Transform database properties to match our Property type
-      const transformedProperties: Property[] = (data || []).map(property => {
-        // Handle profiles - it might be an array or a single object
-        const profileData = Array.isArray(property.profiles) ? property.profiles[0] : property.profiles;
+      // Apply pagination
+      if (options.limit) {
+        query = query.limit(options.limit);
+      }
+      
+      if (options.offset) {
+        query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
+      }
+
+      const { data, error: queryError, count } = await query;
+
+      if (queryError) throw queryError;
+
+      const transformedProperties: Property[] = (data || []).map((item: any) => {
+        const ownerProfile = item.profiles?.[0] || item.profiles;
         
         return {
-          id: property.id,
-          owner_id: property.owner_id,
-          name: property.title, // Add missing name property
-          title: property.title,
-          description: property.description,
-          address: property.address,
-          city: property.city,
-          state: property.state,
-          zip: property.zip || '00000',
-          rent: property.rent,
-          price: property.rent, // Map rent to price for consistency
-          type: (property.property_type as PropertyType) || 'hostel',
-          property_type: property.property_type,
-          property_category: (property.property_category as PropertyCategory) || 'Hostel',
-          propertyCategory: (property.property_category as PropertyCategory) || 'Hostel',
-          bedrooms: property.bedrooms,
-          bathrooms: property.bathrooms,
-          size: property.size,
-          available_from: property.available_from,
-          available_to: property.available_to,
-          is_furnished: property.is_furnished,
-          is_available: property.is_available,
-          images: property.images || [],
-          amenities: property.amenities || [],
-          gender_restriction: property.gender_restriction,
-          genderType: property.gender_restriction,
-          gender_type: property.gender_restriction,
-          parking_available: property.parking_available,
-          total_rooms: property.total_rooms,
-          rooms_available: property.rooms_available,
-          beds_per_room: property.beds_per_room,
-          beds_available: property.beds_available,
-          max_occupants: property.max_occupants,
-          has_bedframes: property.has_bedframes,
-          has_mattresses: property.has_mattresses,
-          has_wardrobes: property.has_wardrobes,
-          has_fan: property.has_fan,
-          has_tiled_room: property.has_tiled_room,
-          has_individual_meters: property.has_individual_meters,
-          washroom_type: property.washroom_type,
-          meter_type: property.meter_type,
-          verification_status: property.verification_status,
-          status: property.is_available ? 'available' as PropertyStatus : 'occupied' as PropertyStatus,
-          verified: property.verification_status === 'verified',
-          priceUnit: 'month',
-          price_unit: 'month',
-          location: `${property.address}, ${property.city}`,
-          distanceToCampus: '10 min walk',
-          distance_to_campus: '10 min walk',
-          owner: profileData ? {
-            id: 'unknown', // Database profiles don't have id field
-            name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
-            email: profileData.email,
-            phone: profileData.phone || '',
-            responseRate: '95%',
-            verified: true
+          id: item.id,
+          owner_id: item.owner_id,
+          title: item.title,
+          description: item.description,
+          type: item.property_type as PropertyType,
+          status: item.is_available ? 'available' as PropertyStatus : 'unavailable' as PropertyStatus,
+          price: item.rent,
+          rent: item.rent,
+          location: item.address,
+          address: item.address,
+          city: item.city,
+          state: item.state,
+          zip: item.zip || '',
+          propertyCategory: item.property_category || 'Hostel',
+          verified: item.verification_status === 'verified',
+          is_available: item.is_available,
+          bedrooms: item.bedrooms,
+          bathrooms: item.bathrooms,
+          amenities: Array.isArray(item.amenities) ? item.amenities : [],
+          images: Array.isArray(item.images) ? item.images : [],
+          available_from: item.available_from,
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          owner: ownerProfile ? {
+            id: item.owner_id,
+            name: `${ownerProfile.first_name || ''} ${ownerProfile.last_name || ''}`.trim(),
+            email: ownerProfile.email,
+            phone: ownerProfile.phone,
+            verified: true,
+            responseRate: '95%'
           } : {
-            id: 'unknown',
+            id: item.owner_id,
             name: 'Property Owner',
-            email: 'owner@example.com',
-            phone: '+233 50 123 4567',
-            responseRate: '95%',
-            verified: true
+            email: '',
+            phone: '',
+            verified: false,
+            responseRate: '0%'
           },
-          rating: 4.5,
-          reviewCount: Math.floor(Math.random() * 50) + 5,
-          created_at: property.created_at,
-          updated_at: property.updated_at,
-          house_rules: 'No smoking inside, No loud music after 10 PM',
-          stories: property.images ? property.images.map((image: string, index: number) => ({
-            id: `story-${index}`,
-            type: 'image' as const,
-            url: image,
-            duration: 5000
-          })) : [],
-          features: ['balcony', 'ensuite'],
-          roomTypes: [
-            { id: '1', name: 'Single Room', capacity: 1, price: property.rent },
-            { id: '2', name: 'Double Room', capacity: 2, price: property.rent * 0.8 },
-            { id: '3', name: 'Triple Room', capacity: 3, price: property.rent * 0.7 }
-          ]
+          house_rules: 'No smoking, no pets',
+          stories: [],
+          features: []
         };
       });
 
-      setProperties(transformedProperties);
-      logger.info(`Successfully loaded ${transformedProperties.length} properties`);
-      
+      return {
+        properties: transformedProperties,
+        totalCount: count || 0,
+        hasMore: transformedProperties.length === (options.limit || 10) && count ? count > (options.offset || 0) + transformedProperties.length : false
+      };
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch properties';
-      logger.error('Property fetch error', { error: errorMessage });
       setError(errorMessage);
-      setProperties([]);
+      ErrorHandler.handle(err, 'Error fetching properties:');
+      throw err;
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const getPropertyById = async (id: string): Promise<Property | null> => {
+  const getPropertyById = useCallback(async (id: string): Promise<Property | null> => {
     try {
-      logger.info('Fetching property by ID', { id });
-      
-      const { data, error } = await supabase
+      setLoading(true);
+      setError(null);
+
+      const { data, error: queryError } = await supabase
         .from('properties')
         .select(`
           *,
-          profiles!owner_id (
+          profiles!properties_owner_id_fkey (
+            id,
             first_name,
             last_name,
             email,
@@ -262,127 +166,71 @@ export const usePropertyData = () => {
         .eq('id', id)
         .single();
 
-      if (error) {
-        logger.error('Error fetching property by ID', { error, id });
-        throw error;
-      }
+      if (queryError) throw queryError;
+      if (!data) return null;
 
-      if (!data) {
-        logger.warn('Property not found', { id });
-        return null;
-      }
+      const ownerProfile = data.profiles?.[0] || data.profiles;
 
-      // Transform database property to match our Property type
-      const profileData = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
-      
       const transformedProperty: Property = {
         id: data.id,
         owner_id: data.owner_id,
         title: data.title,
         description: data.description,
+        type: data.property_type as PropertyType,
+        status: data.is_available ? 'available' as PropertyStatus : 'unavailable' as PropertyStatus,
+        price: data.rent,
+        rent: data.rent,
+        location: data.address,
         address: data.address,
         city: data.city,
         state: data.state,
-        zip: data.zip,
-        rent: data.rent,
-        price: data.rent,
-        type: data.property_type as PropertyType,
-        property_type: data.property_type,
-        property_category: data.property_category as PropertyCategory,
-        propertyCategory: data.property_category as PropertyCategory,
+        zip: data.zip || '',
+        propertyCategory: data.property_category || 'Hostel',
+        verified: data.verification_status === 'verified',
+        is_available: data.is_available,
         bedrooms: data.bedrooms,
         bathrooms: data.bathrooms,
-        size: data.size,
+        amenities: Array.isArray(data.amenities) ? data.amenities : [],
+        images: Array.isArray(data.images) ? data.images : [],
         available_from: data.available_from,
-        available_to: data.available_to,
-        is_furnished: data.is_furnished,
-        is_available: data.is_available,
-        images: data.images || [],
-        amenities: data.amenities || [],
-        gender_restriction: data.gender_restriction,
-        genderType: data.gender_restriction,
-        gender_type: data.gender_restriction,
-        parking_available: data.parking_available,
-        total_rooms: data.total_rooms,
-        rooms_available: data.rooms_available,
-        beds_per_room: data.beds_per_room,
-        beds_available: data.beds_available,
-        max_occupants: data.max_occupants,
-        has_bedframes: data.has_bedframes,
-        has_mattresses: data.has_mattresses,
-        has_wardrobes: data.has_wardrobes,
-        has_fan: data.has_fan,
-        has_tiled_room: data.has_tiled_room,
-        has_individual_meters: data.has_individual_meters,
-        washroom_type: data.washroom_type,
-        meter_type: data.meter_type,
-        verification_status: data.verification_status,
-        status: data.is_available ? 'available' : 'occupied',
-        verified: data.verification_status === 'verified',
-        priceUnit: 'month',
-        price_unit: 'month',
-        location: `${data.address}, ${data.city}`,
-        distanceToCampus: '10 min walk',
-        distance_to_campus: '10 min walk',
-        owner: profileData ? {
-          id: 'unknown',
-          name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
-          email: profileData.email,
-          phone: profileData.phone || '',
-          responseRate: '95%',
-          verified: true
-        } : {
-          id: 'unknown',
-          name: 'Property Owner',
-          email: 'owner@example.com',
-          phone: '+233 50 123 4567',
-          responseRate: '95%',
-          verified: true
-        },
-        rating: 4.5,
-        reviewCount: Math.floor(Math.random() * 50) + 5,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        house_rules: 'No smoking inside, No loud music after 10 PM',
-        stories: data.images ? data.images.map((image: string, index: number) => ({
-          id: `story-${index}`,
-          type: 'image' as const,
-          url: image,
-          duration: 5000
-        })) : [],
-        roomTypes: [
-          { id: '1', name: 'Single Room', capacity: 1, price: data.rent },
-          { id: '2', name: 'Double Room', capacity: 2, price: data.rent * 0.8 },
-          { id: '3', name: 'Triple Room', capacity: 3, price: data.rent * 0.7 }
-        ]
+        owner: ownerProfile ? {
+          id: data.owner_id,
+          name: `${ownerProfile.first_name || ''} ${ownerProfile.last_name || ''}`.trim(),
+          email: ownerProfile.email,
+          phone: ownerProfile.phone,
+          verified: true,
+          responseRate: '95%'
+        } : {
+          id: data.owner_id,
+          name: 'Property Owner',
+          email: '',
+          phone: '',
+          verified: false,
+          responseRate: '0%'
+        },
+        house_rules: 'No smoking, no pets',
+        stories: [],
+        features: []
       };
 
-      logger.info('Successfully loaded property', { id: transformedProperty.id });
       return transformedProperty;
-      
+
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch property';
-      logger.error('Property fetch by ID error', { error: errorMessage, id });
-      return null;
+      setError(errorMessage);
+      ErrorHandler.handle(err, 'Error fetching property:');
+      throw err;
+    } finally {
+      setLoading(false);
     }
-  };
-
-  useEffect(() => {
-    fetchProperties();
   }, []);
 
   return {
-    properties,
+    getProperties,
+    getPropertyById,
     loading,
-    error,
-    refreshProperties: fetchProperties,
-    getPropertyById: async (id: string): Promise<Property | null> => {
-      // Implementation for getting property by ID
-      const property = properties.find(p => p.id === id);
-      return property || null;
-    }
+    error
   };
 };
-
-// Export the getSampleProperties for use in other components
-export { getSampleProperties };

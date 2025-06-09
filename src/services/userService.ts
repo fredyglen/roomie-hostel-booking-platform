@@ -22,9 +22,19 @@ export const userService = {
   },
   
   async createUser(user: Omit<User, 'id' | 'created_at'>): Promise<User> {
+    // Ensure all required fields are present for the database
+    const userData = {
+      email: user.email,
+      role: user.role,
+      first_name: user.first_name || null,
+      last_name: user.last_name || null,
+      phone: user.phone || null,
+      avatar_url: user.avatar_url || null
+    };
+
     const { data, error } = await supabase
       .from('profiles')
-      .insert([user])
+      .insert([userData])
       .select()
       .single();
     if (error) throw error;
