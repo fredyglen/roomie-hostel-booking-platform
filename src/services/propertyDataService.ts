@@ -73,12 +73,13 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
 
   if (queryError) throw queryError;
 
-  // Transform properties with explicit typing
+  // Transform properties with explicit typing to avoid deep inference
   const transformedProperties: Property[] = [];
-  if (data) {
+  if (data && Array.isArray(data)) {
     for (const item of data) {
       try {
-        const rawProperty = item as RawProperty;
+        // Explicitly cast to avoid deep type inference
+        const rawProperty = item as unknown as RawProperty;
         const transformed = transformDbProperty(rawProperty);
         transformedProperties.push(transformed);
       } catch (transformError) {
@@ -88,10 +89,14 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
     }
   }
 
+  const totalCount = count || 0;
+  const limit = options.limit || 10;
+  const offset = options.offset || 0;
+  
   const result: PropertyData = {
     properties: transformedProperties,
-    totalCount: count || 0,
-    hasMore: transformedProperties.length === (options.limit || 10) && count ? count > (options.offset || 0) + transformedProperties.length : false
+    totalCount,
+    hasMore: transformedProperties.length === limit && totalCount > offset + transformedProperties.length
   };
 
   return result;
@@ -116,7 +121,8 @@ export async function fetchPropertyById(id: string): Promise<Property | null> {
   if (queryError) throw queryError;
   if (!data) return null;
 
-  const rawProperty = data as RawProperty;
+  // Explicitly cast to avoid deep type inference
+  const rawProperty = data as unknown as RawProperty;
   const transformedProperty = transformDbProperty(rawProperty);
   return transformedProperty;
 }
