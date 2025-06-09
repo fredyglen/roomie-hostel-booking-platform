@@ -1,13 +1,10 @@
+
 import { createClient } from '@supabase/supabase-js';
-import { config } from '@/config';
 import { supabase as supabaseClient } from '@/integrations/supabase/client';
 import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
 
-// Export the supabase client 
-export const supabase = createClient(
-  config.supabase.url!,
-  config.supabase.anonKey!
-);
+// Export the supabase client from the Lovable-generated integration
+export const supabase = supabaseClient;
 
 export type AuthUser = {
   id: string;

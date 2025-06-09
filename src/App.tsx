@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, DefaultOptions } from '@tanstack/react-query';
@@ -85,18 +86,18 @@ const queryClient = new QueryClient({
 
 // Enhanced route wrapper with error boundary and loading
 const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => {
-
-  // Add logging for Suspense fallback - Use logger.info
-  logger.info('SafeRoute: Rendering Suspense fallback');
-
   return (
     <ErrorBoundary
-      // onError prop is now accepted by ErrorBoundary
       onError={(error, errorInfo) => {
         logger.error('SafeRoute: ErrorBoundary caught an error', { error, errorInfo });
+        console.error('🚨 Route Error:', error, errorInfo);
       }}
     >
-      <Suspense fallback={<LoadingSpinner />}>
+      <Suspense fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <LoadingSpinner />
+        </div>
+      }>
         {element}
       </Suspense>
     </ErrorBoundary>
@@ -104,66 +105,74 @@ const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => {
 };
 
 function App() {
+  console.log('🚀 Application started');
   logger.info('Application started');
 
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <AuthProvider>
-          <div className="min-h-screen bg-gray-50">
-            <Routes>
-              {/* Public Routes */}
-              <Route path="/" element={<SafeRoute element={<AuthRedirect />} />} />
-              <Route path="/landing" element={<SafeRoute element={<Landing />} />} />
-              <Route path="/welcome" element={<SafeRoute element={<Welcome />} />} />
-              <Route path="/login" element={<SafeRoute element={<Login />} />} />
-              <Route path="/register" element={<SafeRoute element={<Register />} />} />
-              <Route path="/payment-success" element={<SafeRoute element={<PaymentSuccess />} />} />
-              <Route path="/test-payment" element={<SafeRoute element={<TestPayment />} />} />
+        <ErrorBoundary
+          onError={(error, errorInfo) => {
+            logger.error('App: Top-level ErrorBoundary caught an error', { error, errorInfo });
+            console.error('🚨 Critical App Error:', error, errorInfo);
+          }}
+        >
+          <AuthProvider>
+            <div className="min-h-screen bg-gray-50">
+              <Routes>
+                {/* Public Routes */}
+                <Route path="/" element={<SafeRoute element={<AuthRedirect />} />} />
+                <Route path="/landing" element={<SafeRoute element={<Landing />} />} />
+                <Route path="/welcome" element={<SafeRoute element={<Welcome />} />} />
+                <Route path="/login" element={<SafeRoute element={<Login />} />} />
+                <Route path="/register" element={<SafeRoute element={<Register />} />} />
+                <Route path="/payment-success" element={<SafeRoute element={<PaymentSuccess />} />} />
+                <Route path="/test-payment" element={<SafeRoute element={<TestPayment />} />} />
 
-              {/* Student Routes */}
-              <Route path="/student/dashboard" element={<SafeRoute element={<StudentDashboard />} />} />
-              <Route path="/student/properties" element={<SafeRoute element={<Properties />} />} />
-              <Route path="/student/property/:id" element={<SafeRoute element={<PropertyDetail />} />} />
-              <Route path="/student/book-property/:id" element={<SafeRoute element={<BookProperty />} />} />
-              <Route path="/student/book/:id" element={<SafeRoute element={<BookingStepsContainer />} />} />
-              <Route path="/student/booking-history" element={<SafeRoute element={<BookingHistory />} />} />
-              <Route path="/student/profile" element={<SafeRoute element={<StudentProfile />} />} />
-              <Route path="/student/subscription" element={<SafeRoute element={<StudentSubscription />} />} />
-              <Route path="/student/explore" element={<SafeRoute element={<Explore />} />} />
-              <Route path="/student/favorites" element={<SafeRoute element={<Favorites />} />} />
-              <Route path="/student/story/:id" element={<SafeRoute element={<StoryView />} />} />
-              <Route path="/student/story-enhanced/:id" element={<SafeRoute element={<StoryViewEnhanced />} />} />
-              <Route path="/student/property/:id/enhanced-story" element={<SafeRoute element={<EnhancedStoryPage />} />} />
+                {/* Student Routes */}
+                <Route path="/student/dashboard" element={<SafeRoute element={<StudentDashboard />} />} />
+                <Route path="/student/properties" element={<SafeRoute element={<Properties />} />} />
+                <Route path="/student/property/:id" element={<SafeRoute element={<PropertyDetail />} />} />
+                <Route path="/student/book-property/:id" element={<SafeRoute element={<BookProperty />} />} />
+                <Route path="/student/book/:id" element={<SafeRoute element={<BookingStepsContainer />} />} />
+                <Route path="/student/booking-history" element={<SafeRoute element={<BookingHistory />} />} />
+                <Route path="/student/profile" element={<SafeRoute element={<StudentProfile />} />} />
+                <Route path="/student/subscription" element={<SafeRoute element={<StudentSubscription />} />} />
+                <Route path="/student/explore" element={<SafeRoute element={<Explore />} />} />
+                <Route path="/student/favorites" element={<SafeRoute element={<Favorites />} />} />
+                <Route path="/student/story/:id" element={<SafeRoute element={<StoryView />} />} />
+                <Route path="/student/story-enhanced/:id" element={<SafeRoute element={<StoryViewEnhanced />} />} />
+                <Route path="/student/property/:id/enhanced-story" element={<SafeRoute element={<EnhancedStoryPage />} />} />
 
-              {/* Owner Routes */}
-              <Route path="/owner/dashboard" element={<SafeRoute element={<OwnerDashboard />} />} />
-              <Route path="/owner/properties" element={<SafeRoute element={<OwnerProperties />} />} />
-              <Route path="/owner/property/new" element={<SafeRoute element={<PropertyNew />} />} />
-              <Route path="/owner/properties/:id/edit" element={<SafeRoute element={<PropertyEdit />} />} />
-              <Route path="/owner/bookings" element={<SafeRoute element={<OwnerBookings />} />} />
-              <Route path="/owner/profile" element={<SafeRoute element={<OwnerProfile />} />} />
-              <Route path="/owner/settings" element={<SafeRoute element={<OwnerSettings />} />} />
-              <Route path="/owner/subscription" element={<SafeRoute element={<OwnerSubscription />} />} />
+                {/* Owner Routes */}
+                <Route path="/owner/dashboard" element={<SafeRoute element={<OwnerDashboard />} />} />
+                <Route path="/owner/properties" element={<SafeRoute element={<OwnerProperties />} />} />
+                <Route path="/owner/property/new" element={<SafeRoute element={<PropertyNew />} />} />
+                <Route path="/owner/properties/:id/edit" element={<SafeRoute element={<PropertyEdit />} />} />
+                <Route path="/owner/bookings" element={<SafeRoute element={<OwnerBookings />} />} />
+                <Route path="/owner/profile" element={<SafeRoute element={<OwnerProfile />} />} />
+                <Route path="/owner/settings" element={<SafeRoute element={<OwnerSettings />} />} />
+                <Route path="/owner/subscription" element={<SafeRoute element={<OwnerSubscription />} />} />
 
-              {/* Admin Routes */}
-              <Route path="/admin/dashboard" element={<SafeRoute element={<AdminDashboard />} />} />
-              <Route path="/admin/properties" element={<SafeRoute element={<AdminProperties />} />} />
-              <Route path="/admin/bookings" element={<SafeRoute element={<AdminBookings />} />} />
-              <Route path="/admin/users" element={<SafeRoute element={<AdminUsers />} />} />
-              <Route path="/admin/settings" element={<SafeRoute element={<AdminSettings />} />} />
-              <Route path="/admin/features" element={<SafeRoute element={<FeatureManagement />} />} />
-              <Route path="/admin/subscriptions" element={<SafeRoute element={<SubscriptionManagement />} />} />
-              <Route path="/admin/verification" element={<SafeRoute element={<VerificationManagement />} />} />
-              <Route path="/admin/owner-settings" element={<SafeRoute element={<OwnerSettingsAdmin />} />} />
+                {/* Admin Routes */}
+                <Route path="/admin/dashboard" element={<SafeRoute element={<AdminDashboard />} />} />
+                <Route path="/admin/properties" element={<SafeRoute element={<AdminProperties />} />} />
+                <Route path="/admin/bookings" element={<SafeRoute element={<AdminBookings />} />} />
+                <Route path="/admin/users" element={<SafeRoute element={<AdminUsers />} />} />
+                <Route path="/admin/settings" element={<SafeRoute element={<AdminSettings />} />} />
+                <Route path="/admin/features" element={<SafeRoute element={<FeatureManagement />} />} />
+                <Route path="/admin/subscriptions" element={<SafeRoute element={<SubscriptionManagement />} />} />
+                <Route path="/admin/verification" element={<SafeRoute element={<VerificationManagement />} />} />
+                <Route path="/admin/owner-settings" element={<SafeRoute element={<OwnerSettingsAdmin />} />} />
 
-              {/* Catch all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-          <Toaster />
-          <SonnerToaster />
-        </AuthProvider>
+                {/* Catch all route */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+            <Toaster />
+            <SonnerToaster />
+          </AuthProvider>
+        </ErrorBoundary>
       </Router>
     </QueryClientProvider>
   );
