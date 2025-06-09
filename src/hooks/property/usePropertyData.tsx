@@ -22,6 +22,7 @@ interface PropertyData {
   hasMore: boolean;
 }
 
+// Simplified database property type to avoid deep type instantiation
 interface DatabaseProperty {
   id: string;
   owner_id: string;
@@ -42,7 +43,7 @@ interface DatabaseProperty {
   available_from: string;
   created_at: string;
   updated_at: string;
-  profiles: any;
+  profiles?: any;
 }
 
 export const usePropertyData = () => {
