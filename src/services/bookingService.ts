@@ -32,7 +32,7 @@ export const bookingService = {
     return data as SimpleBooking;
   },
   
-  async createBooking(booking: Partial<SimpleBooking>): Promise<SimpleBooking> {
+  async createBooking(booking: Omit<SimpleBooking, 'id' | 'created_at' | 'updated_at'>): Promise<SimpleBooking> {
     const { data, error } = await supabase
       .from('bookings')
       .insert([booking])
@@ -42,7 +42,7 @@ export const bookingService = {
     return data as SimpleBooking;
   },
   
-  async updateBooking(id: string, updates: Partial<SimpleBooking>): Promise<SimpleBooking> {
+  async updateBooking(id: string, updates: Partial<Omit<SimpleBooking, 'id' | 'created_at' | 'updated_at'>>): Promise<SimpleBooking> {
     const { data, error } = await supabase
       .from('bookings')
       .update(updates)

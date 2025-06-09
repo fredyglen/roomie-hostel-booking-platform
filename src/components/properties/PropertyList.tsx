@@ -40,8 +40,12 @@ const PropertyList: React.FC<PropertyListProps> = ({
       {properties.map((property) => (
         <PropertyCard
           key={property.id}
-          property={property}
-          onViewProperty={() => onViewProperty(property.id)}
+          id={property.id}
+          title={property.title}
+          location={typeof property.location === 'string' ? property.location : `${property.city}, ${property.state}`}
+          price={property.price}
+          images={property.images}
+          onView={() => onViewProperty(property.id)}
           onViewStory={() => onViewStory(property.id)}
         />
       ))}

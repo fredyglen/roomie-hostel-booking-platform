@@ -95,7 +95,7 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
             responseRate: '95%',
             verified: true
           },
-          house_rules: typeof data.house_rules === 'string' ? data.house_rules : Array.isArray(data.house_rules) ? data.house_rules.join(', ') : '',
+          house_rules: 'No smoking inside, No loud music after 10 PM',
           stories: [],
           features: []
         };

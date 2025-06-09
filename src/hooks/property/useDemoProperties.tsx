@@ -1,6 +1,7 @@
+
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
-import { Property, PropertyCategory } from '@/types/property';
+import { Property, PropertyCategory, PropertyType } from '@/types/property';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
 export const useDemoProperties = () => {
@@ -25,33 +26,40 @@ export const useDemoProperties = () => {
           .order('created_at', { ascending: false });
 
         if (error) {
-          ErrorHandler.handle('Error fetching properties:', error);
-          throw error;
+          ErrorHandler.handle('Error fetching properties', error.message);
+          throw new Error(error.message);
         }
+
         // Transform database properties to match our Property type
         const transformedProperties: Property[] = (data || []).map(property => {
           const profileData = Array.isArray(property.profiles) ? property.profiles[0] : property.profiles;
           
           return {
             id: property.id,
-            name: property.title, // Add required name field
-            status: 'available', // Add required status field
-            price: property.rent, // Add required price field
-            location: `${property.city}, ${property.state}`, // Add required location field
-            university_id: null, // Add required university_id field
-            owner_id: property.owner_id,
+            name: property.title,
             title: property.title,
+            status: 'available',
+            price: property.rent,
+            rent: property.rent,
+            location: `${property.city}, ${property.state}`,
+            zip: property.zip || '00000',
+            propertyCategory: (property.property_category as PropertyCategory) || 'Hostel',
+            verified: property.verification_status === 'verified',
+            owner_id: property.owner_id,
             description: property.description,
             address: property.address,
             city: property.city,
             state: property.state,
-            rent: property.rent,
-            type: property.property_type,
+            type: (property.property_type as PropertyType) || 'hostel',
             property_category: property.property_category as PropertyCategory,
             bedrooms: property.bedrooms,
             bathrooms: property.bathrooms,
             images: property.images || [],
             amenities: property.amenities || [],
+            is_available: property.is_available,
+            available_from: property.available_from,
+            created_at: property.created_at,
+            updated_at: property.updated_at,
             verification_status: property.verification_status as 'pending' | 'verified' | 'rejected',
             gender_restriction: property.gender_restriction,
             parking_available: property.parking_available,
@@ -69,12 +77,14 @@ export const useDemoProperties = () => {
             washroom_type: property.washroom_type as 'inside' | 'outside' | 'shared',
             meter_type: property.meter_type as 'self' | 'shared',
             owner: profileData ? {
+              id: 'unknown',
               name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
               email: profileData.email,
               phone: profileData.phone || '',
               responseRate: '95%',
               verified: true
             } : {
+              id: 'unknown',
               name: 'Property Owner',
               email: 'owner@example.com',
               phone: '+233 50 123 4567',
@@ -82,10 +92,9 @@ export const useDemoProperties = () => {
               verified: true
             },
             rating: 4.5,
-            available_from: property.available_from,
-            created_at: property.created_at,
-            updated_at: property.updated_at,
-            is_available: property.is_available
+            house_rules: '',
+            stories: [],
+            features: []
           };
         });
 
@@ -94,7 +103,7 @@ export const useDemoProperties = () => {
         
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch properties';
-        ErrorHandler.handle('Property fetch error:', errorMessage);
+        ErrorHandler.handle('Property fetch error', errorMessage);
         throw new Error(errorMessage);
       }
     },

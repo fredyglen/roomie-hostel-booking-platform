@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Property, PropertyType, PropertyStatus, PropertyCategory } from '@/types/property';
@@ -103,7 +102,7 @@ export const normalizePropertyData = (dbProperty: Record<string, unknown>): Prop
       responseRate: '95%',
       verified: true
     },
-    house_rules: typeof dbProperty.house_rules === 'string' ? dbProperty.house_rules : Array.isArray(dbProperty.house_rules) ? dbProperty.house_rules.join(', ') : '',
+    house_rules: String(dbProperty.house_rules ?? ''),
     stories: [
       { id: 'story1', type: 'image', url: '/placeholder.svg', duration: 5 }
     ],
@@ -159,10 +158,10 @@ export const usePropertyData = () => {
           zip: property.zip || '00000',
           rent: property.rent,
           price: property.rent, // Map rent to price for consistency
-          type: property.property_type as PropertyType,
+          type: (property.property_type as PropertyType) || 'hostel',
           property_type: property.property_type,
-          property_category: property.property_category as PropertyCategory,
-          propertyCategory: property.property_category as PropertyCategory,
+          property_category: (property.property_category as PropertyCategory) || 'Hostel',
+          propertyCategory: (property.property_category as PropertyCategory) || 'Hostel',
           bedrooms: property.bedrooms,
           bathrooms: property.bathrooms,
           size: property.size,
@@ -216,9 +215,7 @@ export const usePropertyData = () => {
           reviewCount: Math.floor(Math.random() * 50) + 5,
           created_at: property.created_at,
           updated_at: property.updated_at,
-          house_rules: Array.isArray(property.house_rules) ? 
-            property.house_rules.join(', ') : 
-            property.house_rules || 'No smoking inside, No loud music after 10 PM',
+          house_rules: 'No smoking inside, No loud music after 10 PM',
           stories: property.images ? property.images.map((image: string, index: number) => ({
             id: `story-${index}`,
             type: 'image' as const,
