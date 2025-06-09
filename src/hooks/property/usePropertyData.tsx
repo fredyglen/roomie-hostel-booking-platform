@@ -22,81 +22,58 @@ interface PropertyData {
   hasMore: boolean;
 }
 
-// Simplified database result type to avoid deep type instantiation
-interface DatabasePropertyRow {
-  id: string;
-  owner_id: string;
-  title: string;
-  description: string;
-  property_type: string;
-  is_available: boolean;
-  rent: number;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-  property_category: string;
-  bedrooms: number;
-  bathrooms: number;
-  amenities: string[];
-  images: string[];
-  available_from: string;
-  created_at: string;
-  updated_at: string;
-  profiles?: any; // Simplified to avoid complex union types
-}
+// Simple type for database results - avoiding complex type inference
+type SimpleDbProperty = Record<string, any>;
 
-// Move transform function outside component to avoid callback dependency issues
-const transformDatabaseProperty = (item: DatabasePropertyRow): Property => {
-  // Handle profiles - it might be an array or a single object
-  const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+// Simple transformation function that doesn't rely on complex types
+const transformProperty = (dbItem: SimpleDbProperty): Property => {
+  // Extract profile data safely
+  const profileData = Array.isArray(dbItem.profiles) ? dbItem.profiles[0] : dbItem.profiles;
   
-  // Use proper PropertyStatus values
-  const status: PropertyStatus = item.is_available ? 'available' : 'occupied';
-  
-  const baseProperty: Property = {
-    id: item.id || '',
-    owner_id: item.owner_id || '',
-    name: item.title || '',
-    title: item.title || '',
-    description: item.description || '',
-    type: (item.property_type as PropertyType) || 'hostel',
-    status: status,
-    price: item.rent || 0,
-    rent: item.rent || 0,
-    location: item.address || '',
-    address: item.address || '',
-    city: item.city || '',
-    state: item.state || '',
-    zip: item.zip || '',
-    propertyCategory: (item.property_category as PropertyCategory) || 'Hostel',
+  // Basic property transformation with explicit type casting
+  const property: Property = {
+    id: String(dbItem.id || ''),
+    owner_id: String(dbItem.owner_id || ''),
+    name: String(dbItem.title || ''),
+    title: String(dbItem.title || ''),
+    description: String(dbItem.description || ''),
+    type: (dbItem.property_type as PropertyType) || 'hostel',
+    status: (dbItem.is_available ? 'available' : 'occupied') as PropertyStatus,
+    price: Number(dbItem.rent || 0),
+    rent: Number(dbItem.rent || 0),
+    location: String(dbItem.address || ''),
+    address: String(dbItem.address || ''),
+    city: String(dbItem.city || ''),
+    state: String(dbItem.state || ''),
+    zip: String(dbItem.zip || ''),
+    propertyCategory: (dbItem.property_category as PropertyCategory) || 'Hostel',
     verified: true,
-    is_available: item.is_available || false,
-    bedrooms: item.bedrooms || 0,
-    bathrooms: item.bathrooms || 0,
-    amenities: Array.isArray(item.amenities) ? item.amenities : [],
-    images: Array.isArray(item.images) ? item.images : [],
-    available_from: item.available_from || '',
-    created_at: item.created_at || '',
-    updated_at: item.updated_at || '',
-    house_rules: 'No smoking, no pets',
+    is_available: Boolean(dbItem.is_available),
+    bedrooms: Number(dbItem.bedrooms || 0),
+    bathrooms: Number(dbItem.bathrooms || 0),
+    amenities: Array.isArray(dbItem.amenities) ? dbItem.amenities : [],
+    images: Array.isArray(dbItem.images) ? dbItem.images : [],
+    available_from: String(dbItem.available_from || ''),
+    created_at: String(dbItem.created_at || ''),
+    updated_at: String(dbItem.updated_at || ''),
+    house_rules: String(dbItem.house_rules || 'No smoking, no pets'),
     stories: [],
     features: []
   };
 
-  // Add owner information if available
+  // Add owner info if available
   if (profileData) {
-    baseProperty.owner = {
-      id: item.owner_id,
+    property.owner = {
+      id: String(dbItem.owner_id),
       name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
-      email: profileData.email || '',
-      phone: profileData.phone || '',
+      email: String(profileData.email || ''),
+      phone: String(profileData.phone || ''),
       verified: true,
       responseRate: '95%'
     };
   } else {
-    baseProperty.owner = {
-      id: item.owner_id,
+    property.owner = {
+      id: String(dbItem.owner_id),
       name: 'Property Owner',
       email: '',
       phone: '',
@@ -105,7 +82,7 @@ const transformDatabaseProperty = (item: DatabasePropertyRow): Property => {
     };
   }
 
-  return baseProperty;
+  return property;
 };
 
 export const usePropertyData = () => {
@@ -168,12 +145,12 @@ export const usePropertyData = () => {
 
       if (queryError) throw queryError;
 
-      // Simple transformation without complex type inference
+      // Transform properties with error handling
       const transformedProperties: Property[] = [];
       if (data) {
         for (const item of data) {
           try {
-            const transformed = transformDatabaseProperty(item as DatabasePropertyRow);
+            const transformed = transformProperty(item);
             transformedProperties.push(transformed);
           } catch (transformError) {
             console.error('Error transforming property:', transformError);
@@ -221,7 +198,7 @@ export const usePropertyData = () => {
       if (queryError) throw queryError;
       if (!data) return null;
 
-      const transformedProperty = transformDatabaseProperty(data as DatabasePropertyRow);
+      const transformedProperty = transformProperty(data);
       return transformedProperty;
 
     } catch (err) {
