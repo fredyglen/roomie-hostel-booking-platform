@@ -33,7 +33,7 @@ export interface Owner {
   email: string;
   phone: string;
   verified: boolean;
-  responseRate?: number;
+  responseRate?: number | string;
 }
 
 export interface RoomType {
@@ -92,6 +92,7 @@ export interface Property extends BaseEntity {
   amenities: string[] | Amenity[];
   images: string[];
   stories?: Story[];
+  features?: string[];
   
   // Hostel/Apartment specific
   total_rooms?: number;
@@ -110,6 +111,7 @@ export interface Property extends BaseEntity {
   has_accessibility_features?: boolean;
   internet_speed?: string;
   security_features?: string[];
+  house_rules?: string;
   
   // Contact and emergency
   emergency_contact_name?: string;
@@ -153,6 +155,9 @@ export interface Property extends BaseEntity {
   
   // Building structure
   occupancy?: any;
+  
+  // Additional properties for compatibility
+  rating?: number;
 }
 
 export interface PropertyFormValues {
@@ -201,3 +206,6 @@ export interface PropertyFormValues {
   beds_available?: number;
   virtual_tour_url?: string;
 }
+
+// Export PropertyInsert for database operations
+export type PropertyInsert = Omit<Property, 'id' | 'created_at' | 'updated_at'>;

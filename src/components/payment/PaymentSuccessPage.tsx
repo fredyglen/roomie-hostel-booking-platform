@@ -43,7 +43,21 @@ const PaymentSuccessPage: React.FC = () => {
         ErrorHandler.log('Verifying payment with reference:', paymentRef);
         
         const result = await verifyAndProcessPayment(paymentRef!);
-        setVerificationResult(result);
+        
+        // Transform the result to match our interface
+        const transformedResult: PaymentVerificationData = {
+          success: result.success,
+          verification: result.verification ? {
+            amount: result.verification.amount,
+            reference: result.verification.reference,
+            channel: result.verification.channel,
+            ...result.verification
+          } : undefined,
+          booking: result.booking || null,
+          error: result.error
+        };
+        
+        setVerificationResult(transformedResult);
       }
       setLoading(false);
     };

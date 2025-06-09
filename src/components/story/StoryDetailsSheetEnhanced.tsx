@@ -31,14 +31,14 @@ const StoryDetailsSheetEnhanced: React.FC<StoryDetailsSheetEnhancedProps> = ({
     return amenities.map(getAmenityText);
   };
 
-  const getPriceText = (): string => {
+  const getPriceNumber = (): number => {
     const price = property.price || property.rent;
-    return typeof price === 'number' ? price.toString() : price.toString();
+    return typeof price === 'number' ? price : parseFloat(price.toString()) || 0;
   };
 
   // Safe data extraction
   const safeData = {
-    price: getPriceText(),
+    price: getPriceNumber(),
     amenities: property.amenities ? getAmenitiesArray(property.amenities) : [],
     location: getLocationText(property.location),
     priceUnit: property.priceUnit || property.price_unit || 'month'
@@ -54,7 +54,7 @@ const StoryDetailsSheetEnhanced: React.FC<StoryDetailsSheetEnhancedProps> = ({
       <h2 className="text-2xl font-bold mb-2">{property.title}</h2>
       <p className="text-gray-600 mb-2">{safeData.location}</p>
       <div className="flex items-center mb-4">
-        <span className="text-xl font-bold text-blue-600 mr-1">{formatCurrency(Number(safeData.price))}</span>
+        <span className="text-xl font-bold text-blue-600 mr-1">{formatCurrency(safeData.price)}</span>
         <span className="text-gray-600">/{safeData.priceUnit}</span>
       </div>
       

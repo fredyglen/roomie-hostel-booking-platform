@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { 
   PersonalInfoStep,
@@ -104,76 +105,76 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
   const stepComponents = {
     1: (
       <PersonalInfoStep
-        firstName={personalInfo.firstName}
-        lastName={personalInfo.lastName}
-        email={personalInfo.email}
-        phone={personalInfo.phone}
-        onInputChange={handlePersonalInfoAdapter}
-        onNext={handleNextStep}
+        firstName={formData.personalInfo.firstName}
+        lastName={formData.personalInfo.lastName}
+        email={formData.personalInfo.email}
+        phone={formData.personalInfo.phone}
+        onInputChange={handlers.handlePersonalInfoAdapter}
+        onNext={handlers.handleNextStep}
       />
     ),
     2: (
       <DateSelectionStep
-        startDate={bookingDates.moveIn}
-        endDate={bookingDates.moveOut}
-        selectedDuration={bookingDates.duration}
-        onStartDateChange={handleMoveInDateAdapter}
-        onEndDateChange={handleMoveOutDateAdapter}
-        onDurationChange={(value) => handleDateChange('duration', value)}
-        onPrevious={handlePreviousStep}
-        onNext={handleNextStep}
+        startDate={formData.bookingDates.moveIn}
+        endDate={formData.bookingDates.moveOut}
+        selectedDuration={formData.bookingDates.duration}
+        onStartDateChange={handlers.handleMoveInDateAdapter}
+        onEndDateChange={handlers.handleMoveOutDateAdapter}
+        onDurationChange={(value) => handlers.handleDateChange('duration', value)}
+        onPrevious={handlers.handlePreviousStep}
+        onNext={handlers.handleNextStep}
       />
     ),
     3: (
       <RoomSelectionStep
-        selectedRoomType={roomOptions.roomType}
-        selectedFurnishing={roomOptions.furnishingOption}
-        selectedFloor={roomOptions.floor}
-        extraRequests={roomOptions.extraRequests}
-        onRoomTypeChange={(value) => handleRoomOptionChange('roomType', value)}
-        onFurnishingChange={(value) => handleRoomOptionChange('furnishingOption', value)}
-        onFloorChange={(value) => handleRoomOptionChange('floor', value)}
-        onRequestsChange={(value) => handleRoomOptionChange('extraRequests', value)}
-        onPrevious={handlePreviousStep}
-        onNext={handleNextStep}
-        availableRoomTypes={property?.features?.map((feature: string) => feature) || ['single', 'double', 'triple']}
+        selectedRoomType={formData.roomOptions.roomType}
+        selectedFurnishing={formData.roomOptions.furnishingOption}
+        selectedFloor={formData.roomOptions.floor}
+        extraRequests={formData.roomOptions.extraRequests}
+        onRoomTypeChange={(value) => handlers.handleRoomOptionChange('roomType', value)}
+        onFurnishingChange={(value) => handlers.handleRoomOptionChange('furnishingOption', value)}
+        onFloorChange={(value) => handlers.handleRoomOptionChange('floor', value)}
+        onRequestsChange={(value) => handlers.handleRoomOptionChange('extraRequests', value)}
+        onPrevious={handlers.handlePreviousStep}
+        onNext={handlers.handleNextStep}
+        availableRoomTypes={property?.features || ['single', 'double', 'triple']}
       />
     ),
     4: (
       <RoommatesStep
-        roommatesList={roommates}
-        onRoommateChange={handleRoommateChange}
-        onAddRoommate={addRoommate}
-        onRemoveRoommate={removeRoommate}
-        onPrevious={handlePreviousStep}
-        onNext={handleNextStep}
+        roommatesList={formData.roommates}
+        onRoommateChange={handlers.handleRoommateChange}
+        onAddRoommate={handlers.addRoommate}
+        onRemoveRoommate={handlers.removeRoommate}
+        onPrevious={handlers.handlePreviousStep}
+        onNext={handlers.handleNextStep}
       />
     ),
     5: (
       <EmergencyContactStep
-        name={emergencyContact.name}
-        relationship={emergencyContact.relationship}
-        phone={emergencyContact.phone}
-        alternatePhone={emergencyContact.alternatePhone}
-        onInputChange={handleEmergencyContactAdapter}
-        onRelationshipChange={handleRelationshipChange}
-        onPrevious={handlePreviousStep}
-        onNext={handleNextStep}
+        name={formData.emergencyContact.name}
+        relationship={formData.emergencyContact.relationship}
+        phone={formData.emergencyContact.phone}
+        alternatePhone={formData.emergencyContact.alternatePhone}
+        onInputChange={handlers.handleEmergencyContactAdapter}
+        onRelationshipChange={handlers.handleRelationshipChange}
+        onPrevious={handlers.handlePreviousStep}
+        onNext={handlers.handleNextStep}
       />
     ),
     6: (
       <VerificationStep
-        idType={studentVerification.idType}
-        studentId={studentVerification.studentId}
-        university={studentVerification.university}
-        program={studentVerification.program}
-        onInputChange={handleVerificationChange}
-        onFileUpload={handleIdUpload}
-        onVerify={handleVerifyStudent}
-        isVerifying={loading}
-        verified={studentVerification.verified}
-        onPrevious={handlePreviousStep}
-        onNext={handleNextStep}
+        idType={formData.studentVerification.idType}
+        studentId={formData.studentVerification.studentId}
+        university={formData.studentVerification.university}
+        program={formData.studentVerification.program}
+        onInputChange={handlers.handleVerificationChange}
+        onFileUpload={handlers.handleIdUpload}
+        onVerify={handlers.handleVerifyStudent}
+        isVerifying={handlers.loading}
+        verified={formData.studentVerification.verified}
+        onPrevious={handlers.handlePreviousStep}
+        onNext={handlers.handleNextStep}
       />
     )
   };

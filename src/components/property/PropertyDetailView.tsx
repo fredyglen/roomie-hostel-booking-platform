@@ -28,19 +28,21 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
     return amenities.map(getAmenityText);
   };
 
-  const getPriceText = (): string => {
+  const getPriceNumber = (): number => {
     const price = property.price || property.rent;
-    return typeof price === 'number' ? price.toString() : price.toString();
+    return typeof price === 'number' ? price : parseFloat(price.toString()) || 0;
+  };
+
+  const getDistanceText = (): string => {
+    const distance = property.distance_to_campus || property.distanceToCampus;
+    if (distance === undefined || distance === null) return '';
+    return typeof distance === 'string' ? distance : distance.toString();
   };
 
   const getOwnerResponseRate = (): string => {
     const rate = property.owner?.responseRate;
-    return typeof rate === 'number' ? `${rate}%` : 'N/A';
-  };
-
-  const getDistanceToCampus = (): string => {
-    const distance = property.distance_to_campus || property.distanceToCampus;
-    return typeof distance === 'number' ? distance.toString() : (distance || '');
+    if (rate === undefined || rate === null) return 'N/A';
+    return typeof rate === 'number' ? `${rate}%` : rate.toString();
   };
 
   // Safe data extraction
@@ -48,9 +50,10 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
     ...property,
     location: getLocationText(property.location),
     amenities: property.amenities ? getAmenitiesArray(property.amenities) : [],
-    price: getPriceText(),
-    distance_to_campus: getDistanceToCampus(),
+    price: getPriceNumber(),
+    distance_to_campus: getDistanceText(),
     price_unit: property.price_unit || property.priceUnit || 'month',
+    house_rules: property.house_rules || '',
     owner: property.owner ? {
       ...property.owner,
       responseRate: getOwnerResponseRate()
@@ -70,7 +73,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             description={property.description}
             address={property.address}
             distanceToCampus={safeProperty.distance_to_campus}
-            houseRules={property.house_rules}
+            houseRules={safeProperty.house_rules}
             amenities={safeProperty.amenities}
             type={property.type}
             location={safeProperty.location}
