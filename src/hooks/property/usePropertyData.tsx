@@ -22,47 +22,11 @@ interface PropertyData {
   hasMore: boolean;
 }
 
-// Simplified database property type to avoid deep type instantiation
-interface SimpleDbProperty {
-  id: string;
-  owner_id: string;
-  title: string;
-  description: string;
-  property_type: string;
-  property_category: string;
-  is_available: boolean;
-  rent: number;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-  bedrooms: number;
-  bathrooms: number;
-  amenities: string[];
-  images: string[];
-  available_from: string;
-  created_at: string;
-  updated_at: string;
-  profiles?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  } | Array<{
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  }>;
-}
-
 export const usePropertyData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const transformDatabaseProperty = (item: SimpleDbProperty): Property => {
+  const transformDatabaseProperty = (item: any): Property => {
     // Handle profiles - it might be an array or a single object
     let ownerProfile: any = null;
     if (Array.isArray(item.profiles)) {

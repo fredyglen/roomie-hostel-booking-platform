@@ -22,23 +22,33 @@ export const userService = {
   },
   
   async createUser(user: Omit<User, 'id' | 'created_at'>): Promise<User> {
-    // Map the User type fields to database fields
-    const userData = {
+    // For creating users, we rely on Supabase auth trigger to handle profile creation
+    // This method is primarily for direct profile updates if needed
+    const { data: { user: authUser }, error: authError } = await supabase.auth.signUp({
       email: user.email,
-      role: user.role,
-      first_name: user.firstName || null,
-      last_name: user.lastName || null,
-      phone: user.phone || null,
-      avatar_url: user.avatarUrl || null
-    };
+      password: 'temp-password', // This should be handled properly in a real auth flow
+      options: {
+        data: {
+          first_name: user.firstName,
+          last_name: user.lastName,
+          phone: user.phone,
+          role: user.role
+        }
+      }
+    });
 
-    const { data, error } = await supabase
+    if (authError) throw authError;
+    if (!authUser) throw new Error('Failed to create user');
+
+    // Return the created user profile
+    const { data: profile, error: profileError } = await supabase
       .from('profiles')
-      .insert(userData)
-      .select()
+      .select('*')
+      .eq('id', authUser.id)
       .single();
-    if (error) throw error;
-    return data as User;
+
+    if (profileError) throw profileError;
+    return profile as User;
   },
   
   async updateUser(id: string, updates: Partial<Omit<User, 'id' | 'created_at'>>): Promise<User> {
