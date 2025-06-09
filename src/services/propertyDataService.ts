@@ -23,8 +23,8 @@ export interface PropertyData {
 
 export async function fetchProperties(options: PropertyQueryOptions = {}): Promise<PropertyData> {
   try {
-    // Build the base query with explicit typing
-    const baseQuery = supabase
+    // Use a much simpler approach to avoid deep type inference
+    const queryBuilder = supabase
       .from('properties')
       .select(`
         *,
@@ -37,54 +37,53 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
         )
       `, { count: 'exact' });
 
-    // Apply filters step by step to avoid deep inference
-    let query = baseQuery;
-    
+    // Apply filters one by one to avoid complex type building
     if (options.filters?.type) {
-      query = query.eq('property_type', options.filters.type);
+      queryBuilder.eq('property_type', options.filters.type);
     }
     
     if (options.filters?.status) {
-      query = query.eq('status', options.filters.status);
+      queryBuilder.eq('status', options.filters.status);
     }
     
     if (options.filters?.minPrice) {
-      query = query.gte('rent', options.filters.minPrice);
+      queryBuilder.gte('rent', options.filters.minPrice);
     }
     
     if (options.filters?.maxPrice) {
-      query = query.lte('rent', options.filters.maxPrice);
+      queryBuilder.lte('rent', options.filters.maxPrice);
     }
     
     if (options.filters?.city) {
-      query = query.ilike('city', `%${options.filters.city}%`);
+      queryBuilder.ilike('city', `%${options.filters.city}%`);
     }
 
     // Apply pagination
     if (options.limit) {
-      query = query.limit(options.limit);
+      queryBuilder.limit(options.limit);
     }
     
     if (options.offset) {
-      query = query.range(options.offset, options.offset + (options.limit || 10) - 1);
+      queryBuilder.range(options.offset, options.offset + (options.limit || 10) - 1);
     }
 
-    const { data, error: queryError, count } = await query;
+    // Execute the query with minimal typing
+    const result = await queryBuilder;
+    const { data, error: queryError, count } = result;
 
     if (queryError) throw queryError;
 
-    // Transform properties with explicit typing to avoid deep inference
+    // Process results with explicit type handling
     const transformedProperties: Property[] = [];
-    if (data && Array.isArray(data)) {
+    if (data) {
       for (const item of data) {
         try {
-          // Explicitly cast to avoid deep type inference
-          const rawProperty = item as unknown as RawProperty;
+          // Use any type to completely avoid inference issues
+          const rawProperty = item as any;
           const transformed = transformDbProperty(rawProperty);
           transformedProperties.push(transformed);
         } catch (transformError) {
           console.error('Error transforming property:', transformError);
-          // Skip this property but continue with others
         }
       }
     }
@@ -93,13 +92,11 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
     const limit = options.limit || 10;
     const offset = options.offset || 0;
     
-    const result: PropertyData = {
+    return {
       properties: transformedProperties,
       totalCount,
       hasMore: transformedProperties.length === limit && totalCount > offset + transformedProperties.length
     };
-
-    return result;
   } catch (error) {
     console.error('Error in fetchProperties:', error);
     throw error;
@@ -108,7 +105,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
 
 export async function fetchPropertyById(id: string): Promise<Property | null> {
   try {
-    const { data, error: queryError } = await supabase
+    const result = await supabase
       .from('properties')
       .select(`
         *,
@@ -123,11 +120,13 @@ export async function fetchPropertyById(id: string): Promise<Property | null> {
       .eq('id', id)
       .single();
 
+    const { data, error: queryError } = result;
+
     if (queryError) throw queryError;
     if (!data) return null;
 
-    // Explicitly cast to avoid deep type inference
-    const rawProperty = data as unknown as RawProperty;
+    // Use any type to avoid inference issues
+    const rawProperty = data as any;
     const transformedProperty = transformDbProperty(rawProperty);
     return transformedProperty;
   } catch (error) {

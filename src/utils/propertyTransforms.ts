@@ -1,7 +1,7 @@
 
 import { Property, PropertyType, PropertyStatus, PropertyCategory } from '@/types/property';
 
-// Explicit type for database results - no deep inference
+// Simple interface for database results - avoid complex inference
 export interface RawProperty {
   id: string;
   owner_id: string;
@@ -24,21 +24,13 @@ export interface RawProperty {
   created_at: string;
   updated_at: string;
   house_rules?: string;
-  profiles?: RawProfile | RawProfile[];
+  profiles?: any; // Use any to avoid deep inference
 }
 
-export interface RawProfile {
-  id: string;
-  first_name?: string;
-  last_name?: string;
-  email?: string;
-  phone?: string;
-}
-
-// Simple transformation function with explicit types
-export function transformDbProperty(dbItem: RawProperty): Property {
+// Simple transformation function
+export function transformDbProperty(dbItem: any): Property {
   // Extract profile data safely
-  const profileData: RawProfile | undefined = Array.isArray(dbItem.profiles) 
+  const profileData = Array.isArray(dbItem.profiles) 
     ? dbItem.profiles[0] 
     : dbItem.profiles;
   
