@@ -123,6 +123,7 @@ export const usePropertyData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Explicitly type the function to avoid deep type inference
   const getProperties = useCallback(async (options: PropertyQueryOptions = {}): Promise<PropertyData> => {
     try {
       setLoading(true);
@@ -193,11 +194,13 @@ export const usePropertyData = () => {
         }
       }
 
-      return {
+      const result: PropertyData = {
         properties: transformedProperties,
         totalCount: count || 0,
         hasMore: transformedProperties.length === (options.limit || 10) && count ? count > (options.offset || 0) + transformedProperties.length : false
       };
+
+      return result;
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch properties';
@@ -209,6 +212,7 @@ export const usePropertyData = () => {
     }
   }, []);
 
+  // Explicitly type this function as well
   const getPropertyById = useCallback(async (id: string): Promise<Property | null> => {
     try {
       setLoading(true);
