@@ -15,7 +15,7 @@ import { calculatePaymentBreakdown } from '@/utils/paymentCalculations';
 import { formatCurrency } from '@/utils/currency';
 import { Calendar, MapPin, User, Info } from 'lucide-react';
 import { ErrorHandler } from '@/utils/ErrorHandler';
-import { PaymentData } from '@/types/common';
+import { ConfirmedBookingData, ModernPaymentSuccessResult } from '@/types/booking';
 
 // Define interface for confirmed booking data passed to onSuccess
 interface ConfirmedBookingData { // TODO: Refine this interface based on actual booking object structure
@@ -56,9 +56,23 @@ const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
   const [selectedPackage, setSelectedPackage] = useState<'standard' | 'premium' | 'luxury'>('standard');
   const [showPaymentForm, setShowPaymentForm] = useState(false);
 
-  const handlePaymentSuccess = (result: ConfirmedBookingData) => {
+  const handlePaymentSuccess = (result: ModernPaymentSuccessResult) => {
     ErrorHandler.log('Payment successful:', result);
-    onSuccess(result);
+    
+    // Convert ModernPaymentSuccessResult to ConfirmedBookingData
+    const confirmedBooking: ConfirmedBookingData = {
+      id: result.transaction?.reference || Math.random().toString(),
+      booking_reference: result.reference,
+      payment_reference: result.reference,
+      total_amount: result.amount || 0,
+      status: 'confirmed',
+      package_type: selectedPackage,
+      start_date: startDate,
+      end_date: endDate,
+      ...result
+    };
+    
+    onSuccess(confirmedBooking);
     onClose();
   };
 
@@ -79,16 +93,6 @@ const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
 
   const selectedPackageData = BOOKING_PACKAGES[selectedPackage];
   const breakdown = getPackageBreakdown(selectedPackage);
-
-  const handlePayment = async (paymentData: PaymentData) => {
-    try {
-      // ... payment logic ...
-      // logger.info('Payment data', paymentData);
-    } catch (error) {
-      // console.log('Payment error:', error);
-      ErrorHandler.handle(error, 'BusinessPaymentModal.handlePayment');
-    }
-  };
 
   if (showPaymentForm) {
     return (

@@ -1,10 +1,11 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import BusinessPaymentModal from '@/components/payment/BusinessPaymentModal';
 import { Calendar, MapPin } from 'lucide-react';
 import { ErrorHandler } from '@/utils/ErrorHandler';
-import { Booking, BookingStatus } from '@/types/booking';
+import { ConfirmedBookingData } from '@/types/booking';
 
 interface BookingButtonProps {
   propertyId: string;
@@ -36,7 +37,7 @@ const BookingButton: React.FC<BookingButtonProps> = ({
     setPaymentModalOpen(true);
   };
 
-  const handlePaymentSuccess = (booking: Booking) => {
+  const handlePaymentSuccess = (booking: ConfirmedBookingData) => {
     setPaymentModalOpen(false);
     // Redirect to booking confirmation or success page
     window.location.href = `/payment-success?reference=${booking.payment_reference}`;
@@ -45,15 +46,6 @@ const BookingButton: React.FC<BookingButtonProps> = ({
   // Default dates if not provided
   const defaultStartDate = startDate || new Date().toISOString().split('T')[0];
   const defaultEndDate = endDate || new Date(Date.now() + 120 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]; // 4 months
-
-  const handleBooking = async (bookingData: Booking) => {
-    try {
-      // ... booking logic ...
-      // logger.info('Booking data', bookingData);
-    } catch (error) {
-      ErrorHandler.handle(error, 'BookingButton.handleBooking');
-    }
-  };
 
   return (
     <>

@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,6 +13,7 @@ import { PaystackVerificationData } from '@/utils/paystack-verification';
 import { Loader2, CreditCard, Smartphone, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorHandler } from '@/utils/ErrorHandler';
+import { ModernPaymentSuccessResult, MinimalPaystackTransaction } from '@/types/booking';
 
 interface ModernPaystackPaymentProps {
   amount: number; // Amount in GHS
@@ -24,12 +26,6 @@ interface ModernPaystackPaymentProps {
   onError?: (error: string) => void;
   title?: string;
   description?: string;
-}
-
-// Define the expected structure of the success result passed to the onSuccess callback
-interface ModernPaymentSuccessResult {
-  transaction: MinimalPaystackTransaction;
-  verification: PaystackVerificationData;
 }
 
 export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
@@ -101,12 +97,20 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
                 title: "Payment Successful",
                 description: `Payment of ${formatCurrency(verification.amount || amount)} completed successfully.`,
               });
-              onSuccess({
-                transaction,
-                verification: verification.data,
+              
+              const result: ModernPaymentSuccessResult = {
+                reference: transaction.reference,
                 amount: verification.amount,
-                reference: transaction.reference
-              });
+                status: 'success',
+                transaction: {
+                  reference: transaction.reference,
+                  amount: verification.amount || amount,
+                  status: 'success'
+                },
+                verification: verification.data
+              };
+              
+              onSuccess(result);
             } else {
               throw new Error(verification.message || 'Payment verification failed');
             }

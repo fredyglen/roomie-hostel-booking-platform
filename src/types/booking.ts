@@ -26,6 +26,9 @@ export interface ConfirmedBookingData {
   payment_reference: string;
   total_amount: number;
   status: string;
+  package_type?: string;
+  start_date?: string;
+  end_date?: string;
   [key: string]: any;
 }
 
@@ -33,6 +36,8 @@ export interface ModernPaymentSuccessResult {
   reference: string;
   amount?: number;
   status?: string;
+  transaction: MinimalPaystackTransaction;
+  verification: PaystackVerificationData;
   [key: string]: any;
 }
 
@@ -46,7 +51,11 @@ export interface PaymentVerificationData {
   };
   booking?: {
     id: any;
-  };
+    package_type?: string;
+    start_date?: string;
+    end_date?: string;
+    [key: string]: unknown;
+  } | null;
   error?: string;
 }
 
