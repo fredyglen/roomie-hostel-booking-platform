@@ -22,13 +22,44 @@ interface PropertyData {
   hasMore: boolean;
 }
 
+interface DatabaseProperty {
+  id: string;
+  owner_id: string;
+  title: string;
+  description: string;
+  property_type: string;
+  is_available: boolean;
+  rent: number;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  property_category: string;
+  bedrooms: number;
+  bathrooms: number;
+  amenities: string[];
+  images: string[];
+  available_from: string;
+  created_at: string;
+  updated_at: string;
+  profiles?: {
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+  };
+}
+
 export const usePropertyData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const transformDatabaseProperty = (item: Record<string, any>): Property => {
+  const transformDatabaseProperty = (item: DatabaseProperty): Property => {
     // Handle profiles - it might be an array or a single object
     const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+    
+    // Use proper PropertyStatus values
+    const status: PropertyStatus = item.is_available ? 'available' : 'occupied';
     
     const baseProperty: Property = {
       id: item.id || '',
@@ -37,7 +68,7 @@ export const usePropertyData = () => {
       title: item.title || '',
       description: item.description || '',
       type: (item.property_type as PropertyType) || 'hostel',
-      status: item.is_available ? 'available' : 'unavailable',
+      status: status,
       price: item.rent || 0,
       rent: item.rent || 0,
       location: item.address || '',
@@ -140,7 +171,9 @@ export const usePropertyData = () => {
 
       if (queryError) throw queryError;
 
-      const transformedProperties: Property[] = (data || []).map(transformDatabaseProperty);
+      const transformedProperties: Property[] = (data || []).map((item: any) => 
+        transformDatabaseProperty(item as DatabaseProperty)
+      );
 
       return {
         properties: transformedProperties,
@@ -181,7 +214,7 @@ export const usePropertyData = () => {
       if (queryError) throw queryError;
       if (!data) return null;
 
-      const transformedProperty = transformDatabaseProperty(data);
+      const transformedProperty = transformDatabaseProperty(data as DatabaseProperty);
       return transformedProperty;
 
     } catch (err) {
