@@ -1,6 +1,8 @@
 
 import { usePropertyLoader } from './usePropertyLoader';
+import { usePropertyData } from './usePropertyData';
 
 export {
-  usePropertyLoader
+  usePropertyLoader,
+  usePropertyData
 };
