@@ -1,75 +1,84 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
-import PropertyTabs from '@/components/property/PropertyTabs';
-import { Icon } from '@iconify/react';
-import { useNavigate } from 'react-router-dom';
 import { Property } from '@/types/property';
+import { formatCurrency } from '@/utils/currency';
 
 interface StoryDetailsSheetEnhancedProps {
   property: Property;
   onClose: () => void;
-  onBookNow?: () => void;
+  onBookNow: () => void;
 }
 
-const StoryDetailsSheetEnhanced: React.FC<StoryDetailsSheetEnhancedProps> = ({ 
-  property, 
+const StoryDetailsSheetEnhanced: React.FC<StoryDetailsSheetEnhancedProps> = ({
+  property,
   onClose,
-  onBookNow 
+  onBookNow,
 }) => {
-  const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState('about');
-
-  const handleBookNow = () => {
-    if (onBookNow) {
-      onBookNow();
-    } else {
-      navigate(`/student/property/${property.id}/book`);
+  // Helper functions to safely extract data
+  const getLocationText = (location: string | { city: string; state: string; address: string }): string => {
+    if (typeof location === 'string') {
+      return location;
     }
+    return `${location.address}, ${location.city}, ${location.state}`;
+  };
+
+  const getAmenityText = (amenity: string | { id: string; name: string }): string => {
+    return typeof amenity === 'string' ? amenity : amenity.name;
+  };
+
+  const getAmenitiesArray = (amenities: (string | { id: string; name: string })[]): string[] => {
+    return amenities.map(getAmenityText);
+  };
+
+  const getPriceText = (): string => {
+    const price = property.price || property.rent;
+    return typeof price === 'number' ? price.toString() : price.toString();
+  };
+
+  // Safe data extraction
+  const safeData = {
+    price: getPriceText(),
+    amenities: property.amenities ? getAmenitiesArray(property.amenities) : [],
+    location: getLocationText(property.location),
+    priceUnit: property.priceUnit || property.price_unit || 'month'
   };
 
   return (
-    <div className="flex flex-col h-full">
-      {/* Content area with scrolling */}
-      <div className="flex-grow overflow-auto px-4">
-        <h2 className="text-xl font-bold mb-2">{property.title}</h2>
-        <p className="text-gray-600 mb-4">{property.address}</p>
-        
-        {/* Property tabs */}
-        <div className="bg-white rounded-lg mb-20">
-          <PropertyTabs
-            description={property.description || ''}
-            address={property.address}
-            distanceToCampus={property.distanceToCampus || property.distance_to_campus || ''}
-            houseRules={property.house_rules || []}
-            amenities={property.amenities || []}
-            type={property.type || property.property_type || ''}
-            location={property.location || ''}
-            availableUnits={property.availableUnits}
-            onTabChange={setActiveTab}
-          />
-        </div>
+    <div className="h-full bg-white rounded-t-3xl p-6 overflow-y-auto">
+      <div 
+        className="w-16 h-1 bg-gray-300 rounded-full mx-auto mb-6 cursor-pointer"
+        onClick={onClose}
+      ></div>
+      
+      <h2 className="text-2xl font-bold mb-2">{property.title}</h2>
+      <p className="text-gray-600 mb-2">{safeData.location}</p>
+      <div className="flex items-center mb-4">
+        <span className="text-xl font-bold text-blue-600 mr-1">{formatCurrency(Number(safeData.price))}</span>
+        <span className="text-gray-600">/{safeData.priceUnit}</span>
       </div>
       
-      {/* Fixed Book Now button */}
-      <div className="sticky bottom-0 bg-white p-4 border-t border-gray-200 shadow-lg">
-        <div className="flex items-center justify-between mb-2">
-          <div>
-            <span className="text-2xl font-bold text-blue-600">₵{(property.price || property.rent || 0).toLocaleString()}</span>
-            <span className="text-gray-600">/{property.priceUnit || property.price_unit || 'semester'}</span>
+      {property.description && (
+        <p className="text-gray-700 mb-6">{property.description}</p>
+      )}
+      
+      {safeData.amenities && safeData.amenities.length > 0 && (
+        <div className="mb-6">
+          <h3 className="text-lg font-semibold mb-2">Amenities</h3>
+          <div className="flex flex-wrap gap-2">
+            {safeData.amenities.map((amenity, index) => (
+              <span key={index} className="bg-gray-100 text-gray-800 px-3 py-1 rounded-full text-sm">
+                {amenity}
+              </span>
+            ))}
           </div>
-          {property.rating && (
-            <div className="flex items-center">
-              <Icon icon="solar:star-bold" className="h-4 w-4 text-yellow-400" />
-              <span className="text-sm ml-1">{property.rating}</span>
-              <span className="text-xs text-gray-500 ml-1">({property.reviewCount || 0})</span>
-            </div>
-          )}
         </div>
+      )}
+      
+      <div className="sticky bottom-0 pt-4 bg-white">
         <Button 
-          variant="default" 
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white"
-          onClick={handleBookNow}
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={onBookNow}
         >
           Book Now
         </Button>

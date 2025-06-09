@@ -5,15 +5,9 @@ import { useToast } from '@/hooks/use-toast';
 import { handlePaystackError } from '@/utils/paystack-errors';
 import { ModernPaymentSuccessResult, PaystackVerificationData } from '@/types/booking';
 
-interface PaystackPop {
-  setup: (config: any) => {
-    openIframe: () => void;
-  };
-}
-
 declare global {
   interface Window {
-    PaystackPop?: PaystackPop;
+    PaystackPop?: any;
   }
 }
 

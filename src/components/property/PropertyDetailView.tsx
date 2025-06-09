@@ -30,12 +30,17 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
 
   const getPriceText = (): string => {
     const price = property.price || property.rent;
-    return typeof price === 'number' ? price.toString() : price;
+    return typeof price === 'number' ? price.toString() : price.toString();
   };
 
   const getOwnerResponseRate = (): string => {
     const rate = property.owner?.responseRate;
     return typeof rate === 'number' ? `${rate}%` : 'N/A';
+  };
+
+  const getDistanceToCampus = (): string => {
+    const distance = property.distance_to_campus || property.distanceToCampus;
+    return typeof distance === 'number' ? distance.toString() : (distance || '');
   };
 
   // Safe data extraction
@@ -44,14 +49,12 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
     location: getLocationText(property.location),
     amenities: property.amenities ? getAmenitiesArray(property.amenities) : [],
     price: getPriceText(),
-    distance_to_campus: typeof property.distance_to_campus === 'number' 
-      ? property.distance_to_campus.toString() 
-      : property.distance_to_campus || property.distanceToCampus || '',
+    distance_to_campus: getDistanceToCampus(),
     price_unit: property.price_unit || property.priceUnit || 'month',
-    owner: {
+    owner: property.owner ? {
       ...property.owner,
       responseRate: getOwnerResponseRate()
-    }
+    } : undefined
   };
 
   return (
@@ -64,13 +67,14 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
           
           {/* Property Details Tabs */}
           <PropertyTabs
-            property={safeProperty}
-            amenities={safeProperty.amenities}
             description={property.description}
-            location={safeProperty.location}
-            houseRules={property.house_rules}
-            availableUnits={property.availableUnits}
+            address={property.address}
             distanceToCampus={safeProperty.distance_to_campus}
+            houseRules={property.house_rules}
+            amenities={safeProperty.amenities}
+            type={property.type}
+            location={safeProperty.location}
+            availableUnits={property.availableUnits}
           />
         </div>
         
@@ -83,7 +87,9 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
           />
           
           {/* Owner Card */}
-          <PropertyOwnerCard owner={property.owner} />
+          {property.owner && (
+            <PropertyOwnerCard owner={property.owner} />
+          )}
         </div>
       </div>
     </div>

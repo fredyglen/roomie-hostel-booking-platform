@@ -1,33 +1,58 @@
 
 import React from 'react';
-import { Home } from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Owner } from '@/types/property';
 
-interface PropertyOwnerProps {
-  name: string;
-  verified?: boolean;
-  responseRate?: string;
+interface PropertyOwnerCardProps {
+  owner?: Owner;
 }
 
-const PropertyOwnerCard: React.FC<PropertyOwnerProps> = ({
-  name, verified, responseRate
-}) => {
+const PropertyOwnerCard: React.FC<PropertyOwnerCardProps> = ({ owner }) => {
+  if (!owner) {
+    return null;
+  }
+
+  const getInitials = (name: string) => {
+    return name.split(' ').map(word => word[0]).join('').toUpperCase();
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-4">Hosted by {name}</h2>
-      <div className="flex items-center mb-4">
-        <div className="w-12 h-12 bg-gray-200 rounded-full mr-4 flex items-center justify-center">
-          <Home className="h-6 w-6 text-blue-500" />
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-lg">Property Owner</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="flex items-center space-x-3">
+          <Avatar>
+            <AvatarImage src="" alt={owner.name} />
+            <AvatarFallback>{getInitials(owner.name)}</AvatarFallback>
+          </Avatar>
+          <div className="flex-1">
+            <div className="flex items-center space-x-2">
+              <h3 className="font-semibold">{owner.name}</h3>
+              {owner.verified && (
+                <Badge variant="secondary" className="text-xs">
+                  Verified
+                </Badge>
+              )}
+            </div>
+            <p className="text-sm text-gray-600">Response rate: {owner.responseRate || 'N/A'}</p>
+          </div>
         </div>
-        <div>
-          {verified && (
-            <span className="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">
-              Verified
-            </span>
-          )}
-          {responseRate && <p className="mt-1">Response rate: {responseRate}</p>}
+        
+        <div className="space-y-2">
+          <Button variant="outline" className="w-full">
+            Contact Owner
+          </Button>
+          <Button variant="ghost" className="w-full text-sm">
+            View Profile
+          </Button>
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 

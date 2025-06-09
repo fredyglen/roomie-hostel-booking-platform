@@ -18,7 +18,7 @@ interface PaymentModalProps {
   isLoading?: boolean;
 }
 
-const PaymentModal: React.FC<PaymentModalProps> = ({
+export const PaymentModal: React.FC<PaymentModalProps> = ({
   isOpen,
   onClose,
   tier,
@@ -36,10 +36,33 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
     momoNetwork: 'mtn' as 'mtn' | 'vodafone' | 'airtel'
   });
 
-  const { processPayment, processing } = usePaymentProcessor();
+  const { processPaymentHook, processing } = usePaymentProcessor();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const processPayment = async (paymentData: PaymentData) => {
+    try {
+      setIsProcessing(true);
+      
+      await processPaymentHook(
+        paymentData,
+        (reference) => {
+          setIsProcessing(false);
+          onSuccess(reference);
+        },
+        (error) => {
+          setIsProcessing(false);
+          const errorMessage = typeof error === 'string' ? error : 'Payment failed';
+          onError?.(errorMessage);
+        }
+      );
+    } catch (error) {
+      setIsProcessing(false);
+      const errorMessage = typeof error === 'string' ? error : 'Payment processing failed';
+      onError?.(errorMessage);
+    }
   };
 
   const handlePayment = () => {
