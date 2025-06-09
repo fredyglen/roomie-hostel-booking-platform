@@ -121,7 +121,8 @@ export const usePropertyData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const getProperties = useCallback(async (options: PropertyQueryOptions = {}): Promise<PropertyData> => {
+  // Explicitly typed function to avoid deep type inference
+  const getProperties: (options?: PropertyQueryOptions) => Promise<PropertyData> = useCallback(async (options = {}) => {
     try {
       setLoading(true);
       setError(null);
@@ -210,7 +211,8 @@ export const usePropertyData = () => {
     }
   }, []);
 
-  const getPropertyById = useCallback(async (id: string): Promise<Property | null> => {
+  // Explicitly typed function to avoid deep type inference
+  const getPropertyById: (id: string) => Promise<Property | null> = useCallback(async (id) => {
     try {
       setLoading(true);
       setError(null);
