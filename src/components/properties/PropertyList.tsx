@@ -27,8 +27,9 @@ const PropertyList: React.FC<PropertyListProps> = ({
   if (properties.length === 0) {
     return (
       <EmptyState
-        message="No properties found matching your criteria"
-        actionText="Reset Filters"
+        title="No Properties Found"
+        description="No properties found matching your criteria"
+        actionLabel="Reset Filters"
         onAction={onResetFilters}
       />
     );

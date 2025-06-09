@@ -1,7 +1,114 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Property, PropertyCategory } from '@/types/property';
+import { Property, PropertyType, PropertyStatus } from '@/types/property';
 import { logger } from '@/utils/logger';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+
+// Sample properties data as fallback (keeping existing implementation)
+const getSampleProperties = (): Property[] => {
+  return [
+    {
+      id: '1',
+      name: 'Modern Apartment',
+      title: 'Modern Apartment',
+      description: 'A modern apartment in Accra.',
+      type: 'apartment' as PropertyType,
+      status: 'available' as PropertyStatus,
+      price: 1200,
+      rent: 1200,
+      location: {
+        address: '123 Main St',
+        city: 'Accra',
+        state: 'Greater Accra',
+      },
+      address: '123 Main St',
+      city: 'Accra',
+      state: 'Greater Accra',
+      zip: '00233',
+      owner_id: 'owner1',
+      propertyCategory: 'Apartment',
+      verified: true,
+      is_available: true,
+      bedrooms: 2,
+      bathrooms: 1,
+      available_from: '2024-01-01',
+      amenities: ['WiFi', 'AC', 'Parking'],
+      images: ['/placeholder.svg'],
+      created_at: '2024-01-01T00:00:00Z',
+      updated_at: '2024-01-01T00:00:00Z',
+      owner: {
+        id: 'owner1',
+        name: 'John Owner',
+        email: 'owner@example.com',
+        phone: '+233123456789',
+        verified: true,
+        responseRate: '95%'
+      },
+      house_rules: 'No smoking, no pets',
+      stories: [
+        { id: 'story1', type: 'image', url: '/placeholder.svg', duration: 5 }
+      ],
+      features: ['balcony', 'ensuite']
+    }
+  ];
+};
+
+export const normalizePropertyData = (dbProperty: Record<string, unknown>): Property => {
+  const profileData = Array.isArray(dbProperty.profiles) ? dbProperty.profiles[0] : dbProperty.profiles;
+  
+  return {
+    id: String(dbProperty.id ?? ''),
+    owner_id: String(dbProperty.owner_id ?? ''),
+    name: String(dbProperty.name ?? dbProperty.title ?? ''),
+    title: String(dbProperty.title ?? dbProperty.name ?? ''),
+    description: String(dbProperty.description ?? ''),
+    type: (dbProperty.property_type as PropertyType) ?? 'apartment',
+    status: (dbProperty.status === 'Available' ? 'available' : dbProperty.status as PropertyStatus) ?? 'available',
+    price: Number(dbProperty.price ?? dbProperty.rent ?? 0),
+    rent: Number(dbProperty.price ?? dbProperty.rent ?? 0),
+    location: typeof dbProperty.location === 'object' && dbProperty.location !== null
+      ? dbProperty.location as Property['location']
+      : {
+          address: String(dbProperty.address ?? ''),
+          city: String(dbProperty.city ?? ''),
+          state: String(dbProperty.state ?? ''),
+        },
+    address: String(dbProperty.address ?? ''),
+    city: String(dbProperty.city ?? ''),
+    state: String(dbProperty.state ?? ''),
+    zip: String(dbProperty.zip ?? ''),
+    propertyCategory: (dbProperty.property_category as Property['propertyCategory']) ?? 'Hostel',
+    verified: Boolean(dbProperty.verified ?? true),
+    is_available: Boolean(dbProperty.is_available ?? true),
+    bedrooms: Number(dbProperty.bedrooms ?? 1),
+    bathrooms: Number(dbProperty.bathrooms ?? 1),
+    available_from: String(dbProperty.available_from ?? ''),
+    amenities: Array.isArray(dbProperty.amenities) ? dbProperty.amenities as string[] : [],
+    images: Array.isArray(dbProperty.images) ? dbProperty.images as string[] : ['/placeholder.svg'],
+    created_at: String(dbProperty.created_at ?? ''),
+    updated_at: String(dbProperty.updated_at ?? ''),
+    owner: profileData ? {
+      id: String(profileData.id ?? 'unknown'),
+      name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
+      email: profileData.email || 'owner@example.com',
+      phone: profileData.phone || '+233123456789',
+      responseRate: '95%',
+      verified: true
+    } : {
+      id: 'unknown',
+      name: 'Property Owner',
+      email: 'owner@example.com',
+      phone: '+233123456789',
+      responseRate: '95%',
+      verified: true
+    },
+    house_rules: typeof dbProperty.house_rules === 'string' ? dbProperty.house_rules : Array.isArray(dbProperty.house_rules) ? dbProperty.house_rules.join(', ') : '',
+    stories: [
+      { id: 'story1', type: 'image', url: '/placeholder.svg', duration: 5 }
+    ],
+    features: Array.isArray(dbProperty.features) ? dbProperty.features as string[] : ['balcony', 'ensuite']
+  };
+};
 
 export const usePropertyData = () => {
   const [properties, setProperties] = useState<Property[]>([]);
@@ -274,3 +381,6 @@ export const usePropertyData = () => {
     getPropertyById
   };
 };
+
+// Export the getSampleProperties for use in other components
+export { getSampleProperties };

@@ -30,7 +30,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
 
   const getPriceNumber = (): number => {
     const price = property.price || property.rent;
-    return typeof price === 'number' ? price : parseFloat(price.toString()) || 0;
+    return typeof price === 'number' ? price : parseFloat(price?.toString() || '0') || 0;
   };
 
   const getDistanceText = (): string => {
@@ -92,7 +92,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
         <div className="space-y-6">
           {/* Booking Card */}
           <PropertyBookingCard
-            property={safeProperty}
+            property={property}
             onBook={onBook}
           />
           
