@@ -42,19 +42,7 @@ interface DatabaseProperty {
   available_from: string;
   created_at: string;
   updated_at: string;
-  profiles: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  } | {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  }[];
+  profiles: any;
 }
 
 export const usePropertyData = () => {
@@ -63,12 +51,17 @@ export const usePropertyData = () => {
 
   const transformDatabaseProperty = (item: DatabaseProperty): Property => {
     // Handle profiles - it might be an array or a single object
-    const ownerProfile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+    let ownerProfile: any = null;
+    if (Array.isArray(item.profiles)) {
+      ownerProfile = item.profiles[0];
+    } else if (item.profiles) {
+      ownerProfile = item.profiles;
+    }
     
     return {
       id: item.id,
       owner_id: item.owner_id,
-      name: item.title, // Add missing name property
+      name: item.title,
       title: item.title,
       description: item.description,
       type: item.property_type as PropertyType,
@@ -80,7 +73,7 @@ export const usePropertyData = () => {
       city: item.city,
       state: item.state,
       zip: item.zip || '',
-      propertyCategory: item.property_category as PropertyCategory || 'Hostel',
+      propertyCategory: (item.property_category as PropertyCategory) || 'Hostel',
       verified: true,
       is_available: item.is_available,
       bedrooms: item.bedrooms,

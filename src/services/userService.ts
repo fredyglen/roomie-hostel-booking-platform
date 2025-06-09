@@ -34,7 +34,7 @@ export const userService = {
 
     const { data, error } = await supabase
       .from('profiles')
-      .insert(userData)
+      .insert([userData])
       .select()
       .single();
     if (error) throw error;
