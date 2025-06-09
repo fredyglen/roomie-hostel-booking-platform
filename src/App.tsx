@@ -1,13 +1,13 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, DefaultOptions } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
 import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/context/EnhancedAuthContext';
-import ErrorBoundary from '@/components/common/ErrorBoundary';
+import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
+import AuthRedirect from '@/components/auth/AuthRedirect';
 
 // Lazy load all pages for better performance
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -71,38 +71,49 @@ const queryClient = new QueryClient({
         });
         return failureCount < 2;
       },
-      onError: (error) => {
-        logger.error('Query error', error instanceof Error ? error : new Error(String(error)));
-      }
     },
     mutations: {
       onError: (error) => {
         logger.error('Mutation error', error instanceof Error ? error : new Error(String(error)));
       }
+    },
+    onError: (error) => {
+       logger.error('Query error - Global Handler', error instanceof Error ? error : new Error(String(error)));
     }
-  },
+  } as DefaultOptions,
 });
 
 // Enhanced route wrapper with error boundary and loading
-const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => (
-  <ErrorBoundary>
-    <Suspense fallback={<LoadingSpinner />}>
-      {element}
-    </Suspense>
-  </ErrorBoundary>
-);
+const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => {
+
+  // Add logging for Suspense fallback - Use logger.info
+  logger.info('SafeRoute: Rendering Suspense fallback');
+
+  return (
+    <ErrorBoundary
+      // onError prop is now accepted by ErrorBoundary
+      onError={(error, errorInfo) => {
+        logger.error('SafeRoute: ErrorBoundary caught an error', { error, errorInfo });
+      }}
+    >
+      <Suspense fallback={<LoadingSpinner />}>
+        {element}
+      </Suspense>
+    </ErrorBoundary>
+  );
+};
 
 function App() {
   logger.info('Application started');
 
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <Router>
+      <Router>
+        <AuthProvider>
           <div className="min-h-screen bg-gray-50">
             <Routes>
               {/* Public Routes */}
-              <Route path="/" element={<SafeRoute element={<Index />} />} />
+              <Route path="/" element={<SafeRoute element={<AuthRedirect />} />} />
               <Route path="/landing" element={<SafeRoute element={<Landing />} />} />
               <Route path="/welcome" element={<SafeRoute element={<Welcome />} />} />
               <Route path="/login" element={<SafeRoute element={<Login />} />} />
@@ -152,8 +163,8 @@ function App() {
           </div>
           <Toaster />
           <SonnerToaster />
-        </Router>
-      </AuthProvider>
+        </AuthProvider>
+      </Router>
     </QueryClientProvider>
   );
 }

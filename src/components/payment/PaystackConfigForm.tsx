@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Eye, EyeOff, Key, Shield, AlertTriangle } from 'lucide-react';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { API_ENDPOINTS } from '@/constants/api';
 
 const PaystackConfigForm: React.FC = () => {
   const [showTestKey, setShowTestKey] = useState(false);
@@ -18,11 +19,11 @@ const PaystackConfigForm: React.FC = () => {
 
   const handleSaveConfiguration = () => {
     // This would typically save to your secure backend/environment variables
-    console.log('Saving Paystack configuration:', {
+    ErrorHandler.log('Saving Paystack configuration: ' + JSON.stringify({
       environment,
       testKeyLength: testSecretKey.length,
       liveKeyLength: liveSecretKey.length
-    });
+    }));
   };
 
   return (
@@ -171,7 +172,7 @@ const PaystackConfigForm: React.FC = () => {
           <div className="space-y-2">
             <Label>Webhook URL</Label>
             <Input
-              value="https://your-project.supabase.co/functions/v1/paystack-webhook"
+              value={API_ENDPOINTS.PAYSTACK_WEBHOOK}
               readOnly
               className="bg-gray-50"
             />

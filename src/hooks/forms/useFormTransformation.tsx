@@ -1,5 +1,6 @@
-
 import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
+import { useCallback } from 'react';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 export const useFormTransformation = () => {
   const transformFormToDbFormat = (formData: PropertyFormValues, userId: string) => {
@@ -93,66 +94,98 @@ export const useFormTransformation = () => {
     return propertyData;
   };
 
-  const transformDbToFormValues = (dbData: any): Partial<PropertyFormValues> => {
+  const transformDbToFormValues = (dbData: Record<string, unknown>): Partial<PropertyFormValues> => {
     return {
-      title: dbData.title || '',
-      type: dbData.property_type || '',
-      propertyCategory: dbData.property_category || 'Hostel',
-      address: dbData.address || '',
-      city: dbData.city || '',
-      region: dbData.state || 'Greater Accra', // Map state back to region
-      zip: dbData.zip || '',
-      price: Number(dbData.rent) || 0,
+      title: typeof dbData.title === 'string' ? dbData.title : '',
+      type: typeof dbData.property_type === 'string' ? dbData.property_type : '',
+      propertyCategory: typeof dbData.property_category === 'string' ? dbData.property_category as 'Hostel' | 'Homestel' | 'Apartment' : 'Hostel',
+      address: typeof dbData.address === 'string' ? dbData.address : '',
+      city: typeof dbData.city === 'string' ? dbData.city : '',
+      region: typeof dbData.state === 'string' ? dbData.state as any : 'Greater Accra',
+      zip: typeof dbData.zip === 'string' ? dbData.zip : '',
+      price: typeof dbData.rent === 'number' ? dbData.rent : 0,
       price_unit: 'semester',
-      description: dbData.description || '',
-      bedrooms: Number(dbData.bedrooms) || 1,
-      bathrooms: Number(dbData.bathrooms) || 1,
+      description: typeof dbData.description === 'string' ? dbData.description : '',
+      bedrooms: typeof dbData.bedrooms === 'number' ? dbData.bedrooms : 1,
+      bathrooms: typeof dbData.bathrooms === 'number' ? dbData.bathrooms : 1,
       status: dbData.is_available ? 'Available' : 'Unavailable',
       all_inclusive: false,
       amenities: Array.isArray(dbData.amenities) ? dbData.amenities.join(', ') : '',
-      images: dbData.images || [],
+      images: Array.isArray(dbData.images) ? dbData.images as string[] : [],
       
       // Enhanced property features
-      total_rooms: dbData.total_rooms || undefined,
-      rooms_available: dbData.rooms_available || undefined,
-      beds_per_room: dbData.beds_per_room || undefined,
-      beds_available: dbData.beds_available || undefined,
-      max_occupants: dbData.max_occupants || undefined,
+      total_rooms: typeof dbData.total_rooms === 'number' ? dbData.total_rooms : undefined,
+      rooms_available: typeof dbData.rooms_available === 'number' ? dbData.rooms_available : undefined,
+      beds_per_room: typeof dbData.beds_per_room === 'number' ? dbData.beds_per_room : undefined,
+      beds_available: typeof dbData.beds_available === 'number' ? dbData.beds_available : undefined,
+      max_occupants: typeof dbData.max_occupants === 'number' ? dbData.max_occupants : undefined,
       
       // Room features
-      has_bedframes: dbData.has_bedframes || false,
-      has_mattresses: dbData.has_mattresses || false,
-      has_wardrobes: dbData.has_wardrobes || false,
-      has_fan: dbData.has_fan || false,
-      has_tiled_room: dbData.has_tiled_room || false,
-      has_individual_meters: dbData.has_individual_meters || false,
+      has_bedframes: typeof dbData.has_bedframes === 'boolean' ? dbData.has_bedframes : false,
+      has_mattresses: typeof dbData.has_mattresses === 'boolean' ? dbData.has_mattresses : false,
+      has_wardrobes: typeof dbData.has_wardrobes === 'boolean' ? dbData.has_wardrobes : false,
+      has_fan: typeof dbData.has_fan === 'boolean' ? dbData.has_fan : false,
+      has_tiled_room: typeof dbData.has_tiled_room === 'boolean' ? dbData.has_tiled_room : false,
+      has_individual_meters: typeof dbData.has_individual_meters === 'boolean' ? dbData.has_individual_meters : false,
       
       // Washroom and meter configurations
-      washroom_type: dbData.washroom_type || undefined,
-      shared_washroom_count: dbData.shared_washroom_count || undefined,
-      meter_type: dbData.meter_type || undefined,
-      shared_meter_count: dbData.shared_meter_count || undefined,
+      washroom_type: typeof dbData.washroom_type === 'string' && isWashroomType(dbData.washroom_type) ? dbData.washroom_type : undefined,
+      shared_washroom_count: typeof dbData.shared_washroom_count === 'number' ? dbData.shared_washroom_count : undefined,
+      meter_type: typeof dbData.meter_type === 'string' && isMeterType(dbData.meter_type) ? dbData.meter_type : undefined,
+      shared_meter_count: typeof dbData.shared_meter_count === 'number' ? dbData.shared_meter_count : undefined,
       
       // Payment and occupancy details
-      advance_payment_months: dbData.advance_payment_months || undefined,
-      allow_bill_sharing: dbData.allow_bill_sharing || false,
+      advance_payment_months: typeof dbData.advance_payment_months === 'number' ? dbData.advance_payment_months : undefined,
+      allow_bill_sharing: typeof dbData.allow_bill_sharing === 'boolean' ? dbData.allow_bill_sharing : false,
       
       // Enhanced features
-      verification_status: dbData.verification_status || 'pending',
-      emergency_contact_name: dbData.emergency_contact_name || '',
-      emergency_contact_phone: dbData.emergency_contact_phone || '',
-      has_accessibility_features: dbData.has_accessibility_features || false,
-      pet_policy: dbData.pet_policy || 'not_allowed',
-      parking_available: dbData.parking_available || false,
-      parking_cost: dbData.parking_cost || undefined,
-      security_features: dbData.security_features || [],
-      internet_speed: dbData.internet_speed || 'standard',
-      gender_restriction: dbData.gender_restriction || 'mixed',
-      semester_availability: dbData.semester_availability || [],
-      cancellation_policy: dbData.cancellation_policy || 'moderate',
-      virtual_tour_url: dbData.virtual_tour_url || '',
+      verification_status: typeof dbData.verification_status === 'string' && isVerificationStatus(dbData.verification_status) ? dbData.verification_status : 'pending',
+      emergency_contact_name: typeof dbData.emergency_contact_name === 'string' ? dbData.emergency_contact_name : '',
+      emergency_contact_phone: typeof dbData.emergency_contact_phone === 'string' ? dbData.emergency_contact_phone : '',
+      has_accessibility_features: typeof dbData.has_accessibility_features === 'boolean' ? dbData.has_accessibility_features : false,
+      pet_policy: typeof dbData.pet_policy === 'string' && isPetPolicy(dbData.pet_policy) ? dbData.pet_policy : 'not_allowed',
+      parking_available: typeof dbData.parking_available === 'boolean' ? dbData.parking_available : false,
+      parking_cost: typeof dbData.parking_cost === 'number' ? dbData.parking_cost : undefined,
+      security_features: Array.isArray(dbData.security_features) ? dbData.security_features as string[] : [],
+      internet_speed: typeof dbData.internet_speed === 'string' && isInternetSpeed(dbData.internet_speed) ? dbData.internet_speed : 'standard',
+      gender_restriction: typeof dbData.gender_restriction === 'string' && isGenderRestriction(dbData.gender_restriction) ? dbData.gender_restriction : 'mixed',
+      semester_availability: Array.isArray(dbData.semester_availability)
+        ? (dbData.semester_availability as unknown[]).filter(isSemesterAvailability)
+        : [],
+      cancellation_policy: typeof dbData.cancellation_policy === 'string' && isCancellationPolicy(dbData.cancellation_policy) ? dbData.cancellation_policy : 'moderate',
+      virtual_tour_url: typeof dbData.virtual_tour_url === 'string' ? dbData.virtual_tour_url : '',
     };
   };
 
-  return { transformFormToDbFormat, transformDbToFormValues };
+  const transformFormData = useCallback((formData: Record<string, unknown>) => {
+    try {
+      // ... transformation logic ...
+      // logger.info('Form data', formData);
+      return formData;
+    } catch (error) {
+      // logger.error('Form transformation error:', error);
+      ErrorHandler.handle(error, 'useFormTransformation.transformFormData');
+      return {};
+    }
+  }, []);
+
+  return { transformFormToDbFormat, transformDbToFormValues, transformFormData };
 };
+
+// Type guards for string literal unions
+const isWashroomType = (val: unknown): val is 'inside' | 'outside' | 'shared' =>
+  val === 'inside' || val === 'outside' || val === 'shared';
+const isMeterType = (val: unknown): val is 'shared' | 'self' =>
+  val === 'shared' || val === 'self';
+const isVerificationStatus = (val: unknown): val is 'pending' | 'verified' | 'rejected' =>
+  val === 'pending' || val === 'verified' || val === 'rejected';
+const isPetPolicy = (val: unknown): val is 'not_allowed' | 'allowed' | 'cats_only' | 'small_pets' =>
+  val === 'not_allowed' || val === 'allowed' || val === 'cats_only' || val === 'small_pets';
+const isInternetSpeed = (val: unknown): val is 'basic' | 'standard' | 'high_speed' | 'fiber' =>
+  val === 'basic' || val === 'standard' || val === 'high_speed' || val === 'fiber';
+const isGenderRestriction = (val: unknown): val is 'male' | 'female' | 'mixed' =>
+  val === 'male' || val === 'female' || val === 'mixed';
+const isSemesterAvailability = (val: unknown): val is 'semester_1' | 'semester_2' | 'year_round' =>
+  val === 'semester_1' || val === 'semester_2' || val === 'year_round';
+const isCancellationPolicy = (val: unknown): val is 'flexible' | 'moderate' | 'strict' =>
+  val === 'flexible' || val === 'moderate' || val === 'strict';

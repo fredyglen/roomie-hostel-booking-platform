@@ -1,10 +1,10 @@
-
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useBusinessPaymentFlow } from '@/hooks/payment/useBusinessPaymentFlow';
 import { CheckCircle, Clock, XCircle, RefreshCw } from 'lucide-react';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface PaymentStatusTrackerProps {
   transactionReference: string;
@@ -31,7 +31,7 @@ const PaymentStatusTracker: React.FC<PaymentStatusTrackerProps> = ({
         onStatusUpdate?.('failed');
       }
     } catch (error) {
-      console.error('Error checking payment status:', error);
+      ErrorHandler.handle(error, 'PaymentStatusTracker error checking payment status');
       setStatus('error');
       onStatusUpdate?.('error');
     } finally {

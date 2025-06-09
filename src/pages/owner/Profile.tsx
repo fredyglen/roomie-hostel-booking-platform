@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +13,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 const profileFormSchema = z.object({
   firstName: z.string().min(2, {
@@ -73,7 +73,7 @@ const Profile: React.FC = () => {
         description: "Your profile has been updated successfully.",
       });
     } catch (error) {
-      console.error("Failed to update profile:", error);
+      ErrorHandler.handle(error, 'Profile page update error');
       toast({
         title: "Update failed",
         description: "Failed to update your profile. Please try again.",

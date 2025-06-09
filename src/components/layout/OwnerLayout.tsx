@@ -15,6 +15,7 @@ import Logo from '../common/Logo';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
 import { navigateBack } from '@/utils/navigation';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface OwnerLayoutProps {
   children: React.ReactNode;
@@ -51,16 +52,17 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
     try {
       await signOut();
       navigate('/login');
-    } catch (error) {
-      console.error('Error signing out:', error);
+    } catch (error: unknown) {
+      ErrorHandler.handle(error, 'OwnerLayout sign out error');
     }
   };
 
   const handleBack = () => {
-    if (backUrl) {
-      navigate(backUrl);
+    // Safely access location.state.from with type guards
+    if (typeof location.state === 'object' && location.state !== null && 'from' in location.state && typeof location.state.from === 'string') {
+      navigate(location.state.from);
     } else {
-      navigateBack(navigate, '/owner/dashboard');
+      navigate(-1);
     }
   };
 

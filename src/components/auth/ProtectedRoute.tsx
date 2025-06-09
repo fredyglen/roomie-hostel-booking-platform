@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/EnhancedAuthContext';
@@ -39,17 +38,17 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   if (!allowedRoles.includes(user.role)) {
     // Use custom redirect path if provided
     if (redirectTo) {
-      return <Navigate to={redirectTo} replace />;
+      return <Navigate to={redirectTo} />;
     }
 
     // Role-based redirects - more specific routing
     switch (user.role) {
       case 'student':
-        return <Navigate to="/student/properties" replace />;
+        return <Navigate to="/student/properties" />;
       case 'owner':
-        return <Navigate to="/owner/dashboard" replace />;
+        return <Navigate to="/owner/dashboard" />;
       case 'admin':
-        return <Navigate to="/admin/dashboard" replace />;
+        return <Navigate to="/admin/dashboard" />;
       default:
         return <Navigate to="/login" replace />;
     }

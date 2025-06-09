@@ -1,7 +1,7 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface RoleOption {
   id: string;
@@ -52,7 +52,7 @@ const AuthOptions: React.FC = () => {
   const handleContinue = () => {
     if (selectedRole) {
       // In a real app, we would store this selection
-      console.log(`Selected role: ${selectedRole}`);
+      ErrorHandler.log(`Selected role: ${selectedRole}`);
       // Redirect to the appropriate dashboard or onboarding
       navigate(`/onboarding/${selectedRole}`);
     }

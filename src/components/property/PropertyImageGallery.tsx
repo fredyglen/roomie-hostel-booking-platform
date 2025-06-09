@@ -1,6 +1,7 @@
-
 import React from 'react';
 import ImageWithFallback from '@/components/common/ImageWithFallback';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { IMAGE_URLS } from '@/constants/images';
 
 interface PropertyImageGalleryProps {
   images: string[];
@@ -10,12 +11,10 @@ interface PropertyImageGalleryProps {
 
 const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({ images, title, onError }) => {
   // Ensure we always have at least one image
-  const validImages = images && images.length > 0 ? images : [
-    'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800&h=600'
-  ];
+  const validImages = images && images.length > 0 ? images : [IMAGE_URLS.DEFAULT];
 
   const handleImageError = () => {
-    console.log('Image failed to load in PropertyImageGallery');
+    ErrorHandler.log('Image failed to load in PropertyImageGallery');
     if (onError) onError();
   };
 

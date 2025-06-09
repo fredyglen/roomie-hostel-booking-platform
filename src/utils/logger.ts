@@ -1,12 +1,13 @@
+import { ErrorHandler } from './ErrorHandler';
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
 interface LogContext {
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 class Logger {
-  private isDevelopment = process.env.NODE_ENV === 'development';
+  private isDevelopment = import.meta.env.MODE === 'development';
 
   private log(level: LogLevel, message: string, context?: LogContext | string) {
     if (!this.isDevelopment && level === 'debug') return;

@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +18,7 @@ import {
   X,
   Eye
 } from 'lucide-react';
+import { IMAGE_URLS } from '@/constants/images';
 
 interface MediaUploadTabsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -277,7 +277,7 @@ const MediaUploadTabs: React.FC<MediaUploadTabsProps> = ({ form }) => {
                   <FormLabel>Virtual Tour URL</FormLabel>
                   <FormControl>
                     <Input 
-                      placeholder="https://your-virtual-tour-link.com" 
+                      placeholder={IMAGE_URLS.PLACEHOLDER} 
                       {...field} 
                     />
                   </FormControl>

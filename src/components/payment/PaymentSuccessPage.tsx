@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useBusinessPaymentFlow } from '@/hooks/payment/useBusinessPaymentFlow';
@@ -7,10 +6,29 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, Download, Home, MessageCircle } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+
+interface PaymentVerificationData {
+  success: boolean;
+  verification?: { // Define a more specific interface if possible
+    amount?: number;
+    reference?: string;
+    channel?: string;
+    [key: string]: unknown; // Allow other properties
+  };
+  booking?: { // Define a more specific interface if possible
+    id?: string;
+    package_type?: string;
+    start_date?: string;
+    end_date?: string;
+    [key: string]: unknown; // Allow other properties
+  } | null;
+  error?: string;
+}
 
 const PaymentSuccessPage: React.FC = () => {
   const [searchParams] = useSearchParams();
-  const [verificationResult, setVerificationResult] = useState<any>(null);
+  const [verificationResult, setVerificationResult] = useState<PaymentVerificationData | null>(null);
   const [loading, setLoading] = useState(true);
   const { verifyAndProcessPayment } = useBusinessPaymentFlow();
 
@@ -21,7 +39,7 @@ const PaymentSuccessPage: React.FC = () => {
     const verifyPayment = async () => {
       if (reference || trxref) {
         const paymentRef = reference || trxref;
-        console.log('Verifying payment with reference:', paymentRef);
+        ErrorHandler.log('Verifying payment with reference:', paymentRef);
         
         const result = await verifyAndProcessPayment(paymentRef!);
         setVerificationResult(result);
@@ -43,7 +61,7 @@ const PaymentSuccessPage: React.FC = () => {
     );
   }
 
-  if (!verificationResult?.success) {
+  if (!verificationResult || !verificationResult.success) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Card className="max-w-md w-full mx-4">
@@ -92,20 +110,20 @@ const PaymentSuccessPage: React.FC = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Amount Paid:</span>
-                  <span className="font-semibold">{formatCurrency(verification.amount / 100)}</span>
+                  <span>{verification?.amount !== undefined ? formatCurrency(verification.amount / 100) : 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Payment Reference:</span>
-                  <span className="font-mono text-xs">{verification.reference}</span>
+                  <span className="font-mono text-xs">{verification?.reference ?? 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Payment Method:</span>
-                  <span className="capitalize">{verification.channel}</span>
+                  <span className="capitalize">{verification?.channel ?? 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Package Type:</span>
                   <Badge variant="secondary" className="capitalize">
-                    {booking?.package_type} Package
+                    {booking?.package_type ?? 'N/A'} Package
                   </Badge>
                 </div>
                 <div className="flex justify-between">
@@ -121,15 +139,15 @@ const PaymentSuccessPage: React.FC = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between">
                   <span>Booking ID:</span>
-                  <span className="font-mono text-xs">{booking?.id}</span>
+                  <span className="font-mono text-xs">{booking?.id ?? 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Check-in Date:</span>
-                  <span>{new Date(booking?.start_date).toLocaleDateString()}</span>
+                  <span>{booking?.start_date ? new Date(booking.start_date).toLocaleDateString() : 'N/A'}</span>
                 </div>
                 <div className="flex justify-between">
                   <span>Check-out Date:</span>
-                  <span>{new Date(booking?.end_date).toLocaleDateString()}</span>
+                  <span>{booking?.end_date ? new Date(booking.end_date).toLocaleDateString() : 'N/A'}</span>
                 </div>
               </div>
             </div>
@@ -189,9 +207,11 @@ const PaymentSuccessPage: React.FC = () => {
             <div className="text-center text-sm text-gray-600">
               <p>Need help? Contact our support team:</p>
               <p className="font-semibold">support@roomi.com | +233 XX XXX XXXX</p>
-              <p className="text-xs mt-2">
-                Reference this payment: {verification.reference}
-              </p>
+              {verification?.reference && (
+                <p className="text-xs mt-2">
+                  Reference this payment: {verification.reference}
+                </p>
+              )}
             </div>
           </CardContent>
         </Card>

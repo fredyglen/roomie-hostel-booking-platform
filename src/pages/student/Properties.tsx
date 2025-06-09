@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/layout/Header';
@@ -6,6 +5,8 @@ import Footer from '@/components/layout/Footer';
 import PropertyListContainer from '@/components/properties/PropertyListContainer';
 import { usePropertyData } from '@/hooks/property/usePropertyData';
 import { Loader2 } from 'lucide-react';
+import { BaseLoading } from '@/components/ui/BaseLoading';
+import { BaseError } from '@/components/ui/BaseError';
 
 const Properties: React.FC = () => {
   const { properties, loading, error } = usePropertyData();
@@ -15,10 +16,7 @@ const Properties: React.FC = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-            <p className="text-gray-600">Loading properties...</p>
-          </div>
+          <BaseLoading message="Loading properties..." />
         </main>
         <Footer />
       </div>
@@ -30,15 +28,7 @@ const Properties: React.FC = () => {
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">Error loading properties: {error}</p>
-            <button 
-              onClick={() => window.location.reload()} 
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-            >
-              Retry
-            </button>
-          </div>
+          <BaseError message={`Error loading properties: ${error}`} onRetry={() => window.location.reload()} />
         </main>
         <Footer />
       </div>

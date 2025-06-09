@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +8,7 @@ import { Icon } from '@iconify/react';
 import { formatCurrency } from '@/utils/currency';
 import { usePaymentProcessor } from '@/hooks/subscription/usePaymentProcessor';
 import { SubscriptionTier } from '@/types/subscription';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -60,11 +60,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
         }
       },
       (reference) => {
-        console.log('Payment successful:', reference);
+        ErrorHandler.log('Payment successful:', reference);
         onPaymentSuccess();
       },
       (error) => {
-        console.error('Payment failed:', error);
+        ErrorHandler.handle('Payment failed:', error);
       }
     );
   };

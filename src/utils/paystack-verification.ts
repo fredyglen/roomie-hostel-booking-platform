@@ -1,19 +1,27 @@
-
 import { supabase } from '@/lib/supabase';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+
+export interface PaystackVerificationData {
+  reference: string;
+  amount: number;
+  customer: Record<string, unknown>;
+  channel: string;
+  id: number;
+}
 
 export interface PaymentVerificationResult {
   success: boolean;
-  data?: any;
+  data?: PaystackVerificationData;
   amount?: number;
   reference?: string;
-  customer?: any;
+  customer?: unknown;
   message?: string;
   error?: string;
 }
 
 export const verifyPaystackPayment = async (reference: string): Promise<PaymentVerificationResult> => {
   try {
-    console.log('Verifying payment with reference:', reference);
+    ErrorHandler.log('Verifying payment with reference:', reference);
     
     // Use our Supabase Edge Function for verification
     const { data, error } = await supabase.functions.invoke('verify-payment', {
@@ -21,7 +29,7 @@ export const verifyPaystackPayment = async (reference: string): Promise<PaymentV
     });
 
     if (error) {
-      console.error('Verification error:', error);
+      ErrorHandler.handle('Verification error:', error);
       return {
         success: false,
         message: 'Failed to verify payment',
@@ -30,12 +38,39 @@ export const verifyPaystackPayment = async (reference: string): Promise<PaymentV
     }
 
     if (data?.status && data?.data) {
+      const paystackResponse = data;
+
+      // Handle potential errors in the response structure
+      if (!paystackResponse || !paystackResponse.data) {
+        ErrorHandler.handle('Invalid Paystack verification response', paystackResponse);
+        return { success: false, message: 'Invalid verification response from payment provider.' };
+      }
+
+      const paystackData = paystackResponse.data;
+
+      // Basic checks (can be expanded)
+      if (!paystackData.status || paystackData.status !== 'success') {
+        ErrorHandler.handle('Paystack verification status not success', paystackData);
+        return { success: false, message: paystackData.gateway_response || 'Payment verification failed.' };
+      }
+
+      // Further validation and data extraction with type guards
+      const reference = typeof paystackData.reference === 'string' ? paystackData.reference : null;
+      const amount = typeof paystackData.amount === 'number' ? paystackData.amount : null;
+      const customer = typeof paystackData.customer === 'object' && paystackData.customer !== null ? paystackData.customer as Record<string, unknown> : null;
+      const channel = typeof paystackData.channel === 'string' ? paystackData.channel : null;
+      const id = typeof paystackData.id === 'number' ? paystackData.id : null; // Assuming ID is a number
+
+      if (!reference || amount === null || !customer || !channel || id === null) {
+        ErrorHandler.handle('Missing essential data in Paystack verification response', paystackData);
+        return { success: false, message: 'Incomplete data from payment provider.' };
+      }
+
+      // Return essential verification data
       return {
         success: true,
-        data: data.data,
-        amount: data.data.amount / 100, // Convert back to GHS
-        reference: data.data.reference,
-        customer: data.data.customer,
+        data: { reference, amount, customer, channel, id },
+        message: 'Payment verified successfully.'
       };
     } else {
       return {
@@ -44,7 +79,7 @@ export const verifyPaystackPayment = async (reference: string): Promise<PaymentV
       };
     }
   } catch (error) {
-    console.error('Payment verification error:', error);
+    ErrorHandler.handle('Payment verification error:', error);
     return {
       success: false,
       message: 'Failed to verify payment',

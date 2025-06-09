@@ -1,10 +1,12 @@
+import { config } from '@/config';
 
 // Paystack configuration and utilities
-export const PAYSTACK_CONFIG = {
-  publicKey: import.meta.env.VITE_PAYSTACK_PUBLIC_KEY || 'pk_test_placeholder',
+export const paystackConfig = {
+  scriptUrl: 'https://js.paystack.co/v2/inline.js',
+  apiBaseUrl: config.paystack.baseUrl,
+  publicKey: config.paystack.publicKey,
   currency: 'GHS',
   channels: ['card', 'mobile_money', 'bank'],
-  scriptUrl: 'https://js.paystack.co/v2/inline.js'
 };
 
 // Load Paystack script
@@ -16,7 +18,7 @@ export const loadPaystackScript = (): Promise<boolean> => {
     }
 
     const script = document.createElement('script');
-    script.src = PAYSTACK_CONFIG.scriptUrl;
+    script.src = paystackConfig.scriptUrl;
     script.async = true;
     
     script.onload = () => resolve(true);

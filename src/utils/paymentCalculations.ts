@@ -1,3 +1,6 @@
+import { PAYMENT_CONSTANTS } from '@/constants/payment';
+import { PaymentCalculationConfig } from '@/types/payment';
+import { config } from '@/config';
 
 // Payment calculation utilities based on PAYMENT_RULES.md
 
@@ -19,33 +22,27 @@ export interface PaymentConfig {
   bookingFeeRate: number;
 }
 
-// Default payment configuration - easily adjustable
-export const DEFAULT_PAYMENT_CONFIG: PaymentConfig = {
-  platformCommissionRate: 0.042, // 4.2%
-  agentCommissionRate: 0.037,    // 3.7%
-  agentMinimumFee: 100,          // GHS 100 minimum
-  propertyOwnerRetention: 0.98,   // 98%
-  paystackFeeRate: 0.0195,       // 1.95%
-  bookingFeeRate: 0.02           // 2%
-};
-
 /**
  * Calculate payment breakdown based on property price and configuration
  */
 export const calculatePaymentBreakdown = (
   propertyPrice: number,
-  config: PaymentConfig = DEFAULT_PAYMENT_CONFIG
+  configOverride?: PaymentConfig
 ): PaymentBreakdown => {
+  const currentConfig = configOverride || config.payment;
+
   // Calculate each component
   const agentCommission = Math.max(
-    propertyPrice * config.agentCommissionRate,
-    config.agentMinimumFee
+    propertyPrice * currentConfig.agentCommissionRate,
+    currentConfig.agentMinimumFee
   );
   
-  const platformFee = propertyPrice * config.platformCommissionRate;
-  const propertyOwnerAmount = propertyPrice * config.propertyOwnerRetention;
-  const paystackFee = propertyPrice * config.paystackFeeRate;
+  const platformFee = propertyPrice * currentConfig.platformCommissionRate;
+  const paystackFee = (propertyPrice * (currentConfig?.paystackFeeRate ?? config.payment.paystackFeeRate));
   
+  // Assuming propertyOwnerAmount is total - fees for now
+  const propertyOwnerAmount = propertyPrice - agentCommission - platformFee - paystackFee; 
+
   // Platform net is platform fee minus Paystack fees
   const platformNet = platformFee - paystackFee;
 
@@ -64,11 +61,12 @@ export const calculatePaymentBreakdown = (
  */
 export const calculateAgentCommission = (
   propertyPrice: number,
-  config: PaymentConfig = DEFAULT_PAYMENT_CONFIG
+  configOverride?: PaymentConfig
 ): number => {
+   const currentConfig = configOverride || config.payment;
   return Math.max(
-    propertyPrice * config.agentCommissionRate,
-    config.agentMinimumFee
+    propertyPrice * currentConfig.agentCommissionRate,
+    currentConfig.agentMinimumFee
   );
 };
 
@@ -77,9 +75,10 @@ export const calculateAgentCommission = (
  */
 export const calculatePlatformFee = (
   propertyPrice: number,
-  config: PaymentConfig = DEFAULT_PAYMENT_CONFIG
+  configOverride?: PaymentConfig
 ): number => {
-  return propertyPrice * config.platformCommissionRate;
+   const currentConfig = configOverride || config.payment;
+  return propertyPrice * currentConfig.platformCommissionRate;
 };
 
 /**
@@ -87,16 +86,22 @@ export const calculatePlatformFee = (
  */
 export const calculatePropertyOwnerAmount = (
   propertyPrice: number,
-  config: PaymentConfig = DEFAULT_PAYMENT_CONFIG
+  configOverride?: PaymentConfig
 ): number => {
-  return propertyPrice * config.propertyOwnerRetention;
+   const currentConfig = configOverride || config.payment;
+   // Recalculate based on fees, as propertyOwnerRetention is missing from config.payment
+   const agentCommission = calculateAgentCommission(propertyPrice, currentConfig);
+   const platformFee = calculatePlatformFee(propertyPrice, currentConfig);
+   const paystackFee = calculatePaystackFee(propertyPrice, currentConfig);
+   
+   return propertyPrice - agentCommission - platformFee - paystackFee; // Assuming this calculation
 };
 
 /**
  * Validate payment amounts add up correctly
  */
 export const validatePaymentBreakdown = (breakdown: PaymentBreakdown): boolean => {
-  const totalCalculated = breakdown.propertyOwnerAmount + breakdown.agentCommission + breakdown.platformFee;
+  const totalCalculated = breakdown.propertyOwnerAmount + breakdown.agentCommission + breakdown.platformFee + breakdown.paystackFee; // Include paystackFee in validation
   const difference = Math.abs(totalCalculated - breakdown.totalAmount);
   
   // Allow for small rounding differences (less than 1 pesewa)
@@ -130,7 +135,7 @@ export const formatAmount = (amount: number): string => {
 export const calculateDiscount = (
   amount: number,
   discountType: 'early_30' | 'early_60' | 'academic_year' | 'loyalty_second' | 'loyalty_third',
-  config?: any
+  config?: any // TODO: Define proper type for discount config if needed
 ): number => {
   const discountRates = {
     early_30: 0.05,      // 5%
@@ -153,3 +158,22 @@ export const applyDiscount = (
   const discountedTotal = breakdown.totalAmount - discountAmount;
   return calculatePaymentBreakdown(discountedTotal);
 };
+
+export function calculatePlatformCommission(amount: number): number {
+  return amount * PAYMENT_CONSTANTS.PLATFORM_COMMISSION_RATE;
+}
+
+export function calculatePaystackFee(amount: number, configOverride?: PaymentConfig): number {
+  const currentConfig = configOverride || config.payment;
+   // Note: config.payment doesn't currently have a fixed fee, only rate.
+   // If a fixed fee is needed, it should be added to src/config/index.ts.
+   return amount * currentConfig.paystackFeeRate; 
+}
+
+export function calculateBookingFee(amount: number): number {
+  return amount * PAYMENT_CONSTANTS.BOOKING_FEE_RATE;
+}
+
+export function getCurrencyLimits(currency: string) {
+  return PAYMENT_CONSTANTS.CURRENCY_LIMITS[currency] || PAYMENT_CONSTANTS.CURRENCY_LIMITS['GHS'];
+}

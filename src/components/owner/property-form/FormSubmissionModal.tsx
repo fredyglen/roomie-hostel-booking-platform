@@ -1,4 +1,3 @@
-
 import React from 'react';
 import {
   AlertDialog,
@@ -13,6 +12,7 @@ import {
 import { PropertyFormValues } from './PropertyFormSchema';
 import { CheckCircle, MapPin, Calendar, DollarSign, Users, Home, Wifi, Shield } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { IMAGE_URLS } from '@/constants/images';
 
 interface FormSubmissionModalProps {
   isOpen: boolean;
@@ -72,7 +72,7 @@ const FormSubmissionModal: React.FC<FormSubmissionModalProps> = ({
                       alt="Property cover"
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        e.currentTarget.src = "https://via.placeholder.com/800x450?text=Property+Image";
+                        e.currentTarget.src = IMAGE_URLS.PLACEHOLDER;
                       }}
                     />
                   </div>

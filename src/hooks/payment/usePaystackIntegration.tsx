@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { 
@@ -9,11 +8,12 @@ import {
   PaystackConfig,
   MobileMoneyConfig
 } from '@/utils/paystackIntegration';
+import { useStandardizedErrorHandler } from '@/hooks/common/useStandardizedErrorHandler';
 
 interface PaymentData {
   amount: number;
   email: string;
-  metadata?: Record<string, any>;
+  metadata?: Record<string, unknown>;
   method: 'card' | 'mobile_money' | 'bank';
   mobileMoneyNetwork?: 'mtn' | 'vodafone' | 'airtel';
   phoneNumber?: string;
@@ -25,18 +25,15 @@ export const usePaystackIntegration = () => {
   const [processing, setProcessing] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const { toast } = useToast();
+  const { handleError } = useStandardizedErrorHandler();
 
   const processPayment = async (
     paymentData: PaymentData,
-    onSuccess: (reference: any) => void,
-    onError?: (error: any) => void
+    onSuccess: (reference: string) => void,
+    onError?: (error: unknown) => void
   ) => {
     if (!validatePaymentAmount(paymentData.amount)) {
-      toast({
-        title: "Invalid Amount",
-        description: "Payment amount must be between ₵1 and ₵50,000",
-        variant: "destructive"
-      });
+      handleError(new Error("Payment amount must be between ₵1 and ₵50,000"), "usePaystackIntegration: Invalid amount");
       return;
     }
 
@@ -60,11 +57,7 @@ export const usePaystackIntegration = () => {
           },
           onError: (error) => {
             setProcessing(false);
-            toast({
-              title: "Payment Failed",
-              description: error.message || "Mobile Money payment failed. Please try again.",
-              variant: "destructive"
-            });
+            handleError(error, "usePaystackIntegration: Mobile Money payment failed");
             if (onError) onError(error);
           }
         };
@@ -90,22 +83,14 @@ export const usePaystackIntegration = () => {
           },
           onCancel: () => {
             setProcessing(false);
-            toast({
-              title: "Payment Cancelled",
-              description: "Your payment was cancelled.",
-              variant: "destructive"
-            });
+            handleError(new Error("Payment cancelled by user."), "usePaystackIntegration: Payment cancelled");
             if (onError) {
               onError({ message: 'Payment cancelled by user', code: 'CANCELLED' });
             }
           },
           onError: (error) => {
             setProcessing(false);
-            toast({
-              title: "Payment Error",
-              description: error.message || "An error occurred while processing your payment.",
-              variant: "destructive"
-            });
+            handleError(error, "usePaystackIntegration: Card/Bank payment failed");
             if (onError) onError(error);
           }
         };
@@ -114,12 +99,10 @@ export const usePaystackIntegration = () => {
       }
     } catch (error) {
       setProcessing(false);
-      toast({
-        title: "Payment Error",
-        description: "An error occurred while processing your payment.",
-        variant: "destructive"
-      });
-      if (onError) onError(error);
+      handleError(error, "usePaystackIntegration: Payment processing failed");
+      if (onError) {
+        onError(error);
+      }
     }
   };
 
@@ -131,11 +114,7 @@ export const usePaystackIntegration = () => {
       return result;
     } catch (error) {
       setVerifying(false);
-      toast({
-        title: "Verification Error",
-        description: "Failed to verify payment status.",
-        variant: "destructive"
-      });
+      handleError(error, "usePaystackIntegration: Verification failed");
       throw error;
     }
   };

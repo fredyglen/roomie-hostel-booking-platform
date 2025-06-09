@@ -1,14 +1,14 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { Property, PropertyCategory } from '@/types/property';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 export const useDemoProperties = () => {
   return useQuery({
     queryKey: ['demo-properties'],
     queryFn: async (): Promise<Property[]> => {
       try {
-        console.log('Fetching demo properties from database');
+        ErrorHandler.log('Fetching demo properties from database');
         
         const { data, error } = await supabase
           .from('properties')
@@ -25,16 +25,20 @@ export const useDemoProperties = () => {
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Error fetching properties:', error);
+          ErrorHandler.handle('Error fetching properties:', error);
           throw error;
         }
-
         // Transform database properties to match our Property type
         const transformedProperties: Property[] = (data || []).map(property => {
           const profileData = Array.isArray(property.profiles) ? property.profiles[0] : property.profiles;
           
           return {
             id: property.id,
+            name: property.title, // Add required name field
+            status: 'available', // Add required status field
+            price: property.rent, // Add required price field
+            location: `${property.city}, ${property.state}`, // Add required location field
+            university_id: null, // Add required university_id field
             owner_id: property.owner_id,
             title: property.title,
             description: property.description,
@@ -85,12 +89,12 @@ export const useDemoProperties = () => {
           };
         });
 
-        console.log(`Successfully loaded ${transformedProperties.length} properties`);
+        ErrorHandler.log(`Successfully loaded ${transformedProperties.length} properties`);
         return transformedProperties;
         
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to fetch properties';
-        console.error('Property fetch error:', errorMessage);
+        ErrorHandler.handle('Property fetch error:', errorMessage);
         throw new Error(errorMessage);
       }
     },

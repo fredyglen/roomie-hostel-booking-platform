@@ -1,10 +1,11 @@
-
 import React, { useState, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { Progress } from '@/components/ui/progress';
 
 interface SupabaseImageUploadProps {
   images: string[];
@@ -22,24 +23,38 @@ export const SupabaseImageUpload: React.FC<SupabaseImageUploadProps> = ({
   const [uploading, setUploading] = useState(false);
   const [dragOver, setDragOver] = useState(false);
   const { toast } = useToast();
+  const [uploadProgress, setUploadProgress] = useState<number>(0);
 
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
-      const fileExt = file.name.split('.').pop();
+      // 1. Validate file type and size
+      const allowedTypes = ['image/jpeg', 'image/png', 'image/webp'];
+      if (!allowedTypes.includes(file.type)) {
+        ErrorHandler.handle('Invalid file type', file.type);
+        return null;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        ErrorHandler.handle('File too large', file.size.toString());
+        return null;
+      }
+      // 2. Sanitize file name
+      const fileExt = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'jpg';
       const fileName = `${propertyId || 'temp'}_${Date.now()}.${fileExt}`;
       const filePath = `properties/${fileName}`;
 
-      // Upload to Supabase Storage
+      // Show indeterminate progress during upload
+      setUploading(true);
       const { data, error } = await supabase.storage
         .from('property-images')
         .upload(filePath, file, {
           cacheControl: '3600',
           upsert: false
         });
-
+      setUploadProgress(100);
+      setUploading(false);
       if (error) {
-        console.error('Upload error:', error);
-        throw error;
+        ErrorHandler.handle('Upload error', error.message);
+        return null;
       }
 
       // Get public URL
@@ -47,9 +62,12 @@ export const SupabaseImageUpload: React.FC<SupabaseImageUploadProps> = ({
         .from('property-images')
         .getPublicUrl(filePath);
 
+      setUploadProgress(0);
       return publicUrl;
     } catch (error) {
-      console.error('Error uploading image:', error);
+      setUploadProgress(0);
+      setUploading(false);
+      ErrorHandler.handle('Error uploading image', error);
       return null;
     }
   };
@@ -200,6 +218,12 @@ export const SupabaseImageUpload: React.FC<SupabaseImageUploadProps> = ({
               )}
             </Button>
           </div>
+          {uploading && (
+            <div className="w-full mt-4">
+              <Progress value={uploadProgress} max={100} />
+              <div className="text-xs text-gray-500 mt-1">Uploading...</div>
+            </div>
+          )}
         </CardContent>
       </Card>
 

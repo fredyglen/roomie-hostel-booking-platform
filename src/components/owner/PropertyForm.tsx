@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -14,6 +13,7 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertyCategory } from '@/types/property';
 import { Upload, Bed, Building, Users, Home } from 'lucide-react';
+import { IMAGE_URLS } from '@/constants/images';
 
 const propertyFormSchema = z.object({
   title: z.string().min(3, {
@@ -943,7 +943,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                           </div>
                           <Input 
                             type="text" 
-                            placeholder="Or enter image URL directly: https://example.com/image.jpg"
+                            placeholder={`Or enter image URL directly: ${IMAGE_URLS.DEFAULT}`}
                             {...field}
                             className="mt-2"
                           />
@@ -969,7 +969,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                           alt="Cover" 
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            e.currentTarget.src = "https://via.placeholder.com/800x450?text=No+Image+Available";
+                            e.currentTarget.src = IMAGE_URLS.PLACEHOLDER;
                           }}
                         />
                       </div>

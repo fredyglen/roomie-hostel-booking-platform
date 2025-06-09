@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -8,9 +7,9 @@ import { useToast } from "@/components/ui/use-toast";
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import { Button } from '@/components/ui/button';
 import PropertiesGrid from '@/components/owner/PropertiesGrid';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
-import ErrorDisplay from '@/components/common/ErrorDisplay';
 import { Plus } from 'lucide-react';
+import { BaseLoading } from '@/components/ui/BaseLoading';
+import { BaseError } from '@/components/ui/BaseError';
 
 // Define a local PropertyDisplay type that matches what we'll display in the UI
 interface PropertyDisplay {
@@ -143,7 +142,7 @@ const Properties: React.FC = () => {
   if (isLoading) {
     return (
       <OwnerLayout pageTitle="My Properties">
-        <LoadingSpinner message="Loading your properties..." />
+        <BaseLoading message="Loading your properties..." />
       </OwnerLayout>
     );
   }
@@ -151,9 +150,8 @@ const Properties: React.FC = () => {
   if (error) {
     return (
       <OwnerLayout pageTitle="My Properties">
-        <ErrorDisplay 
-          error={error} 
-          title="Failed to load properties"
+        <BaseError 
+          message={error instanceof Error ? error.message : String(error)}
           onRetry={() => queryClient.invalidateQueries({ queryKey: ['properties', user?.id] })}
         />
       </OwnerLayout>

@@ -4,6 +4,7 @@ interface NavigationOptions {
   from?: string;
   preserveHistory?: boolean;
   replace?: boolean;
+  state?: unknown;
 }
 
 export const navigateToProperty = (
@@ -51,7 +52,7 @@ export const navigateToStory = (
 export const navigateBack = (
   navigate: NavigateFunction, 
   fallbackPath: string = '/', 
-  state?: any
+  state?: unknown
 ) => {
   if (state?.from) {
     navigate(state.from);

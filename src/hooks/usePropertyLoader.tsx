@@ -1,9 +1,9 @@
-
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/lib/supabase';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Property } from '@/types/property';
 import { normalizePropertyData, getSampleProperties } from './usePropertyData';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface UsePropertyLoaderOptions {
   propertyId: string;
@@ -23,7 +23,7 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
       if (forOwner && !user?.id) throw new Error('User not authenticated');
 
       try {
-        console.log("Fetching property with ID:", propertyId);
+        ErrorHandler.log(`Fetching property with ID: ${propertyId}`);
         
         // First check if the ID is a valid UUID format (required for Supabase query)
         const isUuid = propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
@@ -40,14 +40,13 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
           }
 
           const { data, error } = await query.maybeSingle();
-
           if (error) {
-            console.error("Error fetching property from database:", error);
+            ErrorHandler.handle(error, "usePropertyLoader error fetching property from database");
             throw error;
           }
           
           if (data) {
-            console.log("Found property in database:", data.title);
+            ErrorHandler.log(`Found property in database: ${data.title}`);
             // Convert database property to our frontend property format
             const normalizedProperty = normalizePropertyData(data);
             return normalizedProperty;
@@ -55,7 +54,7 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
         }
 
         // If no UUID match or no data found in database, check the sample properties
-        console.log("Checking sample data for ID:", propertyId);
+        ErrorHandler.log(`Checking sample data for ID: ${propertyId}`);
         const sampleProperties = getSampleProperties();
         
         // Handle different ID formats consistently (string vs number)
@@ -66,14 +65,14 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
         );
         
         if (!sampleProperty) {
-          console.error("Property not found in sample data either");
+          ErrorHandler.handle("Property not found in sample data either");
           throw new Error('Property not found');
         }
         
-        console.log("Found property in sample data:", sampleProperty.title);
+        ErrorHandler.log(`Found property in sample data: ${sampleProperty.id}`);
         return sampleProperty;
       } catch (error) {
-        console.error("Error in property loader:", error);
+        ErrorHandler.handle("Error in property loader:", error);
         throw error;
       }
     },

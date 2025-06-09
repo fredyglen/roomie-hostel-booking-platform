@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
@@ -11,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
 import { Shield, Wifi, Car, Users, Calendar, AlertTriangle } from 'lucide-react';
+import { IMAGE_URLS } from '@/constants/images';
 
 interface EnhancedPropertyFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -321,7 +321,7 @@ const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, p
                 <FormLabel>Virtual Tour URL</FormLabel>
                 <FormControl>
                   <Input 
-                    placeholder="https://example.com/virtual-tour" 
+                    placeholder={IMAGE_URLS.PLACEHOLDER} 
                     {...field} 
                   />
                 </FormControl>

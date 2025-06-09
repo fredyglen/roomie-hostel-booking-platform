@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Property } from '@/types/property';
@@ -40,7 +39,10 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
 
         if (fetchError) {
           logger.error('Error fetching property', { error: fetchError, propertyId });
-          throw new Error('Property not found or unavailable');
+          setError(fetchError.message);
+          setProperty(null);
+          setLoading(false);
+          return;
         }
 
         if (!data) {

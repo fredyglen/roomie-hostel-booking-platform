@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,8 +8,10 @@ import { initializePaystackPayment } from '@/lib/paystack-config';
 import { verifyPaystackPayment } from '@/utils/paystack-verification';
 import { handlePaystackError, debugPaystackConfig } from '@/utils/paystack-errors';
 import { formatCurrency } from '@/utils/currency';
+import { PaystackVerificationData } from '@/utils/paystack-verification';
 import { Loader2, CreditCard, Smartphone, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface ModernPaystackPaymentProps {
   amount: number; // Amount in GHS
@@ -18,11 +19,17 @@ interface ModernPaystackPaymentProps {
   firstName?: string;
   lastName?: string;
   phone?: string;
-  metadata?: Record<string, any>;
-  onSuccess: (verificationResult: any) => void;
+  metadata?: Record<string, unknown>;
+  onSuccess: (verificationResult: ModernPaymentSuccessResult) => void;
   onError?: (error: string) => void;
   title?: string;
   description?: string;
+}
+
+// Define the expected structure of the success result passed to the onSuccess callback
+interface ModernPaymentSuccessResult {
+  transaction: MinimalPaystackTransaction;
+  verification: PaystackVerificationData;
 }
 
 export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
@@ -83,7 +90,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
           mobile_network: paymentMethod === 'mobile_money' ? mobileNetwork : undefined,
         },
         onSuccess: async (transaction: any) => {
-          console.log('Payment successful:', transaction);
+          ErrorHandler.log('Payment successful:', JSON.stringify(transaction));
           
           try {
             // Verify the payment
@@ -104,7 +111,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
               throw new Error(verification.message || 'Payment verification failed');
             }
           } catch (verificationError) {
-            console.error('Payment verification failed:', verificationError);
+            ErrorHandler.log('Payment verification failed:', verificationError);
             toast({
               title: "Payment Verification Failed",
               description: "Payment completed but verification failed. Please contact support.",
@@ -118,7 +125,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
           }
         },
         onCancel: () => {
-          console.log('Payment cancelled by user');
+          ErrorHandler.log('Payment cancelled by user');
           setIsLoading(false);
           toast({
             title: "Payment Cancelled",
@@ -130,15 +137,20 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
           }
         },
         onClose: () => {
-          console.log('Payment window closed');
+          ErrorHandler.log('Payment window closed');
           setIsLoading(false);
         }
       };
 
-      await initializePaystackPayment(paymentData);
+      const paymentDataWithCurrency = {
+        ...paymentData,
+        currency: 'GHS' // Adding required currency field
+      };
+
+      await initializePaystackPayment(paymentDataWithCurrency);
       
     } catch (error) {
-      console.error('Payment initialization error:', error);
+      ErrorHandler.log('Payment initialization error:', error);
       const errorMessage = handlePaystackError(error);
       setIsLoading(false);
       toast({

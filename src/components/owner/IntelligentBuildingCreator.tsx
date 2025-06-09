@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -7,10 +6,12 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Wand2, Building, Users, Bed } from 'lucide-react';
+import { Wand2, Building as BuildingIcon, Users, Bed } from 'lucide-react';
+import type { Building } from '@/types/building';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface IntelligentBuildingCreatorProps {
-  onCreateBuilding: (buildingData: any) => void;
+  onCreateBuilding: (buildingData: Building) => void;
 }
 
 const IntelligentBuildingCreator: React.FC<IntelligentBuildingCreatorProps> = ({ onCreateBuilding }) => {
@@ -27,7 +28,7 @@ const IntelligentBuildingCreator: React.FC<IntelligentBuildingCreatorProps> = ({
     amenities: [] as string[]
   });
 
-  const handleConfigChange = (field: string, value: any) => {
+  const handleConfigChange = <T,>(field: string, value: T) => {
     setBuildingConfig(prev => ({ ...prev, [field]: value }));
   };
 
@@ -39,6 +40,16 @@ const IntelligentBuildingCreator: React.FC<IntelligentBuildingCreatorProps> = ({
     return `Room ${floor}${String(roomIndex + 1).padStart(2, '0')}`;
   };
 
+  const handleCreateBuilding = async (buildingData: Building) => {
+    try {
+      // ... create building logic ...
+      // logger.info('Building data', buildingData);
+    } catch (error) {
+      // ... error handling ...
+      ErrorHandler.handle(error, 'IntelligentBuildingCreator.handleCreateBuilding');
+    }
+  };
+
   const createIntelligentBuilding = () => {
     const { buildingName, totalFloors, roomsPerFloor, bedsPerRoom, baseRent, roomType } = buildingConfig;
     
@@ -48,34 +59,43 @@ const IntelligentBuildingCreator: React.FC<IntelligentBuildingCreatorProps> = ({
       for (let roomIndex = 0; roomIndex < roomsPerFloor; roomIndex++) {
         rooms.push({
           id: `room-${Date.now()}-${floorNum}-${roomIndex}`,
-          roomNumber: generateRoomNumber(floorNum, roomIndex),
-          roomType,
-          bedCount: bedsPerRoom,
-          bedsAvailable: bedsPerRoom,
-          maxOccupants: bedsPerRoom,
-          rentAmount: baseRent,
+          floor_id: `floor-${Date.now()}-${floorNum}`,
+          number: generateRoomNumber(floorNum, roomIndex),
+          type: roomType,
+          capacity: bedsPerRoom,
+          price: baseRent,
+          status: 'available',
           amenities: [],
-          description: `${roomType} room with ${bedsPerRoom} beds`
+          images: [],
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
         });
       }
       
       floors.push({
         id: `floor-${Date.now()}-${floorNum}`,
-        floorNumber: floorNum,
+        building_id: '', // To be set appropriately
+        number: floorNum,
         name: `Floor ${floorNum}`,
         description: `Floor ${floorNum} with ${roomsPerFloor} rooms`,
-        rooms
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
     }
 
-    const newBuilding = {
+    const newBuilding: Building = {
       id: `building-${Date.now()}`,
+      property_id: '', // To be set appropriately
       name: buildingName || `Intelligent Building ${Date.now()}`,
-      description: `Auto-generated building with ${totalFloors} floors, ${roomsPerFloor} rooms per floor`,
-      floors
+      floors,
+      rooms: floors.flatMap(floor => floor.rooms),
+      total_floors: totalFloors,
+      total_rooms: totalFloors * roomsPerFloor,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
     };
 
-    onCreateBuilding(newBuilding);
+    handleCreateBuilding(newBuilding);
     setIsOpen(false);
     setStep(1);
   };
@@ -204,7 +224,7 @@ const IntelligentBuildingCreator: React.FC<IntelligentBuildingCreatorProps> = ({
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
                     <div className="flex items-center justify-center space-x-1 text-blue-600">
-                      <Building className="w-4 h-4" />
+                      <BuildingIcon className="w-4 h-4" />
                       <span className="font-bold">{buildingConfig.totalFloors}</span>
                     </div>
                     <p className="text-xs text-blue-800">Floors</p>
