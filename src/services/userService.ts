@@ -22,8 +22,7 @@ export const userService = {
   },
   
   async createUser(user: Omit<User, 'id' | 'created_at'>): Promise<User> {
-    // Since we can't auto-generate the id in the client, we'll let Supabase handle it
-    // by not including the id field at all in the insert
+    // Map the User type fields to database fields
     const userData = {
       email: user.email,
       role: user.role,
@@ -35,7 +34,7 @@ export const userService = {
 
     const { data, error } = await supabase
       .from('profiles')
-      .insert([userData])
+      .insert(userData)
       .select()
       .single();
     if (error) throw error;
