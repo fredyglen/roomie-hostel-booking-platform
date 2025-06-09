@@ -22,8 +22,8 @@ interface PropertyData {
   hasMore: boolean;
 }
 
-// Simple type for database results
-type DbPropertyRecord = {
+// Explicit type for database results - no deep inference
+interface RawProperty {
   id: string;
   owner_id: string;
   title: string;
@@ -45,25 +45,23 @@ type DbPropertyRecord = {
   created_at: string;
   updated_at: string;
   house_rules?: string;
-  profiles?: {
-    id: string;
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-    phone?: string;
-  } | Array<{
-    id: string;
-    first_name?: string;
-    last_name?: string;
-    email?: string;
-    phone?: string;
-  }>;
-};
+  profiles?: RawProfile | RawProfile[];
+}
 
-// Simple transformation function outside the hook to avoid circular references
-const transformDbProperty = (dbItem: DbPropertyRecord): Property => {
+interface RawProfile {
+  id: string;
+  first_name?: string;
+  last_name?: string;
+  email?: string;
+  phone?: string;
+}
+
+// Simple transformation function with explicit types
+function transformDbProperty(dbItem: RawProperty): Property {
   // Extract profile data safely
-  const profileData = Array.isArray(dbItem.profiles) ? dbItem.profiles[0] : dbItem.profiles;
+  const profileData: RawProfile | undefined = Array.isArray(dbItem.profiles) 
+    ? dbItem.profiles[0] 
+    : dbItem.profiles;
   
   const property: Property = {
     id: dbItem.id,
@@ -117,13 +115,12 @@ const transformDbProperty = (dbItem: DbPropertyRecord): Property => {
   }
 
   return property;
-};
+}
 
 export const usePropertyData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Explicitly type the function to avoid deep type inference
   const getProperties = useCallback(async (options: PropertyQueryOptions = {}): Promise<PropertyData> => {
     try {
       setLoading(true);
@@ -180,12 +177,13 @@ export const usePropertyData = () => {
 
       if (queryError) throw queryError;
 
-      // Transform properties with error handling
+      // Transform properties with explicit typing
       const transformedProperties: Property[] = [];
       if (data) {
         for (const item of data) {
           try {
-            const transformed = transformDbProperty(item as DbPropertyRecord);
+            const rawProperty = item as RawProperty;
+            const transformed = transformDbProperty(rawProperty);
             transformedProperties.push(transformed);
           } catch (transformError) {
             console.error('Error transforming property:', transformError);
@@ -212,7 +210,6 @@ export const usePropertyData = () => {
     }
   }, []);
 
-  // Explicitly type this function as well
   const getPropertyById = useCallback(async (id: string): Promise<Property | null> => {
     try {
       setLoading(true);
@@ -236,7 +233,8 @@ export const usePropertyData = () => {
       if (queryError) throw queryError;
       if (!data) return null;
 
-      const transformedProperty = transformDbProperty(data as DbPropertyRecord);
+      const rawProperty = data as RawProperty;
+      const transformedProperty = transformDbProperty(rawProperty);
       return transformedProperty;
 
     } catch (err) {
