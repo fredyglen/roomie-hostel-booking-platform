@@ -66,6 +66,13 @@ const StoryContainerEnhanced: React.FC = () => {
 
   const storiesCount = stories.length;
 
+  // Safely convert distance to string
+  const distanceToString = (): string => {
+    const distance = propertyWithDefaults.distanceToCampus || propertyWithDefaults.distance_to_campus;
+    if (distance === undefined || distance === null) return '';
+    return String(distance);
+  };
+
   return (
     <div className="fixed inset-0 bg-black flex flex-col z-50">
       {/* Home icon for navigation */}
@@ -81,9 +88,7 @@ const StoryContainerEnhanced: React.FC = () => {
       <div className="z-40 fixed top-0 left-0 right-0">
         <StoryHeader 
           title={propertyWithDefaults.title || ''}
-          distanceToCampus={typeof propertyWithDefaults.distanceToCampus === 'number' 
-            ? propertyWithDefaults.distanceToCampus.toString() 
-            : propertyWithDefaults.distanceToCampus || propertyWithDefaults.distance_to_campus || ''}
+          distanceToCampus={distanceToString()}
           imageUrl={(propertyWithDefaults.stories && propertyWithDefaults.stories[0] && propertyWithDefaults.stories[0].url) || ''}
           onClose={handleClose} 
         />

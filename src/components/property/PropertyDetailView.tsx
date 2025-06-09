@@ -36,13 +36,20 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
   const getDistanceText = (): string => {
     const distance = property.distance_to_campus || property.distanceToCampus;
     if (distance === undefined || distance === null) return '';
-    return typeof distance === 'string' ? distance : distance.toString();
+    return typeof distance === 'string' ? distance : String(distance);
   };
 
   const getOwnerResponseRate = (): string => {
     const rate = property.owner?.responseRate;
     if (rate === undefined || rate === null) return 'N/A';
     return typeof rate === 'number' ? `${rate}%` : rate.toString();
+  };
+
+  const getHouseRulesArray = (): string[] => {
+    const rules = property.house_rules;
+    if (!rules) return [];
+    if (typeof rules === 'string') return [rules];
+    return Array.isArray(rules) ? rules : [];
   };
 
   // Safe data extraction
@@ -53,7 +60,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
     price: getPriceNumber(),
     distance_to_campus: getDistanceText(),
     price_unit: property.price_unit || property.priceUnit || 'month',
-    house_rules: property.house_rules || '',
+    house_rules: getHouseRulesArray(),
     owner: property.owner ? {
       ...property.owner,
       responseRate: getOwnerResponseRate()

@@ -21,6 +21,7 @@ export const sampleProperties: Property[] = [
     verified: true,
     verification_status: 'verified',
     available_from: '2024-01-01',
+    is_available: true,
     owner: {
       id: '1',
       name: 'John Doe',
@@ -32,9 +33,10 @@ export const sampleProperties: Property[] = [
     city: 'Accra',
     state: 'Greater Accra',
     address: '123 University Road',
+    zip: '00233',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
-    status: 'Available'
+    status: 'available'
   },
   {
     id: '2',
@@ -55,6 +57,7 @@ export const sampleProperties: Property[] = [
     verified: true,
     verification_status: 'verified',
     available_from: '2024-01-01',
+    is_available: true,
     owner: {
       id: '2',
       name: 'Jane Smith',
@@ -66,8 +69,9 @@ export const sampleProperties: Property[] = [
     city: 'Kumasi',
     state: 'Ashanti',
     address: '456 Campus Avenue',
+    zip: '00233',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z',
-    status: 'Available'
+    status: 'available'
   }
 ];

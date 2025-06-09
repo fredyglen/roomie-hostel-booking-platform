@@ -10,7 +10,7 @@ export const bookingSampleProperties: Property[] = [
     location: 'Accra, Ghana',
     price: 800,
     rent: 800,
-    type: 'room',
+    type: 'homestel',
     propertyCategory: 'Homestel',
     property_category: 'Homestel',
     images: ['/placeholder.svg'],
@@ -21,6 +21,7 @@ export const bookingSampleProperties: Property[] = [
     verified: true,
     verification_status: 'verified',
     available_from: '2024-01-01',
+    is_available: true,
     owner: {
       id: '1',
       name: 'John Doe',
@@ -32,6 +33,7 @@ export const bookingSampleProperties: Property[] = [
     city: 'Accra',
     state: 'Greater Accra',
     address: '123 University Road',
+    zip: '00233',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   },
@@ -54,6 +56,7 @@ export const bookingSampleProperties: Property[] = [
     verified: true,
     verification_status: 'verified',
     available_from: '2024-01-01',
+    is_available: true,
     owner: {
       id: '2',
       name: 'Jane Smith',
@@ -65,6 +68,7 @@ export const bookingSampleProperties: Property[] = [
     city: 'Kumasi',
     state: 'Ashanti',
     address: '456 Campus Avenue',
+    zip: '00233',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   },
@@ -87,6 +91,7 @@ export const bookingSampleProperties: Property[] = [
     verified: true,
     verification_status: 'verified',
     available_from: '2024-01-01',
+    is_available: true,
     owner: {
       id: '3',
       name: 'Mike Johnson',
@@ -98,6 +103,7 @@ export const bookingSampleProperties: Property[] = [
     city: 'Cape Coast',
     state: 'Central',
     address: '789 University Street',
+    zip: '00233',
     created_at: '2024-01-01T00:00:00Z',
     updated_at: '2024-01-01T00:00:00Z'
   }

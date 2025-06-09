@@ -33,7 +33,7 @@ const StoryDetailsSheetEnhanced: React.FC<StoryDetailsSheetEnhancedProps> = ({
 
   const getPriceNumber = (): number => {
     const price = property.price || property.rent;
-    return typeof price === 'number' ? price : parseFloat(price.toString()) || 0;
+    return typeof price === 'number' ? price : parseFloat(String(price)) || 0;
   };
 
   // Safe data extraction

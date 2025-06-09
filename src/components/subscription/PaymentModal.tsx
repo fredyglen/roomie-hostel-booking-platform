@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,6 +10,19 @@ import { formatCurrency } from '@/utils/currency';
 import { usePaymentProcessor } from '@/hooks/subscription/usePaymentProcessor';
 import { SubscriptionTier } from '@/types/subscription';
 import { ErrorHandler } from '@/utils/ErrorHandler';
+
+interface PaymentData {
+  amount: number;
+  email: string;
+  phone?: string;
+  method: 'card' | 'mobile_money';
+  network?: 'mtn' | 'vodafone' | 'airtel';
+  metadata?: {
+    tier_id: string;
+    tier_name: string;
+    billing_cycle: string;
+  };
+}
 
 interface PaymentModalProps {
   isOpen: boolean;
@@ -36,58 +50,37 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     momoNetwork: 'mtn' as 'mtn' | 'vodafone' | 'airtel'
   });
 
-  const { processPaymentHook, processing } = usePaymentProcessor();
+  const { processPayment, processing } = usePaymentProcessor();
 
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
-  };
-
-  const processPayment = async (paymentData: PaymentData) => {
-    try {
-      setIsProcessing(true);
-      
-      await processPaymentHook(
-        paymentData,
-        (reference) => {
-          setIsProcessing(false);
-          onSuccess(reference);
-        },
-        (error) => {
-          setIsProcessing(false);
-          const errorMessage = typeof error === 'string' ? error : 'Payment failed';
-          onError?.(errorMessage);
-        }
-      );
-    } catch (error) {
-      setIsProcessing(false);
-      const errorMessage = typeof error === 'string' ? error : 'Payment processing failed';
-      onError?.(errorMessage);
-    }
   };
 
   const handlePayment = () => {
     const serviceFee = tier.price * 0.05;
     const totalAmount = tier.price + serviceFee;
 
+    const paymentData: PaymentData = {
+      amount: totalAmount,
+      email: formData.email,
+      phone: paymentMethod === 'mobile_money' ? formData.momoNumber : undefined,
+      method: paymentMethod === 'mobile_money' ? 'mobile_money' : 'card',
+      network: paymentMethod === 'mobile_money' ? formData.momoNetwork : undefined,
+      metadata: {
+        tier_id: tier.id,
+        tier_name: tier.name,
+        billing_cycle: tier.billing_cycle
+      }
+    };
+
     processPayment(
-      {
-        amount: totalAmount,
-        email: formData.email,
-        phone: paymentMethod === 'mobile_money' ? formData.momoNumber : undefined,
-        method: paymentMethod === 'mobile_money' ? 'mobile_money' : 'card',
-        network: paymentMethod === 'mobile_money' ? formData.momoNetwork : undefined,
-        metadata: {
-          tier_id: tier.id,
-          tier_name: tier.name,
-          billing_cycle: tier.billing_cycle
-        }
-      },
+      paymentData,
       (reference) => {
         ErrorHandler.log('Payment successful:', reference);
         onPaymentSuccess();
       },
       (error) => {
-        ErrorHandler.handle('Payment failed:', error);
+        ErrorHandler.handle(error, 'Payment failed:');
       }
     );
   };
