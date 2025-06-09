@@ -1,7 +1,7 @@
 
 import { useState, useCallback } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Property, PropertyType, PropertyStatus } from '@/types/property';
+import { Property, PropertyType, PropertyStatus, PropertyCategory } from '@/types/property';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface PropertyQueryOptions {
@@ -22,9 +22,94 @@ interface PropertyData {
   hasMore: boolean;
 }
 
+interface DatabaseProperty {
+  id: string;
+  owner_id: string;
+  title: string;
+  description: string;
+  property_type: string;
+  property_category: string;
+  is_available: boolean;
+  rent: number;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  bedrooms: number;
+  bathrooms: number;
+  amenities: string[];
+  images: string[];
+  available_from: string;
+  created_at: string;
+  updated_at: string;
+  profiles: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+  } | {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+  }[];
+}
+
 export const usePropertyData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const transformDatabaseProperty = (item: DatabaseProperty): Property => {
+    // Handle profiles - it might be an array or a single object
+    const ownerProfile = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+    
+    return {
+      id: item.id,
+      owner_id: item.owner_id,
+      name: item.title, // Add missing name property
+      title: item.title,
+      description: item.description,
+      type: item.property_type as PropertyType,
+      status: item.is_available ? 'available' as PropertyStatus : 'unavailable' as PropertyStatus,
+      price: item.rent,
+      rent: item.rent,
+      location: item.address,
+      address: item.address,
+      city: item.city,
+      state: item.state,
+      zip: item.zip || '',
+      propertyCategory: item.property_category as PropertyCategory || 'Hostel',
+      verified: true,
+      is_available: item.is_available,
+      bedrooms: item.bedrooms,
+      bathrooms: item.bathrooms,
+      amenities: Array.isArray(item.amenities) ? item.amenities : [],
+      images: Array.isArray(item.images) ? item.images : [],
+      available_from: item.available_from,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+      owner: ownerProfile ? {
+        id: item.owner_id,
+        name: `${ownerProfile.first_name || ''} ${ownerProfile.last_name || ''}`.trim(),
+        email: ownerProfile.email,
+        phone: ownerProfile.phone,
+        verified: true,
+        responseRate: '95%'
+      } : {
+        id: item.owner_id,
+        name: 'Property Owner',
+        email: '',
+        phone: '',
+        verified: false,
+        responseRate: '0%'
+      },
+      house_rules: 'No smoking, no pets',
+      stories: [],
+      features: []
+    };
+  };
 
   const getProperties = useCallback(async (options: PropertyQueryOptions = {}): Promise<PropertyData> => {
     try {
@@ -82,53 +167,7 @@ export const usePropertyData = () => {
 
       if (queryError) throw queryError;
 
-      const transformedProperties: Property[] = (data || []).map((item: any) => {
-        const ownerProfile = item.profiles?.[0] || item.profiles;
-        
-        return {
-          id: item.id,
-          owner_id: item.owner_id,
-          title: item.title,
-          description: item.description,
-          type: item.property_type as PropertyType,
-          status: item.is_available ? 'available' as PropertyStatus : 'unavailable' as PropertyStatus,
-          price: item.rent,
-          rent: item.rent,
-          location: item.address,
-          address: item.address,
-          city: item.city,
-          state: item.state,
-          zip: item.zip || '',
-          propertyCategory: item.property_category || 'Hostel',
-          verified: item.verification_status === 'verified',
-          is_available: item.is_available,
-          bedrooms: item.bedrooms,
-          bathrooms: item.bathrooms,
-          amenities: Array.isArray(item.amenities) ? item.amenities : [],
-          images: Array.isArray(item.images) ? item.images : [],
-          available_from: item.available_from,
-          created_at: item.created_at,
-          updated_at: item.updated_at,
-          owner: ownerProfile ? {
-            id: item.owner_id,
-            name: `${ownerProfile.first_name || ''} ${ownerProfile.last_name || ''}`.trim(),
-            email: ownerProfile.email,
-            phone: ownerProfile.phone,
-            verified: true,
-            responseRate: '95%'
-          } : {
-            id: item.owner_id,
-            name: 'Property Owner',
-            email: '',
-            phone: '',
-            verified: false,
-            responseRate: '0%'
-          },
-          house_rules: 'No smoking, no pets',
-          stories: [],
-          features: []
-        };
-      });
+      const transformedProperties: Property[] = (data || []).map(transformDatabaseProperty);
 
       return {
         properties: transformedProperties,
@@ -169,52 +208,7 @@ export const usePropertyData = () => {
       if (queryError) throw queryError;
       if (!data) return null;
 
-      const ownerProfile = data.profiles?.[0] || data.profiles;
-
-      const transformedProperty: Property = {
-        id: data.id,
-        owner_id: data.owner_id,
-        title: data.title,
-        description: data.description,
-        type: data.property_type as PropertyType,
-        status: data.is_available ? 'available' as PropertyStatus : 'unavailable' as PropertyStatus,
-        price: data.rent,
-        rent: data.rent,
-        location: data.address,
-        address: data.address,
-        city: data.city,
-        state: data.state,
-        zip: data.zip || '',
-        propertyCategory: data.property_category || 'Hostel',
-        verified: data.verification_status === 'verified',
-        is_available: data.is_available,
-        bedrooms: data.bedrooms,
-        bathrooms: data.bathrooms,
-        amenities: Array.isArray(data.amenities) ? data.amenities : [],
-        images: Array.isArray(data.images) ? data.images : [],
-        available_from: data.available_from,
-        created_at: data.created_at,
-        updated_at: data.updated_at,
-        owner: ownerProfile ? {
-          id: data.owner_id,
-          name: `${ownerProfile.first_name || ''} ${ownerProfile.last_name || ''}`.trim(),
-          email: ownerProfile.email,
-          phone: ownerProfile.phone,
-          verified: true,
-          responseRate: '95%'
-        } : {
-          id: data.owner_id,
-          name: 'Property Owner',
-          email: '',
-          phone: '',
-          verified: false,
-          responseRate: '0%'
-        },
-        house_rules: 'No smoking, no pets',
-        stories: [],
-        features: []
-      };
-
+      const transformedProperty = transformDatabaseProperty(data);
       return transformedProperty;
 
     } catch (err) {

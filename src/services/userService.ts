@@ -22,19 +22,19 @@ export const userService = {
   },
   
   async createUser(user: Omit<User, 'id' | 'created_at'>): Promise<User> {
-    // Ensure all required fields are present for the database
+    // Map the User type fields to database fields
     const userData = {
       email: user.email,
       role: user.role,
-      first_name: user.first_name || null,
-      last_name: user.last_name || null,
+      first_name: user.firstName || null,
+      last_name: user.lastName || null,
       phone: user.phone || null,
-      avatar_url: user.avatar_url || null
+      avatar_url: user.avatarUrl || null
     };
 
     const { data, error } = await supabase
       .from('profiles')
-      .insert([userData])
+      .insert(userData)
       .select()
       .single();
     if (error) throw error;
@@ -42,9 +42,18 @@ export const userService = {
   },
   
   async updateUser(id: string, updates: Partial<Omit<User, 'id' | 'created_at'>>): Promise<User> {
+    // Map the User type fields to database fields
+    const updateData: any = {};
+    if (updates.email) updateData.email = updates.email;
+    if (updates.role) updateData.role = updates.role;
+    if (updates.firstName) updateData.first_name = updates.firstName;
+    if (updates.lastName) updateData.last_name = updates.lastName;
+    if (updates.phone) updateData.phone = updates.phone;
+    if (updates.avatarUrl) updateData.avatar_url = updates.avatarUrl;
+
     const { data, error } = await supabase
       .from('profiles')
-      .update(updates)
+      .update(updateData)
       .eq('id', id)
       .select()
       .single();
