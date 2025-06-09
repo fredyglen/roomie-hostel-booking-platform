@@ -1,3 +1,4 @@
+
 import { BaseEntity } from './common';
 
 export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
@@ -15,4 +16,55 @@ export interface Booking extends BaseEntity {
   guest_count: number;
   special_requests?: string;
   transaction_id?: string;
-} 
+  payment_reference?: string;
+  booking_reference?: string;
+}
+
+export interface ConfirmedBookingData {
+  id: string;
+  booking_reference: string;
+  payment_reference: string;
+  total_amount: number;
+  status: string;
+  [key: string]: any;
+}
+
+export interface ModernPaymentSuccessResult {
+  reference: string;
+  amount?: number;
+  status?: string;
+  [key: string]: any;
+}
+
+export interface PaymentVerificationData {
+  success: boolean;
+  verification?: {
+    [key: string]: unknown;
+    amount?: number;
+    reference?: string;
+    channel?: string;
+  };
+  booking?: {
+    id: any;
+  };
+  error?: string;
+}
+
+export interface TestPaymentResult {
+  reference: string;
+  amount: number;
+  status: string;
+}
+
+export interface PaystackVerificationData {
+  [key: string]: unknown;
+  amount?: number;
+  reference?: string;
+  channel?: string;
+}
+
+export interface MinimalPaystackTransaction {
+  reference: string;
+  amount: number;
+  status: string;
+}
