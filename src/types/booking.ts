@@ -73,7 +73,7 @@ export interface PaystackVerificationData {
   amount?: number;
   reference?: string;
   channel?: string;
-  id?: number;
+  id?: string | number;
   customer?: Record<string, unknown>;
 }
 

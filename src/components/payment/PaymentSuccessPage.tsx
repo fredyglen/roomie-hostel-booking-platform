@@ -1,3 +1,4 @@
+
 import React, { useEffect, useState } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { useBusinessPaymentFlow } from '@/hooks/payment/useBusinessPaymentFlow';
@@ -10,18 +11,18 @@ import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface PaymentVerificationData {
   success: boolean;
-  verification?: { // Define a more specific interface if possible
+  verification?: {
+    [key: string]: unknown;
     amount?: number;
     reference?: string;
     channel?: string;
-    [key: string]: unknown; // Allow other properties
   };
-  booking?: { // Define a more specific interface if possible
+  booking?: {
+    [key: string]: unknown;
     id?: string;
     package_type?: string;
     start_date?: string;
     end_date?: string;
-    [key: string]: unknown; // Allow other properties
   } | null;
   error?: string;
 }

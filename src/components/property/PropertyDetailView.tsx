@@ -44,7 +44,9 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
     location: getLocationText(property.location),
     amenities: property.amenities ? getAmenitiesArray(property.amenities) : [],
     price: getPriceText(),
-    distance_to_campus: property.distance_to_campus || property.distanceToCampus,
+    distance_to_campus: typeof property.distance_to_campus === 'number' 
+      ? property.distance_to_campus.toString() 
+      : property.distance_to_campus || property.distanceToCampus || '',
     price_unit: property.price_unit || property.priceUnit || 'month',
     owner: {
       ...property.owner,

@@ -15,7 +15,8 @@ const EnhancedStoryView: React.FC<EnhancedStoryViewProps> = ({ property }) => {
   const [progressPercentage, setProgressPercentage] = useState(0);
   
   // Convert images to stories if no stories are defined
-  const stories = property.stories || property.images?.map(image => ({
+  const stories: Story[] = property.stories || property.images?.map((image, index) => ({
+    id: `story_${index}_${Date.now()}`,
     type: 'image' as const,
     url: image,
     duration: 5000

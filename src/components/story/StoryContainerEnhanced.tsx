@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home } from 'lucide-react';
@@ -57,7 +58,7 @@ const StoryContainerEnhanced: React.FC = () => {
   // Ensure property has all required fields
   const propertyWithDefaults: Property = {
     ...property,
-    type: property.type || property.property_type || 'Hostel',
+    type: (property.type || property.property_type || 'hostel') as Property['type'],
     description: property.description || '', // Add default empty string for description
     stories: property.stories || [],
     owner_id: property.owner_id || '' // Ensure owner_id has a default value
@@ -80,7 +81,9 @@ const StoryContainerEnhanced: React.FC = () => {
       <div className="z-40 fixed top-0 left-0 right-0">
         <StoryHeader 
           title={propertyWithDefaults.title || ''}
-          distanceToCampus={propertyWithDefaults.distanceToCampus || propertyWithDefaults.distance_to_campus || ''}
+          distanceToCampus={typeof propertyWithDefaults.distanceToCampus === 'number' 
+            ? propertyWithDefaults.distanceToCampus.toString() 
+            : propertyWithDefaults.distanceToCampus || propertyWithDefaults.distance_to_campus || ''}
           imageUrl={(propertyWithDefaults.stories && propertyWithDefaults.stories[0] && propertyWithDefaults.stories[0].url) || ''}
           onClose={handleClose} 
         />

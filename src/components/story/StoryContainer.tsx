@@ -43,7 +43,7 @@ const StoryContainer: React.FC = () => {
   // Ensure property has all required fields
   const propertyWithDefaults: Property = {
     ...property,
-    type: property.type || property.property_type || 'Hostel',
+    type: (property.type || property.property_type || 'hostel') as Property['type'],
     stories: property.stories || []
   };
 
@@ -66,7 +66,9 @@ const StoryContainer: React.FC = () => {
         {/* Header */}
         <StoryHeader 
           title={propertyWithDefaults.title}
-          distanceToCampus={propertyWithDefaults.distanceToCampus || ''}
+          distanceToCampus={typeof propertyWithDefaults.distanceToCampus === 'number' 
+            ? propertyWithDefaults.distanceToCampus.toString() 
+            : propertyWithDefaults.distanceToCampus || ''}
           imageUrl={(stories[0] && stories[0].url) || ''}
           onClose={handleClose}
         />

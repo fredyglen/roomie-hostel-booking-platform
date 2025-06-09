@@ -1,6 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { Property, Story } from '@/types/property';
+import { useParams, useNavigate } from 'react-router-dom';
+import { usePropertyData } from '@/hooks/property/usePropertyData';
 
 const generateStoryId = () => `story_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
 
@@ -28,17 +30,39 @@ const mockStories: Story[] = [
   }
 ];
 
-export const useStoryViewModel = (property: Property) => {
+export const useStoryViewModel = (property?: Property) => {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { getPropertyById } = usePropertyData();
+  
+  const [currentProperty, setCurrentProperty] = useState<Property | null>(property || null);
   const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
   const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
+  const [showDetails, setShowDetails] = useState(false);
+  const [isPaused, setIsPaused] = useState(false);
+
+  // Load property if not provided
+  useEffect(() => {
+    if (!property && id) {
+      const loadProperty = async () => {
+        try {
+          const propertyData = await getPropertyById(id);
+          setCurrentProperty(propertyData);
+        } catch (error) {
+          console.error('Failed to load property:', error);
+        }
+      };
+      loadProperty();
+    }
+  }, [property, id, getPropertyById]);
 
   // Use property stories if available, otherwise use mock stories
-  const stories = property.stories && property.stories.length > 0 ? property.stories : mockStories;
+  const stories = currentProperty?.stories && currentProperty.stories.length > 0 ? currentProperty.stories : mockStories;
   const currentStory = stories[currentStoryIndex];
 
   useEffect(() => {
-    if (!isPlaying || !currentStory) return;
+    if (!isPlaying || !currentStory || isPaused) return;
 
     const interval = setInterval(() => {
       setProgress((prev) => {
@@ -55,7 +79,7 @@ export const useStoryViewModel = (property: Property) => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [currentStoryIndex, isPlaying, currentStory]);
+  }, [currentStoryIndex, isPlaying, currentStory, isPaused]);
 
   const nextStory = () => {
     if (currentStoryIndex < stories.length - 1) {
@@ -80,16 +104,33 @@ export const useStoryViewModel = (property: Property) => {
     setProgress(0);
   };
 
+  const handleNext = () => nextStory();
+  const handlePrevious = () => previousStory();
+  const handleClose = () => navigate(-1);
+  const handleSwipeUp = () => setShowDetails(true);
+  const handleSwipeDown = () => setShowDetails(false);
+
   return {
+    property: currentProperty,
     stories,
     currentStory,
     currentStoryIndex,
+    activeIndex: currentStoryIndex,
     isPlaying,
+    isPaused,
     progress,
+    progressPercentage: progress,
+    showDetails,
     nextStory,
     previousStory,
     togglePlayPause,
     goToStory,
-    totalStories: stories.length
+    totalStories: stories.length,
+    handleNext,
+    handlePrevious,
+    handleClose,
+    handleSwipeUp,
+    handleSwipeDown,
+    setIsPaused
   };
 };
