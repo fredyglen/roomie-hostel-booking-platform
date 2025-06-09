@@ -1,6 +1,9 @@
 import React, { Suspense, ComponentType } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import { ErrorHandler } from '@/utils/ErrorHandler';
+import { logger } from '@/utils/enhanced-logger';
+
+// ... rest of your component code ...
 
 interface LazyLoadWrapperProps {
   children: React.ReactNode;
