@@ -1,6 +1,7 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Property, PropertyType, PropertyStatus } from '@/types/property';
+import { Property, PropertyType, PropertyStatus, PropertyCategory } from '@/types/property';
 import { logger } from '@/utils/logger';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
@@ -77,7 +78,7 @@ export const normalizePropertyData = (dbProperty: Record<string, unknown>): Prop
     city: String(dbProperty.city ?? ''),
     state: String(dbProperty.state ?? ''),
     zip: String(dbProperty.zip ?? ''),
-    propertyCategory: (dbProperty.property_category as Property['propertyCategory']) ?? 'Hostel',
+    propertyCategory: (dbProperty.property_category as PropertyCategory) ?? 'Hostel',
     verified: Boolean(dbProperty.verified ?? true),
     is_available: Boolean(dbProperty.is_available ?? true),
     bedrooms: Number(dbProperty.bedrooms ?? 1),
@@ -149,15 +150,16 @@ export const usePropertyData = () => {
         return {
           id: property.id,
           owner_id: property.owner_id,
+          name: property.title, // Add missing name property
           title: property.title,
           description: property.description,
           address: property.address,
           city: property.city,
           state: property.state,
-          zip: property.zip,
+          zip: property.zip || '00000',
           rent: property.rent,
           price: property.rent, // Map rent to price for consistency
-          type: property.property_type,
+          type: property.property_type as PropertyType,
           property_type: property.property_type,
           property_category: property.property_category as PropertyCategory,
           propertyCategory: property.property_category as PropertyCategory,
@@ -188,7 +190,7 @@ export const usePropertyData = () => {
           washroom_type: property.washroom_type,
           meter_type: property.meter_type,
           verification_status: property.verification_status,
-          status: property.is_available ? 'Available' : 'Not Available',
+          status: property.is_available ? 'available' as PropertyStatus : 'occupied' as PropertyStatus,
           verified: property.verification_status === 'verified',
           priceUnit: 'month',
           price_unit: 'month',
@@ -196,12 +198,14 @@ export const usePropertyData = () => {
           distanceToCampus: '10 min walk',
           distance_to_campus: '10 min walk',
           owner: profileData ? {
+            id: profileData.id || 'unknown',
             name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
             email: profileData.email,
             phone: profileData.phone || '',
             responseRate: '95%',
             verified: true
           } : {
+            id: 'unknown',
             name: 'Property Owner',
             email: 'owner@example.com',
             phone: '+233 50 123 4567',
@@ -212,17 +216,16 @@ export const usePropertyData = () => {
           reviewCount: Math.floor(Math.random() * 50) + 5,
           created_at: property.created_at,
           updated_at: property.updated_at,
-          house_rules: [
-            'No smoking inside',
-            'No loud music after 10 PM',
-            'Keep common areas clean',
-            'Visitors must be registered'
-          ],
-          stories: property.images ? property.images.map(image => ({
+          house_rules: Array.isArray(property.house_rules) ? 
+            property.house_rules.join(', ') : 
+            property.house_rules || 'No smoking inside, No loud music after 10 PM',
+          stories: property.images ? property.images.map((image: string, index: number) => ({
+            id: `story-${index}`,
             type: 'image' as const,
             url: image,
             duration: 5000
           })) : [],
+          features: ['balcony', 'ensuite'],
           roomTypes: [
             { id: '1', name: 'Single Room', capacity: 1, price: property.rent },
             { id: '2', name: 'Double Room', capacity: 2, price: property.rent * 0.8 },
@@ -378,7 +381,11 @@ export const usePropertyData = () => {
     loading,
     error,
     refreshProperties: fetchProperties,
-    getPropertyById
+    getPropertyById: async (id: string): Promise<Property | null> => {
+      // Implementation for getting property by ID
+      const property = properties.find(p => p.id === id);
+      return property || null;
+    }
   };
 };
 

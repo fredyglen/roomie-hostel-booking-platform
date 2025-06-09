@@ -30,19 +30,19 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
 
   const getPriceNumber = (): number => {
     const price = property.price || property.rent;
-    return typeof price === 'number' ? price : parseFloat(price?.toString() || '0') || 0;
+    return typeof price === 'number' ? price : parseFloat(String(price) || '0') || 0;
   };
 
   const getDistanceText = (): string => {
     const distance = property.distance_to_campus || property.distanceToCampus;
     if (distance === undefined || distance === null) return '';
-    return typeof distance === 'string' ? distance : String(distance);
+    return String(distance);
   };
 
   const getOwnerResponseRate = (): string => {
     const rate = property.owner?.responseRate;
     if (rate === undefined || rate === null) return 'N/A';
-    return typeof rate === 'number' ? `${rate}%` : rate.toString();
+    return typeof rate === 'number' ? `${rate}%` : String(rate);
   };
 
   const getHouseRulesArray = (): string[] => {
@@ -60,7 +60,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
     price: getPriceNumber(),
     distance_to_campus: getDistanceText(),
     price_unit: property.price_unit || property.priceUnit || 'month',
-    house_rules: getHouseRulesArray(),
+    house_rules: getHouseRulesArray().join(', '),
     owner: property.owner ? {
       ...property.owner,
       responseRate: getOwnerResponseRate()
@@ -80,7 +80,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             description={property.description}
             address={property.address}
             distanceToCampus={safeProperty.distance_to_campus}
-            houseRules={safeProperty.house_rules}
+            houseRules={getHouseRulesArray()}
             amenities={safeProperty.amenities}
             type={property.type}
             location={safeProperty.location}

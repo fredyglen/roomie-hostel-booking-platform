@@ -41,8 +41,8 @@ const PropertyList: React.FC<PropertyListProps> = ({
         <PropertyCard
           key={property.id}
           property={property}
-          onViewProperty={onViewProperty}
-          onViewStory={onViewStory}
+          onViewProperty={() => onViewProperty(property.id)}
+          onViewStory={() => onViewStory(property.id)}
         />
       ))}
     </div>

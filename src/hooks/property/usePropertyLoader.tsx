@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-import { Property, PropertyType } from '@/types/property';
+import { Property, PropertyType, PropertyCategory } from '@/types/property';
 import { logger } from '@/utils/logger';
 
 export const usePropertyLoader = (propertyId: string | undefined) => {
@@ -28,6 +28,7 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
           .select(`
             *,
             profiles!owner_id (
+              id,
               first_name,
               last_name,
               email,
@@ -67,7 +68,7 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
           rent: data.rent,
           price: data.rent,
           type: (data.property_type as PropertyType) || 'hostel',
-          propertyCategory: data.property_category || 'Hostel',
+          propertyCategory: (data.property_category as PropertyCategory) || 'Hostel',
           verified: true,
           is_available: data.is_available,
           bedrooms: data.bedrooms,
@@ -94,7 +95,7 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
             responseRate: '95%',
             verified: true
           },
-          house_rules: data.house_rules || '',
+          house_rules: typeof data.house_rules === 'string' ? data.house_rules : Array.isArray(data.house_rules) ? data.house_rules.join(', ') : '',
           stories: [],
           features: []
         };
