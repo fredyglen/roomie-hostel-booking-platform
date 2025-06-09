@@ -1,15 +1,17 @@
+
 import { supabase } from '@/lib/supabase';
 import { User } from '@/types/common';
 
 export const userService = {
-  async getUsers() {
+  async getUsers(): Promise<User[]> {
     const { data, error } = await supabase
       .from('profiles')
       .select('*');
     if (error) throw error;
     return data as User[];
   },
-  async getUserById(id: string) {
+  
+  async getUserById(id: string): Promise<User> {
     const { data, error } = await supabase
       .from('profiles')
       .select('*')
@@ -18,24 +20,29 @@ export const userService = {
     if (error) throw error;
     return data as User;
   },
-  async createUser(user: Partial<User>) {
+  
+  async createUser(user: Omit<User, 'id' | 'created_at'>): Promise<User> {
     const { data, error } = await supabase
       .from('profiles')
       .insert([user])
+      .select()
       .single();
     if (error) throw error;
     return data as User;
   },
-  async updateUser(id: string, updates: Partial<User>) {
+  
+  async updateUser(id: string, updates: Partial<Omit<User, 'id' | 'created_at'>>): Promise<User> {
     const { data, error } = await supabase
       .from('profiles')
       .update(updates)
       .eq('id', id)
+      .select()
       .single();
     if (error) throw error;
     return data as User;
   },
-  async deleteUser(id: string) {
+  
+  async deleteUser(id: string): Promise<boolean> {
     const { error } = await supabase
       .from('profiles')
       .delete()
@@ -43,4 +50,4 @@ export const userService = {
     if (error) throw error;
     return true;
   },
-}; 
+};

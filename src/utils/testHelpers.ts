@@ -1,4 +1,4 @@
-import { Amenity } from '@/types/common';
+
 import { Property } from '@/types/property';
 
 /**
@@ -31,20 +31,42 @@ export function generateTestProperty(overrides: Partial<Property> = {}): Propert
     id: 'test-id-1',
     owner_id: 'test-owner-1',
     name: 'Test Property',
+    title: 'Test Property',
     description: 'A test property description',
     type: 'apartment',
     status: 'available',
     price: 1000,
+    rent: 1000,
     location: {
       address: '123 Test St',
       city: 'Test City',
       state: 'Test State',
-      country: 'Test Country',
     },
-    university_id: 'test-uni-1',
+    address: '123 Test St',
+    city: 'Test City',
+    state: 'Test State',
+    zip: '12345',
+    propertyCategory: 'Apartment',
+    verified: true,
+    is_available: true,
+    bedrooms: 2,
+    bathrooms: 1,
+    amenities: ['WiFi', 'Parking'],
     images: ['/placeholder.svg'],
-    amenities: ['WIFI', 'PARKING', 'SECURITY'] as Amenity[],
+    available_from: '2024-01-01',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    owner: {
+      id: 'test-owner-1',
+      name: 'Test Owner',
+      email: 'owner@test.com',
+      phone: '+1234567890',
+      verified: true,
+      responseRate: '95%'
+    },
+    house_rules: 'No smoking, no pets',
+    stories: [],
+    features: [],
+    ...overrides,
   };
 }

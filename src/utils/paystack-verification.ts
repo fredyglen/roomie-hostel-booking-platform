@@ -7,6 +7,7 @@ export interface PaystackVerificationData {
   customer: Record<string, unknown>;
   channel: string;
   id: number;
+  metadata?: Record<string, unknown>; // Add metadata property
 }
 
 export interface PaymentVerificationResult {

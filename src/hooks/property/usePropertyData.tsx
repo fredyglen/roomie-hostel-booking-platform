@@ -88,7 +88,7 @@ export const normalizePropertyData = (dbProperty: Record<string, unknown>): Prop
     created_at: String(dbProperty.created_at ?? ''),
     updated_at: String(dbProperty.updated_at ?? ''),
     owner: profileData ? {
-      id: String(profileData.id ?? 'unknown'),
+      id: 'unknown', // Database profiles don't have id field
       name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
       email: profileData.email || 'owner@example.com',
       phone: profileData.phone || '+233123456789',
@@ -197,7 +197,7 @@ export const usePropertyData = () => {
           distanceToCampus: '10 min walk',
           distance_to_campus: '10 min walk',
           owner: profileData ? {
-            id: profileData.id || 'unknown',
+            id: 'unknown', // Database profiles don't have id field
             name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
             email: profileData.email,
             phone: profileData.phone || '',
@@ -286,7 +286,7 @@ export const usePropertyData = () => {
         zip: data.zip,
         rent: data.rent,
         price: data.rent,
-        type: data.property_type,
+        type: data.property_type as PropertyType,
         property_type: data.property_type,
         property_category: data.property_category as PropertyCategory,
         propertyCategory: data.property_category as PropertyCategory,
@@ -343,12 +343,7 @@ export const usePropertyData = () => {
         reviewCount: Math.floor(Math.random() * 50) + 5,
         created_at: data.created_at,
         updated_at: data.updated_at,
-        house_rules: [
-          'No smoking inside',
-          'No loud music after 10 PM',
-          'Keep common areas clean',
-          'Visitors must be registered'
-        ],
+        house_rules: 'No smoking inside, No loud music after 10 PM',
         stories: data.images ? data.images.map((image: string, index: number) => ({
           id: `story-${index}`,
           type: 'image' as const,

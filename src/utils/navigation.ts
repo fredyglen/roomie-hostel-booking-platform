@@ -1,81 +1,62 @@
+
 import { NavigateFunction } from 'react-router-dom';
 
-interface NavigationOptions {
+interface NavigationState {
   from?: string;
-  preserveHistory?: boolean;
-  replace?: boolean;
-  state?: unknown;
+  [key: string]: any;
 }
 
-export const navigateToProperty = (
-  navigate: NavigateFunction, 
-  propertyId: string, 
-  options?: NavigationOptions
-) => {
-  const path = `/student/property/${propertyId}`;
-  
-  if (options?.replace) {
-    navigate(path, { replace: true, state: { from: options.from } });
-  } else {
-    navigate(path, { state: { from: options?.from } });
-  }
-};
+export const navigationUtils = {
+  goToProperty: (navigate: NavigateFunction, propertyId: string, from?: string) => {
+    navigate(`/student/property/${propertyId}`, { 
+      state: from ? { from } : undefined 
+    });
+  },
 
-export const navigateToBooking = (
-  navigate: NavigateFunction, 
-  propertyId: string, 
-  options?: NavigationOptions
-) => {
-  const path = `/student/book/${propertyId}`;
-  
-  if (options?.replace) {
-    navigate(path, { replace: true, state: { from: options.from } });
-  } else {
-    navigate(path, { state: { from: options?.from } });
-  }
-};
+  goToStory: (navigate: NavigateFunction, propertyId: string, from?: string) => {
+    navigate(`/student/property/${propertyId}/story`, { 
+      state: from ? { from } : undefined 
+    });
+  },
 
-export const navigateToStory = (
-  navigate: NavigateFunction, 
-  propertyId: string, 
-  options?: NavigationOptions
-) => {
-  const path = `/student/story/${propertyId}`;
-  
-  if (options?.replace) {
-    navigate(path, { replace: true, state: { from: options.from } });
-  } else {
-    navigate(path, { state: { from: options?.from } });
-  }
-};
+  goToBooking: (navigate: NavigateFunction, propertyId: string, from?: string) => {
+    navigate(`/student/property/${propertyId}/book`, { 
+      state: from ? { from } : undefined 
+    });
+  },
 
-export const navigateBack = (
-  navigate: NavigateFunction, 
-  fallbackPath: string = '/', 
-  state?: unknown
-) => {
-  if (state?.from) {
-    navigate(state.from);
-  } else if (window.history.length > 1) {
+  goBack: (navigate: NavigateFunction, fallbackPath: string = '/') => {
     navigate(-1);
-  } else {
-    navigate(fallbackPath);
-  }
-};
+  },
 
-export const navigateToProperties = (navigate: (path: string) => void, filters?: Record<string, string>) => {
-  if (!filters || Object.keys(filters).length === 0) {
-    navigate('/student/properties');
-    return;
-  }
-  
-  const queryParams = new URLSearchParams();
-  Object.entries(filters).forEach(([key, value]) => {
-    if (value && value.trim() !== '') {
-      queryParams.append(key, value);
+  goHome: (navigate: NavigateFunction) => {
+    navigate('/');
+  },
+
+  goToExplore: (navigate: NavigateFunction) => {
+    navigate('/student/explore');
+  },
+
+  goToDashboard: (navigate: NavigateFunction, userRole: string) => {
+    const dashboardPath = userRole === 'owner' ? '/owner/dashboard' : '/student/dashboard';
+    navigate(dashboardPath);
+  },
+
+  // Utility to get previous path from state
+  getPreviousPath: (state: unknown, fallback: string = '/'): string => {
+    if (state && typeof state === 'object' && state !== null) {
+      const navigationState = state as NavigationState;
+      return navigationState.from || fallback;
     }
-  });
-  
-  const queryString = queryParams.toString();
-  navigate(`/student/properties${queryString ? `?${queryString}` : ''}`);
+    return fallback;
+  },
+
+  // Utility to check if navigation has previous state
+  hasPreviousState: (state: unknown): boolean => {
+    if (state && typeof state === 'object' && state !== null) {
+      const navigationState = state as NavigationState;
+      return Boolean(navigationState.from);
+    }
+    return false;
+  }
 };
