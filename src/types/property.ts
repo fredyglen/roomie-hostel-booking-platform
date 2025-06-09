@@ -1,6 +1,8 @@
+
 import { BaseEntity, Amenity } from './common';
 
 export type PropertyType = 'apartment' | 'hostel' | 'shared-apartment' | 'studio' | 'room';
+export type PropertyCategory = 'Hostel' | 'Homestel' | 'Apartment';
 
 export interface Location {
   city: string;
@@ -18,6 +20,15 @@ export interface Owner {
   email: string;
   phone: string;
   verified: boolean;
+  responseRate?: number;
+}
+
+export interface Story {
+  id: string;
+  type: 'image' | 'video';
+  url: string;
+  duration?: number;
+  caption?: string;
 }
 
 export interface Property extends BaseEntity {
@@ -53,7 +64,11 @@ export interface Property extends BaseEntity {
   property_type?: string;
   availableUnits?: number;
   priceUnit?: string;
+  price_unit?: string;
   features?: string[];
+  roomTypes?: string[];
+  stories?: Story[];
+  status?: string;
 }
 
 export interface PropertyFormData {
@@ -67,4 +82,40 @@ export interface PropertyFormData {
   bedrooms: number;
   bathrooms: number;
   max_occupants: number;
+}
+
+export interface PropertyFormValues {
+  title: string;
+  propertyCategory: PropertyCategory;
+  type: string;
+  address: string;
+  city: string;
+  state: string;
+  zip: string;
+  location?: string;
+  landmark?: string;
+  price: number;
+  price_unit: string;
+  description: string;
+  distance_to_campus?: string;
+  amenities?: string;
+  house_rules?: string;
+  status: string;
+  occupancy?: string;
+  image_url?: string;
+  all_inclusive: boolean;
+  utilities?: string;
+  bedrooms: number;
+  bathrooms: number;
+  max_occupants?: number;
+  total_rooms?: number;
+  rooms_available?: number;
+  beds_per_room?: number;
+  beds_available?: number;
+  has_bedframes: boolean;
+  has_mattresses: boolean;
+  has_wardrobes: boolean;
+  has_individual_meters: boolean;
+  advance_payment_months?: number;
+  allow_bill_sharing: boolean;
 }

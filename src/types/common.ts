@@ -33,9 +33,16 @@ export interface BookingFormData {
   fullName: string;
   email: string;
   phone: string;
+  emergencyPhone: string;
   specialRequests?: string;
   emergencyContact: EmergencyContact;
   roommates: RoommateInfo[];
+  idType: string;
+  studentId: string;
+  university: string;
+  program: string;
+  idImage: any;
+  termsAgreed: boolean;
 }
 
 export interface EmergencyContact {

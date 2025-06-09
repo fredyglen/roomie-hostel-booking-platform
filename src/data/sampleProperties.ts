@@ -1,3 +1,4 @@
+
 import { Property, PropertyType } from '@/types/property';
 
 export const sampleProperties: Property[] = [
@@ -32,7 +33,8 @@ export const sampleProperties: Property[] = [
     state: 'Greater Accra',
     address: '123 University Road',
     created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z'
+    updated_at: '2024-01-01T00:00:00Z',
+    status: 'Available'
   },
   {
     id: '2',
@@ -65,6 +67,7 @@ export const sampleProperties: Property[] = [
     state: 'Ashanti',
     address: '456 Campus Avenue',
     created_at: '2024-01-01T00:00:00Z',
-    updated_at: '2024-01-01T00:00:00Z'
+    updated_at: '2024-01-01T00:00:00Z',
+    status: 'Available'
   }
 ];
