@@ -22,8 +22,8 @@ interface PropertyData {
   hasMore: boolean;
 }
 
-// Updated to match actual Supabase query result structure
-interface DatabaseProperty {
+// Simplified database result type to avoid deep type instantiation
+interface DatabasePropertyRow {
   id: string;
   owner_id: string;
   title: string;
@@ -43,26 +43,14 @@ interface DatabaseProperty {
   available_from: string;
   created_at: string;
   updated_at: string;
-  profiles?: {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  }[] | {
-    id: string;
-    first_name: string;
-    last_name: string;
-    email: string;
-    phone: string;
-  };
+  profiles?: any; // Simplified to avoid complex union types
 }
 
 export const usePropertyData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const transformDatabaseProperty = (item: any): Property => {
+  const transformDatabaseProperty = useCallback((item: DatabasePropertyRow): Property => {
     // Handle profiles - it might be an array or a single object
     const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
     
@@ -121,7 +109,7 @@ export const usePropertyData = () => {
     }
 
     return baseProperty;
-  };
+  }, []);
 
   const getProperties = useCallback(async (options: PropertyQueryOptions = {}): Promise<PropertyData> => {
     try {
@@ -179,7 +167,19 @@ export const usePropertyData = () => {
 
       if (queryError) throw queryError;
 
-      const transformedProperties: Property[] = (data || []).map(transformDatabaseProperty);
+      // Simple transformation without complex type inference
+      const transformedProperties: Property[] = [];
+      if (data) {
+        for (const item of data) {
+          try {
+            const transformed = transformDatabaseProperty(item as DatabasePropertyRow);
+            transformedProperties.push(transformed);
+          } catch (transformError) {
+            console.error('Error transforming property:', transformError);
+            // Skip this property but continue with others
+          }
+        }
+      }
 
       return {
         properties: transformedProperties,
@@ -195,7 +195,7 @@ export const usePropertyData = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [transformDatabaseProperty]);
 
   const getPropertyById = useCallback(async (id: string): Promise<Property | null> => {
     try {
@@ -220,7 +220,7 @@ export const usePropertyData = () => {
       if (queryError) throw queryError;
       if (!data) return null;
 
-      const transformedProperty = transformDatabaseProperty(data);
+      const transformedProperty = transformDatabaseProperty(data as DatabasePropertyRow);
       return transformedProperty;
 
     } catch (err) {
@@ -231,7 +231,7 @@ export const usePropertyData = () => {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [transformDatabaseProperty]);
 
   return {
     getProperties,
