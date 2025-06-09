@@ -1,223 +1,141 @@
+
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Building, Floor, Room, OccupancyTracking } from '@/types/building';
-import { useToast } from '@/hooks/use-toast';
-import { Property } from '@/types/property';
-import { ErrorHandler } from '@/utils/ErrorHandler';
+import { Building } from '@/types/common';
+import { Property, Amenity } from '@/types/property';
 
-export const useBuildingData = (buildingId?: string) => {
+interface Floor {
+  id: string;
+  floorNumber: number;
+  name: string;
+  description?: string;
+  rooms: Room[];
+}
+
+interface Room {
+  id: string;
+  roomNumber: string;
+  roomType: string;
+  bedCount: number;
+  bedsAvailable: number;
+  maxOccupants: number;
+  rentAmount: number;
+  amenities?: string[];
+  description?: string;
+}
+
+export const useBuildingData = (properties: Property[]) => {
   const [buildings, setBuildings] = useState<Building[]>([]);
-  const [selectedBuilding, setSelectedBuilding] = useState<Building | null>(null);
-  const [floors, setFloors] = useState<Floor[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [occupancy, setOccupancy] = useState<OccupancyTracking[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
-  // Convert properties to buildings format for now (using existing properties table)
-  const transformPropertyToBuilding = (property: Property): Building => {
-    return {
-      property_id: property.id,
-      name: property.name || property.title || 'Unnamed Building',
-      total_floors: 1,
-      total_rooms: property.bedrooms || 1,
-      floors: [],
-      rooms: [],
-    };
-  };
-
-  // Create mock floor and room data from property
-  const createMockFloorsAndRooms = (property: Property): { floors: Floor[], rooms: Room[] } => {
-    const floor: Floor = {
-      id: `${property.id}-floor-1`,
-      building_id: property.id,
-      number: 1,
-      name: 'Ground Floor',
-      created_at: property.created_at,
-      updated_at: property.updated_at,
-    };
-
-    const rooms: Room[] = [];
-    for (let i = 1; i <= (property.bedrooms ?? 1); i++) {
-      rooms.push({
-        id: `${property.id}-room-${i}`,
-        floor_id: floor.id,
-        number: `Room ${i}`,
-        type: 'standard',
-        capacity: property.beds_per_room || 2,
-        price: property.rent || property.price || 0,
-        status: property.status,
-        amenities: property.amenities || [],
-        images: property.images || [],
-        created_at: property.created_at,
-        updated_at: property.updated_at,
-      });
-    }
-
-    return { floors: [floor], rooms };
-  };
-
-  const fetchBuildings = async () => {
-    setLoading(true);
-    try {
-      const { data, error } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('is_available', true)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      
-      const transformedBuildings = (data || []).map(transformPropertyToBuilding);
-      setBuildings(transformedBuildings);
-    } catch (err) {
-      setError('Failed to fetch buildings');
-      toast({
-        title: "Error",
-        description: "Failed to load buildings",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchBuildingDetails = async (id: string) => {
-    setLoading(true);
-    try {
-      // Fetch property as building
-      const { data: property, error: propertyError } = await supabase
-        .from('properties')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-      if (propertyError) throw propertyError;
-      
-      const building = transformPropertyToBuilding(property);
-      const { floors: mockFloors, rooms: mockRooms } = createMockFloorsAndRooms(property);
-      const buildingWithDetails = { ...building, floors: mockFloors, rooms: mockRooms };
-      setSelectedBuilding(buildingWithDetails);
-
-      // Create mock occupancy data
-      const mockOccupancy: OccupancyTracking[] = mockRooms.map(room => ({
-        id: `${room.id}-occupancy`,
-        room_id: room.id,
-        building_id: building.id,
-        floor_id: room.floor_id,
-        current_occupancy: 0,
-        available_spots: room.capacity,
-        last_updated: new Date().toISOString(),
-        updated_by: undefined
-      }));
-      
-      setOccupancy(mockOccupancy);
-
-    } catch (err) {
-      setError('Failed to fetch building details');
-      toast({
-        title: "Error",
-        description: "Failed to load building details",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchOccupancyData = async (id: string) => {
-    try {
-      // For now, return mock data since occupancy_tracking table doesn't exist yet
-      const mockOccupancy: OccupancyTracking[] = rooms.map(room => ({
-        id: `${room.id}-occupancy`,
-        room_id: room.id,
-        building_id: id,
-        floor_id: room.floor_id,
-        current_occupancy: Math.floor(Math.random() * room.capacity),
-        available_spots: room.capacity - Math.floor(Math.random() * room.capacity),
-        last_updated: new Date().toISOString(),
-        updated_by: undefined
-      }));
-      
-      setOccupancy(mockOccupancy);
-    } catch (err) {
-      ErrorHandler.handle(err, 'useBuildingData error fetching occupancy data');
-    }
-  };
-
-  const getRoomOccupancy = (roomId: string) => {
-    const roomOccupancy = occupancy.find(o => o.room_id === roomId);
-    return roomOccupancy || {
-      current_occupancy: 0,
-      available_spots: 2,
-      last_updated: new Date().toISOString()
-    };
-  };
-
-  const getFloorOccupancy = (floorId: string) => {
-    const floorRooms = rooms.filter(room => room.floor_id === floorId);
-    const totalOccupancy = floorRooms.reduce((sum, room) => {
-      const roomOcc = getRoomOccupancy(room.id);
-      return sum + roomOcc.current_occupancy;
-    }, 0);
-    
-    const totalCapacity = floorRooms.reduce((sum, room) => sum + room.capacity, 0);
-    const availableSpots = totalCapacity - totalOccupancy;
-
-    return {
-      current_occupancy: totalOccupancy,
-      total_capacity: totalCapacity,
-      available_spots: availableSpots,
-      occupancy_percentage: totalCapacity > 0 ? (totalOccupancy / totalCapacity) * 100 : 0
-    };
-  };
-
-  const getBuildingOccupancy = (buildingId: string) => {
-    const buildingRooms = rooms.filter(room => 
-      floors.find(floor => floor.id === room.floor_id && floor.building_id === buildingId)
-    );
-    
-    const totalOccupancy = buildingRooms.reduce((sum, room) => {
-      const roomOcc = getRoomOccupancy(room.id);
-      return sum + roomOcc.current_occupancy;
-    }, 0);
-    
-    const totalCapacity = buildingRooms.reduce((sum, room) => sum + room.capacity, 0);
-    const availableSpots = totalCapacity - totalOccupancy;
-
-    return {
-      current_occupancy: totalOccupancy,
-      total_capacity: totalCapacity,
-      available_spots: availableSpots,
-      occupancy_percentage: totalCapacity > 0 ? (totalOccupancy / totalCapacity) * 100 : 0
-    };
-  };
-
-  // Polling for real-time occupancy updates (every 30 seconds)
   useEffect(() => {
-    if (buildingId) {
-      const interval = setInterval(() => {
-        fetchOccupancyData(buildingId);
-      }, 30000);
+    const generateBuildingData = () => {
+      const mockBuilding: Building = {
+        id: '1',
+        property_id: '1',
+        name: 'Main Building',
+        description: 'Primary accommodation building',
+        floors_count: 3,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
 
-      return () => clearInterval(interval);
+      setBuildings([mockBuilding]);
+      setLoading(false);
+    };
+
+    generateBuildingData();
+  }, [properties]);
+
+  const generateFloorsAndRooms = (property: Property): Floor[] => {
+    const floors: Floor[] = [];
+    const floorsCount = 3; // Default floors
+    
+    for (let floorNum = 1; floorNum <= floorsCount; floorNum++) {
+      const rooms: Room[] = [];
+      const roomsPerFloor = 8;
+      
+      for (let roomNum = 1; roomNum <= roomsPerFloor; roomNum++) {
+        const roomNumber = `${floorNum}${roomNum.toString().padStart(2, '0')}`;
+        
+        const room: Room = {
+          id: `${property.id}_${floorNum}_${roomNum}`,
+          roomNumber,
+          roomType: property.type || 'Standard',
+          bedCount: property.beds_per_room || 2,
+          bedsAvailable: Math.floor(Math.random() * (property.beds_per_room || 2)) + 1,
+          maxOccupants: property.max_occupants || 2,
+          rentAmount: property.price || property.rent || 500,
+          amenities: property.amenities?.map(amenity => 
+            typeof amenity === 'string' ? amenity : amenity.name
+          ) || [],
+          description: `${property.type} room with ${property.beds_per_room || 2} beds`
+        };
+        
+        rooms.push(room);
+      }
+      
+      floors.push({
+        id: `${property.id}_floor_${floorNum}`,
+        floorNumber: floorNum,
+        name: `Floor ${floorNum}`,
+        description: `${floorNum === 1 ? 'Ground' : floorNum === 2 ? 'First' : 'Second'} floor accommodations`,
+        rooms
+      });
     }
-  }, [buildingId, rooms]);
+    
+    return floors;
+  };
+
+  const getBuildingsByProperty = (propertyId: string) => {
+    return buildings.filter(building => building.property_id === propertyId);
+  };
+
+  const getPropertyBuildings = (property: Property) => {
+    const propertyBuildings = getBuildingsByProperty(property.id);
+    
+    if (propertyBuildings.length === 0) {
+      // Generate mock building data
+      const mockBuilding: Building = {
+        id: `${property.id}_building_1`,
+        property_id: property.id,
+        name: `${property.title} - Main Building`,
+        description: property.description,
+        floors_count: 3,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+      
+      return [mockBuilding];
+    }
+    
+    return propertyBuildings;
+  };
+
+  const getAvailableBedsCount = (property: Property): number => {
+    return property.beds_available || 0;
+  };
+
+  const getTotalBedsCount = (property: Property): number => {
+    const totalRooms = property.total_rooms || 1;
+    const bedsPerRoom = property.beds_per_room || 1;
+    return totalRooms * bedsPerRoom;
+  };
+
+  const getOccupancyRate = (property: Property): number => {
+    const totalBeds = getTotalBedsCount(property);
+    const availableBeds = getAvailableBedsCount(property);
+    const occupiedBeds = totalBeds - availableBeds;
+    return totalBeds > 0 ? (occupiedBeds / totalBeds) * 100 : 0;
+  };
 
   return {
     buildings,
-    selectedBuilding,
-    floors,
-    rooms,
-    occupancy,
     loading,
-    error,
-    fetchBuildings,
-    fetchBuildingDetails,
-    getRoomOccupancy,
-    getFloorOccupancy,
-    getBuildingOccupancy,
-    refreshOccupancy: () => buildingId && fetchOccupancyData(buildingId)
+    generateFloorsAndRooms,
+    getBuildingsByProperty,
+    getPropertyBuildings,
+    getAvailableBedsCount,
+    getTotalBedsCount,
+    getOccupancyRate
   };
 };

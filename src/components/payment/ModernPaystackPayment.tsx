@@ -1,31 +1,33 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { initializePaystackPayment } from '@/lib/paystack-config';
-import { verifyPaystackPayment } from '@/utils/paystack-verification';
-import { handlePaystackError, debugPaystackConfig } from '@/utils/paystack-errors';
-import { formatCurrency } from '@/utils/currency';
-import { PaystackVerificationData } from '@/utils/paystack-verification';
-import { Loader2, CreditCard, Smartphone, Building2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { ErrorHandler } from '@/utils/ErrorHandler';
-import { ModernPaymentSuccessResult, MinimalPaystackTransaction } from '@/types/booking';
+import { handlePaystackError } from '@/utils/paystack-errors';
+import { ModernPaymentSuccessResult, PaystackVerificationData } from '@/types/booking';
+
+declare global {
+  interface Window {
+    PaystackPop: any;
+  }
+}
 
 interface ModernPaystackPaymentProps {
-  amount: number; // Amount in GHS
+  amount: number;
   email: string;
   firstName?: string;
   lastName?: string;
   phone?: string;
-  metadata?: Record<string, unknown>;
-  onSuccess: (verificationResult: ModernPaymentSuccessResult) => void;
-  onError?: (error: string) => void;
+  onSuccess: (result: ModernPaymentSuccessResult) => void;
+  onError: (error: string) => void;
   title?: string;
   description?: string;
+  disabled?: boolean;
+}
+
+interface MinimalPaystackTransaction {
+  reference: string;
+  amount: number;
+  status: string;
 }
 
 export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
@@ -34,320 +36,133 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
   firstName = '',
   lastName = '',
   phone = '',
-  metadata = {},
   onSuccess,
   onError,
   title = 'Complete Payment',
-  description = 'Secure payment processing'
+  description = 'Secure payment processing',
+  disabled = false
 }) => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState<'card' | 'mobile_money' | 'bank'>('card');
-  const [mobileNetwork, setMobileNetwork] = useState<'mtn' | 'vodafone' | 'airtel'>('mtn');
-  const [customerPhone, setCustomerPhone] = useState(phone);
-  const [customerEmail, setCustomerEmail] = useState(email);
-  const [customerFirstName, setCustomerFirstName] = useState(firstName);
-  const [customerLastName, setCustomerLastName] = useState(lastName);
-  
   const { toast } = useToast();
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [paystackLoaded, setPaystackLoaded] = useState(false);
 
-  const handlePayment = async () => {
-    // Debug configuration
-    debugPaystackConfig();
-    
+  // Load Paystack script
+  useEffect(() => {
+    if (window.PaystackPop) {
+      setPaystackLoaded(true);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://js.paystack.co/v1/inline.js';
+    script.async = true;
+    script.onload = () => setPaystackLoaded(true);
+    script.onerror = () => {
+      console.error('Failed to load Paystack script');
+      onError('Failed to load payment system');
+    };
+    document.body.appendChild(script);
+
+    return () => {
+      if (document.body.contains(script)) {
+        document.body.removeChild(script);
+      }
+    };
+  }, [onError]);
+
+  const handlePayment = () => {
+    if (!paystackLoaded || !window.PaystackPop) {
+      onError('Payment system not ready. Please try again.');
+      return;
+    }
+
+    const publicKey = import.meta.env.VITE_PAYSTACK_PUBLIC_KEY;
+    if (!publicKey) {
+      onError('Payment configuration error. Please contact support.');
+      return;
+    }
+
+    setIsProcessing(true);
+
     try {
-      setIsLoading(true);
+      const reference = `ref_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
       
-      // Validate required fields
-      if (!customerEmail || !amount) {
-        throw new Error('Email and amount are required');
-      }
-      
-      if (amount < 1) {
-        throw new Error('Minimum payment amount is GH₵1.00');
-      }
-
-      // Validate mobile money requirements
-      if (paymentMethod === 'mobile_money' && !customerPhone) {
-        throw new Error('Phone number is required for mobile money payments');
-      }
-      
-      const paymentReference = `ROOMI_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-      
-      const paymentData = {
-        email: customerEmail,
-        amount: amount,
-        firstName: customerFirstName,
-        lastName: customerLastName,
-        phone: customerPhone,
-        reference: paymentReference,
+      const handler = window.PaystackPop.setup({
+        key: publicKey,
+        email: email,
+        amount: amount * 100, // Paystack expects amount in pesewas
+        currency: 'GHS',
+        ref: reference,
+        firstname: firstName,
+        lastname: lastName,
+        phone: phone,
         metadata: {
-          ...metadata,
-          payment_method: paymentMethod,
-          mobile_network: paymentMethod === 'mobile_money' ? mobileNetwork : undefined,
+          firstName,
+          lastName,
+          phone
         },
-        onSuccess: async (transaction: any) => {
-          ErrorHandler.log('Payment successful:', JSON.stringify(transaction));
+        callback: function(response: any) {
+          setIsProcessing(false);
           
-          try {
-            // Verify the payment
-            const verification = await verifyPaystackPayment(transaction.reference);
-            
-            if (verification.success) {
-              toast({
-                title: "Payment Successful",
-                description: `Payment of ${formatCurrency(verification.amount || amount)} completed successfully.`,
-              });
-              
-              const result: ModernPaymentSuccessResult = {
-                reference: transaction.reference,
-                amount: verification.amount,
-                status: 'success',
-                transaction: {
-                  reference: transaction.reference,
-                  amount: verification.amount || amount,
-                  status: 'success'
-                },
-                verification: verification.data
-              };
-              
-              onSuccess(result);
-            } else {
-              throw new Error(verification.message || 'Payment verification failed');
-            }
-          } catch (verificationError) {
-            ErrorHandler.log('Payment verification failed:', verificationError);
-            toast({
-              title: "Payment Verification Failed",
-              description: "Payment completed but verification failed. Please contact support.",
-              variant: "destructive"
-            });
-            if (onError) {
-              onError('Payment verification failed');
-            }
-          } finally {
-            setIsLoading(false);
-          }
+          const verification: PaystackVerificationData = {
+            amount: amount,
+            reference: response.reference,
+            channel: response.channel || 'unknown',
+            id: response.id,
+            customer: response.customer || {}
+          };
+
+          const result: ModernPaymentSuccessResult = {
+            reference: response.reference,
+            status: response.status || 'success',
+            transaction: {
+              reference: response.reference,
+              amount: amount,
+              status: response.status || 'success'
+            },
+            verification
+          };
+          
+          onSuccess(result);
         },
-        onCancel: () => {
-          ErrorHandler.log('Payment cancelled by user');
-          setIsLoading(false);
+        onClose: function() {
+          setIsProcessing(false);
           toast({
             title: "Payment Cancelled",
-            description: "Your payment was cancelled.",
+            description: "You cancelled the payment process.",
             variant: "destructive"
           });
-          if (onError) {
-            onError('Payment was cancelled');
-          }
-        },
-        onClose: () => {
-          ErrorHandler.log('Payment window closed');
-          setIsLoading(false);
         }
-      };
-
-      const paymentDataWithCurrency = {
-        ...paymentData,
-        currency: 'GHS' // Adding required currency field
-      };
-
-      await initializePaystackPayment(paymentDataWithCurrency);
-      
-    } catch (error) {
-      ErrorHandler.log('Payment initialization error:', error);
-      const errorMessage = handlePaystackError(error);
-      setIsLoading(false);
-      toast({
-        title: "Payment Error",
-        description: errorMessage,
-        variant: "destructive"
       });
-      if (onError) {
-        onError(errorMessage);
-      }
+
+      handler.openIframe();
+    } catch (error) {
+      setIsProcessing(false);
+      const errorMessage = handlePaystackError(error);
+      onError(errorMessage);
     }
   };
 
-  const isFormValid = () => {
-    if (!customerEmail || !amount) return false;
-    if (paymentMethod === 'mobile_money' && !customerPhone) return false;
-    return true;
-  };
-
   return (
-    <Card className="w-full max-w-md">
-      <CardHeader>
-        <CardTitle className="flex items-center space-x-2">
-          <CreditCard className="h-5 w-5" />
-          <span>{title}</span>
-        </CardTitle>
-        {description && <p className="text-sm text-gray-600">{description}</p>}
-      </CardHeader>
+    <div className="space-y-4">
+      <div className="text-center space-y-2">
+        <h3 className="text-lg font-semibold">{title}</h3>
+        <p className="text-gray-600">{description}</p>
+        <p className="text-2xl font-bold text-green-600">GH₵{amount.toFixed(2)}</p>
+      </div>
       
-      <CardContent className="space-y-4">
-        {/* Amount Display */}
-        <div className="bg-gray-50 rounded-lg p-4 text-center">
-          <p className="text-sm text-gray-600">Amount to Pay</p>
-          <p className="text-2xl font-bold text-[#9b87f5]">{formatCurrency(amount)}</p>
-        </div>
-
-        {/* Customer Information */}
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="firstName">First Name</Label>
-            <Input
-              id="firstName"
-              value={customerFirstName}
-              onChange={(e) => setCustomerFirstName(e.target.value)}
-              placeholder="John"
-            />
-          </div>
-          <div>
-            <Label htmlFor="lastName">Last Name</Label>
-            <Input
-              id="lastName"
-              value={customerLastName}
-              onChange={(e) => setCustomerLastName(e.target.value)}
-              placeholder="Doe"
-            />
-          </div>
-        </div>
-
-        <div>
-          <Label htmlFor="email">Email Address</Label>
-          <Input
-            id="email"
-            type="email"
-            value={customerEmail}
-            onChange={(e) => setCustomerEmail(e.target.value)}
-            placeholder="john@student.edu.gh"
-            required
-          />
-        </div>
-
-        <div>
-          <Label htmlFor="phone">Phone Number</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={customerPhone}
-            onChange={(e) => setCustomerPhone(e.target.value)}
-            placeholder="0551234567"
-            required={paymentMethod === 'mobile_money'}
-          />
-        </div>
-
-        {/* Payment Method Selection */}
-        <div className="space-y-3">
-          <Label>Payment Method</Label>
-          
-          <div className="grid gap-2">
-            <div 
-              className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${paymentMethod === 'card' ? 'border-[#9b87f5] bg-purple-50' : ''}`}
-              onClick={() => setPaymentMethod('card')}
-            >
-              <input 
-                type="radio" 
-                checked={paymentMethod === 'card'} 
-                onChange={() => setPaymentMethod('card')}
-                className="text-[#9b87f5]"
-              />
-              <CreditCard className="h-5 w-5 text-blue-600" />
-              <div>
-                <p className="font-medium">Card Payment</p>
-                <p className="text-xs text-gray-500">Visa, Mastercard, Verve</p>
-              </div>
-            </div>
-
-            <div 
-              className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${paymentMethod === 'mobile_money' ? 'border-[#9b87f5] bg-purple-50' : ''}`}
-              onClick={() => setPaymentMethod('mobile_money')}
-            >
-              <input 
-                type="radio" 
-                checked={paymentMethod === 'mobile_money'} 
-                onChange={() => setPaymentMethod('mobile_money')}
-                className="text-[#9b87f5]"
-              />
-              <Smartphone className="h-5 w-5 text-green-600" />
-              <div>
-                <p className="font-medium">Mobile Money</p>
-                <p className="text-xs text-gray-500">MTN, Vodafone, AirtelTigo</p>
-              </div>
-            </div>
-
-            <div 
-              className={`flex items-center space-x-3 p-3 border rounded-lg cursor-pointer hover:bg-gray-50 ${paymentMethod === 'bank' ? 'border-[#9b87f5] bg-purple-50' : ''}`}
-              onClick={() => setPaymentMethod('bank')}
-            >
-              <input 
-                type="radio" 
-                checked={paymentMethod === 'bank'} 
-                onChange={() => setPaymentMethod('bank')}
-                className="text-[#9b87f5]"
-              />
-              <Building2 className="h-5 w-5 text-purple-600" />
-              <div>
-                <p className="font-medium">Bank Transfer</p>
-                <p className="text-xs text-gray-500">Direct bank transfer</p>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile Money Network Selection */}
-        {paymentMethod === 'mobile_money' && (
-          <div>
-            <Label htmlFor="network">Mobile Money Provider</Label>
-            <Select value={mobileNetwork} onValueChange={(value) => setMobileNetwork(value as 'mtn' | 'vodafone' | 'airtel')}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="mtn">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                    <span>MTN Mobile Money</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="vodafone">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-red-600" />
-                    <span>Vodafone Cash</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="airtel">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-3 h-3 rounded-full bg-orange-500" />
-                    <span>AirtelTigo Money</span>
-                  </div>
-                </SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-        )}
-
-        {/* Payment Button */}
-        <Button 
-          onClick={handlePayment}
-          disabled={isLoading || !isFormValid()}
-          className="w-full bg-[#9b87f5] hover:bg-[#8b77f0]"
-          size="lg"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Processing Payment...
-            </>
-          ) : (
-            `Pay ${formatCurrency(amount)}`
-          )}
-        </Button>
-
-        <p className="text-xs text-gray-500 text-center">
-          Secure payment powered by Paystack. Your payment information is safe and encrypted.
-        </p>
-      </CardContent>
-    </Card>
+      <Button
+        onClick={handlePayment}
+        disabled={disabled || isProcessing || !paystackLoaded}
+        className="w-full bg-green-600 hover:bg-green-700 text-white"
+        size="lg"
+      >
+        {isProcessing ? 'Processing...' : `Pay GH₵${amount.toFixed(2)}`}
+      </Button>
+      
+      {!paystackLoaded && (
+        <p className="text-sm text-gray-500 text-center">Loading payment system...</p>
+      )}
+    </div>
   );
 };

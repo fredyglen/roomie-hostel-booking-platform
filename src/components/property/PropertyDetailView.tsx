@@ -1,99 +1,90 @@
 
-import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import PropertyHeader from '@/components/property/PropertyHeader';
-import PropertyImageGallery from '@/components/property/PropertyImageGallery';
-import PropertyTabs from '@/components/property/PropertyTabs';
-import PropertyOwnerCard from '@/components/property/PropertyOwnerCard';
-import PropertyBookingCard from '@/components/property/PropertyBookingCard';
+import React from 'react';
 import { Property } from '@/types/property';
-import { toast } from 'sonner';
+import PropertyImageGallery from './PropertyImageGallery';
+import PropertyTabs from './PropertyTabs';
+import PropertyBookingCard from './PropertyBookingCard';
+import PropertyOwnerCard from './PropertyOwnerCard';
 
 interface PropertyDetailViewProps {
   property: Property;
-  onViewStory: () => void;
-  onBookNow: () => void;
+  onBook?: () => void;
 }
 
-const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ 
-  property, 
-  onViewStory,
-  onBookNow 
-}) => {
-  const [activeTab, setActiveTab] = useState('about');
-  
-  // Ensure we have images to display
-  const images = property.images && property.images.length > 0
-    ? property.images
-    : ['/placeholder.svg'];
-  
-  const handleError = () => {
-    toast.error("Failed to load some images");
+const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBook }) => {
+  // Helper functions to safely extract data
+  const getLocationText = (location: string | { city: string; state: string; address: string }): string => {
+    if (typeof location === 'string') {
+      return location;
+    }
+    return `${location.address}, ${location.city}, ${location.state}`;
   };
-  
+
+  const getAmenityText = (amenity: string | { id: string; name: string }): string => {
+    return typeof amenity === 'string' ? amenity : amenity.name;
+  };
+
+  const getAmenitiesArray = (amenities: (string | { id: string; name: string })[]): string[] => {
+    return amenities.map(getAmenityText);
+  };
+
+  const getPriceText = (): string => {
+    const price = property.price || property.rent;
+    return typeof price === 'number' ? price.toString() : price;
+  };
+
+  const getOwnerResponseRate = (): string => {
+    const rate = property.owner?.responseRate;
+    return typeof rate === 'number' ? `${rate}%` : 'N/A';
+  };
+
+  // Safe data extraction
+  const safeProperty = {
+    ...property,
+    location: getLocationText(property.location),
+    amenities: property.amenities ? getAmenitiesArray(property.amenities) : [],
+    price: getPriceText(),
+    distance_to_campus: property.distance_to_campus || property.distanceToCampus,
+    price_unit: property.price_unit || property.priceUnit || 'month',
+    owner: {
+      ...property.owner,
+      responseRate: getOwnerResponseRate()
+    }
+  };
+
   return (
-    <main className="flex-grow py-8 px-4">
-      <div className="container mx-auto max-w-7xl">
-        {/* Property Header */}
-        <PropertyHeader 
-          id={property.id}
-          title={property.title}
-          address={property.address}
-          distanceToCampus={property.distanceToCampus || property.distance_to_campus || ''}
-          rating={property.rating}
-          reviewCount={property.reviewCount}
-          onViewStory={onViewStory}
-        />
-        
-        {/* Property Images */}
-        <PropertyImageGallery 
-          images={images} 
-          title={property.title} 
-          onError={handleError}
-        />
-        
-        {/* Property Details and Booking Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Main Details */}
-          <div className="md:col-span-2">
-            <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-              <PropertyTabs
-                description={property.description || ''}
-                address={property.address}
-                distanceToCampus={property.distanceToCampus || property.distance_to_campus || ''}
-                houseRules={property.house_rules || []}
-                amenities={property.amenities || []}
-                type={property.type || property.property_type || ''}
-                location={property.location || ''}
-                availableUnits={property.availableUnits}
-                onTabChange={(tab) => setActiveTab(tab)}
-              />
-            </div>
-            
-            {/* Owner/Agent Info */}
-            {property.owner && (
-              <PropertyOwnerCard 
-                name={property.owner.name}
-                verified={property.owner.verified}
-                responseRate={property.owner.responseRate}
-              />
-            )}
-          </div>
+    <div className="max-w-7xl mx-auto p-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        {/* Main Content */}
+        <div className="lg:col-span-2 space-y-6">
+          {/* Image Gallery */}
+          <PropertyImageGallery images={property.images} title={property.title} />
           
+          {/* Property Details Tabs */}
+          <PropertyTabs
+            property={safeProperty}
+            amenities={safeProperty.amenities}
+            description={property.description}
+            location={safeProperty.location}
+            houseRules={property.house_rules}
+            availableUnits={property.availableUnits}
+            distanceToCampus={safeProperty.distance_to_campus}
+          />
+        </div>
+        
+        {/* Sidebar */}
+        <div className="space-y-6">
           {/* Booking Card */}
-          <div className="md:col-span-1">
-            <PropertyBookingCard
-              id={property.id}
-              price={property.price || property.rent || 0}
-              priceUnit={property.priceUnit || property.price_unit || 'semester'}
-              verified={property.verified}
-              availableUnits={property.availableUnits}
-              onBookNow={onBookNow}
-            />
-          </div>
+          <PropertyBookingCard
+            property={safeProperty}
+            onBook={onBook}
+          />
+          
+          {/* Owner Card */}
+          <PropertyOwnerCard owner={property.owner} />
         </div>
       </div>
-    </main>
+    </div>
   );
 };
 

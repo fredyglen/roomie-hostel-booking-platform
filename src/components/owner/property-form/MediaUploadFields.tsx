@@ -3,7 +3,7 @@ import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { SupabaseImageUpload } from './SupabaseImageUpload';
 import { UseFormReturn } from 'react-hook-form';
-import { PropertyFormValues } from '@/types/property';
+import { PropertyFormValues } from '@/components/owner/PropertyForm';
 
 interface MediaUploadFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -24,14 +24,14 @@ export const MediaUploadFields: React.FC<MediaUploadFieldsProps> = ({
         
         <FormField
           control={form.control}
-          name="images"
+          name="image_url"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Images</FormLabel>
               <FormControl>
                 <SupabaseImageUpload
-                  images={field.value || []}
-                  onImagesChange={field.onChange}
+                  images={field.value ? [field.value] : []}
+                  onImagesChange={(images) => field.onChange(images[0] || '')}
                   maxImages={10}
                   propertyId={propertyId}
                 />

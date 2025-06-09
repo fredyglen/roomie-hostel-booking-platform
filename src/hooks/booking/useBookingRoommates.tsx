@@ -1,72 +1,71 @@
-import { useState, useEffect } from 'react';
-import { logger } from '@/utils/enhanced-logger';
-import { useErrorHandler } from '@/hooks/common/useErrorHandler';
-import type { RoommateInfo } from '@/types/common';
 
-interface UserInfo {
+import { useState, useEffect } from 'react';
+import { RoommateInfo } from '@/types/common';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+
+interface PrimaryStudent {
   fullName: string;
   email: string;
   phone: string;
 }
 
-export const useBookingRoommates = (
+export const useRoommatesManager = (
   splitPayment: boolean,
   numberOfRoommates: number,
-  currentUserInfo: UserInfo
+  primaryStudent: PrimaryStudent
 ) => {
   const [roommatesInfo, setRoommatesInfo] = useState<RoommateInfo[]>([]);
-  const { handleError } = useErrorHandler();
 
-  // Initialize roommate info when numberOfRoommates changes
   useEffect(() => {
     try {
       if (splitPayment && numberOfRoommates > 1) {
-        // Always keep roommate at index 0 as the current user
-        const currentUser: RoommateInfo = roommatesInfo[0] || {
-          name: currentUserInfo.fullName,
-          email: currentUserInfo.email,
-          phone: currentUserInfo.phone
-        };
+        // Initialize roommates array with primary student as first roommate
+        const initialRoommates: RoommateInfo[] = [{
+          id: '1',
+          name: primaryStudent.fullName,
+          email: primaryStudent.email,
+          phone: primaryStudent.phone,
+          university: '',
+          studentId: '',
+          program: '',
+          yearOfStudy: ''
+        }];
         
-        const newRoommatesInfo: RoommateInfo[] = [currentUser];
-        
-        // Add/remove additional roommates as needed
+        // Add empty roommate objects for additional roommates
         for (let i = 1; i < numberOfRoommates; i++) {
-          newRoommatesInfo[i] = roommatesInfo[i] || { name: '', email: '', phone: '' };
+          initialRoommates.push({
+            id: (i + 1).toString(),
+            name: '',
+            email: '',
+            phone: '',
+            university: '',
+            studentId: '',
+            program: '',
+            yearOfStudy: ''
+          });
         }
         
-        setRoommatesInfo(newRoommatesInfo);
-        logger.debug('Roommates info updated', { 
-          numberOfRoommates, 
-          splitPayment,
-          roommatesCount: newRoommatesInfo.length 
-        });
+        setRoommatesInfo(initialRoommates);
+      } else {
+        setRoommatesInfo([]);
       }
     } catch (error) {
-      handleError(error, { fallbackMessage: 'Failed to update roommates information' });
+      ErrorHandler.handle(error, 'useRoommatesManager.useEffect');
     }
-  }, [numberOfRoommates, splitPayment, currentUserInfo.fullName, currentUserInfo.email, currentUserInfo.phone, handleError]);
+  }, [splitPayment, numberOfRoommates, primaryStudent.fullName, primaryStudent.email, primaryStudent.phone]);
 
   const handleRoommateChange = (index: number, field: keyof RoommateInfo, value: string) => {
-    try {
-      if (index < 0 || index >= roommatesInfo.length) {
-        logger.warn('Invalid roommate index', { index, totalRoommates: roommatesInfo.length });
-        return;
+    setRoommatesInfo(prev => {
+      const updated = [...prev];
+      if (updated[index]) {
+        updated[index] = { ...updated[index], [field]: value };
       }
-
-      const updatedRoommates = [...roommatesInfo];
-      updatedRoommates[index] = { ...updatedRoommates[index], [field]: value };
-      setRoommatesInfo(updatedRoommates);
-      
-      logger.debug('Roommate info changed', { index, field, value });
-    } catch (error) {
-      handleError(error, { fallbackMessage: 'Failed to update roommate information' });
-    }
+      return updated;
+    });
   };
 
   return {
     roommatesInfo,
-    handleRoommateChange,
-    setRoommatesInfo
+    handleRoommateChange
   };
 };

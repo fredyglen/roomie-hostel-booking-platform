@@ -41,6 +41,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
     fullName: '',
     phone: '',
     email: '',
+    emergencyPhone: '',
     emergencyContact: {
       name: '',
       phone: '',
@@ -52,7 +53,8 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
     program: '',
     idImage: null,
     termsAgreed: false,
-    roommates: []
+    roommates: [],
+    specialRequests: ''
   });
   
   // Form validation
@@ -73,8 +75,8 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
   );
   
   // Selected room type and price calculations
-  const selectedRoomType = property?.features?.find(f => f === formData.roomType);
-  const selectedPrice = property?.price || 0;
+  const selectedRoomType = property?.roomTypes?.find(rt => rt === formData.roomType) || formData.roomType;
+  const selectedPrice = property?.price || property?.rent || 0;
   const selectedUnit = 'semester';
   
   // Calculate total price based on duration

@@ -1,145 +1,95 @@
 
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
 import { Property, Story } from '@/types/property';
-import { usePropertyLoader } from '@/hooks/usePropertyLoader';
 
-export const useStoryViewModel = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [showDetails, setShowDetails] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
+const generateStoryId = () => `story_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`;
+
+const mockStories: Story[] = [
+  {
+    id: generateStoryId(),
+    type: 'image',
+    url: '/lovable-uploads/849fd73d-2b2f-42b6-9446-0aa9226cc8e7.png',
+    caption: 'Beautiful hostel exterior',
+    duration: 5000
+  },
+  {
+    id: generateStoryId(),
+    type: 'image', 
+    url: '/lovable-uploads/687d2a93-5ac5-42ea-af7a-729ffcabb3f8.png',
+    caption: 'Comfortable rooms',
+    duration: 5000
+  },
+  {
+    id: generateStoryId(),
+    type: 'video',
+    url: '/placeholder-video.mp4',
+    caption: 'Take a virtual tour',
+    duration: 15000
+  }
+];
+
+export const useStoryViewModel = (property: Property) => {
+  const [currentStoryIndex, setCurrentStoryIndex] = useState(0);
+  const [isPlaying, setIsPlaying] = useState(true);
   const [progress, setProgress] = useState(0);
-  
-  // Use the property loader to fetch property data
-  const { data: property, isLoading: isPropertyLoading } = usePropertyLoader({ 
-    propertyId: id || '', 
-    forOwner: false 
-  });
-  
-  // Define sample stories if needed when property is still loading
-  const sampleStories: Story[] = [
-    {
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-      caption: 'Modern living room with natural light',
-      duration: 5000
-    },
-    {
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80',
-      caption: 'Well-equipped kitchen space',
-      duration: 5000
-    },
-    {
-      type: 'video',
-      url: 'https://assets.mixkit.co/videos/preview/mixkit-living-room-with-a-modern-tv-4047-large.mp4',
-      caption: 'Virtual tour of the apartment',
-      duration: 15000
-    }
-  ];
-  
-  // If property has images, convert them to stories
-  useEffect(() => {
-    if (property && property.images && property.images.length > 0 && (!property.stories || property.stories.length === 0)) {
-      // Reset progress and active index when property changes
-      setProgress(0);
-      setActiveIndex(0);
-      setIsPaused(false);
-      setShowDetails(false);
-    }
-  }, [property]);
-  
-  // Generate stories from property images if needed
-  const stories = property?.stories || 
-    (property?.images?.map(image => ({
-      type: 'image',
-      url: image,
-      duration: 5000
-    })) as Story[]) || 
-    sampleStories;
-  
-  useEffect(() => {
-    if (!property || isPropertyLoading) return;
-    
-    // Don't progress if paused or showing details
-    if (isPaused || showDetails) return;
-    
-    // Auto-advance to the next story
-    const currentStory = stories[activeIndex];
-    if (!currentStory) return;
 
-    const duration = currentStory.duration;
-    
-    const timer = setInterval(() => {
-      setProgress(prev => {
-        const newProgress = prev + 1000;
-        if (newProgress >= duration) {
-          clearInterval(timer);
-          
-          if (activeIndex < stories.length - 1) {
-            setActiveIndex(activeIndex + 1);
-            setProgress(0);
-          } else {
-            // Navigate back to the property detail page when all stories are viewed
-            navigate(`/student/property/${id}`);
-          }
+  // Use property stories if available, otherwise use mock stories
+  const stories = property.stories && property.stories.length > 0 ? property.stories : mockStories;
+  const currentStory = stories[currentStoryIndex];
+
+  useEffect(() => {
+    if (!isPlaying || !currentStory) return;
+
+    const interval = setInterval(() => {
+      setProgress((prev) => {
+        const increment = 100 / (currentStory.duration! / 100);
+        const newProgress = prev + increment;
+        
+        if (newProgress >= 100) {
+          nextStory();
+          return 0;
         }
+        
         return newProgress;
       });
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, [activeIndex, property, id, navigate, isPaused, showDetails, stories, isPropertyLoading]);
-  
-  const handleNext = () => {
-    if (activeIndex < stories.length - 1) {
-      setActiveIndex(activeIndex + 1);
-      setProgress(0);
-    } else {
-      navigate(`/student/property/${id}`);
-    }
-  };
-  
-  const handlePrevious = () => {
-    if (activeIndex > 0) {
-      setActiveIndex(activeIndex - 1);
+    }, 100);
+
+    return () => clearInterval(interval);
+  }, [currentStoryIndex, isPlaying, currentStory]);
+
+  const nextStory = () => {
+    if (currentStoryIndex < stories.length - 1) {
+      setCurrentStoryIndex(prev => prev + 1);
       setProgress(0);
     }
-  };
-  
-  const handleClose = () => {
-    navigate(`/student/property/${id}`);
-  };
-  
-  const handleSwipeUp = () => {
-    setShowDetails(true);
-    setIsPaused(true);
-  };
-  
-  const handleSwipeDown = () => {
-    setShowDetails(false);
-    setIsPaused(false);
   };
 
-  const currentStory = stories[activeIndex];
-  const progressPercentage = currentStory ? (progress / currentStory.duration) * 100 : 0;
+  const previousStory = () => {
+    if (currentStoryIndex > 0) {
+      setCurrentStoryIndex(prev => prev - 1);
+      setProgress(0);
+    }
+  };
+
+  const togglePlayPause = () => {
+    setIsPlaying(!isPlaying);
+  };
+
+  const goToStory = (index: number) => {
+    setCurrentStoryIndex(index);
+    setProgress(0);
+  };
 
   return {
-    property,
-    isLoading: isPropertyLoading,
     stories,
     currentStory,
-    activeIndex,
-    showDetails,
-    isPaused,
-    progressPercentage,
-    handleNext,
-    handlePrevious,
-    handleClose,
-    handleSwipeUp,
-    handleSwipeDown,
-    setIsPaused
+    currentStoryIndex,
+    isPlaying,
+    progress,
+    nextStory,
+    previousStory,
+    togglePlayPause,
+    goToStory,
+    totalStories: stories.length
   };
 };
