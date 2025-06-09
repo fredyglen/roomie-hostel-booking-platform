@@ -46,70 +46,71 @@ interface DatabasePropertyRow {
   profiles?: any; // Simplified to avoid complex union types
 }
 
+// Move transform function outside component to avoid callback dependency issues
+const transformDatabaseProperty = (item: DatabasePropertyRow): Property => {
+  // Handle profiles - it might be an array or a single object
+  const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
+  
+  // Use proper PropertyStatus values
+  const status: PropertyStatus = item.is_available ? 'available' : 'occupied';
+  
+  const baseProperty: Property = {
+    id: item.id || '',
+    owner_id: item.owner_id || '',
+    name: item.title || '',
+    title: item.title || '',
+    description: item.description || '',
+    type: (item.property_type as PropertyType) || 'hostel',
+    status: status,
+    price: item.rent || 0,
+    rent: item.rent || 0,
+    location: item.address || '',
+    address: item.address || '',
+    city: item.city || '',
+    state: item.state || '',
+    zip: item.zip || '',
+    propertyCategory: (item.property_category as PropertyCategory) || 'Hostel',
+    verified: true,
+    is_available: item.is_available || false,
+    bedrooms: item.bedrooms || 0,
+    bathrooms: item.bathrooms || 0,
+    amenities: Array.isArray(item.amenities) ? item.amenities : [],
+    images: Array.isArray(item.images) ? item.images : [],
+    available_from: item.available_from || '',
+    created_at: item.created_at || '',
+    updated_at: item.updated_at || '',
+    house_rules: 'No smoking, no pets',
+    stories: [],
+    features: []
+  };
+
+  // Add owner information if available
+  if (profileData) {
+    baseProperty.owner = {
+      id: item.owner_id,
+      name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
+      email: profileData.email || '',
+      phone: profileData.phone || '',
+      verified: true,
+      responseRate: '95%'
+    };
+  } else {
+    baseProperty.owner = {
+      id: item.owner_id,
+      name: 'Property Owner',
+      email: '',
+      phone: '',
+      verified: false,
+      responseRate: '0%'
+    };
+  }
+
+  return baseProperty;
+};
+
 export const usePropertyData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const transformDatabaseProperty = useCallback((item: DatabasePropertyRow): Property => {
-    // Handle profiles - it might be an array or a single object
-    const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
-    
-    // Use proper PropertyStatus values
-    const status: PropertyStatus = item.is_available ? 'available' : 'occupied';
-    
-    const baseProperty: Property = {
-      id: item.id || '',
-      owner_id: item.owner_id || '',
-      name: item.title || '',
-      title: item.title || '',
-      description: item.description || '',
-      type: (item.property_type as PropertyType) || 'hostel',
-      status: status,
-      price: item.rent || 0,
-      rent: item.rent || 0,
-      location: item.address || '',
-      address: item.address || '',
-      city: item.city || '',
-      state: item.state || '',
-      zip: item.zip || '',
-      propertyCategory: (item.property_category as PropertyCategory) || 'Hostel',
-      verified: true,
-      is_available: item.is_available || false,
-      bedrooms: item.bedrooms || 0,
-      bathrooms: item.bathrooms || 0,
-      amenities: Array.isArray(item.amenities) ? item.amenities : [],
-      images: Array.isArray(item.images) ? item.images : [],
-      available_from: item.available_from || '',
-      created_at: item.created_at || '',
-      updated_at: item.updated_at || '',
-      house_rules: 'No smoking, no pets',
-      stories: [],
-      features: []
-    };
-
-    // Add owner information if available
-    if (profileData) {
-      baseProperty.owner = {
-        id: item.owner_id,
-        name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
-        email: profileData.email || '',
-        phone: profileData.phone || '',
-        verified: true,
-        responseRate: '95%'
-      };
-    } else {
-      baseProperty.owner = {
-        id: item.owner_id,
-        name: 'Property Owner',
-        email: '',
-        phone: '',
-        verified: false,
-        responseRate: '0%'
-      };
-    }
-
-    return baseProperty;
-  }, []);
 
   const getProperties = useCallback(async (options: PropertyQueryOptions = {}): Promise<PropertyData> => {
     try {
@@ -195,7 +196,7 @@ export const usePropertyData = () => {
     } finally {
       setLoading(false);
     }
-  }, [transformDatabaseProperty]);
+  }, []);
 
   const getPropertyById = useCallback(async (id: string): Promise<Property | null> => {
     try {
@@ -231,7 +232,7 @@ export const usePropertyData = () => {
     } finally {
       setLoading(false);
     }
-  }, [transformDatabaseProperty]);
+  }, []);
 
   return {
     getProperties,
