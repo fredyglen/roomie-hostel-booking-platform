@@ -63,6 +63,9 @@ export interface TestPaymentResult {
   reference: string;
   amount: number;
   status: string;
+  verification?: {
+    amount: number;
+  };
 }
 
 export interface PaystackVerificationData {
@@ -70,6 +73,8 @@ export interface PaystackVerificationData {
   amount?: number;
   reference?: string;
   channel?: string;
+  id?: number;
+  customer?: Record<string, unknown>;
 }
 
 export interface MinimalPaystackTransaction {

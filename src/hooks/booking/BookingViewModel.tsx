@@ -1,15 +1,14 @@
 
-import { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { Property } from '@/types/property';
-import { bookingSampleProperties } from '@/data/bookingSampleProperties';
-import { useBookingValidation } from './useBookingValidation';
-import { useBookingRoommates } from './useBookingRoommates';
+import { BookingFormData, EmergencyContact } from '@/types/common';
+import { useLocalStorage } from './useLocalStorage';
+import { useRoommatesManager } from './useRoommatesManager';
+import { useFormValidation } from './useFormValidation';
 import { calculateTotalPrice } from './usePriceCalculation';
-import { logger } from '@/utils/enhanced-logger';
-import { useErrorHandler } from '@/hooks/common/useErrorHandler';
-import type { BookingFormData, RoommateInfo } from '@/types/common';
+import { ErrorHandler } from '@/utils/ErrorHandler';
 
 export const STEP_LABELS = [
   'Room Type',
@@ -19,60 +18,53 @@ export const STEP_LABELS = [
   'Verification',
   'Summary',
   'Payment'
-] as const;
+];
 
-const DEFAULT_FORM_DATA: BookingFormData = {
-  roomType: '',
-  duration: '',
-  durationType: 'semester',
-  checkInDate: '',
-  fullName: '',
-  phone: '',
-  email: '',
-  emergencyContact: '',
-  emergencyPhone: '',
-  idType: 'studentId',
-  studentId: '',
-  university: '',
-  program: '',
-  idImage: null,
-  termsAgreed: false
-};
-
-export const useBookingViewModel = () => {
-  const { id } = useParams<{ id: string }>();
+/**
+ * Custom hook for managing booking form state and logic
+ */
+export const useBookingViewModel = (property: Property | undefined, id: string) => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [currentStep, setCurrentStep] = useState(1);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [splitPayment, setSplitPayment] = useState(false);
   const [numberOfRoommates, setNumberOfRoommates] = useState(1);
-  const { handleError, handleAsyncError } = useErrorHandler();
   
-  const [formData, setFormData] = useState<BookingFormData>(() => {
-    try {
-      // Try to load from localStorage
-      const savedData = localStorage.getItem(`booking_form_${id}`);
-      return savedData ? JSON.parse(savedData) : DEFAULT_FORM_DATA;
-    } catch (error) {
-      logger.warn('Failed to load saved form data', error instanceof Error ? error : new Error(String(error)));
-      return DEFAULT_FORM_DATA;
-    }
+  const [formData, setFormData] = useLocalStorage(`booking_form_${id}`, {
+    roomType: '',
+    duration: '',
+    durationType: 'semester',
+    checkInDate: '',
+    checkOutDate: '',
+    guestCount: 1,
+    fullName: '',
+    phone: '',
+    email: '',
+    emergencyContact: {
+      name: '',
+      phone: '',
+      relationship: ''
+    } as EmergencyContact,
+    idType: 'studentId',
+    studentId: '',
+    university: '',
+    program: '',
+    idImage: null,
+    termsAgreed: false,
+    roommates: []
   });
   
-  // Find the property with the matching ID
-  const property = bookingSampleProperties.find(p => p.id === id);
-  
-  if (!property && id) {
-    logger.error('Property not found', { propertyId: id });
-  }
-  
-  // Validation hook
-  const { validateCurrentStep } = useBookingValidation();
+  // Form validation
+  const { validateStep } = useFormValidation();
   
   // Roommates management
-  const { roommatesInfo, handleRoommateChange } = useBookingRoommates(
-    splitPayment,
-    numberOfRoommates,
+  const { 
+    roommatesInfo, 
+    handleRoommateChange 
+  } = useRoommatesManager(
+    splitPayment, 
+    numberOfRoommates, 
     {
       fullName: formData.fullName,
       email: formData.email,
@@ -80,128 +72,102 @@ export const useBookingViewModel = () => {
     }
   );
   
-  // Selected room type and price
-  const selectedRoomType = property?.roomTypes?.find(r => r.name === formData.roomType);
-  const selectedPrice = selectedRoomType?.price || 0;
-  const selectedUnit = selectedRoomType?.unit || 'semester';
+  // Selected room type and price calculations
+  const selectedRoomType = property?.features?.find(f => f === formData.roomType);
+  const selectedPrice = property?.price || 0;
+  const selectedUnit = 'semester';
   
   // Calculate total price based on duration
-  const totalPrice = calculateTotalPrice(selectedPrice, formData.duration, formData.durationType, selectedUnit);
+  const totalPrice = calculateTotalPrice(
+    selectedPrice, 
+    formData.duration, 
+    formData.durationType, 
+    selectedUnit
+  );
   
   // Calculate individual price if split payment
   const individualPrice = splitPayment && numberOfRoommates > 1 
     ? totalPrice / numberOfRoommates 
     : totalPrice;
   
-  // Save form data to localStorage whenever it changes
-  useEffect(() => {
-    try {
-      localStorage.setItem(`booking_form_${id}`, JSON.stringify(formData));
-    } catch (error) {
-      logger.warn('Failed to save form data to localStorage', error instanceof Error ? error : new Error(String(error)));
-    }
-  }, [formData, id]);
-  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    try {
-      const { name, value } = e.target;
-      setFormData(prev => ({ ...prev, [name]: value }));
-      logger.debug('Form input changed', { field: name, value });
-    } catch (error) {
-      handleError(error, { fallbackMessage: 'Failed to update form field' });
-    }
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
+    });
   };
   
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const { name, checked } = e.target;
-      setFormData(prev => ({ ...prev, [name]: checked }));
-      logger.debug('Checkbox changed', { field: name, checked });
-    } catch (error) {
-      handleError(error, { fallbackMessage: 'Failed to update checkbox' });
-    }
+    const { name, checked } = e.target;
+    setFormData({
+      ...formData,
+      [name]: checked
+    });
   };
   
   const handleSplitPaymentChange = (checked: boolean) => {
-    try {
-      setSplitPayment(checked);
-      logger.userAction('Split payment toggled', { enabled: checked });
-    } catch (error) {
-      handleError(error, { fallbackMessage: 'Failed to update split payment setting' });
-    }
+    setSplitPayment(checked);
   };
   
   const handleNext = () => {
     try {
       // Validate current step
-      const validationContext = {
-        formData,
-        splitPayment,
-        numberOfRoommates,
-        roommatesInfo,
-        selectedPaymentMethod,
-        propertyCategory: property?.propertyCategory
-      };
-      
-      if (!validateCurrentStep(currentStep, validationContext)) return;
+      if (!validateStep(
+        currentStep, 
+        formData, 
+        {
+          splitPayment,
+          numberOfRoommates,
+          roommatesInfo,
+          selectedPaymentMethod,
+          propertyCategory: property?.propertyCategory
+        }
+      )) return;
       
       if (currentStep < 7) {
         setCurrentStep(currentStep + 1);
         window.scrollTo(0, 0);
-        logger.userAction('Booking step advanced', { from: currentStep, to: currentStep + 1 });
       } else {
         // Process payment
         processPayment();
       }
     } catch (error) {
-      handleError(error, { fallbackMessage: 'Failed to proceed to next step' });
+      ErrorHandler.handle(error, 'BookingViewModel.handleNext');
     }
   };
   
   const handleBack = () => {
-    try {
-      if (currentStep > 1) {
-        setCurrentStep(currentStep - 1);
-        window.scrollTo(0, 0);
-        logger.userAction('Booking step back', { from: currentStep, to: currentStep - 1 });
-      } else {
-        navigate(`/student/property/${id}`);
-        logger.userAction('Returned to property page', { propertyId: id });
-      }
-    } catch (error) {
-      handleError(error, { fallbackMessage: 'Failed to go back' });
+    if (currentStep > 1) {
+      setCurrentStep(currentStep - 1);
+      window.scrollTo(0, 0);
+    } else {
+      navigate(`/student/property/${id}`);
     }
   };
   
-  const processPayment = async () => {
-    await handleAsyncError(async () => {
+  const processPayment = () => {
+    try {
       // Simulate payment processing
-      toast.loading('Processing payment...');
-      logger.info('Payment processing started', { 
-        amount: individualPrice, 
-        propertyId: id,
-        paymentMethod: selectedPaymentMethod 
+      toast({
+        title: "Processing payment...",
       });
       
-      return new Promise<void>((resolve) => {
-        setTimeout(() => {
-          toast.dismiss();
-          toast.success('Payment successful! Booking confirmed.');
-          logger.info('Payment processed successfully');
-          
-          // Clear booking form data from localStorage
-          try {
-            localStorage.removeItem(`booking_form_${id}`);
-          } catch (error) {
-            logger.warn('Failed to clear localStorage', error instanceof Error ? error : new Error(String(error)));
-          }
-          
-          // Redirect to dashboard
-          navigate('/student/dashboard');
-          resolve();
-        }, 2000);
-      });
-    }, { fallbackMessage: 'Payment processing failed' });
+      setTimeout(() => {
+        toast({
+          title: "Payment successful!",
+          description: "Booking confirmed."
+        });
+        
+        // Clear booking form data from localStorage
+        localStorage.removeItem(`booking_form_${id}`);
+        
+        // Redirect to dashboard
+        navigate('/student/dashboard');
+      }, 2000);
+    } catch (error) {
+      ErrorHandler.handle(error, 'BookingViewModel.processPayment');
+    }
   };
   
   return {
@@ -223,6 +189,7 @@ export const useBookingViewModel = () => {
     handleCheckboxChange,
     handleNext,
     handleBack,
-    setSelectedPaymentMethod
+    setSelectedPaymentMethod,
+    setCurrentStep
   };
 };

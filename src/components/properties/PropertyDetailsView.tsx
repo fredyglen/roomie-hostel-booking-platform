@@ -23,6 +23,11 @@ interface PropertyDetailsViewProps {
   onGoBack: () => void;
 }
 
+// Helper function to get amenity name
+const getAmenityName = (amenity: string | { id: string; name: string }): string => {
+  return typeof amenity === 'string' ? amenity : amenity.name;
+};
+
 const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
   property,
   onBookNow,
@@ -32,7 +37,7 @@ const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
   const additionalImages = property.images?.slice(1) || [];
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <Button variant="outline" onClick={onGoBack}>
@@ -99,22 +104,23 @@ const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
                 <p className="text-gray-700">{property.description}</p>
               </div>
 
-              {/* Amenities */}
-              {property.amenities && property.amenities.length > 0 && (
-                <div className="mb-6">
-                  <h3 className="font-semibold mb-3">Amenities</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {property.amenities.map((amenity, index) => (
-                      <div key={index} className="flex items-center">
-                        {amenity.toLowerCase().includes('wifi') && <Wifi className="h-4 w-4 mr-2" />}
-                        {amenity.toLowerCase().includes('parking') && <Car className="h-4 w-4 mr-2" />}
-                        {amenity.toLowerCase().includes('security') && <Shield className="h-4 w-4 mr-2" />}
-                        <span className="text-sm">{amenity}</span>
+              {/* Amenities Section */}
+              <div className="space-y-4">
+                <h3 className="text-lg font-semibold">Amenities</h3>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {property.amenities?.map((amenity, index) => {
+                    const amenityName = getAmenityName(amenity);
+                    return (
+                      <div key={index} className="flex items-center space-x-2">
+                        {amenityName.toLowerCase() === 'wifi' && <span>📶</span>}
+                        {amenityName.toLowerCase() === 'parking' && <span>🚗</span>}
+                        {amenityName.toLowerCase() === 'security' && <span>🔒</span>}
+                        <span>{amenityName}</span>
                       </div>
-                    ))}
-                  </div>
+                    );
+                  })}
                 </div>
-              )}
+              </div>
 
               {/* Availability */}
               <div className="border-t pt-4">

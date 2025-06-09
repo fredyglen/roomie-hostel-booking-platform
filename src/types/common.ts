@@ -27,13 +27,21 @@ export interface BookingFormData {
   checkInDate: string;
   checkOutDate: string;
   guestCount: number;
+  roomType: string;
+  duration: string;
+  durationType: string;
+  fullName: string;
+  email: string;
+  phone: string;
   specialRequests?: string;
-  emergencyContact: {
-    name: string;
-    phone: string;
-    relationship: string;
-  };
+  emergencyContact: EmergencyContact;
   roommates: RoommateInfo[];
+}
+
+export interface EmergencyContact {
+  name: string;
+  phone: string;
+  relationship: string;
 }
 
 export interface RoommateInfo {
