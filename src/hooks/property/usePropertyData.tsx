@@ -22,6 +22,7 @@ interface PropertyData {
   hasMore: boolean;
 }
 
+// Updated to match actual Supabase query result structure
 interface DatabaseProperty {
   id: string;
   owner_id: string;
@@ -43,6 +44,13 @@ interface DatabaseProperty {
   created_at: string;
   updated_at: string;
   profiles?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+    phone: string;
+  }[] | {
+    id: string;
     first_name: string;
     last_name: string;
     email: string;
@@ -54,7 +62,7 @@ export const usePropertyData = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const transformDatabaseProperty = (item: DatabaseProperty): Property => {
+  const transformDatabaseProperty = (item: any): Property => {
     // Handle profiles - it might be an array or a single object
     const profileData = Array.isArray(item.profiles) ? item.profiles[0] : item.profiles;
     
@@ -171,9 +179,7 @@ export const usePropertyData = () => {
 
       if (queryError) throw queryError;
 
-      const transformedProperties: Property[] = (data || []).map((item: any) => 
-        transformDatabaseProperty(item as DatabaseProperty)
-      );
+      const transformedProperties: Property[] = (data || []).map(transformDatabaseProperty);
 
       return {
         properties: transformedProperties,
@@ -214,7 +220,7 @@ export const usePropertyData = () => {
       if (queryError) throw queryError;
       if (!data) return null;
 
-      const transformedProperty = transformDatabaseProperty(data as DatabaseProperty);
+      const transformedProperty = transformDatabaseProperty(data);
       return transformedProperty;
 
     } catch (err) {
