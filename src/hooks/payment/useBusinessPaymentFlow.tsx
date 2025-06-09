@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { verifyPaystackPayment } from '@/utils/paystack-verification';
@@ -120,8 +121,9 @@ export const useBusinessPaymentFlow = () => {
       const verification = await verifyPaystackPayment(reference);
       
       if (verification.success && verification.data) {
-        // Update booking status
-        const bookingId = verification.data.metadata?.booking_id;
+        // Update booking status - safely handle metadata access
+        const bookingId = verification.data.metadata?.booking_id || 
+                          (verification.data as any).metadata?.booking_id;
         
         if (bookingId) {
           const { error: updateError } = await supabase

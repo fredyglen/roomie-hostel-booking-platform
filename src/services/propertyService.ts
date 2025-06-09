@@ -40,7 +40,7 @@ export const propertyService = {
         created_at: property.created_at,
         updated_at: property.updated_at,
         owner: profileData ? {
-          id: profileData.id || 'unknown',
+          id: 'unknown',
           name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
           email: profileData.email || 'owner@example.com',
           phone: profileData.phone || '+233 50 123 4567',
@@ -54,7 +54,7 @@ export const propertyService = {
           responseRate: '95%',
           verified: true
         },
-        house_rules: property.house_rules || '',
+        house_rules: '',
         stories: [],
         features: []
       } as Property;
@@ -96,7 +96,7 @@ export const propertyService = {
       created_at: data.created_at,
       updated_at: data.updated_at,
       owner: profileData ? {
-        id: profileData.id || 'unknown',
+        id: 'unknown',
         name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
         email: profileData.email || 'owner@example.com',
         phone: profileData.phone || '+233 50 123 4567',
@@ -110,16 +110,36 @@ export const propertyService = {
         responseRate: '95%',
         verified: true
       },
-      house_rules: data.house_rules || '',
+      house_rules: '',
       stories: [],
       features: []
     } as Property;
   },
   
-  async createProperty(property: Partial<Property>): Promise<Property> {
+  async createProperty(property: Omit<Property, 'id' | 'created_at' | 'updated_at'>): Promise<Property> {
+    // Convert Property to database format
+    const dbProperty = {
+      title: property.title,
+      description: property.description,
+      address: property.address,
+      city: property.city,
+      state: property.state,
+      zip: property.zip,
+      rent: property.rent,
+      property_type: property.type,
+      property_category: property.propertyCategory,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      owner_id: property.owner_id,
+      is_available: property.is_available,
+      available_from: property.available_from,
+      amenities: Array.isArray(property.amenities) ? property.amenities as string[] : [],
+      images: property.images
+    };
+    
     const { data, error } = await supabase
       .from('properties')
-      .insert([property])
+      .insert([dbProperty])
       .select()
       .single();
     if (error) throw error;
@@ -127,9 +147,28 @@ export const propertyService = {
   },
   
   async updateProperty(id: string, updates: Partial<Property>): Promise<Property> {
+    // Convert Property updates to database format
+    const dbUpdates: Record<string, any> = {};
+    
+    if (updates.title) dbUpdates.title = updates.title;
+    if (updates.description) dbUpdates.description = updates.description;
+    if (updates.address) dbUpdates.address = updates.address;
+    if (updates.city) dbUpdates.city = updates.city;
+    if (updates.state) dbUpdates.state = updates.state;
+    if (updates.zip) dbUpdates.zip = updates.zip;
+    if (updates.rent) dbUpdates.rent = updates.rent;
+    if (updates.type) dbUpdates.property_type = updates.type;
+    if (updates.propertyCategory) dbUpdates.property_category = updates.propertyCategory;
+    if (updates.bedrooms) dbUpdates.bedrooms = updates.bedrooms;
+    if (updates.bathrooms) dbUpdates.bathrooms = updates.bathrooms;
+    if (updates.is_available !== undefined) dbUpdates.is_available = updates.is_available;
+    if (updates.available_from) dbUpdates.available_from = updates.available_from;
+    if (updates.amenities) dbUpdates.amenities = Array.isArray(updates.amenities) ? updates.amenities as string[] : [];
+    if (updates.images) dbUpdates.images = updates.images;
+    
     const { data, error } = await supabase
       .from('properties')
-      .update(updates)
+      .update(dbUpdates)
       .eq('id', id)
       .select()
       .single();

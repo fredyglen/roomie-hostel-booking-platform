@@ -317,7 +317,7 @@ export const usePropertyData = () => {
         washroom_type: data.washroom_type,
         meter_type: data.meter_type,
         verification_status: data.verification_status,
-        status: data.is_available ? 'Available' : 'Not Available',
+        status: data.is_available ? 'available' : 'occupied',
         verified: data.verification_status === 'verified',
         priceUnit: 'month',
         price_unit: 'month',
@@ -325,12 +325,14 @@ export const usePropertyData = () => {
         distanceToCampus: '10 min walk',
         distance_to_campus: '10 min walk',
         owner: profileData ? {
+          id: 'unknown',
           name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
           email: profileData.email,
           phone: profileData.phone || '',
           responseRate: '95%',
           verified: true
         } : {
+          id: 'unknown',
           name: 'Property Owner',
           email: 'owner@example.com',
           phone: '+233 50 123 4567',
@@ -347,7 +349,8 @@ export const usePropertyData = () => {
           'Keep common areas clean',
           'Visitors must be registered'
         ],
-        stories: data.images ? data.images.map(image => ({
+        stories: data.images ? data.images.map((image: string, index: number) => ({
+          id: `story-${index}`,
           type: 'image' as const,
           url: image,
           duration: 5000

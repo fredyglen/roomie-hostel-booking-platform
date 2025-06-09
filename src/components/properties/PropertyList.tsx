@@ -42,10 +42,17 @@ const PropertyList: React.FC<PropertyListProps> = ({
           key={property.id}
           id={property.id}
           title={property.title}
+          rent={property.price || property.rent}
           location={typeof property.location === 'string' ? property.location : `${property.city}, ${property.state}`}
-          price={property.price}
+          bedrooms={property.bedrooms}
+          bathrooms={property.bathrooms}
+          maxOccupants={property.max_occupants || 1}
           images={property.images}
-          onView={() => onViewProperty(property.id)}
+          amenities={Array.isArray(property.amenities) ? property.amenities as string[] : []}
+          propertyType={property.propertyCategory}
+          genderRestriction={property.gender_restriction}
+          isAvailable={property.is_available}
+          onViewDetails={() => onViewProperty(property.id)}
           onViewStory={() => onViewStory(property.id)}
         />
       ))}
