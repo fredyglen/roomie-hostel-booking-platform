@@ -24,59 +24,60 @@ export interface RawProperty {
   created_at: string;
   updated_at: string;
   house_rules?: string;
-  profiles?: any; // Use any to avoid deep inference
+  profiles?: any;
 }
 
-// Simple transformation function
+// Simple, reliable transformation function
 export function transformDbProperty(dbItem: any): Property {
-  // Extract profile data safely
+  // Safely extract profile data
   const profileData = Array.isArray(dbItem.profiles) 
     ? dbItem.profiles[0] 
     : dbItem.profiles;
   
+  // Create property with all required fields
   const property: Property = {
-    id: dbItem.id,
-    owner_id: dbItem.owner_id,
-    name: dbItem.title,
-    title: dbItem.title,
-    description: dbItem.description,
+    id: String(dbItem.id || ''),
+    owner_id: String(dbItem.owner_id || ''),
+    name: String(dbItem.title || dbItem.name || ''),
+    title: String(dbItem.title || dbItem.name || ''),
+    description: String(dbItem.description || ''),
     type: (dbItem.property_type as PropertyType) || 'hostel',
     status: (dbItem.is_available ? 'available' : 'occupied') as PropertyStatus,
-    price: dbItem.rent,
-    rent: dbItem.rent,
-    location: dbItem.address,
-    address: dbItem.address,
-    city: dbItem.city,
-    state: dbItem.state,
-    zip: dbItem.zip || '',
+    price: Number(dbItem.rent || dbItem.price || 0),
+    rent: Number(dbItem.rent || dbItem.price || 0),
+    location: String(dbItem.address || ''),
+    address: String(dbItem.address || ''),
+    city: String(dbItem.city || ''),
+    state: String(dbItem.state || ''),
+    zip: String(dbItem.zip || ''),
     propertyCategory: (dbItem.property_category as PropertyCategory) || 'Hostel',
-    verified: true,
-    is_available: dbItem.is_available,
-    bedrooms: dbItem.bedrooms,
-    bathrooms: dbItem.bathrooms,
-    amenities: dbItem.amenities || [],
-    images: dbItem.images || [],
-    available_from: dbItem.available_from || '',
-    created_at: dbItem.created_at,
-    updated_at: dbItem.updated_at,
-    house_rules: dbItem.house_rules || 'No smoking, no pets',
+    verified: Boolean(dbItem.verified ?? true),
+    is_available: Boolean(dbItem.is_available ?? true),
+    bedrooms: Number(dbItem.bedrooms || 1),
+    bathrooms: Number(dbItem.bathrooms || 1),
+    amenities: Array.isArray(dbItem.amenities) ? dbItem.amenities : [],
+    images: Array.isArray(dbItem.images) ? dbItem.images : [],
+    available_from: String(dbItem.available_from || ''),
+    created_at: String(dbItem.created_at || ''),
+    updated_at: String(dbItem.updated_at || ''),
+    house_rules: String(dbItem.house_rules || 'No smoking, no pets'),
     stories: [],
     features: []
   };
 
-  // Add owner info if available
-  if (profileData) {
+  // Add owner info safely
+  if (profileData && typeof profileData === 'object') {
     property.owner = {
-      id: profileData.id || dbItem.owner_id,
+      id: String(profileData.id || dbItem.owner_id || ''),
       name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
-      email: profileData.email || '',
-      phone: profileData.phone || '',
+      email: String(profileData.email || ''),
+      phone: String(profileData.phone || ''),
       verified: true,
       responseRate: '95%'
     };
   } else {
     property.owner = {
-      id: dbItem.owner_id,
+      id: String(dbItem.owner_id || ''),
       name: 'Property Owner',
       email: '',
       phone: '',
