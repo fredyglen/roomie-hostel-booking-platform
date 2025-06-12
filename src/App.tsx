@@ -1,3 +1,4 @@
+
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, DefaultOptions } from '@tanstack/react-query';
@@ -8,6 +9,7 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
 import AuthRedirect from '@/components/auth/AuthRedirect';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import AnalyticsDashboard from '@/pages/owner/AnalyticsDashboard';
 
 // Lazy load all pages for better performance
