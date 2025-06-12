@@ -1,4 +1,3 @@
-
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, DefaultOptions } from '@tanstack/react-query';
@@ -9,6 +8,7 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
 import AuthRedirect from '@/components/auth/AuthRedirect';
+import AnalyticsDashboard from '@/pages/owner/AnalyticsDashboard';
 
 // Lazy load all pages for better performance
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -145,7 +145,16 @@ function App() {
                 <Route path="/student/property/:id/enhanced-story" element={<SafeRoute element={<EnhancedStoryPage />} />} />
 
                 {/* Owner Routes */}
-                <Route path="/owner/dashboard" element={<SafeRoute element={<OwnerDashboard />} />} />
+                <Route path="/owner/dashboard" element={
+                  <ProtectedRoute allowedRoles={['owner']}>
+                    <OwnerDashboard />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/analytics" element={
+                  <ProtectedRoute allowedRoles={['owner']}>
+                    <AnalyticsDashboard />
+                  </ProtectedRoute>
+                } />
                 <Route path="/owner/properties" element={<SafeRoute element={<OwnerProperties />} />} />
                 <Route path="/owner/property/new" element={<SafeRoute element={<PropertyNew />} />} />
                 <Route path="/owner/properties/:id/edit" element={<SafeRoute element={<PropertyEdit />} />} />

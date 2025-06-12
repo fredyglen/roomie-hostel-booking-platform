@@ -9,7 +9,8 @@ import {
   LogOut,
   Menu,
   X,
-  ArrowLeft
+  ArrowLeft,
+  TrendingUp
 } from "lucide-react";
 import Logo from '../common/Logo';
 import { useAuth } from '@/context/EnhancedAuthContext';
@@ -38,6 +39,7 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
   
   const navigationItems = [
     { title: 'Dashboard', path: '/owner/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
+    { title: 'Analytics', path: '/owner/analytics', icon: <TrendingUp className="w-5 h-5" /> },
     { title: 'Properties', path: '/owner/properties', icon: <Building className="w-5 h-5" /> },
     { title: 'Bookings', path: '/owner/bookings', icon: <Calendar className="w-5 h-5" /> },
     { title: 'Profile', path: '/owner/profile', icon: <UserCircle className="w-5 h-5" /> },
