@@ -1,59 +1,47 @@
 import React from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/EnhancedAuthContext';
-import { Loader } from 'lucide-react';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
 
-type ProtectedRouteProps = {
+interface ProtectedRouteProps {
   children: React.ReactNode;
-  allowedRoles: string[];
-  redirectTo?: string;
-  preserveLocation?: boolean;
-};
+  requiredRole?: string | string[];
+}
 
-export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
   children, 
-  allowedRoles,
-  redirectTo,
-  preserveLocation = false
+  requiredRole 
 }) => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const location = useLocation();
 
-  // Show loading state while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Loader className="h-8 w-8 animate-spin text-[#9b87f5]" />
-      </div>
-    );
+  // Show loading spinner while auth state is being determined
+  if (isLoading) {
+    return <LoadingSpinner />;
   }
 
   // Redirect to login if not authenticated
   if (!user) {
-    const state = preserveLocation ? { from: location.pathname + location.search } : undefined;
-    return <Navigate to="/login" state={state} replace />;
+    return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check if user has required role
-  if (!allowedRoles.includes(user.role)) {
-    // Use custom redirect path if provided
-    if (redirectTo) {
-      return <Navigate to={redirectTo} />;
-    }
-
-    // Role-based redirects - more specific routing
-    switch (user.role) {
-      case 'student':
-        return <Navigate to="/student/properties" />;
-      case 'owner':
-        return <Navigate to="/owner/dashboard" />;
-      case 'admin':
-        return <Navigate to="/admin/dashboard" />;
-      default:
-        return <Navigate to="/login" replace />;
+  // Check role requirements if specified
+  if (requiredRole) {
+    const userRole = user.user_metadata?.role || 'student';
+    
+    // Handle both single role and array of roles
+    const hasRequiredRole = Array.isArray(requiredRole)
+      ? requiredRole.includes(userRole)
+      : userRole === requiredRole;
+    
+    if (!hasRequiredRole) {
+      // Redirect to dashboard if user doesn't have required role
+      return <Navigate to="/dashboard" replace />;
     }
   }
 
-  // If authenticated and has the correct role, render the children
+  // User is authenticated and has required role (if specified)
   return <>{children}</>;
 };
+
+export default ProtectedRoute;

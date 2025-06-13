@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, FieldProps } from 'react-hook-form';
 import { z } from 'zod';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,13 @@ import { Loader } from 'lucide-react';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { useStandardizedErrorHandler } from '@/hooks/common/useStandardizedErrorHandler';
 
+// Add JSX namespace declaration
+declare namespace JSX {
+  interface IntrinsicElements {
+    [elemName: string]: any;
+  }
+}
+
 // Define the form schema with Zod
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -21,6 +28,15 @@ const formSchema = z.object({
 
 // Infer the form values type from the schema
 type LoginFormValues = z.infer<typeof formSchema>;
+
+// Add type for field props
+interface FieldProps {
+  onChange: (value: any) => void;
+  onBlur: () => void;
+  value: string;
+  name: string;
+  ref: React.Ref<any>;
+}
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
@@ -89,7 +105,7 @@ const Login: React.FC = () => {
             <FormField
               control={form.control}
               name="email"
-              render={({ field }) => (
+              render={({ field }: { field: FieldProps }) => (
                 <FormItem>
                   <FormLabel>Email address</FormLabel>
                   <FormControl>
@@ -108,7 +124,7 @@ const Login: React.FC = () => {
             <FormField
               control={form.control}
               name="password"
-              render={({ field }) => (
+              render={({ field }: { field: FieldProps }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>

@@ -2,7 +2,8 @@ import { BaseEntity } from './common';
 import { PaymentStatus } from './booking';
 import { Property } from './property';
 
-export type PaymentMethod = 'paystack' | 'bank_transfer' | 'cash';
+export type PaymentMethod = 'card' | 'mobile_money' | 'bank' | 'ussd' | 'qr';
+export type MobileMoneyNetwork = 'mtn' | 'vodafone' | 'airtel';
 export type Currency = 'GHS' | 'NGN' | 'USD' | 'ZAR' | 'KES';
 
 export interface Transaction extends BaseEntity {
@@ -98,18 +99,22 @@ export interface PaymentVerificationResult {
   error?: unknown;
 }
 
-export interface Transaction {
-  id: string;
-  bookingId: string;
+export interface PaymentData {
+  amount: number;
+  email: string;
+  reference: string;
+  metadata?: Record<string, unknown>;
+  onSuccess: (transaction: PaymentTransaction) => void;
+  onCancel: () => void;
+}
+
+export interface PaymentTransaction {
+  reference: string;
+  status: 'success' | 'failed' | 'pending';
   amount: number;
   currency: string;
-  status: TransactionStatus;
-  paymentMethod: string;
-  reference: string;
-  gatewayResponse?: string;
-  metadata?: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
+  transaction_date: string;
+  id?: number;
 }
 
 export type TransactionStatus = 
