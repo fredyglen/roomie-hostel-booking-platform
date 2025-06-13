@@ -1,21 +1,20 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { supabase as supabaseClient } from '@/integrations/supabase/client';
-import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
+import { APP_CONFIG } from '@/config/constants';
+import { Database } from '@/types/supabase';
 
-// Export the supabase client from the Lovable-generated integration
-export const supabase = supabaseClient;
+// Create a single supabase client for the entire application
+export const supabase = createClient<Database>(
+  APP_CONFIG.SUPABASE.URL,
+  APP_CONFIG.SUPABASE.ANON_KEY,
+  {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true
+    }
+  }
+);
 
-export type AuthUser = {
-  id: string;
-  email: string;
-  role: 'owner' | 'student' | 'admin';
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  avatarUrl?: string;
-  createdAt?: string;
-};
-
-// Re-export the Property type from our consolidated definition
-export type { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
+// Export types for convenience
+export type { Database } from '@/types/supabase';

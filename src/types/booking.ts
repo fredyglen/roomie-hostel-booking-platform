@@ -1,84 +1,71 @@
 
-import { BaseEntity } from './common';
+import { Property } from './property';
+import { User } from './core';
 
-export type BookingStatus = 'pending' | 'confirmed' | 'cancelled' | 'completed';
-export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
-
-export interface Booking extends BaseEntity {
-  property_id: string;
-  user_id: string;
-  check_in: string;
-  check_out: string;
-  status: BookingStatus;
-  payment_status: PaymentStatus;
-  total_amount: number;
-  room_type: string;
-  guest_count: number;
-  special_requests?: string;
-  transaction_id?: string;
-  payment_reference?: string;
-  booking_reference?: string;
-}
-
-export interface ConfirmedBookingData {
+export interface Booking {
   id: string;
-  booking_reference: string;
-  payment_reference: string;
-  total_amount: number;
-  status: string;
-  package_type?: string;
-  start_date?: string;
-  end_date?: string;
-  [key: string]: any;
+  propertyId: string;
+  property?: Property;
+  roomId: string;
+  studentId: string;
+  student?: User;
+  startDate: string;
+  endDate: string;
+  status: BookingStatus;
+  totalAmount: number;
+  currency: string;
+  paymentStatus: PaymentStatus;
+  paymentDetails?: PaymentDetails;
+  createdAt: string;
+  updatedAt: string;
+  emergencyContact?: EmergencyContact;
+  notes?: string;
 }
 
-export interface ModernPaymentSuccessResult {
+export type BookingStatus = 
+  | 'PENDING' 
+  | 'CONFIRMED' 
+  | 'CANCELLED' 
+  | 'COMPLETED' 
+  | 'REJECTED';
+
+export type PaymentStatus = 
+  | 'PENDING' 
+  | 'PARTIAL' 
+  | 'PAID' 
+  | 'REFUNDED' 
+  | 'FAILED';
+
+export interface PaymentDetails {
   reference: string;
-  amount?: number;
-  status?: string;
-  transaction: MinimalPaystackTransaction;
-  verification: PaystackVerificationData;
-  [key: string]: any;
+  method: PaymentMethod;
+  paidAmount: number;
+  paidAt?: string;
+  transactionId?: string;
+  receiptUrl?: string;
 }
 
-export interface PaymentVerificationData {
-  success: boolean;
-  verification?: {
-    [key: string]: unknown;
-    amount?: number;
-    reference?: string;
-    channel?: string;
-  };
-  booking?: {
-    id: any;
-    package_type?: string;
-    start_date?: string;
-    end_date?: string;
-    [key: string]: unknown;
-  } | null;
-  error?: string;
+export type PaymentMethod = 
+  | 'card' 
+  | 'mobile_money' 
+  | 'bank_transfer' 
+  | 'ussd' 
+  | 'qr';
+
+export interface EmergencyContact {
+  name: string;
+  relationship: string;
+  phone: string;
+  email?: string;
 }
 
-export interface TestPaymentResult {
-  reference: string;
-  amount: number;
-  status: string;
-  verification?: {
-    amount: number;
-  };
+export interface BookingFormValues {
+  propertyId: string;
+  roomId: string;
+  startDate: string;
+  endDate: string;
+  emergencyContact: EmergencyContact;
+  notes?: string;
 }
 
-export interface PaystackVerificationData {
-  [key: string]: unknown;
-  amount?: number;
-  reference?: string;
-  channel?: string;
-  id?: string | number;
-  customer?: Record<string, unknown>;
-}
-
-export interface MinimalPaystackTransaction {
-  reference: string;
-  amount: number;
-  status: string;
-}
+export type BookingInsert = Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'property' | 'student'>;

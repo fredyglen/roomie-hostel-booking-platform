@@ -39,9 +39,25 @@ export interface PaystackPaymentOptions {
   onError?: (error: unknown) => void;
 }
 
+export interface PaymentInitResult {
+  success: boolean;
+  message: string;
+  error?: unknown;
+  paymentData?: any;
+}
+
 // Initialize Paystack payment
-export const initializePaystackPayment = async (config: PaystackConfig) => {
+export const initializePaystackPayment = async (config: PaystackConfig): Promise<PaymentInitResult> => {
   try {
+    // Validate inputs before proceeding
+    if (!config.email) {
+      return { success: false, message: 'Email is required for payment' };
+    }
+    
+    if (!config.amount || config.amount <= 0) {
+      return { success: false, message: 'Valid amount is required for payment' };
+    }
+
     ErrorHandler.log('Initializing Paystack payment: ' + JSON.stringify({
       amount: formatCurrency(config.amount),
       email: config.email,
@@ -63,11 +79,19 @@ export const initializePaystackPayment = async (config: PaystackConfig) => {
     });
 
     if (error) {
-      throw new Error(error.message);
+      ErrorHandler.handle(error, 'Payment initialization error');
+      return { 
+        success: false, 
+        message: error.message || 'Failed to initialize payment',
+        error: error
+      };
     }
 
     if (!data.status) {
-      throw new Error(data.message);
+      return { 
+        success: false, 
+        message: data.message || 'Payment initialization failed'
+      };
     }
 
     // Use Paystack Popup for frontend payment
