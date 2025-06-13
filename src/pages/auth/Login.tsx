@@ -57,11 +57,14 @@ const Login: React.FC = () => {
   // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
-      const from = location.state?.from || 
-        (user.role === 'student' ? '/student/properties' : 
-         user.role === 'owner' ? '/owner/dashboard' : 
-         user.role === 'admin' ? '/admin/dashboard' : '/');
-      
+      // Check multiple possible locations for the role
+      const userRole = (user as any).role || user.user_metadata?.role || 'student';
+
+      const from = location.state?.from ||
+        (userRole === 'student' ? '/student/dashboard' :
+         userRole === 'owner' || userRole === 'agent' ? '/owner/dashboard' :
+         userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard');
+
       navigate(from, { replace: true });
     }
   }, [user, navigate, location]);
@@ -148,9 +151,9 @@ const Login: React.FC = () => {
               </div>
             </div>
 
-            <Button 
-              type="submit" 
-              className="w-full" 
+            <Button
+              type="submit"
+              className="w-full"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -164,6 +167,57 @@ const Login: React.FC = () => {
             </Button>
           </form>
         </Form>
+
+        {/* Demo Accounts Section */}
+        <div className="mt-8 p-4 bg-gray-50 rounded-lg">
+          <h3 className="text-sm font-medium text-gray-700 mb-3">Demo Accounts (Development Only)</h3>
+          <div className="space-y-2 text-xs mb-4">
+            <div className="flex justify-between">
+              <span className="font-medium">Student:</span>
+              <span>student@roomi.com / password123</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Owner:</span>
+              <span>owner@roomi.com / password123</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="font-medium">Admin:</span>
+              <span>admin@roomi.com / password123</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                form.setValue('email', 'student@roomi.com');
+                form.setValue('password', 'password123');
+              }}
+            >
+              Student
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                form.setValue('email', 'owner@roomi.com');
+                form.setValue('password', 'password123');
+              }}
+            >
+              Owner
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                form.setValue('email', 'admin@roomi.com');
+                form.setValue('password', 'password123');
+              }}
+            >
+              Admin
+            </Button>
+          </div>
+        </div>
       </div>
     </div>
   );

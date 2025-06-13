@@ -1,47 +1,75 @@
-import React from 'react';
+import { ReactNode, useEffect, useState } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/context/EnhancedAuthContext';
-import LoadingSpinner from '@/components/common/LoadingSpinner';
+import { supabase } from '@/integrations/supabase/client';
+import { Loader } from '@/components/ui/loader';
 
 interface ProtectedRouteProps {
-  children: React.ReactNode;
-  requiredRole?: string | string[];
+  children: ReactNode;
+  allowedRoles?: string[];
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ 
-  children, 
-  requiredRole 
-}) => {
-  const { user, isLoading } = useAuth();
+export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [hasRequiredRole, setHasRequiredRole] = useState(true);
   const location = useLocation();
 
-  // Show loading spinner while auth state is being determined
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        
+        if (!session) {
+          setIsAuthenticated(false);
+          setIsLoading(false);
+          return;
+        }
+
+        setIsAuthenticated(true);
+
+        // Check for required role if specified
+        if (allowedRoles && allowedRoles.length > 0) {
+          const { data: userData, error } = await supabase
+            .from('profiles')
+            .select('role')
+            .eq('id', session.user.id)
+            .single();
+
+          if (error || !userData) {
+            setHasRequiredRole(false);
+          } else {
+            setHasRequiredRole(allowedRoles.includes(userData.role));
+          }
+        }
+
+        setIsLoading(false);
+      } catch (error) {
+        console.error('Error checking authentication:', error);
+        setIsAuthenticated(false);
+        setIsLoading(false);
+      }
+    };
+
+    checkAuth();
+  }, [allowedRoles]);
+
   if (isLoading) {
-    return <LoadingSpinner />;
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader size="lg" />
+      </div>
+    );
   }
 
-  // Redirect to login if not authenticated
-  if (!user) {
+  if (!isAuthenticated) {
+    // Redirect to login if not authenticated
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  // Check role requirements if specified
-  if (requiredRole) {
-    const userRole = user.user_metadata?.role || 'student';
-    
-    // Handle both single role and array of roles
-    const hasRequiredRole = Array.isArray(requiredRole)
-      ? requiredRole.includes(userRole)
-      : userRole === requiredRole;
-    
-    if (!hasRequiredRole) {
-      // Redirect to dashboard if user doesn't have required role
-      return <Navigate to="/dashboard" replace />;
-    }
+  if (!hasRequiredRole) {
+    // Redirect to unauthorized page if doesn't have required role
+    return <Navigate to="/unauthorized" replace />;
   }
 
-  // User is authenticated and has required role (if specified)
   return <>{children}</>;
-};
-
-export default ProtectedRoute;
+}

@@ -13,35 +13,35 @@ const AuthRedirect = () => {
     if (!isLoading) {
       if (user) {
         // User is logged in, redirect based on role
-        const userRole = user.user_metadata?.role || 'student';
-        let targetPath = '/dashboard';
-        
+        // Check multiple possible locations for the role
+        const userRole = (user as any).role || user.user_metadata?.role || 'student';
+        let targetPath = '/student/dashboard';
+
         switch (userRole) {
           case 'admin':
             targetPath = '/admin/dashboard';
             break;
           case 'owner':
+          case 'agent':
             targetPath = '/owner/dashboard';
             break;
-          case 'agent':
-            targetPath = '/agent/dashboard';
-            break;
+          case 'student':
           default:
-            targetPath = '/dashboard';
+            targetPath = '/student/dashboard';
             break;
         }
-        
-        logger.debug('Redirecting authenticated user', { 
+
+        logger.debug('Redirecting authenticated user', {
           userId: user.id,
           role: userRole,
-          targetPath 
+          targetPath
         });
-        
+
         navigate(targetPath);
       } else {
-        // User is not logged in, redirect to landing page
-        logger.debug('Redirecting unauthenticated user to landing page');
-        navigate('/landing');
+        // User is not logged in, redirect to welcome page first
+        logger.debug('Redirecting unauthenticated user to welcome page');
+        navigate('/welcome');
       }
     }
   }, [user, isLoading, navigate]);

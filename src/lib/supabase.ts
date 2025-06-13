@@ -1,20 +1,11 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { APP_CONFIG } from '@/config/constants';
-import { Database } from '@/types/supabase';
 
-// Create a single supabase client for the entire application
-export const supabase = createClient<Database>(
-  APP_CONFIG.SUPABASE.URL,
-  APP_CONFIG.SUPABASE.ANON_KEY,
-  {
-    auth: {
-      persistSession: true,
-      autoRefreshToken: true,
-      detectSessionInUrl: true
-    }
-  }
-);
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-// Export types for convenience
-export type { Database } from '@/types/supabase';
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

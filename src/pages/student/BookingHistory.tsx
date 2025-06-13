@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Calendar } from 'lucide-react';
 import BookingFilters from '@/components/student/BookingFilters';

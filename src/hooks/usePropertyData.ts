@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Property } from '@/types/property';
 import { logger } from '@/utils/logger';
 import { ErrorHandler } from '@/utils/ErrorHandler';

@@ -1,6 +1,6 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Property, PropertyCategory, PropertyType } from '@/types/property';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 

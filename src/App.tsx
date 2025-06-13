@@ -131,20 +131,93 @@ function App() {
                 <Route path="/payment-success" element={<SafeRoute element={<PaymentSuccess />} />} />
                 <Route path="/test-payment" element={<SafeRoute element={<TestPayment />} />} />
 
+                {/* Test Route for Flow Verification */}
+                <Route path="/test-flow" element={
+                  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+                      <h1 className="text-2xl font-bold mb-4">Flow Test Page</h1>
+                      <p className="text-gray-600 mb-6">This page verifies the application flow is working correctly.</p>
+                      <div className="space-y-4">
+                        <a href="/welcome" className="block w-full bg-blue-600 text-white text-center py-2 px-4 rounded hover:bg-blue-700">
+                          Start from Welcome
+                        </a>
+                        <a href="/landing" className="block w-full bg-green-600 text-white text-center py-2 px-4 rounded hover:bg-green-700">
+                          Go to Landing
+                        </a>
+                        <a href="/login" className="block w-full bg-purple-600 text-white text-center py-2 px-4 rounded hover:bg-purple-700">
+                          Go to Login
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                } />
+
                 {/* Student Routes */}
-                <Route path="/student/dashboard" element={<SafeRoute element={<StudentDashboard />} />} />
-                <Route path="/student/properties" element={<SafeRoute element={<Properties />} />} />
-                <Route path="/student/property/:id" element={<SafeRoute element={<PropertyDetail />} />} />
-                <Route path="/student/book-property/:id" element={<SafeRoute element={<BookProperty />} />} />
-                <Route path="/student/book/:id" element={<SafeRoute element={<BookingStepsContainer />} />} />
-                <Route path="/student/booking-history" element={<SafeRoute element={<BookingHistory />} />} />
-                <Route path="/student/profile" element={<SafeRoute element={<StudentProfile />} />} />
-                <Route path="/student/subscription" element={<SafeRoute element={<StudentSubscription />} />} />
-                <Route path="/student/explore" element={<SafeRoute element={<Explore />} />} />
-                <Route path="/student/favorites" element={<SafeRoute element={<Favorites />} />} />
-                <Route path="/student/story/:id" element={<SafeRoute element={<StoryView />} />} />
-                <Route path="/student/story-enhanced/:id" element={<SafeRoute element={<StoryViewEnhanced />} />} />
-                <Route path="/student/property/:id/enhanced-story" element={<SafeRoute element={<EnhancedStoryPage />} />} />
+                <Route path="/student/dashboard" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<StudentDashboard />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/properties" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<Properties />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/property/:id" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<PropertyDetail />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/book-property/:id" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<BookProperty />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/book/:id" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<BookingStepsContainer />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/booking-history" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<BookingHistory />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/profile" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<StudentProfile />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/subscription" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<StudentSubscription />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/explore" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<Explore />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/favorites" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<Favorites />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/story/:id" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<StoryView />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/story-enhanced/:id" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<StoryViewEnhanced />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/property/:id/enhanced-story" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<EnhancedStoryPage />} />
+                  </ProtectedRoute>
+                } />
 
                 {/* Owner Routes */}
                 <Route path="/owner/dashboard" element={
@@ -157,24 +230,88 @@ function App() {
                     <AnalyticsDashboard />
                   </ProtectedRoute>
                 } />
-                <Route path="/owner/properties" element={<SafeRoute element={<OwnerProperties />} />} />
-                <Route path="/owner/property/new" element={<SafeRoute element={<PropertyNew />} />} />
-                <Route path="/owner/properties/:id/edit" element={<SafeRoute element={<PropertyEdit />} />} />
-                <Route path="/owner/bookings" element={<SafeRoute element={<OwnerBookings />} />} />
-                <Route path="/owner/profile" element={<SafeRoute element={<OwnerProfile />} />} />
-                <Route path="/owner/settings" element={<SafeRoute element={<OwnerSettings />} />} />
-                <Route path="/owner/subscription" element={<SafeRoute element={<OwnerSubscription />} />} />
+                <Route path="/owner/properties" element={
+                  <ProtectedRoute allowedRoles={['owner', 'agent']}>
+                    <SafeRoute element={<OwnerProperties />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/property/new" element={
+                  <ProtectedRoute allowedRoles={['owner', 'agent']}>
+                    <SafeRoute element={<PropertyNew />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/properties/:id/edit" element={
+                  <ProtectedRoute allowedRoles={['owner', 'agent']}>
+                    <SafeRoute element={<PropertyEdit />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/bookings" element={
+                  <ProtectedRoute allowedRoles={['owner', 'agent']}>
+                    <SafeRoute element={<OwnerBookings />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/profile" element={
+                  <ProtectedRoute allowedRoles={['owner', 'agent']}>
+                    <SafeRoute element={<OwnerProfile />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/settings" element={
+                  <ProtectedRoute allowedRoles={['owner', 'agent']}>
+                    <SafeRoute element={<OwnerSettings />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/subscription" element={
+                  <ProtectedRoute allowedRoles={['owner', 'agent']}>
+                    <SafeRoute element={<OwnerSubscription />} />
+                  </ProtectedRoute>
+                } />
 
                 {/* Admin Routes */}
-                <Route path="/admin/dashboard" element={<SafeRoute element={<AdminDashboard />} />} />
-                <Route path="/admin/properties" element={<SafeRoute element={<AdminProperties />} />} />
-                <Route path="/admin/bookings" element={<SafeRoute element={<AdminBookings />} />} />
-                <Route path="/admin/users" element={<SafeRoute element={<AdminUsers />} />} />
-                <Route path="/admin/settings" element={<SafeRoute element={<AdminSettings />} />} />
-                <Route path="/admin/features" element={<SafeRoute element={<FeatureManagement />} />} />
-                <Route path="/admin/subscriptions" element={<SafeRoute element={<SubscriptionManagement />} />} />
-                <Route path="/admin/verification" element={<SafeRoute element={<VerificationManagement />} />} />
-                <Route path="/admin/owner-settings" element={<SafeRoute element={<OwnerSettingsAdmin />} />} />
+                <Route path="/admin/dashboard" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SafeRoute element={<AdminDashboard />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/properties" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SafeRoute element={<AdminProperties />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/bookings" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SafeRoute element={<AdminBookings />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/users" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SafeRoute element={<AdminUsers />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/settings" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SafeRoute element={<AdminSettings />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/features" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SafeRoute element={<FeatureManagement />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/subscriptions" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SafeRoute element={<SubscriptionManagement />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/verification" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SafeRoute element={<VerificationManagement />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/owner-settings" element={
+                  <ProtectedRoute allowedRoles={['admin']}>
+                    <SafeRoute element={<OwnerSettingsAdmin />} />
+                  </ProtectedRoute>
+                } />
 
                 {/* Catch all route */}
                 <Route path="*" element={<NotFound />} />

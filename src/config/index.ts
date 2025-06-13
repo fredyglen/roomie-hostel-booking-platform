@@ -63,7 +63,7 @@ export const config: AppConfig = {
   },
   features: {
     enableNotifications: true,
-    enableAnalytics: import.meta.env.PROD === true,
+    enableAnalytics: import.meta.env.MODE === 'production',
     enableOfflineMode: false,
   },
 };
