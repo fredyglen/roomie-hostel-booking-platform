@@ -12,6 +12,7 @@ import { toast } from "@/components/ui/use-toast";
 import { Loader } from 'lucide-react';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { useStandardizedErrorHandler } from '@/hooks/common/useStandardizedErrorHandler';
+import { logger } from '@/utils/enhanced-logger';
 
 // Add JSX namespace declaration
 declare namespace JSX {
@@ -57,8 +58,13 @@ const Login: React.FC = () => {
   // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
-      // Check multiple possible locations for the role
-      const userRole = (user as any).role || user.user_metadata?.role || 'student';
+      const userRole = (user as any).role || 'student';
+
+      logger.debug('Login redirect - user role detected', {
+        userId: user.id,
+        role: userRole,
+        userObject: user
+      });
 
       const from = location.state?.from ||
         (userRole === 'student' ? '/student/dashboard' :
@@ -73,17 +79,21 @@ const Login: React.FC = () => {
   const onSubmit = async (values: LoginFormValues): Promise<void> => {
     setIsSubmitting(true);
     try {
-      ErrorHandler.log('Login form submitted', JSON.stringify(values));
+      logger.info('Login form submitted', { email: values.email });
       await signIn(values.email, values.password);
-      
+
       toast({
         title: "Login successful",
         description: "You have been signed in",
       });
       // The redirection will be handled by the useEffect above when the user state updates
     } catch (error: unknown) {
-      ErrorHandler.handle(error, 'Login submission error');
-      handleError(error, 'Login submission error');
+      logger.error('Login error', { error });
+      toast({
+        title: "Login failed",
+        description: error instanceof Error ? error.message : "An error occurred during login",
+        variant: "destructive",
+      });
     } finally {
       setIsSubmitting(false);
     }

@@ -13,9 +13,14 @@ const AuthRedirect = () => {
     if (!isLoading) {
       if (user) {
         // User is logged in, redirect based on role
-        // Check multiple possible locations for the role
-        const userRole = (user as any).role || user.user_metadata?.role || 'student';
+        const userRole = (user as any).role || 'student';
         let targetPath = '/student/dashboard';
+
+        logger.debug('User role detected', {
+          userId: user.id,
+          role: userRole,
+          userObject: user
+        });
 
         switch (userRole) {
           case 'admin':

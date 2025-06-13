@@ -19,6 +19,7 @@ const Welcome = React.lazy(() => import('@/pages/Welcome'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 const PaymentSuccess = React.lazy(() => import('@/pages/PaymentSuccess'));
 const TestPayment = React.lazy(() => import('@/pages/TestPayment'));
+const TestAuth = React.lazy(() => import('@/pages/TestAuth'));
 
 // Auth Pages
 const Login = React.lazy(() => import('@/pages/auth/Login'));
@@ -130,6 +131,7 @@ function App() {
                 <Route path="/register" element={<SafeRoute element={<Register />} />} />
                 <Route path="/payment-success" element={<SafeRoute element={<PaymentSuccess />} />} />
                 <Route path="/test-payment" element={<SafeRoute element={<TestPayment />} />} />
+                <Route path="/test-auth" element={<SafeRoute element={<TestAuth />} />} />
 
                 {/* Test Route for Flow Verification */}
                 <Route path="/test-flow" element={
@@ -146,6 +148,9 @@ function App() {
                         </a>
                         <a href="/login" className="block w-full bg-purple-600 text-white text-center py-2 px-4 rounded hover:bg-purple-700">
                           Go to Login
+                        </a>
+                        <a href="/test-auth" className="block w-full bg-red-600 text-white text-center py-2 px-4 rounded hover:bg-red-700">
+                          Test Authentication
                         </a>
                       </div>
                     </div>
