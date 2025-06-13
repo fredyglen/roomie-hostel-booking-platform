@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -11,7 +11,10 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Logo from '@/components/common/Logo';
 import { toast } from "@/components/ui/use-toast";
 import { ErrorHandler } from '@/utils/ErrorHandler';
+import { Loader } from 'lucide-react';
+import { UserRole } from '@/types/auth';
 
+// Define the form schema with Zod
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -19,7 +22,7 @@ const formSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
   phone: z.string().optional(),
-  role: z.enum(['student', 'owner'], {
+  role: z.enum(['student', 'owner'] as const, {
     required_error: "Please select a role",
   }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -27,12 +30,16 @@ const formSchema = z.object({
   path: ["confirmPassword"],
 });
 
+// Infer the form values type from the schema
+type RegisterFormValues = z.infer<typeof formSchema>;
+
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { signUp, user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Initialize form with react-hook-form and zod validation
+  const form = useForm<RegisterFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
@@ -46,7 +53,7 @@ const Register: React.FC = () => {
   });
 
   // If user is already logged in, redirect to appropriate dashboard
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       if (user.role === 'student') {
         navigate('/student/properties');
@@ -56,12 +63,22 @@ const Register: React.FC = () => {
     }
   }, [user, navigate]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  // Form submission handler
+  const onSubmit = async (values: RegisterFormValues): Promise<void> => {
     setIsSubmitting(true);
     try {
       ErrorHandler.log('Register form submitted', JSON.stringify(values));
       
-      await signUp(values.email, values.password, values.role);
+      await signUp(
+        values.email, 
+        values.password, 
+        values.role as UserRole,
+        {
+          firstName: values.firstName,
+          lastName: values.lastName,
+          phone: values.phone
+        }
+      );
       
       toast({
         title: "Account created",
