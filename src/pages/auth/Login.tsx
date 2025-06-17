@@ -89,7 +89,7 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-roomi-blue-50 to-white">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-2xl shadow-xl border border-gray-100 animate-fade-in-up">
+      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded shadow-lg border border-gray-100 animate-fade-in-up">
         <div className="flex flex-col items-center justify-center text-center">
           <Logo size="lg" />
           <h1 className="mt-6 text-3xl font-bold text-gray-900 font-bricolage">Sign in to your account</h1>
@@ -110,10 +110,11 @@ const Login: React.FC = () => {
                 <FormItem>
                   <FormLabel>Email address</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="email" 
-                      placeholder="you@example.com" 
-                      {...field} 
+                    <Input
+                      type="email"
+                      placeholder="you@example.com"
+                      autoComplete="email"
+                      {...field}
                       disabled={isSubmitting}
                     />
                   </FormControl>
@@ -129,10 +130,11 @@ const Login: React.FC = () => {
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="password" 
-                      placeholder="••••••••" 
-                      {...field} 
+                    <Input
+                      type="password"
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      {...field}
                       disabled={isSubmitting}
                     />
                   </FormControl>
@@ -167,10 +169,10 @@ const Login: React.FC = () => {
         </Form>
 
         {/* Premium Demo Accounts Section */}
-        <div className="mt-8 p-6 bg-gradient-to-r from-roomi-blue-50 to-roomi-teal-50 rounded-xl border border-roomi-blue-100">
+        <div className="mt-8 p-6 bg-gradient-to-r from-roomi-blue-50 to-roomi-teal-50 rounded border border-roomi-blue-100">
           <h3 className="text-sm font-semibold text-gray-800 mb-4 text-center">Demo Accounts (Development Only)</h3>
           <div className="space-y-3 text-xs mb-6">
-            <div className="flex justify-between items-center p-2 bg-white rounded-lg shadow-sm">
+            <div className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
               <span className="font-medium text-gray-700">Student:</span>
               <span className="text-gray-600 font-mono">student@roomi.com / password123</span>
             </div>

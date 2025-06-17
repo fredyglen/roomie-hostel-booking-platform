@@ -27,7 +27,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 221.2 83.2% 53.3%;
-    --radius: 0.5rem;
+    --radius: 0.25rem; /* Reduced from 0.5rem for minimal rounding */
 
     /* ROOMi Premium Brand Colors */
     --roomi-blue-50: 240 249 255;
@@ -133,7 +133,7 @@
     height: 40px;
     border: 3px solid rgba(59, 130, 246, 0.1);
     border-top: 3px solid rgb(59, 130, 246);
-    border-radius: 50%;
+    border-radius: 50%; /* Keep circular for spinner */
     animation: spin-smooth 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
   }
 
@@ -148,7 +148,7 @@
   .progress-premium {
     height: 4px;
     background: rgba(59, 130, 246, 0.1);
-    border-radius: 2px;
+    border-radius: 1px; /* Minimal rounding */
     overflow: hidden;
   }
 
@@ -160,7 +160,7 @@
       rgb(59, 130, 246) 0%,
       rgb(147, 197, 253) 50%,
       rgb(59, 130, 246) 100%);
-    border-radius: 2px;
+    border-radius: 1px; /* Minimal rounding */
     animation: progress-flow 2s ease-in-out infinite;
   }
 }
