@@ -54,12 +54,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   return (
-    <Card className="overflow-hidden hover:shadow-lg transition-shadow">
+    <Card className="overflow-hidden card-premium animate-fade-in-up">
       <div className="relative">
         <ImageWithFallback
           src={primaryImage}
           alt={title}
-          className="w-full h-48 object-cover"
+          className="w-full h-48 object-cover transition-transform duration-300 hover:scale-105"
           priority={false}
         />
         
@@ -77,8 +77,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         </div>
       </div>
 
-      <div className="p-4">
-        <h3 className="font-semibold text-lg mb-2 line-clamp-2">{title}</h3>
+      <div className="p-6">
+        <h3 className="font-semibold text-lg mb-3 line-clamp-2 text-gray-900">{title}</h3>
         
         <div className="flex items-center text-gray-600 mb-3">
           <MapPin className="h-4 w-4 mr-1" />
@@ -114,20 +114,20 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           </div>
         )}
 
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between mb-4">
           <div>
-            <span className="text-2xl font-bold text-[#9b87f5]">
+            <span className="text-2xl font-bold text-roomi-blue-600">
               {formatCurrency(rent)}
             </span>
-            <span className="text-gray-600 text-sm">/month</span>
+            <span className="text-gray-500 text-sm font-medium">/semester</span>
           </div>
         </div>
 
         {showActions && (
-          <div className="flex gap-2 mt-4">
-            <Button 
+          <div className="flex gap-3 mt-6">
+            <Button
               onClick={onViewDetails}
-              className="flex-1"
+              className="flex-1 btn-premium bg-roomi-blue-600 hover:bg-roomi-blue-700 text-white font-medium"
               size="sm"
             >
               View Details
@@ -137,7 +137,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
                 onClick={onViewStory}
                 variant="outline"
                 size="sm"
-                className="flex-1"
+                className="flex-1 btn-premium border-roomi-blue-600 text-roomi-blue-600 hover:bg-roomi-blue-50"
               >
                 View Story
               </Button>
