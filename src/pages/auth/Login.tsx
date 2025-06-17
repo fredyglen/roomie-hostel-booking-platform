@@ -88,12 +88,12 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-roomi-blue-50 to-white">
-      <div className="w-full max-w-md p-8 space-y-8 bg-white rounded shadow-lg border border-gray-100 animate-fade-in-up">
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
+      <div className="w-full max-w-sm p-6 space-y-4 bg-white rounded shadow-sm border border-gray-200 animate-fade-in-up">
         <div className="flex flex-col items-center justify-center text-center">
-          <Logo size="lg" />
-          <h1 className="mt-6 text-3xl font-bold text-gray-900 font-bricolage">Sign in to your account</h1>
-          <p className="mt-3 text-sm text-gray-600">
+          <Logo size="md" />
+          <h1 className="mt-4 text-xl font-semibold text-gray-900 font-bricolage">Sign in to your account</h1>
+          <p className="mt-2 text-sm text-gray-600">
             Or{" "}
             <Link to="/register" className="font-medium text-roomi-blue-600 hover:text-roomi-blue-700 transition-colors">
               create a new account
@@ -102,7 +102,7 @@ const Login: React.FC = () => {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="email"
@@ -153,7 +153,7 @@ const Login: React.FC = () => {
 
             <Button
               type="submit"
-              className="w-full btn-premium bg-roomi-blue-600 hover:bg-roomi-blue-700 text-white font-medium py-3 text-base"
+              className="w-full btn-premium bg-roomi-blue-600 hover:bg-roomi-blue-700 text-white font-medium"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -168,28 +168,14 @@ const Login: React.FC = () => {
           </form>
         </Form>
 
-        {/* Premium Demo Accounts Section */}
-        <div className="mt-8 p-6 bg-gradient-to-r from-roomi-blue-50 to-roomi-teal-50 rounded border border-roomi-blue-100">
-          <h3 className="text-sm font-semibold text-gray-800 mb-4 text-center">Demo Accounts (Development Only)</h3>
-          <div className="space-y-3 text-xs mb-6">
-            <div className="flex justify-between items-center p-2 bg-white rounded shadow-sm">
-              <span className="font-medium text-gray-700">Student:</span>
-              <span className="text-gray-600 font-mono">student@roomi.com / password123</span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded-lg shadow-sm">
-              <span className="font-medium text-gray-700">Owner:</span>
-              <span className="text-gray-600 font-mono">owner@roomi.com / password123</span>
-            </div>
-            <div className="flex justify-between items-center p-2 bg-white rounded-lg shadow-sm">
-              <span className="font-medium text-gray-700">Admin:</span>
-              <span className="text-gray-600 font-mono">admin@roomi.com / password123</span>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-3">
+        {/* Compact Demo Accounts */}
+        <div className="mt-4 p-3 bg-gray-50 rounded border">
+          <p className="text-xs text-gray-600 mb-2 text-center">Quick Demo Login:</p>
+          <div className="grid grid-cols-3 gap-2">
             <Button
               variant="outline"
               size="sm"
-              className="btn-premium border-roomi-blue-300 text-roomi-blue-700 hover:bg-roomi-blue-100 font-medium"
+              className="text-xs"
               onClick={() => {
                 form.setValue('email', 'student@roomi.com');
                 form.setValue('password', 'password123');
@@ -200,7 +186,7 @@ const Login: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              className="btn-premium border-roomi-teal-300 text-roomi-teal-700 hover:bg-roomi-teal-100 font-medium"
+              className="text-xs"
               onClick={() => {
                 form.setValue('email', 'owner@roomi.com');
                 form.setValue('password', 'password123');
@@ -211,7 +197,7 @@ const Login: React.FC = () => {
             <Button
               variant="outline"
               size="sm"
-              className="btn-premium border-roomi-orange-300 text-roomi-orange-700 hover:bg-roomi-orange-100 font-medium"
+              className="text-xs"
               onClick={() => {
                 form.setValue('email', 'admin@roomi.com');
                 form.setValue('password', 'password123');
