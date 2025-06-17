@@ -32,7 +32,7 @@ const AuthRedirect = () => {
             break;
           case 'student':
           default:
-            targetPath = '/student/dashboard';
+            targetPath = '/student/properties';
             break;
         }
 
@@ -51,7 +51,40 @@ const AuthRedirect = () => {
     }
   }, [user, loading, navigate]);
 
-  return <LoadingSpinner />;
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#ffffff',
+      padding: '20px'
+    }}>
+      <div style={{
+        width: '40px',
+        height: '40px',
+        border: '3px solid #f0f0f0',
+        borderTop: '3px solid #0f68fd',
+        borderRadius: '50%',
+        animation: 'spin 1s linear infinite',
+        marginBottom: '16px'
+      }}></div>
+      <p style={{
+        color: '#666',
+        fontSize: '14px',
+        textAlign: 'center'
+      }}>
+        {loading ? 'Loading your account...' : 'Redirecting...'}
+      </p>
+      <style>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
+    </div>
+  );
 };
 
 export default AuthRedirect;

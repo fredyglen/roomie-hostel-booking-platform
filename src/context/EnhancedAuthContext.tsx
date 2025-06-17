@@ -41,15 +41,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      // Try to fetch profile, but don't fail if it doesn't exist
-      const { data: profile, error } = await supabase
+      // Try to fetch profile with timeout
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
+      // Add timeout to profile fetch
+      const timeoutPromise = new Promise((_, reject) =>
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
+      );
+
+      const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+
       if (error) {
-        logger.warn('Profile not found, using auth user data only', { error: error.message });
+        logger.warn('Profile not found or timeout, using auth user data only', { error: error.message });
         // Return auth user with default role if profile doesn't exist
         return {
           ...authUser,
@@ -77,7 +84,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return combinedUser;
     } catch (error) {
       logger.error('Error in fetchUserProfile', { error });
-      // Return null to indicate failure, but don't throw
+      // Return auth user with fallback data
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser && authUser.id === userId) {
+          return {
+            ...authUser,
+            role: authUser.user_metadata?.role || 'student',
+            firstName: authUser.user_metadata?.first_name,
+            lastName: authUser.user_metadata?.last_name,
+            phone: authUser.user_metadata?.phone,
+            avatarUrl: authUser.user_metadata?.avatar_url
+          } as AuthUser;
+        }
+      } catch (fallbackError) {
+        logger.error('Fallback auth user fetch failed', { fallbackError });
+      }
       return null;
     }
   };
@@ -111,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const timeoutId = setTimeout(() => {
       logger.warn('Auth initialization timeout, setting loading to false');
       setLoading(false);
-    }, 5000); // 5 second timeout
+    }, 3000); // 3 second timeout (reduced from 5)
 
     getSession().finally(() => {
       clearTimeout(timeoutId);

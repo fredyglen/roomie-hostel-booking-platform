@@ -55,9 +55,9 @@ const Login: React.FC = () => {
       });
 
       const from = location.state?.from ||
-        (userRole === 'student' ? '/student/dashboard' :
+        (userRole === 'student' ? '/student/properties' :
          userRole === 'owner' || userRole === 'agent' ? '/owner/dashboard' :
-         userRole === 'admin' ? '/admin/dashboard' : '/student/dashboard');
+         userRole === 'admin' ? '/admin/dashboard' : '/student/properties');
 
       navigate(from, { replace: true });
     }
