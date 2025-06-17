@@ -260,7 +260,7 @@ const Login: React.FC = () => {
                 <span style={{ fontSize: '13px', color: '#5f6368' }}>Remember this Device</span>
               </div>
               <Link to="/forgot-password" style={{
-                color: '#1a73e8',
+                color: '#0f68fd',
                 fontSize: '13px',
                 textDecoration: 'none',
                 cursor: 'pointer'
@@ -274,8 +274,8 @@ const Login: React.FC = () => {
               style={{
                 width: '100%',
                 height: '44px',
-                background: '#1a73e8',
-                color: 'white',
+                background: '#0f68fd',
+                color: '#ffffff',
                 border: 'none',
                 borderRadius: '22px',
                 fontSize: '14px',
@@ -299,7 +299,7 @@ const Login: React.FC = () => {
         }}>
           New to ROOMi?{" "}
           <Link to="/register" style={{
-            color: '#1a73e8',
+            color: '#0f68fd',
             textDecoration: 'none',
             cursor: 'pointer'
           }}>

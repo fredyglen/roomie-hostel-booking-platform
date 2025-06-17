@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Button from './common/Button';
 import { Icon } from '@iconify/react';
 
 interface StoryViewerProps {
@@ -224,7 +223,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
           
           <div className="flex justify-between items-center mb-4">
             <div>
-              <span className="font-bold text-xl text-blue-600">₵{propertyDetails.price}</span>
+              <span className="font-bold text-xl" style={{ color: '#0f68fd' }}>₵{propertyDetails.price}</span>
               <span className="text-gray-500">/{propertyDetails.priceUnit}</span>
             </div>
             <div className="flex items-center">
@@ -249,9 +248,22 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
             <p className="text-gray-600">{propertyDetails.description}</p>
           </div>
           
-          <Button variant="primary" fullWidth onClick={handleBookNow}>
+          <button
+            onClick={handleBookNow}
+            style={{
+              width: '100%',
+              height: '48px',
+              background: '#0f68fd',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '24px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
             Book Now
-          </Button>
+          </button>
         </div>
       </div>
     </div>

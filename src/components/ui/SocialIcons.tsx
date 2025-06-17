@@ -17,9 +17,9 @@ export const FacebookIcon: React.FC<{ size?: number }> = ({ size = 18 }) => (
 );
 
 export const ROOMiLogo: React.FC<{ size?: number }> = ({ size = 24 }) => (
-  <div style={{ 
-    width: size + 8, 
-    height: size, 
+  <div style={{
+    width: size + 8,
+    height: size,
     position: 'relative',
     display: 'flex',
     alignItems: 'center',
@@ -29,7 +29,7 @@ export const ROOMiLogo: React.FC<{ size?: number }> = ({ size = 24 }) => (
       position: 'absolute',
       width: size * 0.5,
       height: size * 0.5,
-      background: '#1a73e8',
+      background: '#0f68fd',
       borderRadius: '50%',
       left: '0',
       top: '0'
@@ -38,10 +38,11 @@ export const ROOMiLogo: React.FC<{ size?: number }> = ({ size = 24 }) => (
       position: 'absolute',
       width: size * 0.5,
       height: size * 0.5,
-      background: '#34a853',
+      background: '#ffffff',
       borderRadius: '50%',
       right: '0',
-      top: '0'
+      top: '0',
+      border: '1px solid #e0e0e0'
     }}></div>
   </div>
 );

@@ -38,6 +38,8 @@ const Favorites = React.lazy(() => import('@/pages/student/Favorites'));
 const StoryView = React.lazy(() => import('@/pages/student/StoryView'));
 const StoryViewEnhanced = React.lazy(() => import('@/pages/student/StoryViewEnhanced'));
 const EnhancedStoryPage = React.lazy(() => import('@/pages/student/EnhancedStoryPage'));
+const PropertyListing = React.lazy(() => import('@/pages/student/PropertyListing'));
+const PropertyStory = React.lazy(() => import('@/pages/student/PropertyStory'));
 
 // Owner Pages
 const OwnerDashboard = React.lazy(() => import('@/pages/owner/Dashboard'));
@@ -170,7 +172,12 @@ function App() {
                 } />
                 <Route path="/student/properties" element={
                   <ProtectedRoute allowedRoles={['student']}>
-                    <SafeRoute element={<Properties />} />
+                    <SafeRoute element={<PropertyListing />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/property/:propertyId/story" element={
+                  <ProtectedRoute allowedRoles={['student']}>
+                    <SafeRoute element={<PropertyStory />} />
                   </ProtectedRoute>
                 } />
                 <Route path="/student/property/:id" element={

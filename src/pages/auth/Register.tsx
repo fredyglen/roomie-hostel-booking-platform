@@ -132,7 +132,7 @@ const Register: React.FC = () => {
         }}>
           Or{" "}
           <Link to="/login" style={{
-            color: '#1a73e8',
+            color: '#0f68fd',
             textDecoration: 'none',
             cursor: 'pointer'
           }}>
@@ -389,8 +389,8 @@ const Register: React.FC = () => {
               style={{
                 width: '100%',
                 height: '44px',
-                background: '#1a73e8',
-                color: 'white',
+                background: '#0f68fd',
+                color: '#ffffff',
                 border: 'none',
                 borderRadius: '22px',
                 fontSize: '14px',
