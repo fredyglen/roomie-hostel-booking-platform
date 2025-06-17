@@ -88,31 +88,45 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
-      <div className="w-full max-w-sm p-6 space-y-4 bg-white rounded shadow-sm border border-gray-200 animate-fade-in-up">
-        <div className="flex flex-col items-center justify-center text-center">
-          <Logo size="md" />
-          <h1 className="mt-4 text-xl font-semibold text-gray-900 font-bricolage">Sign in to your account</h1>
-          <p className="mt-2 text-sm text-gray-600">
-            Or{" "}
-            <Link to="/register" className="font-medium text-roomi-blue-600 hover:text-roomi-blue-700 transition-colors">
-              create a new account
-            </Link>
-          </p>
+    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#e8eaed' }}>
+      <div className="w-full max-w-sm bg-white rounded-xl shadow-sm border border-gray-200" style={{ padding: '40px 32px', maxWidth: '400px' }}>
+        {/* Logo */}
+        <div className="flex justify-center mb-8">
+          <Logo size="sm" withText={false} />
+        </div>
+
+        {/* Social Login Buttons */}
+        <div className="flex gap-4 mb-6">
+          <button className="flex-1 h-12 border border-gray-300 rounded-lg bg-white flex items-center justify-center gap-2 text-sm font-medium hover:shadow-sm transition-shadow">
+            <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
+            Google
+          </button>
+          <button className="flex-1 h-12 border border-gray-300 rounded-lg bg-white flex items-center justify-center gap-2 text-sm font-medium hover:shadow-sm transition-shadow">
+            <div className="w-4 h-4 bg-blue-600 rounded-full"></div>
+            Facebook
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div className="text-center text-gray-500 text-sm mb-6 relative">
+          <span className="bg-white px-3">or sign in with</span>
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-gray-300"></div>
+          </div>
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email address</FormLabel>
+                  <FormLabel className="text-sm font-medium text-gray-900 mb-2 block">Username</FormLabel>
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder="you@example.com"
+                      className="w-full h-12 border border-gray-300 rounded-lg px-4 text-base outline-none focus:border-blue-600 transition-colors"
                       autoComplete="email"
                       {...field}
                       disabled={isSubmitting}
@@ -128,11 +142,11 @@ const Login: React.FC = () => {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel className="text-sm font-medium text-gray-900 mb-2 block">Password</FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="••••••••"
+                      className="w-full h-12 border border-gray-300 rounded-lg px-4 text-base outline-none focus:border-blue-600 transition-colors"
                       autoComplete="current-password"
                       {...field}
                       disabled={isSubmitting}
@@ -143,68 +157,71 @@ const Login: React.FC = () => {
               )}
             />
 
-            <div className="flex items-center justify-between">
-              <div className="text-sm">
-                <Link to="/forgot-password" className="font-medium text-roomi-blue-600 hover:text-roomi-blue-700 transition-colors">
-                  Forgot your password?
-                </Link>
+            {/* Remember Device and Forgot Password */}
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-2">
+                <input type="checkbox" className="w-4 h-4 border border-gray-300 rounded" />
+                <span className="text-sm text-gray-600">Remember this Device</span>
               </div>
+              <Link to="/forgot-password" className="text-sm text-blue-600 hover:underline">
+                Forgot Password ?
+              </Link>
             </div>
 
             <Button
               type="submit"
-              className="w-full btn-premium bg-roomi-blue-600 hover:bg-roomi-blue-700 text-white font-medium"
+              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white border-none rounded-full text-sm font-medium transition-colors mb-4"
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <>
-                  <div className="loading-premium mr-2 w-4 h-4" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign in"
-              )}
+              {isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
           </form>
         </Form>
 
-        {/* Compact Demo Accounts */}
-        <div className="mt-4 p-3 bg-gray-50 rounded border">
-          <p className="text-xs text-gray-600 mb-2 text-center">Quick Demo Login:</p>
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={() => {
+        {/* Sign Up Link */}
+        <div className="text-center text-sm text-gray-600 mt-6">
+          New to ROOMi?{" "}
+          <Link to="/register" className="text-blue-600 hover:underline">
+            Create an account
+          </Link>
+        </div>
+
+        {/* Quick Demo Login - Compact */}
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <div className="flex gap-1">
+            <button
+              type="button"
+              className="flex-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+              onClick={(e) => {
+                e.preventDefault();
                 form.setValue('email', 'student@roomi.com');
                 form.setValue('password', 'password123');
               }}
             >
               Student
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={() => {
+            </button>
+            <button
+              type="button"
+              className="flex-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+              onClick={(e) => {
+                e.preventDefault();
                 form.setValue('email', 'owner@roomi.com');
                 form.setValue('password', 'password123');
               }}
             >
               Owner
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs"
-              onClick={() => {
+            </button>
+            <button
+              type="button"
+              className="flex-1 px-2 py-1 text-xs bg-gray-100 hover:bg-gray-200 rounded"
+              onClick={(e) => {
+                e.preventDefault();
                 form.setValue('email', 'admin@roomi.com');
                 form.setValue('password', 'password123');
               }}
             >
               Admin
-            </Button>
+            </button>
           </div>
         </div>
       </div>
