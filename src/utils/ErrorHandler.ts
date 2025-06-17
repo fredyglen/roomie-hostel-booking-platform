@@ -2,7 +2,7 @@ import { logger } from './enhanced-logger';
 
 interface ErrorOptions {
   showUser?: boolean;
-  context?: Record<string, any>;
+  context?: Record<string, unknown>;
   reportToService?: boolean;
 }
 
@@ -50,7 +50,7 @@ export class ErrorHandler {
     return new Error(JSON.stringify(error));
   }
   
-  private static reportToErrorService(error: Error, context: Record<string, any>) {
+  private static reportToErrorService(error: Error, context: Record<string, unknown>) {
     // This would be implemented with your error reporting service
     // Example: Sentry.captureException(error, { extra: context });
     if (import.meta.env.DEV) {

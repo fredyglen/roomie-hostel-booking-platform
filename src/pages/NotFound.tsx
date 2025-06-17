@@ -29,7 +29,7 @@ const NotFound: React.FC = () => {
           </Button>
           
           <Button
-            onClick={() => navigate('/welcome')}
+            onClick={() => navigate('/')}
             className="flex items-center"
           >
             <Home className="w-4 h-4 mr-2" />

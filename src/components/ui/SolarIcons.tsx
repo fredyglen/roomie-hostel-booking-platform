@@ -71,3 +71,15 @@ export const HeartIcon: React.FC<{ size?: number; color?: string; filled?: boole
     <path d="M20.84 4.61C20.3 4.07 19.66 3.64 18.96 3.34C18.26 3.04 17.51 2.88 16.75 2.88C16 2.88 15.25 3.04 14.55 3.34C13.85 3.64 13.21 4.07 12.67 4.61L12 5.28L11.33 4.61C10.24 3.52 8.75 2.88 7.25 2.88C5.75 2.88 4.26 3.52 3.17 4.61C2.08 5.7 1.44 7.19 1.44 8.69C1.44 10.19 2.08 11.68 3.17 12.77L12 21.6L20.83 12.77C21.92 11.68 22.56 10.19 22.56 8.69C22.56 7.19 21.92 5.7 20.84 4.61Z"/>
   </svg>
 );
+
+export const SecurityIcon: React.FC<{ size?: number; color?: string }> = ({ size = 16, color = '#0f68fd' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 1L3 5V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V5L12 1ZM12 7C13.1 7 14 7.9 14 9S13.1 11 12 11S10 10.1 10 9S10.9 7 12 7ZM12 17C10.33 17 8.94 16.16 8.24 14.9C8.26 13.58 11 12.9 12 12.9S15.74 13.58 15.76 14.9C15.06 16.16 13.67 17 12 17Z" fill={color}/>
+  </svg>
+);
+
+export const KitchenIcon: React.FC<{ size?: number; color?: string }> = ({ size = 16, color = '#0f68fd' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <path d="M18 2.01L6 2C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V4C20 2.89 19.11 2.01 18 2.01ZM8 4H9V10H8V4ZM11 4H12V10H11V4ZM18 20H6V12H18V20Z" fill={color}/>
+  </svg>
+);

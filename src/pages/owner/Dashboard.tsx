@@ -7,6 +7,7 @@ import { useAuth } from '@/context/EnhancedAuthContext';
 import OwnerLayout from '@/components/layout/OwnerLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorDisplay from '@/components/common/ErrorDisplay';
+import { OwnerQueries } from '@/services/database/ownerQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,66 +28,33 @@ const OwnerDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Mock data for dashboard
-  const [dashboardStats] = useState({
-    totalProperties: 5,
-    totalBookings: 12,
-    monthlyEarnings: 8500,
-    occupancyRate: 85,
-    averageRating: 4.6,
-    totalReviews: 48
+  // Real data queries
+  const { data: dashboardStats, isLoading: statsLoading, error: statsError } = useQuery({
+    queryKey: ['owner-dashboard-stats', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getDashboardStats(user.id);
+    },
+    enabled: !!user?.id,
   });
 
-  const [recentBookings] = useState([
-    {
-      id: 1,
-      studentName: 'Kwame Asante',
-      propertyTitle: 'Modern Studio Apartment',
-      checkIn: '2024-06-15',
-      amount: 1200,
-      status: 'confirmed'
+  const { data: recentBookings, isLoading: bookingsLoading } = useQuery({
+    queryKey: ['owner-recent-bookings', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getRecentBookings(user.id, 5);
     },
-    {
-      id: 2,
-      studentName: 'Ama Serwaa',
-      propertyTitle: 'Shared 2-Bedroom',
-      checkIn: '2024-06-20',
-      amount: 800,
-      status: 'pending'
-    },
-    {
-      id: 3,
-      studentName: 'Kofi Mensah',
-      propertyTitle: 'Premium Hostel Room',
-      checkIn: '2024-06-25',
-      amount: 950,
-      status: 'confirmed'
-    }
-  ]);
+    enabled: !!user?.id,
+  });
 
-  const [propertyPerformance] = useState([
-    {
-      id: 1,
-      title: 'Modern Studio Apartment',
-      occupancy: 100,
-      earnings: 3600,
-      bookings: 3
+  const { data: propertyPerformance, isLoading: performanceLoading } = useQuery({
+    queryKey: ['owner-property-performance', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getPropertyPerformance(user.id, 5);
     },
-    {
-      id: 2,
-      title: 'Shared 2-Bedroom',
-      occupancy: 75,
-      earnings: 2400,
-      bookings: 6
-    },
-    {
-      id: 3,
-      title: 'Premium Hostel Room',
-      occupancy: 90,
-      earnings: 2500,
-      bookings: 3
-    }
-  ]);
+    enabled: !!user?.id,
+  });
 
   // Fetch properties count
   const { data: propertiesData, isLoading: propertiesLoading } = useQuery({
@@ -118,10 +86,21 @@ const OwnerDashboard: React.FC = () => {
     }
   };
 
-  if (propertiesLoading) {
+  if (statsLoading || bookingsLoading || performanceLoading) {
     return (
       <OwnerLayout pageTitle="Dashboard">
         <LoadingSpinner message="Loading dashboard..." />
+      </OwnerLayout>
+    );
+  }
+
+  if (statsError) {
+    return (
+      <OwnerLayout pageTitle="Dashboard">
+        <ErrorDisplay
+          message="Failed to load dashboard data"
+          onRetry={() => window.location.reload()}
+        />
       </OwnerLayout>
     );
   }
@@ -147,7 +126,7 @@ const OwnerDashboard: React.FC = () => {
                 <Building className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Properties</p>
-                  <p className="text-2xl font-bold">{propertiesData || dashboardStats.totalProperties}</p>
+                  <p className="text-2xl font-bold">{dashboardStats?.totalProperties || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -159,7 +138,7 @@ const OwnerDashboard: React.FC = () => {
                 <Calendar className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                  <p className="text-2xl font-bold">{dashboardStats.totalBookings}</p>
+                  <p className="text-2xl font-bold">{dashboardStats?.totalBookings || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -171,7 +150,7 @@ const OwnerDashboard: React.FC = () => {
                 <DollarSign className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Monthly Earnings</p>
-                  <p className="text-2xl font-bold">{formatCurrency(dashboardStats.monthlyEarnings)}</p>
+                  <p className="text-2xl font-bold">{formatCurrency(dashboardStats?.monthlyEarnings || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -183,7 +162,7 @@ const OwnerDashboard: React.FC = () => {
                 <TrendingUp className="h-8 w-8 text-orange-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Occupancy Rate</p>
-                  <p className="text-2xl font-bold">{dashboardStats.occupancyRate}%</p>
+                  <p className="text-2xl font-bold">{dashboardStats?.occupancyRate || 0}%</p>
                 </div>
               </div>
             </CardContent>
@@ -207,21 +186,28 @@ const OwnerDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentBookings.map((booking) => (
-                  <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div>
-                      <h4 className="font-medium">{booking.studentName}</h4>
-                      <p className="text-sm text-gray-600">{booking.propertyTitle}</p>
-                      <p className="text-xs text-gray-500">Check-in: {booking.checkIn}</p>
+                {recentBookings && recentBookings.length > 0 ? (
+                  recentBookings.map((booking) => (
+                    <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
+                      <div>
+                        <h4 className="font-medium">{booking.student_name}</h4>
+                        <p className="text-sm text-gray-600">{booking.property_title}</p>
+                        <p className="text-xs text-gray-500">Check-in: {new Date(booking.check_in_date).toLocaleDateString()}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-bold">{formatCurrency(booking.total_amount)}</p>
+                        <Badge className={getStatusColor(booking.status)}>
+                          {booking.status}
+                        </Badge>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-bold">{formatCurrency(booking.amount)}</p>
-                      <Badge className={getStatusColor(booking.status)}>
-                        {booking.status}
-                      </Badge>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Calendar className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p>No recent bookings</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -243,25 +229,32 @@ const OwnerDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {propertyPerformance.map((property) => (
-                  <div key={property.id} className="p-4 border rounded-lg">
-                    <h4 className="font-medium">{property.title}</h4>
-                    <div className="grid grid-cols-3 gap-4 mt-2">
-                      <div>
-                        <p className="text-xs text-gray-500">Occupancy</p>
-                        <p className="font-semibold">{property.occupancy}%</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Earnings</p>
-                        <p className="font-semibold">{formatCurrency(property.earnings)}</p>
-                      </div>
-                      <div>
-                        <p className="text-xs text-gray-500">Bookings</p>
-                        <p className="font-semibold">{property.bookings}</p>
+                {propertyPerformance && propertyPerformance.length > 0 ? (
+                  propertyPerformance.map((property) => (
+                    <div key={property.id} className="p-4 border rounded-lg">
+                      <h4 className="font-medium">{property.title}</h4>
+                      <div className="grid grid-cols-3 gap-4 mt-2">
+                        <div>
+                          <p className="text-xs text-gray-500">Occupancy</p>
+                          <p className="font-semibold">{property.occupancy_rate}%</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Earnings</p>
+                          <p className="font-semibold">{formatCurrency(property.total_earnings)}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs text-gray-500">Bookings</p>
+                          <p className="font-semibold">{property.total_bookings}</p>
+                        </div>
                       </div>
                     </div>
+                  ))
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Building className="h-8 w-8 mx-auto mb-2 text-gray-400" />
+                    <p>No properties found</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -311,16 +304,16 @@ const OwnerDashboard: React.FC = () => {
             <CardContent>
               <div className="flex items-center space-x-4">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-yellow-600">{dashboardStats.averageRating}</div>
+                  <div className="text-3xl font-bold text-yellow-600">{dashboardStats?.averageRating || 0}</div>
                   <div className="flex items-center justify-center">
                     {[...Array(5)].map((_, i) => (
-                      <Star 
-                        key={i} 
-                        className={`h-4 w-4 ${i < Math.floor(dashboardStats.averageRating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`} 
+                      <Star
+                        key={i}
+                        className={`h-4 w-4 ${i < Math.floor(dashboardStats?.averageRating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
                       />
                     ))}
                   </div>
-                  <div className="text-sm text-gray-600">{dashboardStats.totalReviews} reviews</div>
+                  <div className="text-sm text-gray-600">{dashboardStats?.totalReviews || 0} reviews</div>
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-gray-600">

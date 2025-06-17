@@ -3,9 +3,10 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/enhanced-logger';
+import { UserRole, isValidRole } from '@/types/roles';
 
 interface AuthUser extends User {
-  role: 'owner' | 'student' | 'admin';
+  role: UserRole;
   firstName?: string;
   lastName?: string;
   phone?: string;
@@ -20,6 +21,8 @@ interface AuthContextType {
   signUp: (email: string, password: string, role: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+  isSessionValid: () => boolean;
+  getSessionTimeRemaining: () => number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,39 +44,54 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      // Try to fetch profile with timeout
-      const profilePromise = supabase
+      // Try to fetch profile (no timeout)
+      logger.info('Attempting to fetch profile from database', { userId });
+      const { data: profile, error } = await supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
-      // Add timeout to profile fetch
-      const timeoutPromise = new Promise((_, reject) =>
-        setTimeout(() => reject(new Error('Profile fetch timeout')), 3000)
-      );
-
-      const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+      logger.info('Profile fetch result', { profile, error: error?.message });
 
       if (error) {
-        logger.warn('Profile not found or timeout, using auth user data only', { error: error.message });
+        logger.warn('Profile fetch error, using auth user data only', {
+          error: error.message,
+          code: error.code,
+          userId: userId
+        });
         // Return auth user with default role if profile doesn't exist
+        const fallbackRole = isValidRole(authUser.user_metadata?.role)
+          ? authUser.user_metadata.role as UserRole
+          : UserRole.STUDENT;
+
         return {
           ...authUser,
-          role: authUser.user_metadata?.role || 'student',
-          firstName: authUser.user_metadata?.first_name,
-          lastName: authUser.user_metadata?.last_name,
-          phone: authUser.user_metadata?.phone,
+          role: fallbackRole,
+          firstName: authUser.user_metadata?.first_name || '',
+          lastName: authUser.user_metadata?.last_name || '',
+          phone: authUser.user_metadata?.phone || '',
           avatarUrl: authUser.user_metadata?.avatar_url
         } as AuthUser;
       }
 
       logger.info('Profile fetched successfully', { profile });
 
-      // Combine auth user data with profile data
+      // Validate and combine auth user data with profile data
+      const profileRole = profile.role || authUser.user_metadata?.role;
+      const validatedRole = isValidRole(profileRole) ? profileRole as UserRole : UserRole.STUDENT;
+
+      if (profile.role && !isValidRole(profile.role)) {
+        logger.warn('Invalid role in profile, using fallback', {
+          invalidRole: profile.role,
+          fallbackRole: validatedRole,
+          userId
+        });
+      }
+
       const combinedUser = {
         ...authUser,
-        role: profile.role || authUser.user_metadata?.role || 'student',
+        role: validatedRole,
         firstName: profile.first_name || authUser.user_metadata?.first_name,
         lastName: profile.last_name || authUser.user_metadata?.last_name,
         phone: profile.phone || authUser.user_metadata?.phone,
@@ -88,9 +106,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const { data: { user: authUser } } = await supabase.auth.getUser();
         if (authUser && authUser.id === userId) {
+          const fallbackRole = isValidRole(authUser.user_metadata?.role)
+            ? authUser.user_metadata.role as UserRole
+            : UserRole.STUDENT;
+
           return {
             ...authUser,
-            role: authUser.user_metadata?.role || 'student',
+            role: fallbackRole,
             firstName: authUser.user_metadata?.first_name,
             lastName: authUser.user_metadata?.last_name,
             phone: authUser.user_metadata?.phone,
@@ -105,35 +127,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    let isMounted = true;
+
     // Check active sessions and set the user
     const getSession = async () => {
       try {
         logger.info('Getting initial session');
         const { data: { session } } = await supabase.auth.getSession();
+
+        if (!isMounted) return;
+
         setSession(session);
 
         if (session?.user) {
           logger.info('Session found, fetching user profile', { userId: session.user.id });
           const userWithProfile = await fetchUserProfile(session.user.id);
-          setUser(userWithProfile);
+          if (isMounted) {
+            setUser(userWithProfile);
+          }
         } else {
           logger.info('No session found');
-          setUser(null);
+          if (isMounted) {
+            setUser(null);
+          }
         }
       } catch (error) {
         logger.error('Error getting session:', error);
-        setUser(null);
+        if (isMounted) {
+          setUser(null);
+        }
       } finally {
-        setLoading(false);
-        logger.info('Initial auth check completed');
+        if (isMounted) {
+          setLoading(false);
+          logger.info('Initial auth check completed');
+        }
       }
     };
 
     // Add timeout to prevent infinite loading
     const timeoutId = setTimeout(() => {
-      logger.warn('Auth initialization timeout, setting loading to false');
-      setLoading(false);
-    }, 3000); // 3 second timeout (reduced from 5)
+      if (isMounted) {
+        logger.warn('Auth initialization timeout, setting loading to false');
+        setLoading(false);
+      }
+    }, 5000); // Reduced to 5 seconds
 
     getSession().finally(() => {
       clearTimeout(timeoutId);
@@ -144,27 +181,40 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       async (event, session) => {
         try {
           logger.info('Auth state changed', { event, hasSession: !!session });
+
+          if (!isMounted) return;
+
           setSession(session);
 
           if (session?.user) {
             logger.info('User session detected, fetching profile', { userId: session.user.id });
             const userWithProfile = await fetchUserProfile(session.user.id);
-            setUser(userWithProfile);
+            if (isMounted) {
+              setUser(userWithProfile);
+            }
           } else {
             logger.info('No user session, clearing user state');
-            setUser(null);
+            if (isMounted) {
+              setUser(null);
+            }
           }
         } catch (error) {
           logger.error('Error in auth state change handler', { error });
-          setUser(null);
+          if (isMounted) {
+            setUser(null);
+          }
         } finally {
-          setLoading(false);
+          if (isMounted) {
+            setLoading(false);
+          }
         }
       }
     );
 
     return () => {
+      isMounted = false;
       subscription.unsubscribe();
+      clearTimeout(timeoutId);
     };
   }, []);
 
@@ -195,7 +245,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
 
-      setLoading(false);
+      // Don't set loading to false here - let the auth state change handler do it
+      logger.info('Sign in process completed, waiting for auth state change');
     } catch (error) {
       logger.error('Error signing in', { error });
       setLoading(false);
@@ -235,29 +286,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
-      // If user is created, create profile
+      // Profile will be created automatically by database trigger
       if (data.user) {
-        try {
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              email: email,
-              role: role as any,
-              first_name: profileData?.firstName || '',
-              last_name: profileData?.lastName || '',
-              phone: profileData?.phone || '',
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-
-          if (profileError) {
-            logger.warn('Profile creation failed', profileError);
-            // Don't throw error here, auth was successful
-          }
-        } catch (profileError) {
-          logger.warn('Profile creation error', profileError);
-        }
+        logger.info('User created successfully, profile will be created by trigger', { userId: data.user.id });
       }
 
       setLoading(false);
@@ -298,6 +329,74 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // Session validation and security monitoring
+  const isSessionValid = (): boolean => {
+    if (!session) return false;
+
+    const now = Math.floor(Date.now() / 1000);
+    const expiresAt = session.expires_at;
+
+    if (!expiresAt) return false;
+
+    // Check if session expires within next 5 minutes
+    const fiveMinutes = 5 * 60;
+    return expiresAt > (now + fiveMinutes);
+  };
+
+  const getSessionTimeRemaining = (): number => {
+    if (!session?.expires_at) return 0;
+
+    const now = Math.floor(Date.now() / 1000);
+    const remaining = session.expires_at - now;
+
+    return Math.max(0, remaining);
+  };
+
+  // Auto-refresh session when it's about to expire
+  useEffect(() => {
+    if (!session) return;
+
+    const checkSessionExpiry = () => {
+      const timeRemaining = getSessionTimeRemaining();
+
+      // Refresh session if less than 10 minutes remaining
+      if (timeRemaining > 0 && timeRemaining < 600) {
+        logger.info('Session expiring soon, refreshing', { timeRemaining });
+        refreshAuth();
+      }
+
+      // Log security warning if session is about to expire
+      if (timeRemaining < 300 && timeRemaining > 0) {
+        logger.warn('Session expires soon', { timeRemaining });
+      }
+    };
+
+    // Check every minute
+    const interval = setInterval(checkSessionExpiry, 60000);
+
+    return () => clearInterval(interval);
+  }, [session]);
+
+  // Security monitoring for suspicious activity
+  useEffect(() => {
+    if (!user) return;
+
+    const monitorActivity = () => {
+      // Log user activity for security monitoring
+      logger.info('User activity monitored', {
+        userId: user.id,
+        role: user.role,
+        lastActivity: new Date().toISOString(),
+        sessionValid: isSessionValid()
+      });
+    };
+
+    // Monitor activity every 5 minutes
+    const interval = setInterval(monitorActivity, 300000);
+
+    return () => clearInterval(interval);
+  }, [user]);
+
   const value: AuthContextType = {
     user,
     session,
@@ -306,6 +405,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signUp,
     signOut,
     refreshAuth,
+    isSessionValid,
+    getSessionTimeRemaining,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -78,7 +78,7 @@ const AdvancedBookingForm: React.FC<AdvancedBookingFormProps> = ({
       };
 
       const { data: result, error } = await supabase
-        .from('bookings_enhanced')
+        .from('bookings')
         .insert(bookingData)
         .select()
         .single();

@@ -34,14 +34,31 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
   isMobile = true,
   progressPercentage
 }) => {
-  const handleTouchStart = useCallback(() => {
+  const [touchStartY, setTouchStartY] = useState<number>(0);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     onPause(true);
+    setTouchStartY(e.touches[0].clientY);
   }, [onPause]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartY || !onSwipeUp) return;
+
+    const currentY = e.touches[0].clientY;
+    const diff = touchStartY - currentY;
+
+    // If swiping up significantly, trigger swipe up
+    if (diff > 50) {
+      onSwipeUp();
+      setTouchStartY(0); // Reset to prevent multiple triggers
+    }
+  }, [touchStartY, onSwipeUp]);
 
   const handleTouchEnd = useCallback(() => {
     if (!showDetails) {
       onPause(false);
     }
+    setTouchStartY(0);
   }, [onPause, showDetails]);
 
   if (!story) return null;
@@ -63,12 +80,13 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
       </div>
       
       {/* Main content */}
-      <div 
+      <div
         className="w-full h-full touch-none relative z-10 flex items-center justify-center"
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onMouseDown={handleTouchStart}
-        onMouseUp={handleTouchEnd}
+        onMouseDown={(e) => onPause(true)}
+        onMouseUp={(e) => !showDetails && onPause(false)}
       >
         <div className="story-content">
           {story.type === 'image' ? (

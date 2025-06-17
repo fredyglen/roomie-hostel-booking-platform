@@ -1,59 +1,20 @@
-import { ReactNode, useEffect, useState } from 'react';
+import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/context/EnhancedAuthContext';
 import { Loader } from '@/components/ui/loader';
+import { UserRole } from '@/types/roles';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  allowedRoles?: string[];
+  allowedRoles?: UserRole[];
 }
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [hasRequiredRole, setHasRequiredRole] = useState(true);
+  const { user, loading } = useAuth();
   const location = useLocation();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        
-        if (!session) {
-          setIsAuthenticated(false);
-          setIsLoading(false);
-          return;
-        }
-
-        setIsAuthenticated(true);
-
-        // Check for required role if specified
-        if (allowedRoles && allowedRoles.length > 0) {
-          const { data: userData, error } = await supabase
-            .from('profiles')
-            .select('role')
-            .eq('id', session.user.id)
-            .single();
-
-          if (error || !userData) {
-            setHasRequiredRole(false);
-          } else {
-            setHasRequiredRole(allowedRoles.includes(userData.role));
-          }
-        }
-
-        setIsLoading(false);
-      } catch (error) {
-        console.error('Error checking authentication:', error);
-        setIsAuthenticated(false);
-        setIsLoading(false);
-      }
-    };
-
-    checkAuth();
-  }, [allowedRoles]);
-
-  if (isLoading) {
+  // Show loading spinner while auth is being determined
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader size="lg" />
@@ -61,14 +22,16 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
     );
   }
 
-  if (!isAuthenticated) {
-    // Redirect to login if not authenticated
+  // Redirect to login if not authenticated
+  if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
   }
 
-  if (!hasRequiredRole) {
-    // Redirect to unauthorized page if doesn't have required role
-    return <Navigate to="/unauthorized" replace />;
+  // Check for required role if specified
+  if (allowedRoles && allowedRoles.length > 0) {
+    if (!allowedRoles.includes(user.role)) {
+      return <Navigate to="/unauthorized" replace />;
+    }
   }
 
   return <>{children}</>;

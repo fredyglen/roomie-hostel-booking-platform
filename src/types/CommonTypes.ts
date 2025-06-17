@@ -16,7 +16,7 @@ export interface ApiResponse<T> {
 
 export interface ApiError {
   message: string;
-  details?: any;
+  details?: Record<string, unknown> | string | null;
 }
 
 // Pagination types

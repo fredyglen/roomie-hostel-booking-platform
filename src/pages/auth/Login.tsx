@@ -307,68 +307,7 @@ const Login: React.FC = () => {
           </Link>
         </div>
 
-        {/* Quick Demo Login - Minimal */}
-        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #dadce0' }}>
-          <div style={{ display: 'flex', gap: '3px' }}>
-            <button
-              type="button"
-              style={{
-                flex: 1,
-                padding: '3px 6px',
-                fontSize: '11px',
-                background: '#f8f9fa',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                form.setValue('email', 'student@roomi.com');
-                form.setValue('password', 'password123');
-              }}
-            >
-              Student
-            </button>
-            <button
-              type="button"
-              style={{
-                flex: 1,
-                padding: '3px 6px',
-                fontSize: '11px',
-                background: '#f8f9fa',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                form.setValue('email', 'owner@roomi.com');
-                form.setValue('password', 'password123');
-              }}
-            >
-              Owner
-            </button>
-            <button
-              type="button"
-              style={{
-                flex: 1,
-                padding: '3px 6px',
-                fontSize: '11px',
-                background: '#f8f9fa',
-                border: 'none',
-                borderRadius: '3px',
-                cursor: 'pointer'
-              }}
-              onClick={(e) => {
-                e.preventDefault();
-                form.setValue('email', 'admin@roomi.com');
-                form.setValue('password', 'password123');
-              }}
-            >
-              Admin
-            </button>
-          </div>
-        </div>
+
       </div>
     </div>
   );

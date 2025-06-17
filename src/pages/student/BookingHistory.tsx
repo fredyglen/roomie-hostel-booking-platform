@@ -50,7 +50,7 @@ const BookingHistory: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('bookings_enhanced')
+        .from('bookings')
         .select('*')
         .eq('student_id', user?.id)
         .order('created_at', { ascending: false });

@@ -19,6 +19,40 @@ interface UpdatePaymentStatus {
   paymentDate?: string;
 }
 
+interface PaymentWebhookPayload {
+  event: string;
+  data: {
+    reference: string;
+    status: string;
+    amount: number;
+    currency: string;
+    transaction_date: string;
+    metadata?: Record<string, unknown>;
+  };
+}
+
+interface BookingPaymentData {
+  reference: string;
+  status: string;
+  amount: number;
+  metadata?: {
+    bookingId: string;
+    userId: string;
+    [key: string]: unknown;
+  };
+}
+
+interface SubscriptionPaymentData {
+  user_id: string;
+  reference: string;
+  status: string;
+  amount: number;
+  metadata?: {
+    planId: string;
+    [key: string]: unknown;
+  };
+}
+
 /**
  * Service for handling payment-related operations
  */
@@ -94,7 +128,7 @@ export const PaymentService = {
   /**
    * Handle webhook notification from payment provider
    */
-  async handlePaymentWebhook(payload: any): Promise<boolean> {
+  async handlePaymentWebhook(payload: PaymentWebhookPayload): Promise<boolean> {
     try {
       // Validate webhook signature
       if (!this.validateWebhookSignature(payload)) {
@@ -197,7 +231,7 @@ export const PaymentService = {
   /**
    * Process booking payment
    */
-  async processBookingPayment(paymentData: any): Promise<void> {
+  async processBookingPayment(paymentData: BookingPaymentData): Promise<void> {
     try {
       const bookingId = paymentData.metadata?.bookingId;
       
@@ -230,7 +264,7 @@ export const PaymentService = {
   /**
    * Process subscription payment
    */
-  async processSubscriptionPayment(paymentData: any): Promise<void> {
+  async processSubscriptionPayment(paymentData: SubscriptionPaymentData): Promise<void> {
     try {
       const userId = paymentData.user_id;
       const planId = paymentData.metadata?.planId;
@@ -366,7 +400,7 @@ export const PaymentService = {
   /**
    * Validate webhook signature
    */
-  validateWebhookSignature(payload: any): boolean {
+  validateWebhookSignature(payload: PaymentWebhookPayload): boolean {
     // In a real implementation, this would verify the signature from headers
     // For now, we'll just do basic validation
     return !!payload && !!payload.event && !!payload.data;

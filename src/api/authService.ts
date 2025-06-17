@@ -2,6 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { ApiResponse } from '@/types/CommonTypes';
 import { User } from '@/types/UserTypes';
 import { logger } from '@/utils/enhanced-logger';
+import { Session } from '@supabase/supabase-js';
 
 interface AuthCredentials {
   email: string;
@@ -16,7 +17,7 @@ interface SignUpData extends AuthCredentials {
 
 interface AuthResponse {
   user: User | null;
-  session: any | null;
+  session: Session | null;
 }
 
 export async function signIn(credentials: AuthCredentials): Promise<ApiResponse<AuthResponse>> {

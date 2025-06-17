@@ -1,17 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  SearchIcon, 
-  FilterIcon, 
-  LocationIcon, 
-  WifiIcon, 
-  AirConditionIcon, 
-  LaundryIcon, 
-  StudyAreaIcon, 
-  BedroomIcon,
-  StarIcon,
-  HeartIcon 
+import {
+  SearchIcon,
+  FilterIcon
 } from '@/components/ui/SolarIcons';
+import PropertyCard from '@/components/properties/PropertyCard';
+import LazyPropertyCard from '@/components/common/LazyPropertyCard';
 
 // Mock property data - replace with real data from Supabase
 const mockProperties = [
@@ -65,37 +59,16 @@ const mockProperties = [
 const PropertyListing: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [properties, setProperties] = useState(mockProperties);
-  const [favorites, setFavorites] = useState<number[]>([]);
+  const properties = mockProperties;
 
   const handlePropertyClick = (propertyId: number) => {
     navigate(`/student/property/${propertyId}/story`);
   };
 
-  const toggleFavorite = (propertyId: number, e: React.MouseEvent) => {
-    e.stopPropagation();
-    setFavorites(prev => 
-      prev.includes(propertyId) 
-        ? prev.filter(id => id !== propertyId)
-        : [...prev, propertyId]
-    );
-  };
-
-  const renderAmenityIcon = (amenity: string) => {
-    const iconProps = { size: 14, color: '#0f68fd' };
-    switch (amenity) {
-      case 'wifi': return <WifiIcon {...iconProps} />;
-      case 'ac': return <AirConditionIcon {...iconProps} />;
-      case 'laundry': return <LaundryIcon {...iconProps} />;
-      case 'study': return <StudyAreaIcon {...iconProps} />;
-      default: return null;
-    }
-  };
-
   const getAmenityLabel = (amenity: string) => {
     switch (amenity) {
-      case 'wifi': return 'Wifi';
-      case 'ac': return 'Air Condition';
+      case 'wifi': return 'WiFi';
+      case 'ac': return 'AC';
       case 'laundry': return 'Laundry';
       case 'study': return 'Study Area';
       default: return amenity;
@@ -127,15 +100,15 @@ const PropertyListing: React.FC = () => {
             display: 'flex',
             alignItems: 'center'
           }}>
-            <SearchIcon 
-              size={18} 
-              color="#666" 
-              style={{
-                position: 'absolute',
-                left: '14px',
-                zIndex: 2
-              }}
-            />
+            <div style={{
+              position: 'absolute',
+              left: '14px',
+              zIndex: 2,
+              top: '50%',
+              transform: 'translateY(-50%)'
+            }}>
+              <SearchIcon size={18} color="#666" />
+            </div>
             <input
               type="text"
               placeholder="Search properties, locations..."
@@ -199,165 +172,44 @@ const PropertyListing: React.FC = () => {
         </div>
       </div>
 
-      {/* Property Grid */}
+      {/* Property Grid - Enhanced PropertyCard */}
       <div style={{
         padding: '16px',
         display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+        gridTemplateColumns: 'repeat(4, 1fr)',
         gap: '16px'
-      }}>
+      }}
+      className="
+        grid-cols-1
+        sm:grid-cols-2
+        md:grid-cols-3
+        lg:grid-cols-4
+        xl:grid-cols-4
+      "
+      >
         {properties.map((property) => (
-          <div
-            key={property.id}
-            onClick={() => handlePropertyClick(property.id)}
-            style={{
-              background: '#ffffff',
-              borderRadius: '16px',
-              overflow: 'hidden',
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-              cursor: 'pointer',
-              transition: 'transform 0.2s, box-shadow 0.2s',
-              position: 'relative'
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.transform = 'translateY(-2px)';
-              e.currentTarget.style.boxShadow = '0 4px 16px rgba(0, 0, 0, 0.15)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.transform = 'translateY(0)';
-              e.currentTarget.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.1)';
-            }}
-          >
-            {/* Property Image */}
-            <div style={{
-              position: 'relative',
-              height: '180px',
-              background: `url(${property.image}) center/cover`,
-              borderRadius: '16px 16px 0 0'
-            }}>
-              {/* Favorite Button */}
-              <button
-                onClick={(e) => toggleFavorite(property.id, e)}
-                style={{
-                  position: 'absolute',
-                  top: '12px',
-                  right: '12px',
-                  width: '32px',
-                  height: '32px',
-                  border: 'none',
-                  borderRadius: '16px',
-                  background: 'rgba(255, 255, 255, 0.9)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  cursor: 'pointer'
-                }}
-              >
-                <HeartIcon 
-                  size={16} 
-                  color="#0f68fd" 
-                  filled={favorites.includes(property.id)} 
-                />
-              </button>
-
-              {/* Room Type Badge */}
-              <div style={{
-                position: 'absolute',
-                bottom: '12px',
-                left: '12px',
-                background: 'rgba(15, 104, 253, 0.9)',
-                color: '#ffffff',
-                padding: '4px 8px',
-                borderRadius: '8px',
-                fontSize: '12px',
-                fontWeight: '500'
-              }}>
-                <BedroomIcon size={12} color="#ffffff" style={{ marginRight: '4px' }} />
-                {property.roomType}
-              </div>
-            </div>
-
-            {/* Property Details */}
-            <div style={{ padding: '16px' }}>
-              {/* Title */}
-              <h3 style={{
-                fontSize: '16px',
-                fontWeight: '600',
-                color: '#202124',
-                margin: '0 0 4px 0',
-                lineHeight: '1.3'
-              }}>
-                {property.title}
-              </h3>
-
-              {/* Location */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                marginBottom: '12px'
-              }}>
-                <LocationIcon size={12} color="#666" />
-                <span style={{
-                  fontSize: '13px',
-                  color: '#666',
-                  lineHeight: '1.2'
-                }}>
-                  {property.location}
-                </span>
-              </div>
-
-              {/* Rating */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px',
-                marginBottom: '12px'
-              }}>
-                <StarIcon size={12} color="#FFD700" filled />
-                <span style={{
-                  fontSize: '13px',
-                  fontWeight: '500',
-                  color: '#202124'
-                }}>
-                  {property.rating}
-                </span>
-                <span style={{
-                  fontSize: '12px',
-                  color: '#666'
-                }}>
-                  ({property.reviewCount} reviews)
-                </span>
-              </div>
-
-              {/* Amenities */}
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '8px'
-              }}>
-                {property.amenities.slice(0, 4).map((amenity) => (
-                  <div
-                    key={amenity}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      padding: '4px 8px',
-                      background: '#f8f9fa',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      color: '#0f68fd',
-                      fontWeight: '500'
-                    }}
-                  >
-                    {renderAmenityIcon(amenity)}
-                    {getAmenityLabel(amenity)}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          <LazyPropertyCard key={property.id}>
+            <PropertyCard
+              id={property.id.toString()}
+              title={property.title}
+              rent={2800} // Default semester price
+              location={property.location}
+              bedrooms={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : 4}
+              bathrooms={1}
+              maxOccupants={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : 4}
+              images={property.images}
+              amenities={property.amenities.map(getAmenityLabel)}
+              propertyType="Hostel"
+              genderRestriction="Mixed"
+              isAvailable={true}
+              distanceToCampus={property.location.includes('walk') ? property.location.split(',')[1]?.trim() : '5 min walk'}
+              totalBedsAvailable={Math.floor(Math.random() * 8) + 1}
+              totalBeds={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : 4}
+              priceUnit="semester"
+              onViewDetails={() => handlePropertyClick(property.id)}
+              onViewStory={() => handlePropertyClick(property.id)}
+            />
+          </LazyPropertyCard>
         ))}
       </div>
     </div>

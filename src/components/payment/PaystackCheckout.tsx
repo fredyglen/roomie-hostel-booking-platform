@@ -120,9 +120,16 @@ export function PaystackCheckout({
         </div>
       </CardContent>
       <CardFooter>
-        <Button 
-          onClick={handlePayment} 
-          disabled={isLoading} 
+        <Button
+          onClick={handlePayment}
+          disabled={isLoading}
           className="w-full"
         >
-          {isLoading ?
+          {isLoading ? 'Processing...' : 'Pay Now'}
+        </Button>
+      </CardFooter>
+    </Card>
+  );
+};
+
+export default PaystackCheckout;

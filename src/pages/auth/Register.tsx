@@ -14,6 +14,7 @@ import { ErrorHandler } from '@/utils/ErrorHandler';
 import { Loader } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 import { logger } from '@/utils/enhanced-logger';
+import SuccessAnimation from '@/components/ui/SuccessAnimation';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -38,6 +39,8 @@ const Register: React.FC = () => {
   const navigate = useNavigate();
   const { signUp, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successData, setSuccessData] = useState<{ name: string; role: string }>({ name: '', role: '' });
   
   // Initialize form with react-hook-form and zod validation
   const form = useForm<RegisterFormValues>({
@@ -69,10 +72,10 @@ const Register: React.FC = () => {
     setIsSubmitting(true);
     try {
       logger.info('Register form submitted', { email: values.email, role: values.role });
-      
+
       await signUp(
-        values.email, 
-        values.password, 
+        values.email,
+        values.password,
         values.role as UserRole,
         {
           firstName: values.firstName,
@@ -80,17 +83,37 @@ const Register: React.FC = () => {
           phone: values.phone
         }
       );
-      
-      toast({
-        title: "Account created",
-        description: "Your account has been created successfully. Please log in.",
+
+      // Set success data and show animation
+      setSuccessData({
+        name: `${values.firstName} ${values.lastName}`,
+        role: values.role
       });
-      navigate('/login');
+      setShowSuccessAnimation(true);
+
+      // Clear the form
+      form.reset();
+
     } catch (error: unknown) {
       ErrorHandler.handle(error, "Registration submission error");
+
+      // Better error messages
+      let errorMessage = "Failed to create account";
+      if (error instanceof Error) {
+        if (error.message.includes("already registered") || error.message.includes("already exists")) {
+          errorMessage = "An account with this email already exists. Please try signing in instead.";
+        } else if (error.message.includes("password")) {
+          errorMessage = "Password must be at least 6 characters long.";
+        } else if (error.message.includes("email")) {
+          errorMessage = "Please enter a valid email address.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       toast({
         title: "Registration failed",
-        description: error instanceof Error ? error.message : "Failed to create account",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -98,7 +121,22 @@ const Register: React.FC = () => {
     }
   };
 
+  // Handle success animation completion
+  const handleSuccessComplete = () => {
+    setShowSuccessAnimation(false);
+    navigate('/login');
+  };
+
   return (
+    <>
+      {/* Success Animation */}
+      <SuccessAnimation
+        isVisible={showSuccessAnimation}
+        title="Account Created Successfully!"
+        message={`Welcome ${successData.name}! Your ${successData.role} account has been created. You can now sign in.`}
+        onComplete={handleSuccessComplete}
+        duration={3000}
+      />
     <div className="min-h-screen flex items-center justify-center" style={{
       background: '#e8eaed',
       padding: '16px'
@@ -286,6 +324,7 @@ const Register: React.FC = () => {
                   <FormControl>
                     <Input
                       type="password"
+                      autoComplete="new-password"
                       style={{
                         width: '100%',
                         height: '44px',
@@ -318,6 +357,7 @@ const Register: React.FC = () => {
                   <FormControl>
                     <Input
                       type="password"
+                      autoComplete="new-password"
                       style={{
                         width: '100%',
                         height: '44px',
@@ -405,6 +445,7 @@ const Register: React.FC = () => {
         </Form>
       </div>
     </div>
+    </>
   );
 };
 

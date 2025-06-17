@@ -16,6 +16,7 @@ export interface AppConfig {
   };
   app: {
     baseUrl: string;
+    environment: 'development' | 'staging' | 'production';
     imageCdnUrl: string;
     defaultPageSize: number;
     maxPageSize: number;
@@ -27,6 +28,13 @@ export interface AppConfig {
     enableNotifications: boolean;
     enableAnalytics: boolean;
     enableOfflineMode: boolean;
+  };
+  payment: {
+    platformCommissionRate: number;
+    agentCommissionRate: number;
+    agentMinimumFee: number;
+    paystackFeeRate: number;
+    bookingFeeRate: number;
   };
 }
 
@@ -54,6 +62,7 @@ export const config: AppConfig = {
   },
   app: {
     baseUrl: import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5173',
+    environment: import.meta.env.MODE as 'development' | 'staging' | 'production',
     imageCdnUrl: import.meta.env.VITE_IMAGE_CDN_URL || '',
     defaultPageSize: parseInt(import.meta.env.VITE_DEFAULT_PAGE_SIZE || '10'),
     maxPageSize: parseInt(import.meta.env.VITE_MAX_PAGE_SIZE || '100'),
@@ -66,12 +75,57 @@ export const config: AppConfig = {
     enableAnalytics: import.meta.env.MODE === 'production',
     enableOfflineMode: false,
   },
+  payment: {
+    platformCommissionRate: 0.05, // 5% platform commission
+    agentCommissionRate: 0.037, // 3.7% agent commission
+    agentMinimumFee: 100, // GHS 100 minimum
+    paystackFeeRate: 0.0195, // 1.95% Paystack fee
+    bookingFeeRate: 0.02, // 2% booking fee
+  },
 };
 
 // Validate configuration at runtime
 export function validateConfig(): void {
-  // Already validated required env vars during initialization
-  logger.debug('Configuration validated successfully');
+  const requiredVars = [
+    'VITE_SUPABASE_URL',
+    'VITE_SUPABASE_ANON_KEY',
+    'VITE_PAYSTACK_PUBLIC_KEY',
+  ];
+
+  const missing = requiredVars.filter((key) => !import.meta.env[key]);
+
+  if (missing.length > 0) {
+    const message = `Missing required environment variables: ${missing.join(', ')}`;
+
+    if (import.meta.env.DEV) {
+      logger.warn(message);
+    } else {
+      logger.error(message);
+      throw new Error(message);
+    }
+  }
+
+  // Validate Paystack key format
+  const paystackKey = config.paystack.publicKey;
+  if (paystackKey && !paystackKey.startsWith('pk_test_') && !paystackKey.startsWith('pk_live_')) {
+    const message = 'Invalid Paystack public key format';
+    logger.error(message);
+    throw new Error(message);
+  }
+
+  // Validate Supabase URL format
+  const supabaseUrl = config.supabase.url;
+  if (supabaseUrl && !supabaseUrl.includes('supabase.co')) {
+    const message = 'Invalid Supabase URL format';
+    logger.warn(message);
+  }
+
+  logger.debug('Configuration validated successfully', {
+    environment: config.app.environment,
+    hasSupabase: !!config.supabase.url,
+    hasPaystack: !!config.paystack.publicKey,
+    paystackMode: paystackKey?.startsWith('pk_test_') ? 'test' : 'live'
+  });
 }
 
 // Export singleton instance

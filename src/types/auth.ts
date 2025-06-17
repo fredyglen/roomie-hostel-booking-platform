@@ -33,7 +33,7 @@ export interface AuthContextType {
   loading: boolean;
   error: Error | null;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role: UserRole, metadata?: Record<string, any>) => Promise<void>;
+  signUp: (email: string, password: string, role: UserRole, metadata?: Record<string, unknown>) => Promise<void>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<void>;
   updateProfile: (data: Partial<AuthUser>) => Promise<void>;

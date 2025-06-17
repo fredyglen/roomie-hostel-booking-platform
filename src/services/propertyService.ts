@@ -1,19 +1,16 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Property, PropertyType, PropertyCategory } from '@/types/property';
+import { PropertyQueries } from '@/services/database/standardizedQueries';
 
 export const propertyService = {
   async getProperties(): Promise<Property[]> {
-    const { data, error } = await supabase
-      .from('properties')
-      .select(`*, profiles!owner_id (first_name, last_name, email, phone)`) 
-      .eq('is_available', true)
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-    
-    // Transform the data to match our Property interface
-    return (data || []).map(property => {
-      const profileData = Array.isArray(property.profiles) ? property.profiles[0] : property.profiles;
+    try {
+      const result = await PropertyQueries.getAvailableProperties({ limit: 50 });
+
+      // Transform the data to match our Property interface
+      return result.properties.map(property => {
+        const profileData = Array.isArray(property.profiles) ? property.profiles[0] : property.profiles;
       
       return {
         id: property.id,
@@ -25,18 +22,19 @@ export const propertyService = {
         city: property.city,
         state: property.state,
         zip: property.zip || '00000',
-        rent: property.rent,
-        price: property.rent,
+        rent: property.base_price_per_semester,
+        price: property.base_price_per_semester,
         type: property.property_type as PropertyType,
         propertyCategory: property.property_category as PropertyCategory,
         verified: property.verification_status === 'verified',
         is_available: property.is_available,
-        bedrooms: property.bedrooms,
-        bathrooms: property.bathrooms,
+        genderType: property.gender_type,
+        maxOccupancy: property.max_occupancy,
+        currentOccupancy: property.current_occupancy,
         images: property.images || [],
         amenities: property.amenities || [],
         location: `${property.city}, ${property.state}`,
-        available_from: property.available_from,
+        verificationStatus: property.verification_status,
         created_at: property.created_at,
         updated_at: property.updated_at,
         owner: profileData ? {
@@ -59,6 +57,10 @@ export const propertyService = {
         features: []
       } as Property;
     });
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      throw error;
+    }
   },
   
   async getPropertyById(id: string): Promise<Property> {
