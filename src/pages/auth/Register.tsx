@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import Logo from '@/components/common/Logo';
+import { ROOMiLogo } from '@/components/ui/SocialIcons';
 import { toast } from "@/components/ui/use-toast";
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { Loader } from 'lucide-react';
@@ -99,64 +99,75 @@ const Register: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <Link to="/">
-            <Logo />
-          </Link>
+    <div className="min-h-screen flex items-center justify-center" style={{
+      background: '#e8eaed',
+      padding: '16px'
+    }}>
+      <div className="bg-white shadow-lg" style={{
+        borderRadius: '12px',
+        width: '100%',
+        maxWidth: '400px',
+        padding: '32px 24px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+      }}>
+        {/* Logo */}
+        <div className="flex justify-center" style={{ marginBottom: '16px' }}>
+          <ROOMiLogo size={24} />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Create your account</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+
+        {/* Title */}
+        <h2 style={{
+          textAlign: 'center',
+          fontSize: '20px',
+          fontWeight: '400',
+          color: '#202124',
+          marginBottom: '8px'
+        }}>Create your account</h2>
+
+        <p style={{
+          textAlign: 'center',
+          fontSize: '13px',
+          color: '#5f6368',
+          marginBottom: '24px'
+        }}>
           Or{" "}
-          <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <Link to="/login" style={{
+            color: '#1a73e8',
+            textDecoration: 'none',
+            cursor: 'pointer'
+          }}>
             sign in to your existing account
           </Link>
         </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} style={{ marginBottom: '20px' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '16px' }}>
               <FormField
                 control={form.control}
-                name="email"
+                name="firstName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel style={{
+                      color: '#202124',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      marginBottom: '6px',
+                      display: 'block'
+                    }}>First Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="you@example.com" {...field} />
+                      <Input
+                        placeholder="John"
+                        style={{
+                          width: '100%',
+                          height: '44px',
+                          border: '1px solid #dadce0',
+                          borderRadius: '8px',
+                          padding: '0 14px',
+                          fontSize: '16px',
+                          outline: 'none'
+                        }}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -165,83 +176,233 @@ const Register: React.FC = () => {
 
               <FormField
                 control={form.control}
-                name="phone"
+                name="lastName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Phone (optional)</FormLabel>
+                    <FormLabel style={{
+                      color: '#202124',
+                      fontSize: '14px',
+                      fontWeight: '500',
+                      marginBottom: '6px',
+                      display: 'block'
+                    }}>Last Name</FormLabel>
                     <FormControl>
-                      <Input placeholder="+233 50 123 4567" {...field} />
+                      <Input
+                        placeholder="Doe"
+                        style={{
+                          width: '100%',
+                          height: '44px',
+                          border: '1px solid #dadce0',
+                          borderRadius: '8px',
+                          padding: '0 14px',
+                          fontSize: '16px',
+                          outline: 'none'
+                        }}
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
+            </div>
 
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem style={{ marginBottom: '16px' }}>
+                  <FormLabel style={{
+                    color: '#202124',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '6px',
+                    display: 'block'
+                  }}>Email</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="you@example.com"
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        border: '1px solid #dadce0',
+                        borderRadius: '8px',
+                        padding: '0 14px',
+                        fontSize: '16px',
+                        outline: 'none'
+                      }}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="phone"
+              render={({ field }) => (
+                <FormItem style={{ marginBottom: '16px' }}>
+                  <FormLabel style={{
+                    color: '#202124',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '6px',
+                    display: 'block'
+                  }}>Phone (optional)</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="+233 50 123 4567"
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        border: '1px solid #dadce0',
+                        borderRadius: '8px',
+                        padding: '0 14px',
+                        fontSize: '16px',
+                        outline: 'none'
+                      }}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>I am a:</FormLabel>
-                    <FormControl>
-                      <RadioGroup 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                        className="flex space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="student" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Student looking for accommodation</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="owner" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Property owner/agent</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem style={{ marginBottom: '16px' }}>
+                  <FormLabel style={{
+                    color: '#202124',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '6px',
+                    display: 'block'
+                  }}>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        border: '1px solid #dadce0',
+                        borderRadius: '8px',
+                        padding: '0 14px',
+                        fontSize: '16px',
+                        outline: 'none'
+                      }}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Creating account..." : "Create account"}
-              </Button>
-            </form>
-          </Form>
-        </div>
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem style={{ marginBottom: '16px' }}>
+                  <FormLabel style={{
+                    color: '#202124',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '6px',
+                    display: 'block'
+                  }}>Confirm Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        border: '1px solid #dadce0',
+                        borderRadius: '8px',
+                        padding: '0 14px',
+                        fontSize: '16px',
+                        outline: 'none'
+                      }}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem style={{ marginBottom: '20px' }}>
+                  <FormLabel style={{
+                    color: '#202124',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '8px',
+                    display: 'block'
+                  }}>I am a:</FormLabel>
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}
+                    >
+                      <FormItem style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                        <FormControl>
+                          <RadioGroupItem value="student" />
+                        </FormControl>
+                        <FormLabel style={{
+                          fontWeight: 'normal',
+                          fontSize: '14px',
+                          color: '#5f6368',
+                          margin: 0,
+                          cursor: 'pointer'
+                        }}>Student looking for accommodation</FormLabel>
+                      </FormItem>
+                      <FormItem style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+                        <FormControl>
+                          <RadioGroupItem value="owner" />
+                        </FormControl>
+                        <FormLabel style={{
+                          fontWeight: 'normal',
+                          fontSize: '14px',
+                          color: '#5f6368',
+                          margin: 0,
+                          cursor: 'pointer'
+                        }}>Property owner/agent</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <Button
+              type="submit"
+              style={{
+                width: '100%',
+                height: '44px',
+                background: '#1a73e8',
+                color: 'white',
+                border: 'none',
+                borderRadius: '22px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer'
+              }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? "Creating account..." : "Create account"}
+            </Button>
+          </form>
+        </Form>
       </div>
     </div>
   );

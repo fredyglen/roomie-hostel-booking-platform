@@ -7,7 +7,7 @@ import { useAuth } from '@/context/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import Logo from '@/components/common/Logo';
+import { GoogleIcon, FacebookIcon, ROOMiLogo } from '@/components/ui/SocialIcons';
 import { toast } from "@/components/ui/use-toast";
 import { Loader } from 'lucide-react';
 // Removed unused import
@@ -88,75 +88,64 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-5" style={{ background: '#e8eaed' }}>
+    <div className="min-h-screen flex items-center justify-center" style={{
+      background: '#e8eaed',
+      padding: '16px'
+    }}>
       <div className="bg-white shadow-lg" style={{
         borderRadius: '12px',
-        width: '400px',
-        padding: '40px 32px',
+        width: '100%',
+        maxWidth: '400px',
+        padding: '32px 24px',
         boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
       }}>
         {/* Logo */}
-        <div className="flex justify-center" style={{ marginBottom: '32px' }}>
-          <div style={{
-            width: '32px',
-            height: '24px',
-            position: 'relative'
-          }}>
-            <div style={{
-              position: 'absolute',
-              width: '12px',
-              height: '12px',
-              background: '#1a73e8',
-              borderRadius: '50%',
-              left: '0',
-              top: '0'
-            }}></div>
-            <div style={{
-              position: 'absolute',
-              width: '12px',
-              height: '12px',
-              background: '#34a853',
-              borderRadius: '50%',
-              right: '0',
-              top: '0'
-            }}></div>
-          </div>
+        <div className="flex justify-center" style={{ marginBottom: '24px' }}>
+          <ROOMiLogo size={24} />
         </div>
 
         {/* Social Login Buttons */}
-        <div className="flex" style={{ gap: '16px', marginBottom: '24px' }}>
+        <div className="flex" style={{ gap: '12px', marginBottom: '20px' }}>
           <button style={{
             flex: 1,
-            height: '48px',
+            height: '44px',
             border: '1px solid #dadce0',
             borderRadius: '8px',
             background: 'white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
+            gap: '6px',
             fontSize: '14px',
             fontWeight: '500',
-            cursor: 'pointer'
-          }}>
-            <div style={{ width: '18px', height: '18px', background: '#1a73e8', borderRadius: '50%' }}></div>
+            cursor: 'pointer',
+            transition: 'box-shadow 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+          >
+            <GoogleIcon size={16} />
             Google
           </button>
           <button style={{
             flex: 1,
-            height: '48px',
+            height: '44px',
             border: '1px solid #dadce0',
             borderRadius: '8px',
             background: 'white',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            gap: '8px',
+            gap: '6px',
             fontSize: '14px',
             fontWeight: '500',
-            cursor: 'pointer'
-          }}>
-            <div style={{ width: '18px', height: '18px', background: '#1877f2', borderRadius: '50%' }}></div>
+            cursor: 'pointer',
+            transition: 'box-shadow 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+          >
+            <FacebookIcon size={16} />
             Facebook
           </button>
         </div>
@@ -165,11 +154,11 @@ const Login: React.FC = () => {
         <div style={{
           textAlign: 'center',
           color: '#5f6368',
-          fontSize: '14px',
-          margin: '24px 0',
+          fontSize: '13px',
+          margin: '20px 0',
           position: 'relative'
         }}>
-          <span style={{ background: 'white', padding: '0 12px' }}>or sign in with</span>
+          <span style={{ background: 'white', padding: '0 10px' }}>or sign in with</span>
           <div style={{
             position: 'absolute',
             top: '50%',
@@ -182,17 +171,17 @@ const Login: React.FC = () => {
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} style={{ marginBottom: '24px' }}>
+          <form onSubmit={form.handleSubmit(onSubmit)} style={{ marginBottom: '20px' }}>
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem style={{ marginBottom: '24px' }}>
+                <FormItem style={{ marginBottom: '20px' }}>
                   <FormLabel style={{
                     color: '#202124',
                     fontSize: '14px',
                     fontWeight: '500',
-                    marginBottom: '8px',
+                    marginBottom: '6px',
                     display: 'block'
                   }}>Username</FormLabel>
                   <FormControl>
@@ -200,10 +189,10 @@ const Login: React.FC = () => {
                       type="email"
                       style={{
                         width: '100%',
-                        height: '48px',
+                        height: '44px',
                         border: '1px solid #dadce0',
                         borderRadius: '8px',
-                        padding: '0 16px',
+                        padding: '0 14px',
                         fontSize: '16px',
                         outline: 'none'
                       }}
@@ -221,12 +210,12 @@ const Login: React.FC = () => {
               control={form.control}
               name="password"
               render={({ field }) => (
-                <FormItem style={{ marginBottom: '24px' }}>
+                <FormItem style={{ marginBottom: '20px' }}>
                   <FormLabel style={{
                     color: '#202124',
                     fontSize: '14px',
                     fontWeight: '500',
-                    marginBottom: '8px',
+                    marginBottom: '6px',
                     display: 'block'
                   }}>Password</FormLabel>
                   <FormControl>
@@ -234,10 +223,10 @@ const Login: React.FC = () => {
                       type="password"
                       style={{
                         width: '100%',
-                        height: '48px',
+                        height: '44px',
                         border: '1px solid #dadce0',
                         borderRadius: '8px',
-                        padding: '0 16px',
+                        padding: '0 14px',
                         fontSize: '16px',
                         outline: 'none'
                       }}
@@ -256,21 +245,23 @@ const Login: React.FC = () => {
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              marginBottom: '24px'
+              marginBottom: '20px',
+              flexWrap: 'wrap',
+              gap: '8px'
             }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <input type="checkbox" style={{
-                  width: '16px',
-                  height: '16px',
+                  width: '14px',
+                  height: '14px',
                   border: '1px solid #dadce0',
                   borderRadius: '2px',
                   background: 'white'
                 }} />
-                <span style={{ fontSize: '14px', color: '#5f6368' }}>Remember this Device</span>
+                <span style={{ fontSize: '13px', color: '#5f6368' }}>Remember this Device</span>
               </div>
               <Link to="/forgot-password" style={{
                 color: '#1a73e8',
-                fontSize: '14px',
+                fontSize: '13px',
                 textDecoration: 'none',
                 cursor: 'pointer'
               }}>
@@ -282,11 +273,11 @@ const Login: React.FC = () => {
               type="submit"
               style={{
                 width: '100%',
-                height: '48px',
+                height: '44px',
                 background: '#1a73e8',
                 color: 'white',
                 border: 'none',
-                borderRadius: '24px',
+                borderRadius: '22px',
                 fontSize: '14px',
                 fontWeight: '500',
                 cursor: 'pointer',
@@ -302,9 +293,9 @@ const Login: React.FC = () => {
         {/* Sign Up Link */}
         <div style={{
           textAlign: 'center',
-          fontSize: '14px',
+          fontSize: '13px',
           color: '#5f6368',
-          marginTop: '24px'
+          marginTop: '20px'
         }}>
           New to ROOMi?{" "}
           <Link to="/register" style={{
@@ -317,17 +308,17 @@ const Login: React.FC = () => {
         </div>
 
         {/* Quick Demo Login - Minimal */}
-        <div style={{ marginTop: '16px', paddingTop: '16px', borderTop: '1px solid #dadce0' }}>
-          <div style={{ display: 'flex', gap: '4px' }}>
+        <div style={{ marginTop: '12px', paddingTop: '12px', borderTop: '1px solid #dadce0' }}>
+          <div style={{ display: 'flex', gap: '3px' }}>
             <button
               type="button"
               style={{
                 flex: 1,
-                padding: '4px 8px',
-                fontSize: '12px',
+                padding: '3px 6px',
+                fontSize: '11px',
                 background: '#f8f9fa',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 cursor: 'pointer'
               }}
               onClick={(e) => {
@@ -342,11 +333,11 @@ const Login: React.FC = () => {
               type="button"
               style={{
                 flex: 1,
-                padding: '4px 8px',
-                fontSize: '12px',
+                padding: '3px 6px',
+                fontSize: '11px',
                 background: '#f8f9fa',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 cursor: 'pointer'
               }}
               onClick={(e) => {
@@ -361,11 +352,11 @@ const Login: React.FC = () => {
               type="button"
               style={{
                 flex: 1,
-                padding: '4px 8px',
-                fontSize: '12px',
+                padding: '3px 6px',
+                fontSize: '11px',
                 background: '#f8f9fa',
                 border: 'none',
-                borderRadius: '4px',
+                borderRadius: '3px',
                 cursor: 'pointer'
               }}
               onClick={(e) => {
