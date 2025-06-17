@@ -6,11 +6,11 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
 
 const AuthRedirect = () => {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading) {
+    if (!loading) {
       if (user) {
         // User is logged in, redirect based on role
         const userRole = (user as any).role || 'student';
@@ -49,7 +49,7 @@ const AuthRedirect = () => {
         navigate('/welcome');
       }
     }
-  }, [user, isLoading, navigate]);
+  }, [user, loading, navigate]);
 
   return <LoadingSpinner />;
 };

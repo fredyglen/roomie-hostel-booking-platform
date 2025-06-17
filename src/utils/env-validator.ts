@@ -14,7 +14,10 @@ export function validateEnvironmentVariables(): string[] {
   );
   
   if (missingVars.length > 0) {
-    console.error('Missing required environment variables:', missingVars);
+    // Use logger instead of console in production
+    if (import.meta.env.DEV) {
+      console.error('Missing required environment variables:', missingVars);
+    }
   }
   
   return missingVars;

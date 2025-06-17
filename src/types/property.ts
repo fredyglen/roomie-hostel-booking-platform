@@ -125,3 +125,50 @@ export interface PropertyFormValues {
 
 // Property insert type (for database operations)
 export type PropertyInsert = Omit<Property, 'id' | 'createdAt' | 'updatedAt' | 'owner'>;
+
+// Ghana-specific hostel types for semester-based pricing
+export interface GhanaHostelProperty {
+  id: string;
+  name: string;
+  description: string;
+  images: string[];
+  location: {
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    coordinates?: { lat: number; lng: number };
+  };
+  pricePerSemester: number; // Base price for semester (4 months)
+  roomOptions: RoomOption[];
+  distanceToCampus: number; // in kilometers
+  nearestUniversity: string;
+  propertyType: 'hostel' | 'shared_room' | 'apartment';
+  bedrooms: number;
+  bathrooms: number;
+  maxOccupants: number;
+  amenities: string[];
+  rules: string[];
+  owner: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    responseRate?: string;
+    verified?: boolean;
+  };
+  availableFrom: string;
+  availableTo: string;
+  isActive: boolean;
+  features: string[];
+  house_rules: string;
+  stories?: string[];
+}
+
+export interface RoomOption {
+  type: string; // e.g., '2-in-a-room', '4-in-a-room', '1-in-a-room'
+  price: number; // Price per semester for this room type
+  available: boolean;
+  description?: string;
+  maxOccupants?: number;
+}

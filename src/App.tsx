@@ -3,9 +3,9 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, DefaultOptions } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/context/EnhancedAuthContext';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { EnhancedErrorBoundary } from '@/components/common/EnhancedErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
 import AuthRedirect from '@/components/auth/AuthRedirect';
@@ -93,7 +93,9 @@ const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => {
     <ErrorBoundary
       onError={(error, errorInfo) => {
         logger.error('SafeRoute: ErrorBoundary caught an error', { error, errorInfo });
-        console.error('🚨 Route Error:', error, errorInfo);
+        if (import.meta.env.DEV) {
+          console.error('🚨 Route Error:', error, errorInfo);
+        }
       }}
     >
       <Suspense fallback={
@@ -108,7 +110,10 @@ const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => {
 };
 
 function App() {
-  console.log('🚀 Application started');
+  // Remove console.log in production
+  if (import.meta.env.DEV) {
+    console.log('🚀 Application started');
+  }
   logger.info('Application started');
 
   return (
@@ -323,7 +328,6 @@ function App() {
               </Routes>
             </div>
             <Toaster />
-            <SonnerToaster />
           </AuthProvider>
         </ErrorBoundary>
       </Router>

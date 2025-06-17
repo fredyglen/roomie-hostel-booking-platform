@@ -1,0 +1,1 @@
+If an owner or an agent adds a property and everything information about the property. will it automatically create all the necessary database backend code required? because someone should not list a property and the a student will search and it wont show up. 

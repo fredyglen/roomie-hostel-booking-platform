@@ -21,6 +21,8 @@ import {
   Eye
 } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
+import DatabaseSeeder from '@/components/admin/DatabaseSeeder';
+import PropertyVisibilityMonitor from '@/components/admin/PropertyVisibilityMonitor';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -289,49 +291,60 @@ const AdminDashboard: React.FC = () => {
         </div>
 
         {/* Quick Admin Actions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Button 
-                className="h-20 flex flex-col"
-                onClick={() => navigate('/admin/verification')}
-              >
-                <CheckCircle className="h-6 w-6 mb-2" />
-                Verify Properties
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="h-20 flex flex-col"
-                onClick={() => navigate('/admin/users')}
-              >
-                <Users className="h-6 w-6 mb-2" />
-                Manage Users
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="h-20 flex flex-col"
-                onClick={() => navigate('/admin/properties')}
-              >
-                <Building className="h-6 w-6 mb-2" />
-                Review Properties
-              </Button>
-              
-              <Button 
-                variant="outline" 
-                className="h-20 flex flex-col"
-                onClick={() => navigate('/admin/settings')}
-              >
-                <TrendingUp className="h-6 w-6 mb-2" />
-                Platform Settings
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  <Button
+                    className="h-20 flex flex-col"
+                    onClick={() => navigate('/admin/verification')}
+                  >
+                    <CheckCircle className="h-6 w-6 mb-2" />
+                    Verify Properties
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col"
+                    onClick={() => navigate('/admin/users')}
+                  >
+                    <Users className="h-6 w-6 mb-2" />
+                    Manage Users
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col"
+                    onClick={() => navigate('/admin/properties')}
+                  >
+                    <Building className="h-6 w-6 mb-2" />
+                    Review Properties
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="h-20 flex flex-col"
+                    onClick={() => navigate('/admin/settings')}
+                  >
+                    <TrendingUp className="h-6 w-6 mb-2" />
+                    Platform Settings
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div>
+            <DatabaseSeeder />
+          </div>
+        </div>
+
+        {/* Property Visibility Monitor */}
+        <PropertyVisibilityMonitor />
 
         {/* System Health */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

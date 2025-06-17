@@ -1,11 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
-import { formatCurrency } from './currency';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { config } from '@/config';
-import { PAYMENT_CONSTANTS } from '@/constants/payment';
-import { PaystackPop } from '@paystack/inline-js';
+import PaystackPop from '@paystack/inline-js';
 import { logger } from '@/utils/enhanced-logger';
-import type { PaymentData, PaymentTransaction, PaymentMethod, MobileMoneyNetwork } from '@/types/payment';
+import type { PaymentData, PaymentTransaction, MobileMoneyNetwork } from '@/types/payment';
 
 // Validate Paystack configuration
 export const validatePaystackConfig = (): string => {
@@ -109,25 +107,25 @@ export const initializePaystackPayment = (paymentData: PaymentData): void => {
 };
 
 // Initialize Mobile Money payment
-export const initializeMobileMoneyPayment = async (config: MobileMoneyConfig): Promise<void> => {
+export const initializeMobileMoneyPayment = async (mobileConfig: MobileMoneyConfig): Promise<void> => {
   try {
-    validatePaystackConfig();
-    
+    const publicKey = validatePaystackConfig();
+
     const response = await fetch(`${config.paystack.baseUrl}/charge/mobile_money`, {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${config.paystack.publicKey}`,
+        'Authorization': `Bearer ${publicKey}`,
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
-        email: config.email,
-        amount: convertToPesewas(config.amount),
+        email: mobileConfig.email,
+        amount: convertToPesewas(mobileConfig.amount),
         mobile_money: {
-          phone: config.phone,
-          provider: config.network
+          phone: mobileConfig.phone,
+          provider: mobileConfig.network
         },
-        reference: config.reference || generatePaymentReference(),
-        metadata: config.metadata
+        reference: mobileConfig.reference || generatePaymentReference(),
+        metadata: mobileConfig.metadata
       })
     });
     
@@ -138,26 +136,26 @@ export const initializeMobileMoneyPayment = async (config: MobileMoneyConfig): P
     }
     
     if (data.status === 'success') {
-      config.onSuccess(data.data as PaymentTransaction);
+      mobileConfig.onSuccess(data.data as PaymentTransaction);
     } else {
       throw new Error(data.message || 'Mobile money payment failed');
     }
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));
     ErrorHandler.handle(err, 'Mobile money payment failed');
-    config.onError(err);
+    mobileConfig.onError(err);
   }
 };
 
 // Verify payment status
 export const verifyPayment = async (reference: string): Promise<PaymentTransaction> => {
   try {
-    validatePaystackConfig();
-    
+    const publicKey = validatePaystackConfig();
+
     const response = await fetch(`${config.paystack.baseUrl}/transaction/verify/${reference}`, {
       method: 'GET',
       headers: {
-        'Authorization': `Bearer ${config.paystack.publicKey}`,
+        'Authorization': `Bearer ${publicKey}`,
         'Content-Type': 'application/json'
       }
     });

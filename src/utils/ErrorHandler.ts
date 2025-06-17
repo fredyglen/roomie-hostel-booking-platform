@@ -53,23 +53,28 @@ export class ErrorHandler {
   private static reportToErrorService(error: Error, context: Record<string, any>) {
     // This would be implemented with your error reporting service
     // Example: Sentry.captureException(error, { extra: context });
-    console.error('[Error Service] Would report:', error, context);
+    if (import.meta.env.DEV) {
+      console.error('[Error Service] Would report:', error, context);
+    }
+    // In production, implement actual error reporting service
   }
   
-  private static getUserFriendlyMessage(error: Error): string {
+  static getUserFriendlyMessage(error: unknown): string {
+    const normalizedError = this.normalizeError(error);
+
     // You could have specific user-friendly messages for known error types
-    if (error.message.includes('network')) {
+    if (normalizedError.message.includes('network')) {
       return 'There was a problem connecting to the server. Please check your internet connection and try again.';
     }
-    
-    if (error.message.includes('permission')) {
+
+    if (normalizedError.message.includes('permission')) {
       return 'You don\'t have permission to perform this action.';
     }
-    
-    if (error.message.includes('not found')) {
+
+    if (normalizedError.message.includes('not found')) {
       return 'The requested resource could not be found.';
     }
-    
+
     // Default message
     return 'Something went wrong. Please try again later.';
   }
@@ -84,4 +89,15 @@ export class ErrorHandler {
       throw this.handle(error, errorMessage);
     }
   }
+
+  // Static method for simple logging (used throughout codebase)
+  static log(message: string | unknown, context?: string) {
+    if (typeof message === 'string') {
+      logger.info(context ? `${context}: ${message}` : message);
+    } else {
+      logger.info(context || 'Log entry', message);
+    }
+  }
+
+
 }

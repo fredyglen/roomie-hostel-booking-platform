@@ -13,6 +13,7 @@ import { toast } from "@/components/ui/use-toast";
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { Loader } from 'lucide-react';
 import { UserRole } from '@/types/auth';
+import { logger } from '@/utils/enhanced-logger';
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -67,7 +68,7 @@ const Register: React.FC = () => {
   const onSubmit = async (values: RegisterFormValues): Promise<void> => {
     setIsSubmitting(true);
     try {
-      ErrorHandler.log('Register form submitted', JSON.stringify(values));
+      logger.info('Register form submitted', { email: values.email, role: values.role });
       
       await signUp(
         values.email, 

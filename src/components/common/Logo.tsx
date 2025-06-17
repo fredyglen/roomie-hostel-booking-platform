@@ -29,11 +29,11 @@ const Logo: React.FC<LogoProps> = ({
     }
   };
 
-  const color = variant === 'white' ? 'text-white' : 'text-roomi-blue';
+  const color = variant === 'white' ? 'text-white' : 'text-blue-600';
 
   return (
     <Link to="/" className="flex items-center">
-      <div className={`${getSize()} rounded-md bg-gradient-to-br from-roomi-blue to-roomi-teal flex items-center justify-center`}>
+      <div className={`${getSize()} rounded-md bg-gradient-to-br from-blue-600 to-teal-600 flex items-center justify-center`}>
         <span className="text-white font-bold text-xs">R</span>
       </div>
       {withText && (

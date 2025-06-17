@@ -106,9 +106,5 @@ export interface LogContext {
   [key: string]: unknown;
 }
 
-// Global window extension for Paystack
-declare global {
-  interface Window {
-    PaystackPop?: any; // TODO: Replace with proper type when available
-  }
-}
+// Note: Paystack types are defined in src/types/paystack.d.ts
+// This avoids duplicate Window interface declarations

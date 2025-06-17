@@ -5,6 +5,7 @@ import PropertyListContainer from '@/components/properties/PropertyListContainer
 import { BaseLoading } from '@/components/ui/BaseLoading';
 import { BaseError } from '@/components/ui/BaseError';
 import { Property } from '@/types/property';
+import { logger } from '@/utils/enhanced-logger';
 
 const Properties: React.FC = () => {
   const { getProperties, loading, error } = usePropertyData();
@@ -16,7 +17,7 @@ const Properties: React.FC = () => {
         const result = await getProperties();
         setProperties(result.properties);
       } catch (err) {
-        console.error('Failed to fetch properties:', err);
+        logger.error('Failed to fetch properties', err);
       }
     };
 

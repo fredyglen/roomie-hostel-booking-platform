@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm, FieldProps } from 'react-hook-form';
+import { useForm, FieldValues, ControllerRenderProps } from 'react-hook-form';
 import { z } from 'zod';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
@@ -10,16 +10,11 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import Logo from '@/components/common/Logo';
 import { toast } from "@/components/ui/use-toast";
 import { Loader } from 'lucide-react';
-import { ErrorHandler } from '@/utils/ErrorHandler';
-import { useStandardizedErrorHandler } from '@/hooks/common/useStandardizedErrorHandler';
+// Removed unused import
 import { logger } from '@/utils/enhanced-logger';
+import LoginRedirect from '@/components/auth/LoginRedirect';
 
-// Add JSX namespace declaration
-declare namespace JSX {
-  interface IntrinsicElements {
-    [elemName: string]: any;
-  }
-}
+// JSX namespace is handled by React types - removing unnecessary declaration
 
 // Define the form schema with Zod
 const formSchema = z.object({
@@ -30,21 +25,14 @@ const formSchema = z.object({
 // Infer the form values type from the schema
 type LoginFormValues = z.infer<typeof formSchema>;
 
-// Add type for field props
-interface FieldProps {
-  onChange: (value: any) => void;
-  onBlur: () => void;
-  value: string;
-  name: string;
-  ref: React.Ref<any>;
-}
+// Field props are handled by react-hook-form Controller
 
 const Login: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { signIn, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const { handleError } = useStandardizedErrorHandler();
+  // Error handling is done through form validation and toast notifications
   
   // Initialize form with react-hook-form and zod validation
   const form = useForm<LoginFormValues>({
@@ -103,7 +91,7 @@ const Login: React.FC = () => {
     <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gray-50">
       <div className="w-full max-w-md p-8 space-y-8 bg-white rounded-lg shadow-md">
         <div className="flex flex-col items-center justify-center text-center">
-          <Logo className="h-12 w-auto" />
+          <Logo size="lg" />
           <h1 className="mt-6 text-3xl font-extrabold text-gray-900">Sign in to your account</h1>
           <p className="mt-2 text-sm text-gray-600">
             Or{" "}
@@ -118,7 +106,7 @@ const Login: React.FC = () => {
             <FormField
               control={form.control}
               name="email"
-              render={({ field }: { field: FieldProps }) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Email address</FormLabel>
                   <FormControl>
@@ -137,7 +125,7 @@ const Login: React.FC = () => {
             <FormField
               control={form.control}
               name="password"
-              render={({ field }: { field: FieldProps }) => (
+              render={({ field }) => (
                 <FormItem>
                   <FormLabel>Password</FormLabel>
                   <FormControl>

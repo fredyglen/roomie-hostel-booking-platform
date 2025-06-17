@@ -1,0 +1,5 @@
+now we want to establish a sub-properpey management option under roomi, where we will speak and get into contact directly with property manager, then we will plainly let then know the degree and level of transparency we provide, then setup accounts and just be paying into the accounts for whatever time peroid the choose to go with. the minimum will be a year. in conventional terms, they should just sleep, we will screen the student tenants, admit them and then manage everuthing for them, all the will have to do is to check thier accounts peroidically and then be present for meetings where we account for all that we're doing as a company.
+
+
+We will partner with housing complementary services to expand our value and importance. 
+we plan to build and sell an api around this business which is currently not available in the world yet, its a constant challege.

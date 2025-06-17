@@ -47,9 +47,9 @@ export interface ModalProps extends BaseComponentProps {
 }
 
 // Form props
-export interface FormProps extends WithChildrenProps {
-  onSubmit: (data: any) => void;
-  defaultValues?: Record<string, any>;
+export interface FormProps<T = Record<string, unknown>> extends WithChildrenProps {
+  onSubmit: (data: T) => void;
+  defaultValues?: Partial<T>;
 }
 
 // Table props
@@ -63,7 +63,7 @@ export interface TableProps<T> extends BaseComponentProps {
 
 export interface TableColumn<T> {
   header: string;
-  accessor: keyof T | ((row: T) => any);
-  cell?: (value: any, row: T) => ReactNode;
+  accessor: keyof T | ((row: T) => unknown);
+  cell?: (value: unknown, row: T) => ReactNode;
   className?: string;
 }

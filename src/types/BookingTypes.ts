@@ -1,6 +1,5 @@
 // Booking related type definitions
-import { Property } from './PropertyTypes';
-import { User } from './UserTypes';
+// Property and User types are imported where needed
 
 export type BookingStatus = 'PENDING' | 'CONFIRMED' | 'CANCELLED' | 'COMPLETED';
 export type PaymentStatus = 'PENDING' | 'PAID' | 'FAILED' | 'REFUNDED' | 'PARTIAL';
@@ -87,7 +86,7 @@ export interface BookingFormValues {
   studentId?: string;
   university?: string;
   program?: string;
-  idImage?: any; // TODO: Replace with proper file type
+  idImage?: File | string; // File for upload, string for URL
   termsAgreed?: boolean;
 }
 
