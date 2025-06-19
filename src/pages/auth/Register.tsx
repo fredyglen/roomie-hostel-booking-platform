@@ -12,6 +12,7 @@ import { ROOMiLogo } from '@/components/ui/SocialIcons';
 import { toast } from "@/components/ui/use-toast";
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { Loader } from 'lucide-react';
+import { Loader } from 'lucide-react';
 import { UserRole } from '@/types/auth';
 import { logger } from '@/utils/enhanced-logger';
 import SuccessAnimation from '@/components/ui/SuccessAnimation';
@@ -94,6 +95,12 @@ const Register: React.FC = () => {
       // Clear the form
       form.reset();
 
+      // Show success message
+      toast({
+        title: "Account Created Successfully!",
+        description: `Welcome ${values.firstName}! Your ${values.role} account has been created.`,
+      });
+
     } catch (error: unknown) {
       ErrorHandler.handle(error, "Registration submission error");
 
@@ -124,7 +131,13 @@ const Register: React.FC = () => {
   // Handle success animation completion
   const handleSuccessComplete = () => {
     setShowSuccessAnimation(false);
-    navigate('/login');
+    // Navigate to login page with a message
+    navigate('/login', {
+      state: {
+        message: 'Account created successfully! Please sign in with your credentials.',
+        email: successData.name ? form.getValues('email') : undefined
+      }
+    });
   };
 
   return (
@@ -429,16 +442,23 @@ const Register: React.FC = () => {
               style={{
                 width: '100%',
                 height: '44px',
-                background: '#0f68fd',
+                background: isSubmitting ? '#6b7280' : '#0f68fd',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '22px',
                 fontSize: '14px',
                 fontWeight: '500',
-                cursor: 'pointer'
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
               }}
               disabled={isSubmitting}
             >
+              {isSubmitting && (
+                <Loader className="animate-spin" size={16} />
+              )}
               {isSubmitting ? "Creating account..." : "Create account"}
             </Button>
           </form>

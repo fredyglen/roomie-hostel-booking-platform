@@ -226,24 +226,54 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
         {/* Action Buttons */}
         {showActions && (
-          <div className="flex gap-2 mt-auto">
+          <div className="flex flex-col gap-2 mt-auto">
+            {/* Primary Book Now Button */}
             <Button
               onClick={onViewDetails}
-              className="flex-1 btn-premium bg-primary hover:bg-primary/90 text-white font-medium text-xs py-2"
+              className="w-full btn-premium bg-green-600 hover:bg-green-700 text-white font-bold text-sm py-2.5"
               size="sm"
             >
-              View Details
+              Book Now
             </Button>
-            {onViewStory && (
+
+            {/* Secondary Actions */}
+            <div className="flex gap-2">
+              {onViewStory && (
+                <Button
+                  onClick={onViewStory}
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 btn-premium border-primary text-primary hover:bg-primary/5 text-xs py-2"
+                >
+                  View Story
+                </Button>
+              )}
               <Button
-                onClick={onViewStory}
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  // Navigate to property details page
+                  try {
+                    // Try React Router navigation first
+                    if (window.history && window.history.pushState) {
+                      window.history.pushState({}, '', `/student/property/${id}`);
+                      window.dispatchEvent(new PopStateEvent('popstate'));
+                    } else {
+                      // Fallback to direct navigation
+                      window.location.href = `/student/property/${id}`;
+                    }
+                  } catch (error) {
+                    // Final fallback
+                    window.location.href = `/student/property/${id}`;
+                  }
+                }}
                 variant="outline"
                 size="sm"
-                className="flex-1 btn-premium border-primary text-primary hover:bg-primary/5 text-xs py-2"
+                className="flex-1 btn-premium border-gray-300 text-gray-600 hover:bg-gray-50 text-xs py-2"
               >
-                View Story
+                Details
               </Button>
-            )}
+            </div>
           </div>
         )}
       </div>

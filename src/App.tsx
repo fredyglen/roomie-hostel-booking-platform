@@ -14,6 +14,7 @@ import AnalyticsDashboard from '@/pages/owner/AnalyticsDashboard';
 import { UserRole } from '@/types/roles';
 import { initializePerformanceOptimizations } from '@/utils/bundleOptimization';
 import PerformanceMonitor from '@/components/common/PerformanceMonitor';
+import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
 
 // Lazy load all pages for better performance
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -43,6 +44,7 @@ const StoryViewEnhanced = React.lazy(() => import('@/pages/student/StoryViewEnha
 const EnhancedStoryPage = React.lazy(() => import('@/pages/student/EnhancedStoryPage'));
 const PropertyListing = React.lazy(() => import('@/pages/student/PropertyListing'));
 const PropertyStory = React.lazy(() => import('@/pages/student/PropertyStory'));
+const BookingConfirmation = React.lazy(() => import('@/pages/student/BookingConfirmation'));
 
 // Owner Pages
 const OwnerDashboard = React.lazy(() => import('@/pages/owner/Dashboard'));
@@ -201,6 +203,11 @@ function App() {
                 <Route path="/student/book/:id" element={
                   <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
                     <SafeRoute element={<BookingStepsContainer />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/booking-confirmation" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<BookingConfirmation />} />
                   </ProtectedRoute>
                 } />
                 <Route path="/student/booking-history" element={
@@ -365,6 +372,7 @@ function App() {
             </div>
             <Toaster />
             <PerformanceMonitor />
+            <AuthDebugPanel />
           </AuthProvider>
         </ErrorBoundary>
       </Router>

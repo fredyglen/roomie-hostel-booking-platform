@@ -6,6 +6,8 @@ import { useLocalStorage } from './useLocalStorage';
 import { useRoommatesManager } from './useRoommatesManager';
 import { useFormValidation } from './useFormValidation';
 import { calculateTotalPrice } from './usePriceCalculation';
+import { BookingQueries } from '@/services/database/standardizedQueries';
+import { supabase } from '@/integrations/supabase/client';
 
 export const STEP_LABELS = [
   'Room Type',
@@ -27,6 +29,11 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
   const [splitPayment, setSplitPayment] = useState(false);
   const [numberOfRoommates, setNumberOfRoommates] = useState(1);
+
+  // Payment integration state
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [isCreatingBooking, setIsCreatingBooking] = useState(false);
+  const [bookingId, setBookingId] = useState<string | null>(null);
   
   const [formData, setFormData] = useLocalStorage(`booking_form_${id}`, {
     roomType: '',
@@ -64,9 +71,9 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
   );
   
   // Selected room type and price calculations
-  const selectedRoomType = property?.roomTypes?.find(r => r.name === formData.roomType);
-  const selectedPrice = selectedRoomType?.price || 0;
-  const selectedUnit = selectedRoomType?.unit || 'semester';
+  const selectedRoomType = property?.buildings?.[0]?.floors?.[0]?.rooms?.find((r: any) => r.name === formData.roomType);
+  const selectedPrice = selectedRoomType?.price || property?.price?.amount || 0;
+  const selectedUnit = property?.price?.period || 'semester';
   
   // Calculate total price based on duration
   const totalPrice = calculateTotalPrice(
@@ -111,7 +118,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
         numberOfRoommates,
         roommatesInfo,
         selectedPaymentMethod,
-        propertyCategory: property?.propertyCategory
+        propertyCategory: property?.type
       }
     )) return;
     
@@ -133,24 +140,148 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
     }
   };
   
-  const processPayment = () => {
-    // Simulate payment processing
-    toast({
-      title: "Processing payment...",
-    });
-    
-    setTimeout(() => {
-      toast({
-        title: "Payment successful!",
-        description: "Booking confirmed."
-      });
-      
-      // Clear booking form data from localStorage
+  // Business model configuration
+  const BUSINESS_MODEL = {
+    platformCommissionRate: 0.05,  // 5%
+    platformFixedFee: 100,         // 100 GHS
+    paystackFeeRate: 0.0195        // 1.95%
+  };
+
+  const calculatePaymentDistribution = (basePrice: number) => {
+    const platformCommission = basePrice * BUSINESS_MODEL.platformCommissionRate;
+    const platformFee = BUSINESS_MODEL.platformFixedFee;
+    const subtotal = basePrice + platformCommission + platformFee;
+    const paystackFee = subtotal * BUSINESS_MODEL.paystackFeeRate;
+    const totalAmount = subtotal + paystackFee;
+
+    return {
+      basePrice,
+      platformCommission,
+      platformFee,
+      paystackFee,
+      totalAmount,
+      propertyOwnerAmount: basePrice,
+      roomiAmount: platformCommission + platformFee
+    };
+  };
+
+  const handlePaymentSuccess = async (paymentResult: any) => {
+    try {
+      if (!bookingId) {
+        throw new Error('No booking ID found');
+      }
+
+      // Update booking with payment information
+      const { error } = await supabase
+        .from('bookings')
+        .update({
+          payment_status: 'completed',
+          status: 'confirmed',
+          payment_reference: paymentResult.reference,
+          paystack_reference: paymentResult.transaction?.reference || paymentResult.reference,
+          payment_method: paymentResult.verification?.channel || 'card',
+          paid_at: new Date().toISOString()
+        })
+        .eq('id', bookingId);
+
+      if (error) throw error;
+
+      // Clear form data
       localStorage.removeItem(`booking_form_${id}`);
-      
-      // Redirect to dashboard
-      navigate('/student/dashboard');
-    }, 2000);
+
+      // Close payment modal
+      setShowPaymentModal(false);
+
+      // Show success message
+      toast({
+        title: "Payment Successful!",
+        description: "Your booking has been confirmed.",
+      });
+
+      // Navigate to booking confirmation page
+      navigate('/student/booking-confirmation', {
+        state: {
+          bookingId: bookingId,
+          paymentReference: paymentResult.reference
+        }
+      });
+
+    } catch (error: any) {
+      toast({
+        title: "Payment Processing Error",
+        description: "Payment successful but booking update failed. Please contact support.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive"
+    });
+
+    // Keep payment modal open for retry
+    // User can try again or close modal
+  };
+
+  const handlePaymentModalClose = () => {
+    setShowPaymentModal(false);
+    // Booking remains in pending state for user to retry later
+  };
+
+  const processPayment = async () => {
+    try {
+      setIsCreatingBooking(true);
+
+      // Calculate payment distribution
+      const distribution = calculatePaymentDistribution(totalPrice);
+
+      // Get authenticated user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error('User not authenticated');
+      }
+
+      // Create booking record first
+      const bookingData = {
+        student_id: user.id,
+        property_id: id,
+        property_owner_id: property?.user_id || property?.owner_id,
+        room_id: property?.buildings?.[0]?.floors?.[0]?.rooms?.[0]?.id || null,
+        bed_id: property?.buildings?.[0]?.floors?.[0]?.rooms?.[0]?.beds?.[0]?.id || null,
+        check_in_date: formData.checkInDate,
+        check_out_date: new Date(new Date(formData.checkInDate).getTime() + (parseInt(formData.duration) * 30 * 24 * 60 * 60 * 1000)).toISOString(),
+        total_amount: distribution.totalAmount,
+        base_property_price: distribution.basePrice,
+        platform_commission: distribution.platformCommission,
+        platform_fee: distribution.platformFee,
+        student_name: formData.fullName,
+        student_email: formData.email,
+        student_phone: formData.phone,
+        emergency_contact_name: formData.emergencyContact,
+        emergency_contact_phone: formData.emergencyPhone,
+        special_requests: formData.roomType ? `Room type: ${formData.roomType}` : null,
+        payment_status: 'pending',
+        status: 'pending'
+      };
+
+      const booking = await BookingQueries.createBooking(bookingData);
+      setBookingId(booking.id);
+      setIsCreatingBooking(false);
+
+      // Show payment modal
+      setShowPaymentModal(true);
+
+    } catch (error: any) {
+      setIsCreatingBooking(false);
+      toast({
+        title: "Booking Creation Failed",
+        description: error.message || "Failed to create booking. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
   
   return {
@@ -173,6 +304,15 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
     handleNext,
     handleBack,
     setSelectedPaymentMethod,
-    setCurrentStep
+    setCurrentStep,
+    processPayment,
+    // Payment integration state and handlers
+    showPaymentModal,
+    setShowPaymentModal,
+    isCreatingBooking,
+    handlePaymentSuccess,
+    handlePaymentError,
+    handlePaymentModalClose,
+    paymentDistribution: calculatePaymentDistribution(totalPrice)
   };
 };

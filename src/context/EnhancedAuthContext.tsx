@@ -242,6 +242,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         if (userWithProfile) {
           setUser(userWithProfile);
           logger.info('User profile set', { role: userWithProfile.role });
+
+          // Ensure loading is set to false after successful login
+          setLoading(false);
         }
       }
 

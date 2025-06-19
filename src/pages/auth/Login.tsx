@@ -43,6 +43,24 @@ const Login: React.FC = () => {
     },
   });
 
+  // Show registration success message if coming from registration
+  useEffect(() => {
+    if (location.state?.message) {
+      toast({
+        title: "Registration Successful",
+        description: location.state.message,
+      });
+
+      // Pre-fill email if provided
+      if (location.state.email) {
+        form.setValue('email', location.state.email);
+      }
+
+      // Clear the state to prevent showing message again
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, toast]);
+
   // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
@@ -72,14 +90,29 @@ const Login: React.FC = () => {
 
       toast({
         title: "Login successful",
-        description: "You have been signed in",
+        description: "Redirecting to your dashboard...",
       });
       // The redirection will be handled by the useEffect above when the user state updates
     } catch (error: unknown) {
       logger.error('Login error', { error });
+
+      // Provide more specific error messages
+      let errorMessage = "An error occurred during login";
+      if (error instanceof Error) {
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = "Invalid email or password. Please check your credentials and try again.";
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = "Please check your email and confirm your account before signing in.";
+        } else if (error.message.includes('Too many requests')) {
+          errorMessage = "Too many login attempts. Please wait a moment and try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       toast({
         title: "Login failed",
-        description: error instanceof Error ? error.message : "An error occurred during login",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -274,17 +307,24 @@ const Login: React.FC = () => {
               style={{
                 width: '100%',
                 height: '44px',
-                background: '#0f68fd',
+                background: isSubmitting ? '#6b7280' : '#0f68fd',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '22px',
                 fontSize: '14px',
                 fontWeight: '500',
-                cursor: 'pointer',
-                marginBottom: '16px'
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
               }}
               disabled={isSubmitting}
             >
+              {isSubmitting && (
+                <Loader className="animate-spin" size={16} />
+              )}
               {isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
           </form>

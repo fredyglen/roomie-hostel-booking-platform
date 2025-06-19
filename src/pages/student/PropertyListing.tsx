@@ -65,6 +65,15 @@ const PropertyListing: React.FC = () => {
     navigate(`/student/property/${propertyId}/story`);
   };
 
+  const handleViewDetails = (propertyId: number) => {
+    // Navigate directly to booking flow for faster access
+    navigate(`/student/book/${propertyId}`);
+  };
+
+  const handleViewStory = (propertyId: number) => {
+    navigate(`/student/property/${propertyId}/story`);
+  };
+
   const getAmenityLabel = (amenity: string) => {
     switch (amenity) {
       case 'wifi': return 'WiFi';
@@ -206,8 +215,8 @@ const PropertyListing: React.FC = () => {
               totalBedsAvailable={Math.floor(Math.random() * 8) + 1}
               totalBeds={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : 4}
               priceUnit="semester"
-              onViewDetails={() => handlePropertyClick(property.id)}
-              onViewStory={() => handlePropertyClick(property.id)}
+              onViewDetails={() => handleViewDetails(property.id)}
+              onViewStory={() => handleViewStory(property.id)}
             />
           </LazyPropertyCard>
         ))}
