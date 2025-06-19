@@ -1,11 +1,13 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Users, Bed, Bath } from 'lucide-react';
+import { MapPin, Users, Bed, Bath, Lock } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import LazyImage from '@/components/common/LazyImage';
+import { useBookingAccess } from '@/hooks/useBookingAccess';
+import RegistrationPromptModal from '@/components/auth/RegistrationPromptModal';
 import {
   WifiIcon,
   AirConditionIcon,
@@ -43,7 +45,6 @@ export interface PropertyCardProps {
   priceUnit?: 'semester' | 'month' | 'year';
   onViewDetails: () => void;
   onViewStory?: () => void;
-  showActions?: boolean;
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({
@@ -65,10 +66,42 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   totalBeds = 1,
   priceUnit = 'semester',
   onViewDetails,
-  onViewStory,
-  showActions = true
+  onViewStory
 }) => {
-  const primaryImage = images && images.length > 0 ? images[0] : undefined;
+  const { accessLevel, canPerformAction, filterPropertyData, getRegistrationPrompt } = useBookingAccess();
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+
+  // Filter property data based on user access level
+  const filteredProperty = filterPropertyData({
+    id, title, rent, location, bedrooms, bathrooms, maxOccupants,
+    images, amenities, propertyType, genderRestriction, isAvailable,
+    roomTypes, distanceToCampus, totalBedsAvailable, totalBeds, priceUnit
+  });
+
+  const primaryImage = filteredProperty.images && filteredProperty.images.length > 0 ? filteredProperty.images[0] : undefined;
+
+  // Handle booking attempt
+  const handleBookingAttempt = () => {
+    if (!canPerformAction('start_booking')) {
+      setShowRegistrationModal(true);
+      return;
+    }
+    onViewDetails();
+  };
+
+  // Handle story view attempt
+  const handleStoryAttempt = () => {
+    if (!canPerformAction('view_details') && onViewStory) {
+      setShowRegistrationModal(true);
+      return;
+    }
+    if (onViewStory) {
+      onViewStory();
+    }
+  };
+
+  // Get registration prompt data
+  const registrationPrompt = getRegistrationPrompt();
 
   // Calculate bed availability percentage for color coding
   const availabilityPercentage = totalBeds > 0 ? (totalBedsAvailable / totalBeds) * 100 : 0;
@@ -81,6 +114,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   const availabilityInfo = getAvailabilityStatus();
+
+
 
   // Get room type display (most common or cheapest)
   const getRoomTypeDisplay = () => {
@@ -106,23 +141,40 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   };
 
   return (
-    <Card className="overflow-hidden card-premium animate-fade-in-up h-[280px] flex flex-col">
+    <Card
+      className={`overflow-hidden card-premium animate-fade-in-up h-[280px] sm:h-[280px] flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200 w-full ${
+        !canPerformAction('view_details') ? 'relative' : ''
+      }`}
+      onClick={() => {
+        console.log(`Navigating to property details for: ${filteredProperty.title}`);
+        handleBookingAttempt();
+      }}
+    >
+      {/* Access Restriction Overlay */}
+      {!canPerformAction('view_details') && (
+        <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] z-10 flex items-center justify-center">
+          <div className="bg-white/90 rounded-lg p-3 flex items-center gap-2 shadow-lg">
+            <Lock size={16} className="text-primary" />
+            <span className="text-sm font-medium text-gray-800">Register to View Details</span>
+          </div>
+        </div>
+      )}
       {/* Enhanced Image Section with Better Visibility */}
-      <div className="relative h-[140px] flex-shrink-0">
+      <div className="relative h-[70px] flex-shrink-0">
         <LazyImage
           src={primaryImage || '/placeholder-property.jpg'}
           alt={title}
           className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
           width={400}
-          height={140}
+          height={70}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           priority={false}
         />
 
         {/* Bed Availability Badge - Top Left */}
-        <div className="absolute top-2 left-2">
+        <div className="absolute top-1 left-1">
           <Badge
-            className={`${availabilityInfo.color} ${availabilityInfo.textColor} text-xs font-bold px-2 py-1`}
+            className={`${availabilityInfo.color} ${availabilityInfo.textColor} text-xs font-bold px-1 py-0.5`}
           >
             {availabilityInfo.status}
           </Badge>
@@ -130,21 +182,21 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
         {/* Gender Restriction - Top Right */}
         {genderRestriction && genderRestriction !== 'mixed' && (
-          <div className="absolute top-2 right-2">
+          <div className="absolute top-1 right-1">
             <Badge
               variant="outline"
-              className="bg-white/90 text-gray-800 text-xs font-medium border-gray-300"
+              className="bg-white/90 text-gray-800 text-xs font-medium border-gray-300 px-1 py-0.5"
             >
-              {genderRestriction === 'male' ? '♂ Male' : '♀ Female'}
+              {genderRestriction === 'male' ? '♂' : '♀'}
             </Badge>
           </div>
         )}
 
         {/* Property Type Badge - Bottom Right */}
-        <div className="absolute bottom-2 right-2">
+        <div className="absolute bottom-1 right-1">
           <Badge
             variant="secondary"
-            className="bg-black/70 text-white text-xs font-medium"
+            className="bg-black/70 text-white text-xs font-medium px-1 py-0.5"
           >
             {propertyType}
           </Badge>
@@ -153,10 +205,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         {/* Story View Button - Bottom Left */}
         {onViewStory && (
           <button
-            onClick={onViewStory}
-            className="absolute bottom-2 left-2 bg-white/90 hover:bg-white rounded-full p-2 transition-all duration-200 shadow-md"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Story view icon clicked for property:', id);
+              handleStoryAttempt();
+            }}
+            className={`absolute bottom-1 left-1 bg-white/90 hover:bg-white rounded-full p-1 transition-all duration-200 shadow-md ${
+              !canPerformAction('view_details') ? 'opacity-50' : ''
+            }`}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" className="text-primary">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-primary">
               <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
                     stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -165,35 +224,38 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       </div>
 
       {/* Enhanced Content Section */}
-      <div className="p-3 flex-1 flex flex-col justify-between">
+      <div className="p-2 flex-1 flex flex-col justify-between min-h-0">
         {/* Header with Title and Price */}
         <div className="flex justify-between items-start mb-2">
-          <h3 className="font-bold text-gray-900 text-sm leading-tight line-clamp-2 flex-1 mr-2">
-            {title}
+          <h3 className="font-bold text-gray-900 text-base leading-tight line-clamp-1 flex-1 mr-2">
+            {filteredProperty.title}
           </h3>
           <div className="text-right flex-shrink-0">
             <div className="text-lg font-bold text-primary">
-              ¢{rent.toLocaleString()}
+              ¢{filteredProperty.rent.toLocaleString()}
             </div>
-            <div className="text-xs text-gray-500">/{priceUnit}</div>
+            <div className="text-sm text-gray-500">/{filteredProperty.priceUnit}</div>
           </div>
         </div>
 
         {/* Location and Distance */}
-        <div className="flex items-center justify-between text-xs text-gray-600 mb-2">
+        <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
           <div className="flex items-center flex-1">
             <LocationIcon size={12} />
-            <span className="ml-1 truncate">{location}</span>
+            <span className="ml-1 truncate">{filteredProperty.location}</span>
+            {!canPerformAction('view_location') && (
+              <Lock size={10} className="ml-1 text-gray-400" />
+            )}
           </div>
-          {distanceToCampus && (
-            <span className="text-primary font-medium ml-2 flex-shrink-0">
-              {distanceToCampus}
+          {filteredProperty.distanceToCampus && (
+            <span className="text-primary font-medium ml-1 flex-shrink-0 text-sm">
+              {filteredProperty.distanceToCampus}
             </span>
           )}
         </div>
 
         {/* Room Type and Bed Availability */}
-        <div className="flex items-center justify-between text-xs mb-2">
+        <div className="flex items-center justify-between text-sm mb-2">
           <div className="flex items-center">
             <BedroomIcon size={12} />
             <span className="ml-1 font-medium text-gray-700">
@@ -201,82 +263,54 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             </span>
           </div>
           <div className="text-right">
-            <span className={`font-bold ${
+            <span className={`font-bold text-sm ${
               totalBedsAvailable > 0 ? 'text-green-600' : 'text-red-600'
             }`}>
-              {totalBedsAvailable} bed{totalBedsAvailable !== 1 ? 's' : ''} available
+              {totalBedsAvailable} available
             </span>
           </div>
         </div>
 
-        {/* Amenities */}
-        <div className="flex flex-wrap gap-1 mb-3">
-          {amenities.slice(0, 4).map((amenity, index) => (
-            <div key={index} className="flex items-center bg-blue-50 rounded-full px-2 py-1 text-xs text-primary">
+        {/* Amenities - Enhanced */}
+        <div className="flex flex-wrap gap-1 mb-2">
+          {filteredProperty.amenities.slice(0, 2).map((amenity, index) => (
+            <div key={index} className="flex items-center bg-blue-50 rounded-full px-2 py-1 text-sm text-primary">
               {getAmenityIcon(amenity)}
               <span className="ml-1 font-medium">{amenity}</span>
             </div>
           ))}
-          {amenities.length > 4 && (
-            <div className="flex items-center bg-gray-100 rounded-full px-2 py-1 text-xs text-gray-600">
-              +{amenities.length - 4}
+          {filteredProperty.amenities.length > 2 && (
+            <div className="flex items-center bg-gray-100 rounded-full px-2 py-1 text-sm text-gray-600">
+              +{filteredProperty.amenities.length - 2}
+              {!canPerformAction('view_details') && (
+                <Lock size={10} className="ml-1 text-gray-400" />
+              )}
             </div>
           )}
         </div>
 
-        {/* Action Buttons */}
-        {showActions && (
-          <div className="flex flex-col gap-2 mt-auto">
-            {/* Primary Book Now Button */}
-            <Button
-              onClick={onViewDetails}
-              className="w-full btn-premium bg-green-600 hover:bg-green-700 text-white font-bold text-sm py-2.5"
-              size="sm"
-            >
-              Book Now
-            </Button>
-
-            {/* Secondary Actions */}
-            <div className="flex gap-2">
-              {onViewStory && (
-                <Button
-                  onClick={onViewStory}
-                  variant="outline"
-                  size="sm"
-                  className="flex-1 btn-premium border-primary text-primary hover:bg-primary/5 text-xs py-2"
-                >
-                  View Story
-                </Button>
-              )}
-              <Button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  // Navigate to property details page
-                  try {
-                    // Try React Router navigation first
-                    if (window.history && window.history.pushState) {
-                      window.history.pushState({}, '', `/student/property/${id}`);
-                      window.dispatchEvent(new PopStateEvent('popstate'));
-                    } else {
-                      // Fallback to direct navigation
-                      window.location.href = `/student/property/${id}`;
-                    }
-                  } catch (error) {
-                    // Final fallback
-                    window.location.href = `/student/property/${id}`;
-                  }
-                }}
-                variant="outline"
-                size="sm"
-                className="flex-1 btn-premium border-gray-300 text-gray-600 hover:bg-gray-50 text-xs py-2"
-              >
-                Details
-              </Button>
-            </div>
+        {/* Access Level Indicator */}
+        {accessLevel.accessTier === 'anonymous' && (
+          <div className="mt-2 text-xs text-gray-500 text-center">
+            <Lock size={10} className="inline mr-1" />
+            Register to view all details
           </div>
         )}
+
       </div>
+
+      {/* Registration Prompt Modal */}
+      {registrationPrompt && (
+        <RegistrationPromptModal
+          isOpen={showRegistrationModal}
+          onClose={() => setShowRegistrationModal(false)}
+          title={registrationPrompt.title}
+          message={registrationPrompt.message}
+          actionText={registrationPrompt.actionText}
+          benefits={registrationPrompt.benefits}
+          trigger="booking_attempt"
+        />
+      )}
     </Card>
   );
 };

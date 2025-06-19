@@ -72,6 +72,15 @@ const Login: React.FC = () => {
         userObject: user
       });
 
+      // Reset submitting state before navigation
+      setIsSubmitting(false);
+
+      // Show success message
+      toast({
+        title: "Login successful",
+        description: `Welcome back! Redirecting to your ${userRole} dashboard...`,
+      });
+
       const from = location.state?.from ||
         (userRole === 'student' ? '/student/properties' :
          userRole === 'owner' || userRole === 'agent' ? '/owner/dashboard' :
@@ -79,7 +88,7 @@ const Login: React.FC = () => {
 
       navigate(from, { replace: true });
     }
-  }, [user, navigate, location]);
+  }, [user, navigate, location, toast]);
 
   // Form submission handler
   const onSubmit = async (values: LoginFormValues): Promise<void> => {
@@ -88,10 +97,9 @@ const Login: React.FC = () => {
       logger.info('Login form submitted', { email: values.email });
       await signIn(values.email, values.password);
 
-      toast({
-        title: "Login successful",
-        description: "Redirecting to your dashboard...",
-      });
+      // Don't show success toast immediately - wait for navigation
+      logger.info('Sign in completed, waiting for auth state change and navigation');
+
       // The redirection will be handled by the useEffect above when the user state updates
     } catch (error: unknown) {
       logger.error('Login error', { error });
@@ -115,9 +123,11 @@ const Login: React.FC = () => {
         description: errorMessage,
         variant: "destructive",
       });
-    } finally {
+
+      // Reset submitting state on error
       setIsSubmitting(false);
     }
+    // Don't set isSubmitting to false on success - let navigation handle it
   };
 
   return (
@@ -329,6 +339,105 @@ const Login: React.FC = () => {
             </Button>
           </form>
         </Form>
+
+        {/* EMERGENCY BYPASS BUTTON - DEVELOPMENT ONLY */}
+        {process.env.NODE_ENV === 'development' && (
+          <div style={{ marginBottom: '16px' }}>
+            <Button
+              type="button"
+              onClick={async () => {
+                console.log('🚨 EMERGENCY BYPASS - Creating mock user session');
+                try {
+                  // Create a mock user session for development
+                  const mockUser = {
+                    id: 'dev-bypass-user-' + Date.now(),
+                    email: 'dev@roomi.com',
+                    role: 'student' as const,
+                    firstName: 'Dev',
+                    lastName: 'User',
+                    phone: '+233123456789',
+                    avatarUrl: undefined,
+                    aud: 'authenticated',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString(),
+                    email_confirmed_at: new Date().toISOString(),
+                    last_sign_in_at: new Date().toISOString(),
+                    app_metadata: {},
+                    user_metadata: {
+                      role: 'student',
+                      first_name: 'Dev',
+                      last_name: 'User'
+                    },
+                    identities: [],
+                    factors: []
+                  };
+
+                  // Temporarily override the auth context for development
+                  (window as any).__DEV_BYPASS_USER__ = mockUser;
+
+                  console.log('🚨 EMERGENCY BYPASS - Mock user created, navigating to properties');
+
+                  // Add visual feedback
+                  const button = document.querySelector('[data-bypass-button]') as HTMLButtonElement;
+                  if (button) {
+                    button.textContent = '✅ BYPASS ACTIVE - Redirecting...';
+                    button.style.background = '#16a34a';
+                  }
+
+                  // Small delay for visual feedback
+                  setTimeout(() => {
+                    navigate('/student/properties', { replace: true });
+                  }, 500);
+                } catch (error) {
+                  console.error('🚨 EMERGENCY BYPASS - Error:', error);
+                  // Fallback to unprotected route
+                  navigate('/landing', { replace: true });
+                }
+              }}
+              data-bypass-button
+              style={{
+                width: '100%',
+                height: '44px',
+                background: '#dc2626',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '22px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: 'pointer',
+                marginBottom: '8px'
+              }}
+            >
+              🚨 EMERGENCY BYPASS - Skip to Properties (DEV ONLY)
+            </Button>
+
+            {/* Clear bypass button */}
+            {(window as any).__DEV_BYPASS_USER__ && (
+              <Button
+                type="button"
+                onClick={() => {
+                  delete (window as any).__DEV_BYPASS_USER__;
+                  console.log('🚨 EMERGENCY BYPASS - Cleared');
+                  window.location.reload();
+                }}
+                style={{
+                  width: '100%',
+                  height: '32px',
+                  background: '#6b7280',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '16px',
+                  fontSize: '12px',
+                  fontWeight: '400',
+                  cursor: 'pointer',
+                  marginBottom: '8px'
+                }}
+              >
+                Clear Dev Bypass
+              </Button>
+            )}
+          </div>
+        )}
 
         {/* Sign Up Link */}
         <div style={{

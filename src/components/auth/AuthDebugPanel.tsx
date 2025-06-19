@@ -1,16 +1,31 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useNavigate } from 'react-router-dom';
+import { ChevronDown, ChevronUp, X } from 'lucide-react';
 
 const AuthDebugPanel: React.FC = () => {
   const { user, session, loading, signOut } = useAuth();
   const navigate = useNavigate();
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
 
   if (process.env.NODE_ENV === 'production') {
     return null; // Don't show in production
+  }
+
+  if (!isVisible) {
+    return (
+      <Button
+        onClick={() => setIsVisible(true)}
+        className="fixed bottom-4 right-4 z-50 bg-blue-600 hover:bg-blue-700 text-white p-2 rounded-full shadow-lg"
+        size="sm"
+      >
+        🔧
+      </Button>
+    );
   }
 
   const handleNavigateToRole = (role: string) => {
@@ -31,16 +46,39 @@ const AuthDebugPanel: React.FC = () => {
   };
 
   return (
-    <Card className="fixed bottom-4 right-4 w-80 z-50 bg-white shadow-lg border-2 border-blue-200">
+    <Card className={`fixed bottom-4 right-4 z-50 bg-white shadow-lg border-2 border-blue-200 transition-all duration-200 ${
+      isMinimized ? 'w-64' : 'w-80'
+    }`}>
       <CardHeader className="pb-2">
         <CardTitle className="text-sm flex items-center justify-between">
-          🔧 Auth Debug Panel
-          <Badge variant={user ? "default" : "secondary"}>
-            {loading ? "Loading..." : user ? "Authenticated" : "Not Authenticated"}
-          </Badge>
+          <div className="flex items-center gap-2">
+            🔧 Auth Debug Panel
+            <Badge variant={user ? "default" : "secondary"}>
+              {loading ? "Loading..." : user ? "Authenticated" : "Not Authenticated"}
+            </Badge>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              onClick={() => setIsMinimized(!isMinimized)}
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0"
+            >
+              {isMinimized ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
+            </Button>
+            <Button
+              onClick={() => setIsVisible(false)}
+              variant="ghost"
+              size="sm"
+              className="h-6 w-6 p-0 text-gray-500 hover:text-red-500"
+            >
+              <X size={12} />
+            </Button>
+          </div>
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3 text-xs">
+      {!isMinimized && (
+        <CardContent className="space-y-3 text-xs">
         {/* User Info */}
         {user ? (
           <div className="space-y-2">
@@ -152,7 +190,8 @@ const AuthDebugPanel: React.FC = () => {
             </div>
           </div>
         )}
-      </CardContent>
+        </CardContent>
+      )}
     </Card>
   );
 };

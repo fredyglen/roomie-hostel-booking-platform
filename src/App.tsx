@@ -15,6 +15,7 @@ import { UserRole } from '@/types/roles';
 import { initializePerformanceOptimizations } from '@/utils/bundleOptimization';
 import PerformanceMonitor from '@/components/common/PerformanceMonitor';
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
+import { DevBypassIndicator } from '@/components/dev/DevBypassIndicator';
 
 // Lazy load all pages for better performance
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -138,6 +139,7 @@ function App() {
           }}
         >
           <AuthProvider>
+            <DevBypassIndicator />
             <div className="min-h-screen bg-gray-50">
               <Routes>
                 {/* Public Routes */}

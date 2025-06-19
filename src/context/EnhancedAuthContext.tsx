@@ -170,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logger.warn('Auth initialization timeout, setting loading to false');
         setLoading(false);
       }
-    }, 5000); // Reduced to 5 seconds
+    }, 3000); // Reduced to 3 seconds for faster feedback
 
     getSession().finally(() => {
       clearTimeout(timeoutId);
@@ -191,6 +191,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             const userWithProfile = await fetchUserProfile(session.user.id);
             if (isMounted) {
               setUser(userWithProfile);
+              logger.info('Profile fetch completed, setting loading to false');
             }
           } else {
             logger.info('No user session, clearing user state');
@@ -206,6 +207,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         } finally {
           if (isMounted) {
             setLoading(false);
+            logger.info('Auth state change completed, loading set to false');
           }
         }
       }
@@ -234,22 +236,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
-      if (data.user && data.session) {
-        setSession(data.session);
-        logger.info('Sign in successful, fetching profile');
-        // Fetch the user profile immediately
-        const userWithProfile = await fetchUserProfile(data.user.id);
-        if (userWithProfile) {
-          setUser(userWithProfile);
-          logger.info('User profile set', { role: userWithProfile.role });
+      // Don't manually fetch profile here - let the auth state change handler do it
+      // This prevents the race condition and infinite loading
+      logger.info('Sign in successful, auth state change will handle profile fetch');
 
-          // Ensure loading is set to false after successful login
-          setLoading(false);
-        }
-      }
-
-      // Don't set loading to false here - let the auth state change handler do it
-      logger.info('Sign in process completed, waiting for auth state change');
     } catch (error) {
       logger.error('Error signing in', { error });
       setLoading(false);
@@ -420,5 +410,18 @@ export function useAuth() {
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+
+  // In development, check for bypass user
+  if (process.env.NODE_ENV === 'development') {
+    const devBypassUser = (window as any).__DEV_BYPASS_USER__;
+    if (devBypassUser && !context.user) {
+      return {
+        ...context,
+        user: devBypassUser,
+        loading: false
+      };
+    }
+  }
+
   return context;
 }
