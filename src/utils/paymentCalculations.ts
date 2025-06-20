@@ -65,7 +65,7 @@ export const calculateBookingCosts = (
   durationMonths: number = 1,
   packageType: 'standard' | 'premium' | 'luxury' = 'standard'
 ): BookingCosts => {
-  const baseRent = property.rent || property.price;
+  const baseRent = property.price.amount;
   const subtotal = baseRent * durationMonths;
   
   const platformFee = subtotal * PAYMENT_CONFIG.platformFeePercentage;
