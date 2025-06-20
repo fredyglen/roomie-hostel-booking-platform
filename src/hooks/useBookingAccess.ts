@@ -53,16 +53,16 @@ export const useBookingAccess = () => {
       };
     }
 
-    // Registered user - enhanced access
+    // Registered user - enhanced access (no document verification required for browsing)
     if (user && !user.verified) {
       return {
         canViewBasicInfo: true,
         canViewDetailedInfo: true,
-        canViewExactLocation: false,
-        canInitiateBooking: true,
-        canViewPremiumFeatures: false,
+        canViewExactLocation: true, // Allow location viewing for registered users
+        canInitiateBooking: false, // Require verification only for booking
+        canViewPremiumFeatures: true, // Allow premium features for registered users
         accessTier: 'registered',
-        restrictionMessage: 'Complete student verification to access exact locations and premium features'
+        restrictionMessage: 'Student verification required to book properties. Upload your student ID to complete booking.'
       };
     }
 
@@ -190,15 +190,15 @@ export const useBookingAccess = () => {
 
     if (accessLevel.accessTier === 'registered') {
       return {
-        title: 'Complete Student Verification',
-        message: 'Upload your student ID or proof of enrollment to access premium features and exact property locations.',
-        actionText: 'Verify Student Status',
+        title: 'Student Verification Required for Booking',
+        message: 'Upload your student ID or proof of enrollment to book properties and complete reservations.',
+        actionText: 'Start Booking Process',
         benefits: [
-          'View exact property locations',
-          'Access Google Maps integration',
-          'Premium property features',
+          'Book student accommodations',
+          'Secure your preferred room',
+          'Access booking management',
           'Priority booking status',
-          'Enhanced security verification'
+          'Verified student pricing'
         ]
       };
     }

@@ -7,7 +7,10 @@ import {
 import PropertyCard from '@/components/properties/PropertyCard';
 import LazyPropertyCard from '@/components/common/LazyPropertyCard';
 import ViewingProgressIndicator from '@/components/properties/ViewingProgressIndicator';
+import TimeLimitIndicator from '@/components/auth/TimeLimitIndicator';
+import TimeLimitOverlay from '@/components/auth/TimeLimitOverlay';
 import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
+import { useAnonymousTimeLimit } from '@/hooks/useAnonymousTimeLimit';
 import GhanaHostelService, { GhanaProperty } from '../../services/ghanaHostelService';
 import { getGenderRestrictionLabel, getFacilityTypeLabel, getProximityBadge } from '../../data/ghanaHostels';
 
@@ -17,29 +20,52 @@ const ghanaProperties = GhanaHostelService.convertToProperties();
 const PropertyListing: React.FC = () => {
   const navigate = useNavigate();
   const { getViewingProgress, isAnonymous } = usePropertyViewingTracker();
+  const {
+    timeLimitStatus,
+    shouldBlockAction,
+    getRestrictionMessage,
+    hasTimeLimit
+  } = useAnonymousTimeLimit();
+
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [occupants, setOccupants] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [showTimeLimitOverlay, setShowTimeLimitOverlay] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const properties = ghanaProperties;
 
+  // Check time limit before allowing actions
+  const checkTimeLimitAndProceed = (action: 'navigation' | 'property_view' | 'search' | 'filter', callback: () => void) => {
+    if (shouldBlockAction(action)) {
+      setShowTimeLimitOverlay(true);
+      return;
+    }
+    callback();
+  };
+
   const handlePropertyClick = (propertyId: number) => {
-    console.log('Property clicked:', propertyId);
-    navigate(`/student/property/${propertyId}/story`);
+    checkTimeLimitAndProceed('property_view', () => {
+      console.log('Property clicked:', propertyId);
+      navigate(`/student/property/${propertyId}/story`);
+    });
   };
 
   const handleViewDetails = (propertyId: number) => {
-    console.log('View details clicked for property:', propertyId);
-    // Navigate directly to booking flow for faster access
-    navigate(`/student/book/${propertyId}`);
+    checkTimeLimitAndProceed('property_view', () => {
+      console.log('View details clicked for property:', propertyId);
+      // Navigate directly to booking flow for faster access
+      navigate(`/student/book/${propertyId}`);
+    });
   };
 
   const handleViewStory = (propertyId: number) => {
-    console.log('View story clicked for property:', propertyId);
-    navigate(`/student/property/${propertyId}/story`);
+    checkTimeLimitAndProceed('property_view', () => {
+      console.log('View story clicked for property:', propertyId);
+      navigate(`/student/property/${propertyId}/story`);
+    });
   };
 
   const getAmenityLabel = (amenity: string) => {
@@ -92,13 +118,23 @@ const PropertyListing: React.FC = () => {
   });
 
   const handleFilterClick = (filter: string) => {
-    setSelectedFilter(filter);
-    console.log('Filter selected:', filter);
+    checkTimeLimitAndProceed('filter', () => {
+      setSelectedFilter(filter);
+      console.log('Filter selected:', filter);
+    });
   };
 
   const handleFilterToggle = () => {
-    setShowFilters(!showFilters);
-    console.log('Filter panel toggled:', !showFilters);
+    checkTimeLimitAndProceed('filter', () => {
+      setShowFilters(!showFilters);
+      console.log('Filter panel toggled:', !showFilters);
+    });
+  };
+
+  const handleSearchChange = (value: string) => {
+    checkTimeLimitAndProceed('search', () => {
+      setSearchQuery(value);
+    });
   };
 
   // Swipe gesture handlers
@@ -152,6 +188,16 @@ const PropertyListing: React.FC = () => {
         padding: '16px',
         borderBottom: '1px solid #f0f0f0'
       }}>
+        {/* Time Limit Indicator for Anonymous Users */}
+        {hasTimeLimit && (
+          <div className="mb-3 flex justify-center">
+            <TimeLimitIndicator
+              timeRemaining={timeLimitStatus.timeRemaining}
+              isActive={timeLimitStatus.isActive}
+              isExpired={timeLimitStatus.isExpired}
+            />
+          </div>
+        )}
         {/* Search Bar */}
         <div style={{
           position: 'relative',
@@ -175,7 +221,7 @@ const PropertyListing: React.FC = () => {
               type="text"
               placeholder="Search properties, locations..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearchChange(e.target.value)}
               style={{
                 width: '100%',
                 height: '32px',
@@ -416,6 +462,15 @@ const PropertyListing: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* Time Limit Overlay */}
+      <TimeLimitOverlay
+        isVisible={showTimeLimitOverlay}
+        timeRemaining={timeLimitStatus.timeRemaining}
+        isExpired={timeLimitStatus.isExpired}
+        restrictionMessage={getRestrictionMessage('navigation')}
+        onClose={() => setShowTimeLimitOverlay(false)}
+      />
     </div>
   );
 };
