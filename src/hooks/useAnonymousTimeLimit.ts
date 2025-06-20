@@ -21,14 +21,24 @@ const STORAGE_KEY = 'roomi_anonymous_session';
 // Generate a unique session ID that can't be easily cleared
 const generateSessionId = () => {
   const timestamp = Date.now();
-  const random = Math.random().toString(36).substr(2, 9);
+  const random = Math.random().toString(36).substring(2, 11);
   const userAgent = navigator.userAgent;
-  const screen = `${screen.width}x${screen.height}`;
-  return btoa(`${timestamp}-${random}-${userAgent}-${screen}`).substr(0, 32);
+  const screenRes = `${window.screen.width}x${window.screen.height}`;
+  return btoa(`${timestamp}-${random}-${userAgent}-${screenRes}`).substring(0, 32);
 };
 
+// Session data interface
+interface SessionData {
+  sessionId: string;
+  startTime: number;
+  expiryTime: number;
+  timeLimitSeconds: number;
+  userAgent: string;
+  screenResolution: string;
+}
+
 // Store session data in multiple locations to prevent easy clearing
-const storeSessionData = (data: any) => {
+const storeSessionData = (data: SessionData) => {
   const serialized = JSON.stringify(data);
   
   // Store in localStorage

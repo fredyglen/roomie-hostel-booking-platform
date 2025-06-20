@@ -41,7 +41,7 @@ export interface BookingFormData {
   studentId: string;
   university: string;
   program: string;
-  idImage: any;
+  idImage: File | null;
   termsAgreed: boolean;
 }
 

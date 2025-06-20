@@ -206,8 +206,12 @@ export function useCSRFProtection() {
 export function createCSRFMiddleware() {
   const csrf = CSRFProtection.getInstance();
   
+  interface RequestWithHeaders {
+    headers?: Record<string, string>;
+  }
+
   return {
-    beforeRequest: (request: any) => {
+    beforeRequest: (request: RequestWithHeaders) => {
       // Add CSRF headers to Supabase requests
       if (request.headers) {
         Object.assign(request.headers, csrf.getHeaders());

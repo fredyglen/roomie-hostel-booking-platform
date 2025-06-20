@@ -1,8 +1,8 @@
 import { useState, useCallback } from 'react';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
-interface UseAsyncReturn<T, E = Error> {
-  execute: (...args: any[]) => Promise<T | null>;
+interface UseAsyncReturn<T, A extends unknown[] = unknown[], E = Error> {
+  execute: (...args: A) => Promise<T | null>;
   status: 'idle' | 'pending' | 'success' | 'error';
   value: T | null;
   error: E | null;
@@ -15,18 +15,18 @@ interface UseAsyncReturn<T, E = Error> {
 /**
  * Hook for handling async operations with loading, success, and error states
  */
-export function useAsync<T, E = Error>(
-  asyncFunction: (...args: any[]) => Promise<T>,
+export function useAsync<T, A extends unknown[] = unknown[], E = Error>(
+  asyncFunction: (...args: A) => Promise<T>,
   immediate = false,
   context = 'useAsync'
-): UseAsyncReturn<T, E> {
+): UseAsyncReturn<T, A, E> {
   const [status, setStatus] = useState<'idle' | 'pending' | 'success' | 'error'>('idle');
   const [value, setValue] = useState<T | null>(null);
   const [error, setError] = useState<E | null>(null);
 
   // The execute function wraps asyncFunction and handles state changes
   const execute = useCallback(
-    async (...args: any[]): Promise<T | null> => {
+    async (...args: A): Promise<T | null> => {
       setStatus('pending');
       setValue(null);
       setError(null);

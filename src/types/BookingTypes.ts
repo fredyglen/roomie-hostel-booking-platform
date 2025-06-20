@@ -35,12 +35,22 @@ export interface Booking {
   payment_status: PaymentStatus;
   total_amount: number;
   deposit_amount?: number;
-  payment_details?: Record<string, any>;
+  payment_details?: Record<string, unknown>;
   notes?: string;
   created_at: string;
   updated_at: string;
-  property?: any; // This would be the Property type
-  student?: any; // This would be the User type
+  property?: {
+    id: string;
+    title: string;
+    address: string;
+    rent: number;
+  };
+  student?: {
+    id: string;
+    first_name: string;
+    last_name: string;
+    email: string;
+  };
   payments?: BookingPayment[];
 }
 

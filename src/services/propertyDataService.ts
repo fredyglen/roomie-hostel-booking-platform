@@ -99,7 +99,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
       };
     }
 
-    const properties = (data || []).map((item: any) => {
+    const properties = (data || []).map((item: Record<string, unknown>) => {
       try {
         return transformDbProperty(item);
       } catch (transformError) {
@@ -120,7 +120,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
           city: item.city || '',
           state: item.state || '',
           zip: item.zip || '',
-          propertyCategory: 'Hostel' as any,
+          propertyCategory: 'Hostel' as const,
           verified: true,
           is_available: true,
           bedrooms: item.bedrooms || 1,
