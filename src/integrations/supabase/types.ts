@@ -642,6 +642,8 @@ export type Database = {
           property_category: string | null
           property_type: string
           rent: number
+          base_price_per_semester: number | null
+          currency: string | null
           rooms_available: number | null
           security_features: string[] | null
           semester_availability: string[] | null
@@ -698,6 +700,8 @@ export type Database = {
           property_category?: string | null
           property_type: string
           rent: number
+          base_price_per_semester?: number | null
+          currency?: string | null
           rooms_available?: number | null
           security_features?: string[] | null
           semester_availability?: string[] | null
@@ -754,6 +758,8 @@ export type Database = {
           property_category?: string | null
           property_type?: string
           rent?: number
+          base_price_per_semester?: number | null
+          currency?: string | null
           rooms_available?: number | null
           security_features?: string[] | null
           semester_availability?: string[] | null
@@ -1097,6 +1103,89 @@ export type Database = {
           status?: string
           updated_at?: string
           webhook_verified?: boolean | null
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          id: string
+          user_id: string
+          title: string
+          message: string
+          type: string
+          read: boolean
+          data: Json | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          title: string
+          message: string
+          type: string
+          read?: boolean
+          data?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          title?: string
+          message?: string
+          type?: string
+          read?: boolean
+          data?: Json | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      subscription_plans: {
+        Row: {
+          id: string
+          name: string
+          description: string
+          price: number
+          currency: string
+          duration_months: number
+          features: string[]
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description: string
+          price: number
+          currency?: string
+          duration_months: number
+          features: string[]
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string
+          price?: number
+          currency?: string
+          duration_months?: number
+          features?: string[]
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
