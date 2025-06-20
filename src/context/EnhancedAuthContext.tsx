@@ -411,17 +411,7 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
 
-  // In development, check for bypass user
-  if (process.env.NODE_ENV === 'development') {
-    const devBypassUser = (window as any).__DEV_BYPASS_USER__;
-    if (devBypassUser && !context.user) {
-      return {
-        ...context,
-        user: devBypassUser,
-        loading: false
-      };
-    }
-  }
+  // REMOVED: Development bypass logic - SECURITY RISK eliminated
 
   return context;
 }
