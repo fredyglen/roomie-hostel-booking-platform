@@ -54,7 +54,10 @@ export class ErrorHandler {
     // This would be implemented with your error reporting service
     // Example: Sentry.captureException(error, { extra: context });
     if (import.meta.env.DEV) {
-      console.error('[Error Service] Would report:', error, context);
+      // Use logger instead of console
+      import('@/utils/enhanced-logger').then(({ logger }) => {
+        logger.error('Error Service would report', { error: error.message, context });
+      });
     }
     // In production, implement actual error reporting service
   }

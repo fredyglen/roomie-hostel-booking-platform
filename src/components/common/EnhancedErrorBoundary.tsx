@@ -85,9 +85,11 @@ export class EnhancedErrorBoundary extends Component<Props, State> {
       level: this.props.level,
     };
 
-    // In development, just log to console
+    // In development, use logger instead of console
     if (import.meta.env.DEV) {
-      console.error('Error Report:', errorReport);
+      import('@/utils/enhanced-logger').then(({ logger }) => {
+        logger.error('Error Report', errorReport);
+      });
     }
     
     // TODO: Implement actual error reporting service

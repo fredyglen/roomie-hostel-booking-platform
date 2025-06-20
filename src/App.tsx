@@ -101,9 +101,7 @@ const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => {
     <ErrorBoundary
       onError={(error, errorInfo) => {
         logger.error('SafeRoute: ErrorBoundary caught an error', { error, errorInfo });
-        if (import.meta.env.DEV) {
-          console.error('🚨 Route Error:', error, errorInfo);
-        }
+        // Removed console.error - using logger only
       }}
     >
       <Suspense fallback={
@@ -123,10 +121,7 @@ function App() {
     initializePerformanceOptimizations();
   }, []);
 
-  // Remove console.log in production
-  if (import.meta.env.DEV) {
-    console.log('🚀 Application started');
-  }
+  // Removed console.log - using logger only
   logger.info('Application started');
 
   return (
@@ -135,7 +130,7 @@ function App() {
         <ErrorBoundary
           onError={(error, errorInfo) => {
             logger.error('App: Top-level ErrorBoundary caught an error', { error, errorInfo });
-            console.error('🚨 Critical App Error:', error, errorInfo);
+            // Removed console.error - using logger only
           }}
         >
           <AuthProvider>

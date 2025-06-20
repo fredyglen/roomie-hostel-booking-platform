@@ -338,12 +338,24 @@ export class AdminQueries {
         supabase.from(TABLE_NAMES.PROFILES).select('id', { count: 'exact' })
       ]);
 
+      // Get pending verifications count
+      const { count: pendingVerificationsCount } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('verification_status', 'pending');
+
+      // Get active disputes count (using bookings with disputed status)
+      const { count: activeDisputesCount } = await supabase
+        .from('bookings')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'disputed');
+
       return {
         totalProperties: propertiesResult.count || 0,
         totalBookings: bookingsResult.count || 0,
         totalUsers: usersResult.count || 0,
-        pendingVerifications: 0, // TODO: Implement when verification table is ready
-        activeDisputes: 0 // TODO: Implement when disputes are tracked
+        pendingVerifications: pendingVerificationsCount || 0,
+        activeDisputes: activeDisputesCount || 0
       };
     } catch (error) {
       logger.error('Exception in getPlatformStats', { error });

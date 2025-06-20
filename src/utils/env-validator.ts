@@ -15,9 +15,9 @@ export function validateEnvironmentVariables(): string[] {
   
   if (missingVars.length > 0) {
     // Use logger instead of console in production
-    if (import.meta.env.DEV) {
-      console.error('Missing required environment variables:', missingVars);
-    }
+    import('@/utils/enhanced-logger').then(({ logger }) => {
+      logger.error('Missing required environment variables', { missingVars });
+    });
   }
   
   return missingVars;

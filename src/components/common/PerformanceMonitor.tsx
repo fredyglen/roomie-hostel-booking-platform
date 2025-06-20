@@ -245,9 +245,9 @@ const PerformanceMonitor: React.FC = () => {
             <button
               onClick={() => {
                 logger.info('Performance metrics', metrics);
-                console.log('Performance Metrics:', metrics);
+                // Removed console.log statements - using logger only
                 if (platformHealth) {
-                  console.log('Platform Health:', platformHealth);
+                  logger.info('Platform Health', platformHealth);
                 }
               }}
               className="flex-1 bg-blue-600 text-white text-sm py-2 px-3 rounded hover:bg-blue-700 transition-colors"

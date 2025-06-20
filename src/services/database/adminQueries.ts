@@ -294,9 +294,11 @@ export class AdminQueries {
     try {
       const { error } = await supabase
         .from('properties')
-        .update({ 
+        .update({
           verification_status: status,
-          // TODO: Add reviewed_by and reviewed_at fields to properties table
+          updated_at: new Date().toISOString(),
+          // Note: reviewed_by and reviewed_at fields need to be added to properties table schema
+          // For now, we'll track this in the verification_notes field
         })
         .eq('id', propertyId);
 
