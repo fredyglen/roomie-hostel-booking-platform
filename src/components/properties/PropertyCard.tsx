@@ -6,8 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Users, Bed, Bath, Lock, Eye } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import LazyImage from '@/components/common/LazyImage';
-import { useBookingAccess } from '@/hooks/useBookingAccess';
-import RegistrationPromptModal from '@/components/auth/RegistrationPromptModal';
+
 import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
 import ViewingLimitOverlay from './ViewingLimitOverlay';
 import { useNavigate } from 'react-router-dom';
@@ -72,7 +71,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   onViewStory
 }) => {
   const navigate = useNavigate();
-  const { accessLevel, canPerformAction, filterPropertyData, getRegistrationPrompt } = useBookingAccess();
   const {
     trackImageView,
     trackStoryView,
@@ -83,42 +81,23 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     isAnonymous
   } = usePropertyViewingTracker();
 
-  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showViewingLimitOverlay, setShowViewingLimitOverlay] = useState(false);
   const [viewingRestriction, setViewingRestriction] = useState<any>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  // Filter property data based on user access level
-  const filteredProperty = filterPropertyData({
-    id, title, rent, location, bedrooms, bathrooms, maxOccupants,
-    images, amenities, propertyType, genderRestriction, isAvailable,
-    roomTypes, distanceToCampus, totalBedsAvailable, totalBeds, priceUnit
-  });
+  const primaryImage = images && images.length > 0 ? images[0] : undefined;
 
-  const primaryImage = filteredProperty.images && filteredProperty.images.length > 0 ? filteredProperty.images[0] : undefined;
-
-  // Handle booking attempt
-  const handleBookingAttempt = () => {
-    if (!canPerformAction('start_booking')) {
-      setShowRegistrationModal(true);
-      return;
-    }
+  // Handle property card click - just navigate, no booking verification
+  const handlePropertyClick = () => {
     onViewDetails();
   };
 
   // Handle story view attempt
   const handleStoryAttempt = () => {
-    if (!canPerformAction('view_details') && onViewStory) {
-      setShowRegistrationModal(true);
-      return;
-    }
     if (onViewStory) {
       onViewStory();
     }
   };
-
-  // Get registration prompt data
-  const registrationPrompt = getRegistrationPrompt();
 
   // Track property view on mount (for anonymous users)
   useEffect(() => {
@@ -154,10 +133,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       trackStoryView();
     }
 
-    if (!canPerformAction('view_details') && onViewStory) {
-      setShowRegistrationModal(true);
-      return;
-    }
     if (onViewStory) {
       onViewStory();
     }
@@ -213,28 +188,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
   return (
     <Card
-      className={`overflow-hidden card-premium animate-fade-in-up h-[280px] sm:h-[280px] flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200 w-full ${
-        !canPerformAction('view_details') ? 'relative' : ''
-      }`}
+      className="overflow-hidden card-premium animate-fade-in-up h-[280px] sm:h-[280px] flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200 w-full"
       onClick={() => {
-        console.log(`Navigating to property details for: ${filteredProperty.title}`);
-        handleBookingAttempt();
+        console.log(`Navigating to property details for: ${title}`);
+        handlePropertyClick();
       }}
     >
-      {/* Access Restriction Overlay */}
-      {!canPerformAction('view_details') && (
-        <div className="absolute inset-0 bg-black/20 backdrop-blur-[1px] z-10 flex items-center justify-center">
-          <div className="bg-white/90 rounded-lg p-3 flex items-center gap-2 shadow-lg">
-            <Lock size={16} className="text-primary" />
-            <span className="text-sm font-medium text-gray-800">Register to View Details</span>
-          </div>
-        </div>
-      )}
+
       {/* Enhanced Image Section with Better Visibility */}
       <div className="relative h-[70px] flex-shrink-0">
         <LazyImage
           src={primaryImage || '/placeholder-property.jpg'}
-          alt={filteredProperty.title}
+          alt={title}
           className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${
             isAnonymous && !canViewImage() ? 'blur-sm' : ''
           }`}
@@ -299,9 +264,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
               console.log('Story view icon clicked for property:', id);
               handleStoryAttempt();
             }}
-            className={`absolute bottom-1 left-1 bg-white/90 hover:bg-white rounded-full p-1 transition-all duration-200 shadow-md ${
-              !canPerformAction('view_details') ? 'opacity-50' : ''
-            }`}
+            className="absolute bottom-1 left-1 bg-white/90 hover:bg-white rounded-full p-1 transition-all duration-200 shadow-md"
           >
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="text-primary">
               <path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
@@ -316,13 +279,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         {/* Header with Title and Price */}
         <div className="flex justify-between items-start mb-2">
           <h3 className="font-bold text-gray-900 text-base leading-tight line-clamp-1 flex-1 mr-2">
-            {filteredProperty.title}
+            {title}
           </h3>
           <div className="text-right flex-shrink-0">
             <div className="text-lg font-bold text-primary">
-              ¢{filteredProperty.rent.toLocaleString()}
+              ¢{rent.toLocaleString()}
             </div>
-            <div className="text-sm text-gray-500">/{filteredProperty.priceUnit}</div>
+            <div className="text-sm text-gray-500">/{priceUnit}</div>
           </div>
         </div>
 
@@ -330,14 +293,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         <div className="flex items-center justify-between text-sm text-gray-600 mb-2">
           <div className="flex items-center flex-1">
             <LocationIcon size={12} />
-            <span className="ml-1 truncate">{filteredProperty.location}</span>
-            {!canPerformAction('view_location') && (
-              <Lock size={10} className="ml-1 text-gray-400" />
-            )}
+            <span className="ml-1 truncate">{location}</span>
           </div>
-          {filteredProperty.distanceToCampus && (
+          {distanceToCampus && (
             <span className="text-primary font-medium ml-1 flex-shrink-0 text-sm">
-              {filteredProperty.distanceToCampus}
+              {distanceToCampus}
             </span>
           )}
         </div>
@@ -361,18 +321,15 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
         {/* Amenities - Enhanced */}
         <div className="flex flex-wrap gap-1 mb-2">
-          {filteredProperty.amenities.slice(0, 2).map((amenity, index) => (
+          {amenities.slice(0, 2).map((amenity, index) => (
             <div key={index} className="flex items-center bg-blue-50 rounded-full px-2 py-1 text-sm text-primary">
               {getAmenityIcon(amenity)}
               <span className="ml-1 font-medium">{amenity}</span>
             </div>
           ))}
-          {filteredProperty.amenities.length > 2 && (
+          {amenities.length > 2 && (
             <div className="flex items-center bg-gray-100 rounded-full px-2 py-1 text-sm text-gray-600">
-              +{filteredProperty.amenities.length - 2}
-              {!canPerformAction('view_details') && (
-                <Lock size={10} className="ml-1 text-gray-400" />
-              )}
+              +{amenities.length - 2}
             </div>
           )}
         </div>
@@ -387,17 +344,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
       </div>
 
-      {/* Registration Prompt Modal */}
-      {registrationPrompt && (
-        <RegistrationPromptModal
-          isOpen={showRegistrationModal}
-          onClose={() => setShowRegistrationModal(false)}
-          title={registrationPrompt.title}
-          message={registrationPrompt.message}
-          actionText={registrationPrompt.actionText}
-          trigger="booking_attempt"
-        />
-      )}
+
 
       {/* Viewing Limit Overlay */}
       {viewingRestriction && (
