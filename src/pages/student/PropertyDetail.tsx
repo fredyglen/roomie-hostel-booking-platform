@@ -100,7 +100,7 @@ const PropertyDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{property.title} - ROOMi</title>
+        <title>{property.name} - ROOMi</title>
         <meta name="description" content={property.description} />
       </Helmet>
       
