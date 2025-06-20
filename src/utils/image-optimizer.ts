@@ -24,11 +24,13 @@ export interface OptimizedImage {
   };
 }
 
+import { uploadConfig } from '@/config/environment';
+
 export class ImageOptimizer {
   private static readonly DEFAULT_OPTIONS: Required<ImageOptimizationOptions> = {
     maxWidth: 1920,
     maxHeight: 1080,
-    quality: 0.8,
+    quality: uploadConfig.compressionQuality,
     format: 'webp',
     maintainAspectRatio: true,
   };

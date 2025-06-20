@@ -1,8 +1,9 @@
 // Anonymous User Time Limit Hook
-// Enforces 30-second time limit for anonymous users on the platform
+// Enforces configurable time limit for anonymous users on the platform
 
 import { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/EnhancedAuthContext';
+import { securityConfig } from '@/config/environment';
 
 export interface TimeLimitStatus {
   timeRemaining: number;
@@ -12,9 +13,11 @@ export interface TimeLimitStatus {
   expiryTime: number;
 }
 
-// Randomize time limit between 15-30 seconds
+// Get time limit from configuration (with randomization for security)
 const getRandomTimeLimit = () => {
-  return Math.floor(Math.random() * (30 - 15 + 1)) + 15;
+  const baseLimit = securityConfig.anonymousTimeLimit;
+  const variation = Math.floor(baseLimit * 0.2); // 20% variation
+  return Math.floor(Math.random() * (variation * 2 + 1)) + (baseLimit - variation);
 };
 const STORAGE_KEY = 'roomi_anonymous_session';
 
