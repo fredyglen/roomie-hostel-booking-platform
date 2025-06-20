@@ -176,30 +176,16 @@ export const useBookingAccess = () => {
     if (accessLevel.accessTier === 'anonymous') {
       return {
         title: 'Register to Continue',
-        message: 'Create a free account to access detailed property information, start bookings, and view exact locations.',
-        actionText: 'Register Now',
-        benefits: [
-          'View detailed property information',
-          'Access all property photos and videos',
-          'Start booking process',
-          'Contact property owners',
-          'Save favorite properties'
-        ]
+        message: 'Create a free account to continue browsing properties.',
+        actionText: 'Register Now'
       };
     }
 
     if (accessLevel.accessTier === 'registered') {
       return {
         title: 'Student Verification Required for Booking',
-        message: 'Upload your student ID or proof of enrollment to book properties and complete reservations.',
-        actionText: 'Start Booking Process',
-        benefits: [
-          'Book student accommodations',
-          'Secure your preferred room',
-          'Access booking management',
-          'Priority booking status',
-          'Verified student pricing'
-        ]
+        message: 'Upload your student ID or proof of enrollment to book properties.',
+        actionText: 'Start Booking Process'
       };
     }
 

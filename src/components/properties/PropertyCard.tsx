@@ -395,7 +395,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           title={registrationPrompt.title}
           message={registrationPrompt.message}
           actionText={registrationPrompt.actionText}
-          benefits={registrationPrompt.benefits}
           trigger="booking_attempt"
         />
       )}

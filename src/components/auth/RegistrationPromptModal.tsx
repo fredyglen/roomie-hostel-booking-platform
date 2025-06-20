@@ -14,7 +14,6 @@ interface RegistrationPromptModalProps {
   title: string;
   message: string;
   actionText: string;
-  benefits: string[];
   trigger?: 'image_limit' | 'video_limit' | 'booking_attempt' | 'location_access';
 }
 
@@ -24,7 +23,6 @@ const RegistrationPromptModal: React.FC<RegistrationPromptModalProps> = ({
   title,
   message,
   actionText,
-  benefits,
   trigger = 'image_limit'
 }) => {
   const navigate = useNavigate();
@@ -71,16 +69,7 @@ const RegistrationPromptModal: React.FC<RegistrationPromptModalProps> = ({
     }
   };
 
-  const getBenefitIcon = (benefit: string) => {
-    if (benefit.includes('detailed')) return <CheckCircle size={16} className="text-green-500" />;
-    if (benefit.includes('photos') || benefit.includes('videos')) return <CheckCircle size={16} className="text-blue-500" />;
-    if (benefit.includes('booking')) return <CheckCircle size={16} className="text-purple-500" />;
-    if (benefit.includes('contact')) return <Users size={16} className="text-orange-500" />;
-    if (benefit.includes('locations')) return <MapPin size={16} className="text-red-500" />;
-    if (benefit.includes('favorite')) return <Heart size={16} className="text-pink-500" />;
-    if (benefit.includes('security') || benefit.includes('verification')) return <Shield size={16} className="text-indigo-500" />;
-    return <CheckCircle size={16} className="text-gray-500" />;
-  };
+
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -110,20 +99,7 @@ const RegistrationPromptModal: React.FC<RegistrationPromptModalProps> = ({
             {message}
           </p>
 
-          {/* Benefits List */}
-          <div className="space-y-3">
-            <h4 className="font-semibold text-gray-900 text-sm">
-              What you'll get with registration:
-            </h4>
-            <div className="space-y-2">
-              {benefits.map((benefit, index) => (
-                <div key={index} className="flex items-center gap-3 text-sm">
-                  {getBenefitIcon(benefit)}
-                  <span className="text-gray-700">{benefit}</span>
-                </div>
-              ))}
-            </div>
-          </div>
+
 
           {/* Action Buttons */}
           <div className="space-y-3 pt-4">

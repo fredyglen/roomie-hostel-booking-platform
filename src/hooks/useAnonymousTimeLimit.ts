@@ -12,7 +12,10 @@ export interface TimeLimitStatus {
   expiryTime: number;
 }
 
-const TIME_LIMIT_SECONDS = 30;
+// Randomize time limit between 15-30 seconds
+const getRandomTimeLimit = () => {
+  return Math.floor(Math.random() * (30 - 15 + 1)) + 15;
+};
 const STORAGE_KEY = 'roomi_anonymous_session';
 
 // Generate a unique session ID that can't be easily cleared
@@ -102,13 +105,15 @@ export const useAnonymousTimeLimit = () => {
         expiryTime: existingSession.expiryTime
       };
     } else {
-      // Create new session
+      // Create new session with randomized time limit
+      const timeLimitSeconds = getRandomTimeLimit();
       const startTime = now;
-      const expiryTime = startTime + (TIME_LIMIT_SECONDS * 1000);
+      const expiryTime = startTime + (timeLimitSeconds * 1000);
       const sessionData = {
         sessionId: generateSessionId(),
         startTime,
         expiryTime,
+        timeLimitSeconds,
         userAgent: navigator.userAgent,
         screenResolution: `${screen.width}x${screen.height}`
       };
@@ -116,7 +121,7 @@ export const useAnonymousTimeLimit = () => {
       storeSessionData(sessionData);
 
       return {
-        timeRemaining: TIME_LIMIT_SECONDS,
+        timeRemaining: timeLimitSeconds,
         isExpired: false,
         isActive: true,
         startTime,

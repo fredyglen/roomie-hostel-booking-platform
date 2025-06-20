@@ -7,8 +7,7 @@ import {
 import PropertyCard from '@/components/properties/PropertyCard';
 import LazyPropertyCard from '@/components/common/LazyPropertyCard';
 import ViewingProgressIndicator from '@/components/properties/ViewingProgressIndicator';
-import TimeLimitIndicator from '@/components/auth/TimeLimitIndicator';
-import TimeLimitOverlay from '@/components/auth/TimeLimitOverlay';
+import SimpleRegistrationModal from '@/components/auth/SimpleRegistrationModal';
 import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
 import { useAnonymousTimeLimit } from '@/hooks/useAnonymousTimeLimit';
 import GhanaHostelService, { GhanaProperty } from '../../services/ghanaHostelService';
@@ -20,18 +19,13 @@ const ghanaProperties = GhanaHostelService.convertToProperties();
 const PropertyListing: React.FC = () => {
   const navigate = useNavigate();
   const { getViewingProgress, isAnonymous } = usePropertyViewingTracker();
-  const {
-    timeLimitStatus,
-    shouldBlockAction,
-    getRestrictionMessage,
-    hasTimeLimit
-  } = useAnonymousTimeLimit();
+  const { shouldBlockAction } = useAnonymousTimeLimit();
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [occupants, setOccupants] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
-  const [showTimeLimitOverlay, setShowTimeLimitOverlay] = useState(false);
+  const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -40,7 +34,7 @@ const PropertyListing: React.FC = () => {
   // Check time limit before allowing actions
   const checkTimeLimitAndProceed = (action: 'navigation' | 'property_view' | 'search' | 'filter', callback: () => void) => {
     if (shouldBlockAction(action)) {
-      setShowTimeLimitOverlay(true);
+      setShowRegistrationModal(true);
       return;
     }
     callback();
@@ -188,16 +182,7 @@ const PropertyListing: React.FC = () => {
         padding: '16px',
         borderBottom: '1px solid #f0f0f0'
       }}>
-        {/* Time Limit Indicator for Anonymous Users */}
-        {hasTimeLimit && (
-          <div className="mb-3 flex justify-center">
-            <TimeLimitIndicator
-              timeRemaining={timeLimitStatus.timeRemaining}
-              isActive={timeLimitStatus.isActive}
-              isExpired={timeLimitStatus.isExpired}
-            />
-          </div>
-        )}
+
         {/* Search Bar */}
         <div style={{
           position: 'relative',
@@ -463,13 +448,10 @@ const PropertyListing: React.FC = () => {
         )}
       </div>
 
-      {/* Time Limit Overlay */}
-      <TimeLimitOverlay
-        isVisible={showTimeLimitOverlay}
-        timeRemaining={timeLimitStatus.timeRemaining}
-        isExpired={timeLimitStatus.isExpired}
-        restrictionMessage={getRestrictionMessage('navigation')}
-        onClose={() => setShowTimeLimitOverlay(false)}
+      {/* Simple Registration Modal */}
+      <SimpleRegistrationModal
+        isVisible={showRegistrationModal}
+        onClose={() => setShowRegistrationModal(false)}
       />
     </div>
   );
