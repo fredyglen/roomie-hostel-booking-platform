@@ -12,10 +12,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Property, PropertyType, PropertyStatus } from '@/types/property';
 import { transformDbProperty } from '@/utils/propertyTransforms';
 import { ErrorHandler } from '@/utils/ErrorHandler';
-import {
-  PropertyNotFoundError,
-  InternalServerError
-} from '@/errors/property-errors';
+import { PropertyNotFoundError } from '@/errors/property-errors';
+import { InternalServerError } from '@/errors/base';
 
 export interface PropertyQueryOptions {
   limit?: number;

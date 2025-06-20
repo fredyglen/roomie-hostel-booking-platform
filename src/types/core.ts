@@ -1,16 +1,34 @@
 // Core type definitions for the application
 
 // User related types
+export interface UserProfile {
+  firstName: string;
+  lastName: string;
+  phone?: string;
+  avatar?: string;
+  dateOfBirth?: string;
+  address?: string;
+  university?: string;
+  studentId?: string;
+  emergencyContact?: {
+    name: string;
+    phone: string;
+    relationship: string;
+  };
+}
+
 export interface User {
   id: string;
   email: string;
   role: UserRole;
+  profile?: UserProfile;
+  createdAt: string;
+  updatedAt: string;
+  // Legacy fields for backward compatibility
   firstName?: string;
   lastName?: string;
   phone?: string;
   avatarUrl?: string;
-  createdAt?: string;
-  updatedAt?: string;
 }
 
 export type UserRole = 'owner' | 'student' | 'admin';
