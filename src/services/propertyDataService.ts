@@ -167,17 +167,29 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
 
     for (const item of data || []) {
       try {
-        const transformedProperty = transformDbProperty(item);
-        properties.push(transformedProperty);
+        const transformResult = await transformDbProperty(item);
+        if (transformResult.success) {
+          properties.push(transformResult.data);
+        } else {
+          // Log transformation error but continue processing other properties
+          ErrorHandler.handle(transformResult.error, {
+            operation: 'transformDbProperty',
+            propertyId: item.id,
+            propertyTitle: item.title,
+            context: transformResult.context
+          });
+
+          // Skip this property rather than returning invalid data
+          continue;
+        }
       } catch (transformError) {
-        // Log transformation error but continue processing other properties
+        // Handle unexpected errors
         ErrorHandler.handle(transformError, {
           operation: 'transformDbProperty',
           propertyId: item.id,
           propertyTitle: item.title
         });
 
-        // Skip this property rather than returning invalid data
         continue;
       }
     }
@@ -277,9 +289,13 @@ export async function fetchPropertyById(id: string): Promise<Property | null> {
     }
 
     // Transform database result to Property interface
-    const transformedProperty = transformDbProperty(data);
+    const transformResult = await transformDbProperty(data);
 
-    return transformedProperty;
+    if (!transformResult.success) {
+      throw transformResult.error;
+    }
+
+    return transformResult.data;
   } catch (error) {
     if (error instanceof PropertyNotFoundError) {
       throw error;

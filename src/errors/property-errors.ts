@@ -175,3 +175,55 @@ export class PropertyMaintenanceError extends AppError {
     super(message, { ...context, maintenanceEnd });
   }
 }
+
+/**
+ * Property transformation error
+ */
+export class PropertyTransformError extends AppError {
+  readonly code = 'PROPERTY_TRANSFORM_ERROR';
+  readonly statusCode = 500;
+  readonly userMessage = 'Error processing property data';
+
+  constructor(
+    message: string,
+    public readonly transformStep?: string,
+    context?: ErrorContext
+  ) {
+    super(message, { ...context, transformStep });
+  }
+}
+
+/**
+ * Missing price error
+ */
+export class MissingPriceError extends AppError {
+  readonly code = 'MISSING_PROPERTY_PRICE';
+  readonly statusCode = 400;
+  readonly userMessage = 'Property price information is required';
+
+  constructor(
+    message: string,
+    public readonly propertyId?: string,
+    context?: ErrorContext
+  ) {
+    super(message, { ...context, propertyId });
+  }
+}
+
+/**
+ * Invalid price error
+ */
+export class InvalidPriceError extends AppError {
+  readonly code = 'INVALID_PROPERTY_PRICE';
+  readonly statusCode = 400;
+  readonly userMessage = 'Property price is invalid';
+
+  constructor(
+    message: string,
+    public readonly price?: number,
+    public readonly currency?: string,
+    context?: ErrorContext
+  ) {
+    super(message, { ...context, price, currency });
+  }
+}
