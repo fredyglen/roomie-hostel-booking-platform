@@ -8,6 +8,7 @@ import PropertyCard from '@/components/properties/PropertyCard';
 import LazyPropertyCard from '@/components/common/LazyPropertyCard';
 import ViewingProgressIndicator from '@/components/properties/ViewingProgressIndicator';
 import SimpleRegistrationModal from '@/components/auth/SimpleRegistrationModal';
+import PropertyDetailModal from '@/components/property/PropertyDetailModal';
 import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
 import { useAnonymousTimeLimit } from '@/hooks/useAnonymousTimeLimit';
 import GhanaHostelService, { GhanaProperty } from '../../services/ghanaHostelService';
@@ -26,6 +27,8 @@ const PropertyListing: React.FC = () => {
   const [occupants, setOccupants] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [showPropertyModal, setShowPropertyModal] = useState(false);
+  const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -43,8 +46,31 @@ const PropertyListing: React.FC = () => {
   const handlePropertyClick = (propertyId: number) => {
     checkTimeLimitAndProceed('property_view', () => {
       console.log('Property clicked:', propertyId);
-      navigate(`/student/property/${propertyId}/story`);
+      const property = properties.find(p => p.id === propertyId);
+      if (property) {
+        setSelectedProperty(property);
+        setShowPropertyModal(true);
+      }
     });
+  };
+
+  const handleCloseModal = () => {
+    setShowPropertyModal(false);
+    setSelectedProperty(null);
+  };
+
+  const handleBookNow = () => {
+    if (selectedProperty) {
+      handleCloseModal();
+      navigate(`/student/property/${selectedProperty.id}/book`);
+    }
+  };
+
+  const handleModalViewStory = () => {
+    if (selectedProperty) {
+      handleCloseModal();
+      navigate(`/student/property/${selectedProperty.id}/story`);
+    }
   };
 
   const handleViewDetails = (propertyId: number) => {
@@ -453,6 +479,17 @@ const PropertyListing: React.FC = () => {
         isVisible={showRegistrationModal}
         onClose={() => setShowRegistrationModal(false)}
       />
+
+      {/* Property Detail Modal */}
+      {selectedProperty && (
+        <PropertyDetailModal
+          property={selectedProperty}
+          isOpen={showPropertyModal}
+          onClose={handleCloseModal}
+          onBookNow={handleBookNow}
+          onViewStory={handleModalViewStory}
+        />
+      )}
     </div>
   );
 };
