@@ -145,13 +145,14 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div 
+    <div
       ref={modalRef}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm"
+      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-hidden"
       onClick={(e) => e.target === modalRef.current && onClose()}
+      style={{ touchAction: 'none' }}
     >
       {/* Property Cover Photo - Top 45% */}
-      <div className="absolute top-0 left-0 right-0 h-[45vh] overflow-hidden">
+      <div className="absolute top-0 left-0 right-0 h-[45vh] overflow-hidden select-none">
         <img
           src={primaryImage}
           alt={property.title}
