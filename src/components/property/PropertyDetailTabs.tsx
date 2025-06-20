@@ -104,15 +104,15 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200 mb-4">
+      <div className="flex border-b border-gray-200 mb-6">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id as any)}
-            className={`flex-1 py-3 px-4 text-sm font-medium border-b-2 transition-colors ${
+            className={`flex-1 py-4 px-4 text-base font-semibold border-b-3 transition-all duration-200 ${
               activeTab === tab.id
-                ? 'border-primary text-primary'
-                : 'border-transparent text-gray-500 hover:text-gray-700'
+                ? 'border-primary text-primary bg-primary/5'
+                : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50'
             }`}
           >
             {tab.label}
@@ -123,40 +123,40 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
       {/* Tab Content */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'description' && (
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <h3 className="text-lg font-semibold mb-2">About this property</h3>
-              <p className="text-gray-700 leading-relaxed">
+              <h3 className="text-xl font-bold mb-4 text-gray-900">About this property</h3>
+              <p className="text-gray-700 leading-relaxed text-base">
                 {property.description || 'No description available for this property.'}
               </p>
             </div>
 
             <div>
-              <h4 className="font-medium mb-2">Property Details</h4>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Bedrooms:</span>
-                  <span className="font-medium">{property.bedrooms || 'N/A'}</span>
+              <h4 className="text-lg font-semibold mb-4 text-gray-900">Property Details</h4>
+              <div className="grid grid-cols-2 gap-4 text-base">
+                <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-600 font-medium">Bedrooms:</span>
+                  <span className="font-bold text-gray-900">{property.bedrooms || 'N/A'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Bathrooms:</span>
-                  <span className="font-medium">{property.bathrooms || 'N/A'}</span>
+                <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-600 font-medium">Bathrooms:</span>
+                  <span className="font-bold text-gray-900">{property.bathrooms || 'N/A'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Max Occupants:</span>
-                  <span className="font-medium">{property.maxOccupants || 'N/A'}</span>
+                <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-600 font-medium">Max Occupants:</span>
+                  <span className="font-bold text-gray-900">{property.maxOccupants || 'N/A'}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Property Type:</span>
-                  <span className="font-medium">{property.propertyType || 'Hostel'}</span>
+                <div className="flex justify-between p-3 bg-gray-50 rounded-lg">
+                  <span className="text-gray-600 font-medium">Property Type:</span>
+                  <span className="font-bold text-gray-900">{property.propertyType || 'Hostel'}</span>
                 </div>
               </div>
             </div>
 
             {property.genderRestriction && (
               <div>
-                <h4 className="font-medium mb-2">Restrictions</h4>
-                <Badge variant="outline" className="text-sm">
+                <h4 className="text-lg font-semibold mb-3 text-gray-900">Restrictions</h4>
+                <Badge variant="outline" className="text-base px-4 py-2 font-medium">
                   {property.genderRestriction} only
                 </Badge>
               </div>

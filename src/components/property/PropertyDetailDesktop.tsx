@@ -96,50 +96,50 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
 
       {/* Main Content */}
       <div className="pt-16 h-full flex">
-        {/* Left Side - Media Bento Grid (60%) */}
-        <div className="w-3/5 h-full bg-gray-50 p-6">
-          <div className="h-full grid grid-cols-4 grid-rows-4 gap-4">
-            {/* Main Image - Takes up 3x3 grid */}
-            <div className="col-span-3 row-span-3 relative group overflow-hidden rounded-2xl bg-white shadow-lg">
+        {/* Left Side - Media Bento Grid (65%) */}
+        <div className="w-[65%] h-full bg-gray-50 p-8">
+          <div className="h-full grid grid-cols-4 grid-rows-3 gap-4">
+            {/* Main Image - Takes up 3x2 grid */}
+            <div className="col-span-3 row-span-2 relative group overflow-hidden rounded-2xl bg-white shadow-xl">
               <img
                 src={mainImage}
                 alt={property.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
-              
+
               {/* Image overlay controls */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div className="absolute top-4 right-4 flex gap-2">
+              <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                <div className="absolute top-6 right-6 flex gap-3">
                   {onViewStory && (
                     <button
                       onClick={onViewStory}
-                      className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors"
+                      className="w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl hover:bg-white transition-all duration-200"
                     >
-                      <Play size={16} className="text-gray-800 ml-0.5" />
+                      <Play size={18} className="text-gray-900 ml-0.5" />
                     </button>
                   )}
-                  <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg hover:bg-white transition-colors">
-                    <Camera size={16} className="text-gray-800" />
+                  <button className="w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl hover:bg-white transition-all duration-200">
+                    <Camera size={18} className="text-gray-900" />
                   </button>
                 </div>
               </div>
 
               {/* Image counter */}
-              <div className="absolute bottom-4 right-4 bg-black/70 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
+              <div className="absolute bottom-6 right-6 bg-black/80 backdrop-blur-md text-white px-4 py-2 rounded-full text-sm font-medium">
                 {selectedImageIndex + 1} / {Math.max(allImages.length, 1)}
               </div>
             </div>
 
             {/* Thumbnail Grid - Right column */}
-            <div className="col-span-1 row-span-3 flex flex-col gap-4">
-              {gridImages.slice(1, 4).map((image, index) => (
+            <div className="col-span-1 row-span-2 flex flex-col gap-4">
+              {gridImages.slice(1, 3).map((image, index) => (
                 <button
                   key={index + 1}
                   onClick={() => setSelectedImageIndex(index + 1)}
-                  className={`flex-1 relative overflow-hidden rounded-xl transition-all ${
-                    selectedImageIndex === index + 1 
-                      ? 'ring-2 ring-primary shadow-lg' 
-                      : 'hover:shadow-md'
+                  className={`flex-1 relative overflow-hidden rounded-xl transition-all duration-200 ${
+                    selectedImageIndex === index + 1
+                      ? 'ring-3 ring-primary shadow-xl scale-105'
+                      : 'hover:shadow-lg hover:scale-102'
                   }`}
                 >
                   <img
@@ -153,24 +153,24 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
 
             {/* Bottom Row - Additional thumbnails */}
             <div className="col-span-4 row-span-1 flex gap-4">
-              {gridImages.slice(4, 8).map((image, index) => (
+              {gridImages.slice(2, 6).map((image, index) => (
                 <button
-                  key={index + 4}
-                  onClick={() => setSelectedImageIndex(index + 4)}
-                  className={`flex-1 relative overflow-hidden rounded-xl transition-all ${
-                    selectedImageIndex === index + 4 
-                      ? 'ring-2 ring-primary shadow-lg' 
-                      : 'hover:shadow-md'
+                  key={index + 2}
+                  onClick={() => setSelectedImageIndex(index + 2)}
+                  className={`flex-1 relative overflow-hidden rounded-xl transition-all duration-200 ${
+                    selectedImageIndex === index + 2
+                      ? 'ring-3 ring-primary shadow-xl scale-105'
+                      : 'hover:shadow-lg hover:scale-102'
                   }`}
                 >
                   <img
                     src={image}
-                    alt={`${property.title} ${index + 5}`}
+                    alt={`${property.title} ${index + 3}`}
                     className="w-full h-full object-cover"
                   />
-                  {index === 3 && allImages.length > 8 && (
-                    <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
-                      <span className="text-white font-medium">+{allImages.length - 8}</span>
+                  {index === 3 && allImages.length > 6 && (
+                    <div className="absolute inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center">
+                      <span className="text-white font-bold text-lg">+{allImages.length - 6}</span>
                     </div>
                   )}
                 </button>
@@ -179,54 +179,54 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
           </div>
         </div>
 
-        {/* Right Side - Property Details (40%) */}
-        <div className="w-2/5 h-full bg-white flex flex-col">
+        {/* Right Side - Property Details (35%) */}
+        <div className="w-[35%] h-full bg-white flex flex-col border-l border-gray-100">
           {/* Property Info Header */}
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex justify-between items-start mb-4">
+          <div className="p-8 border-b border-gray-100">
+            <div className="flex justify-between items-start mb-6">
               <div>
-                <div className="text-3xl font-bold text-primary mb-1">
+                <div className="text-4xl font-bold text-primary mb-2">
                   ¢{property.rent?.toLocaleString() || '0'}
                 </div>
-                <div className="text-gray-600">per semester</div>
+                <div className="text-lg text-gray-600 font-medium">per semester</div>
               </div>
-              
+
               <div className="text-right">
-                <div className="flex items-center gap-1 mb-1">
-                  <Star size={16} className="text-yellow-500 fill-current" />
-                  <span className="font-medium">{property.rating || '4.5'}</span>
+                <div className="flex items-center gap-2 mb-2 bg-yellow-50 px-3 py-2 rounded-full">
+                  <Star size={18} className="text-yellow-500 fill-current" />
+                  <span className="font-bold text-gray-900">{property.rating || '4.5'}</span>
                 </div>
-                <div className="text-sm text-gray-500">(24 reviews)</div>
+                <div className="text-sm text-gray-600 font-medium">(24 reviews)</div>
               </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 mb-4">
-              <Badge variant="secondary">
+            <div className="flex flex-wrap gap-3 mb-6">
+              <Badge variant="secondary" className="px-4 py-2 text-sm font-medium">
                 {property.propertyType || 'Hostel'}
               </Badge>
               {property.genderRestriction && (
-                <Badge variant="outline">
+                <Badge variant="outline" className="px-4 py-2 text-sm font-medium">
                   {property.genderRestriction}
                 </Badge>
               )}
-              <Badge variant="outline">
+              <Badge variant="outline" className="px-4 py-2 text-sm font-medium">
                 {property.maxOccupants} max occupants
               </Badge>
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-4 text-center">
-              <div>
-                <div className="text-lg font-semibold text-gray-900">{property.bedrooms || 'N/A'}</div>
-                <div className="text-sm text-gray-600">Bedrooms</div>
+            <div className="grid grid-cols-3 gap-6 text-center">
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <div className="text-2xl font-bold text-gray-900">{property.bedrooms || 'N/A'}</div>
+                <div className="text-sm text-gray-600 font-medium mt-1">Bedrooms</div>
               </div>
-              <div>
-                <div className="text-lg font-semibold text-gray-900">{property.bathrooms || 'N/A'}</div>
-                <div className="text-sm text-gray-600">Bathrooms</div>
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <div className="text-2xl font-bold text-gray-900">{property.bathrooms || 'N/A'}</div>
+                <div className="text-sm text-gray-600 font-medium mt-1">Bathrooms</div>
               </div>
-              <div>
-                <div className="text-lg font-semibold text-gray-900">{property.maxOccupants || 'N/A'}</div>
-                <div className="text-sm text-gray-600">Max Guests</div>
+              <div className="p-4 bg-gray-50 rounded-xl">
+                <div className="text-2xl font-bold text-gray-900">{property.maxOccupants || 'N/A'}</div>
+                <div className="text-sm text-gray-600 font-medium mt-1">Max Guests</div>
               </div>
             </div>
           </div>
@@ -241,20 +241,20 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
           </div>
 
           {/* Sticky Bottom Actions */}
-          <div className="p-6 border-t border-gray-200 bg-white">
-            <div className="flex gap-3">
+          <div className="p-8 border-t border-gray-100 bg-white">
+            <div className="flex gap-4">
               {onViewStory && (
                 <Button
                   variant="outline"
                   onClick={onViewStory}
-                  className="flex-1"
+                  className="flex-1 h-14 text-base font-medium border-2 hover:bg-gray-50"
                 >
                   View Story
                 </Button>
               )}
               <Button
                 onClick={onBookNow}
-                className="flex-1 bg-primary hover:bg-primary/90"
+                className="flex-1 h-14 text-base font-medium bg-primary hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-200"
                 size="lg"
               >
                 Book Now

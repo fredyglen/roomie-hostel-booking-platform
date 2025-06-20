@@ -15,7 +15,7 @@ const BookingWizard: React.FC<BookingWizardProps> = ({ property }) => {
 
   const handleStartBooking = () => {
     // Navigate to the booking steps container
-    navigate(`/student/book-property/${property.id}`);
+    navigate(`/student/book/${property.id}`);
   };
 
   return (
@@ -54,8 +54,8 @@ const BookingWizard: React.FC<BookingWizardProps> = ({ property }) => {
           <div className="border-t pt-4">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <p className="text-lg font-semibold">₵{property.price}</p>
-                <p className="text-sm text-gray-600">per {property.priceUnit}</p>
+                <p className="text-lg font-semibold">₵{property.rent?.toLocaleString() || property.price || '0'}</p>
+                <p className="text-sm text-gray-600">per semester</p>
               </div>
               <Button onClick={handleStartBooking} size="lg">
                 Start Booking Process

@@ -11,11 +11,9 @@ import SimpleRegistrationModal from '@/components/auth/SimpleRegistrationModal';
 import PropertyDetailWrapper from '@/components/property/PropertyDetailWrapper';
 import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
 import { useAnonymousTimeLimit } from '@/hooks/useAnonymousTimeLimit';
+import { useDemoProperties } from '@/hooks/property/useDemoProperties';
 import GhanaHostelService, { GhanaProperty } from '../../services/ghanaHostelService';
 import { getGenderRestrictionLabel, getFacilityTypeLabel, getProximityBadge } from '../../data/ghanaHostels';
-
-// Real Ghana hostel data from our service
-const ghanaProperties = GhanaHostelService.convertToProperties();
 
 const PropertyListing: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +30,13 @@ const PropertyListing: React.FC = () => {
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const properties = ghanaProperties;
+
+  // Use real database properties instead of mock data
+  const { data: databaseProperties, isLoading, error } = useDemoProperties();
+
+  // Fallback to Ghana mock data if database is empty
+  const ghanaProperties = GhanaHostelService.convertToProperties();
+  const properties = databaseProperties && databaseProperties.length > 0 ? databaseProperties : ghanaProperties;
 
   // Check time limit before allowing actions
   const checkTimeLimitAndProceed = (action: 'navigation' | 'property_view' | 'search' | 'filter', callback: () => void) => {
@@ -43,16 +47,7 @@ const PropertyListing: React.FC = () => {
     callback();
   };
 
-  const handlePropertyClick = (propertyId: number) => {
-    checkTimeLimitAndProceed('property_view', () => {
-      console.log('Property clicked:', propertyId);
-      const property = properties.find(p => p.id === propertyId);
-      if (property) {
-        setSelectedProperty(property);
-        setShowPropertyModal(true);
-      }
-    });
-  };
+
 
   const handleCloseModal = () => {
     setShowPropertyModal(false);
@@ -62,7 +57,7 @@ const PropertyListing: React.FC = () => {
   const handleBookNow = () => {
     if (selectedProperty) {
       handleCloseModal();
-      navigate(`/student/property/${selectedProperty.id}/book`);
+      navigate(`/student/book/${selectedProperty.id}`);
     }
   };
 
@@ -73,11 +68,14 @@ const PropertyListing: React.FC = () => {
     }
   };
 
-  const handleViewDetails = (propertyId: number) => {
+  const handleViewDetails = (propertyId: string | number) => {
     checkTimeLimitAndProceed('property_view', () => {
       console.log('View details clicked for property:', propertyId);
-      // Navigate directly to booking flow for faster access
-      navigate(`/student/book/${propertyId}`);
+      const property = properties.find(p => p.id === propertyId || p.id === String(propertyId));
+      if (property) {
+        setSelectedProperty(property);
+        setShowPropertyModal(true);
+      }
     });
   };
 
@@ -417,20 +415,20 @@ const PropertyListing: React.FC = () => {
             <div key={property.id} style={{ pointerEvents: 'auto' }}>
               <PropertyCard
                 id={property.id.toString()}
-                title={property.title}
-                rent={property.rent}
-                location={property.location}
-                bedrooms={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : 4}
-                bathrooms={1}
-                maxOccupants={property.maxOccupants}
-                images={property.images}
-                amenities={property.amenities.map(getAmenityLabel)}
+                title={property.title || (property as any).name}
+                rent={property.rent || (property as any).price}
+                location={property.location || (property as any).address}
+                bedrooms={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : (property as any).bedrooms || 4}
+                bathrooms={(property as any).bathrooms || 1}
+                maxOccupants={property.maxOccupants || (property as any).max_occupants}
+                images={property.images || []}
+                amenities={property.amenities ? property.amenities.map(getAmenityLabel) : []}
                 propertyType="Hostel"
-                genderRestriction={property.genderRestriction}
-                isAvailable={true}
-                distanceToCampus={property.distanceToCampus}
-                totalBedsAvailable={Math.floor(Math.random() * 8) + 1}
-                totalBeds={property.maxOccupants}
+                genderRestriction={property.genderRestriction || (property as any).gender_restriction}
+                isAvailable={(property as any).is_available !== false}
+                distanceToCampus={property.distanceToCampus || '5 mins'}
+                totalBedsAvailable={(property as any).beds_available || Math.floor(Math.random() * 8) + 1}
+                totalBeds={property.maxOccupants || (property as any).max_occupants || 4}
                 priceUnit="semester"
                 onViewDetails={() => handleViewDetails(property.id)}
                 onViewStory={() => handleViewStory(property.id)}

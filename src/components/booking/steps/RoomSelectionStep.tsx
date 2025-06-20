@@ -45,9 +45,18 @@ const RoomSelectionStep: React.FC<RoomSelectionStepProps> = ({
             <SelectValue placeholder="Select room type" />
           </SelectTrigger>
           <SelectContent>
-            {availableRoomTypes.map((type) => (
-              <SelectItem key={type} value={type}>{type}</SelectItem>
-            ))}
+            {availableRoomTypes.length > 0 ? (
+              availableRoomTypes.map((type) => (
+                <SelectItem key={type} value={type}>{type}</SelectItem>
+              ))
+            ) : (
+              <>
+                <SelectItem value="1_in_room">1 in a room</SelectItem>
+                <SelectItem value="2_in_room">2 in a room</SelectItem>
+                <SelectItem value="3_in_room">3 in a room</SelectItem>
+                <SelectItem value="4_in_room">4 in a room</SelectItem>
+              </>
+            )}
           </SelectContent>
         </Select>
       </div>

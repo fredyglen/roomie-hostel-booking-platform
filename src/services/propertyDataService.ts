@@ -158,6 +158,8 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
 
 export async function fetchPropertyById(id: string): Promise<Property | null> {
   try {
+    console.log('fetchPropertyById called with ID:', id);
+
     const { data, error } = await supabase
       .from('properties')
       .select(`
@@ -180,26 +182,28 @@ export async function fetchPropertyById(id: string): Promise<Property | null> {
         available_from,
         available_to,
         created_at,
-        updated_at,
-        profiles!properties_owner_id_fkey (
-          id,
-          first_name,
-          last_name,
-          email,
-          phone
-        )
+        updated_at
       `)
       .eq('id', id)
       .single();
+
+    console.log('Supabase query result:', { data, error });
 
     if (error) {
       console.error('Database error:', error);
       return null;
     }
-    
-    if (!data) return null;
 
-    return transformDbProperty(data as any);
+    if (!data) {
+      console.log('No data returned from query');
+      return null;
+    }
+
+    console.log('Raw data before transform:', data);
+    const transformedProperty = transformDbProperty(data as any);
+    console.log('Transformed property:', transformedProperty);
+
+    return transformedProperty;
   } catch (error) {
     console.error('Fetch property by ID error:', error);
     return null;

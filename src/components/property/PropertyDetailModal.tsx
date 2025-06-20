@@ -147,7 +147,7 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   return (
     <div
       ref={modalRef}
-      className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm overflow-hidden"
+      className="fixed inset-0 z-50 bg-black/60 backdrop-blur-md overflow-hidden"
       onClick={(e) => e.target === modalRef.current && onClose()}
       style={{ touchAction: 'none' }}
     >
@@ -163,48 +163,48 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
         
         {/* Header controls */}
-        <div className="absolute top-4 left-4 right-4 flex justify-between items-center">
+        <div className="absolute top-6 left-6 right-6 flex justify-between items-center">
           <button
             onClick={onClose}
-            className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg"
+            className="w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl hover:bg-white transition-all duration-200"
           >
-            <X size={20} className="text-gray-800" />
+            <X size={22} className="text-gray-900" />
           </button>
-          
-          <div className="flex gap-2">
-            <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
-              <Heart size={18} className="text-gray-800" />
+
+          <div className="flex gap-3">
+            <button className="w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl hover:bg-white transition-all duration-200">
+              <Heart size={20} className="text-gray-900" />
             </button>
-            <button className="w-10 h-10 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-lg">
-              <Share2 size={18} className="text-gray-800" />
+            <button className="w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl hover:bg-white transition-all duration-200">
+              <Share2 size={20} className="text-gray-900" />
             </button>
           </div>
         </div>
 
         {/* Property basic info overlay */}
-        <div className="absolute bottom-4 left-4 right-4">
-          <div className="flex items-center gap-2 mb-2">
-            <Badge variant="secondary" className="bg-white/90 text-gray-800">
+        <div className="absolute bottom-6 left-6 right-6">
+          <div className="flex items-center gap-3 mb-3">
+            <Badge variant="secondary" className="bg-white/95 text-gray-900 font-medium px-3 py-1">
               {property.propertyType || 'Hostel'}
             </Badge>
             {property.genderRestriction && (
-              <Badge variant="outline" className="bg-white/90 text-gray-800 border-white/50">
+              <Badge variant="outline" className="bg-white/95 text-gray-900 border-white/70 font-medium px-3 py-1">
                 {property.genderRestriction}
               </Badge>
             )}
           </div>
-          
-          <h1 className="text-2xl font-bold text-white mb-1 drop-shadow-lg">
+
+          <h1 className="text-3xl font-bold text-white mb-2 drop-shadow-2xl">
             {property.title}
           </h1>
-          
-          <div className="flex items-center gap-4 text-white/90">
-            <div className="flex items-center gap-1">
-              <MapPin size={16} />
-              <span className="text-sm">{getLocationText()}</span>
+
+          <div className="flex items-center gap-4 text-white/95">
+            <div className="flex items-center gap-2">
+              <MapPin size={18} className="drop-shadow-lg" />
+              <span className="text-base font-medium drop-shadow-lg">{getLocationText()}</span>
             </div>
             {getDistanceText() && (
-              <span className="text-sm">{getDistanceText()}</span>
+              <span className="text-base font-medium drop-shadow-lg">{getDistanceText()}</span>
             )}
           </div>
         </div>
@@ -213,38 +213,39 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
       {/* Sliding Card - Bottom 55% */}
       <div
         ref={cardRef}
-        className={`absolute bottom-0 left-0 right-0 h-[55vh] bg-white rounded-t-3xl shadow-2xl transform ${
+        className={`absolute bottom-0 left-0 right-0 h-[55vh] bg-white rounded-t-[24px] shadow-2xl transform ${
           isAnimating ? 'translate-y-full transition-transform duration-300 ease-out' :
           isDragging ? '' : 'transition-transform duration-300 ease-out'
         }`}
         style={{
           transform: `translateY(${cardOffset}px)`,
-          transition: isDragging ? 'none' : undefined
+          transition: isDragging ? 'none' : undefined,
+          boxShadow: '0 -8px 32px rgba(0, 0, 0, 0.12)'
         }}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-2">
-          <div className="w-12 h-1.5 bg-gray-300 rounded-full" />
+        <div className="flex justify-center pt-4 pb-3">
+          <div className="w-12 h-1.5 bg-gray-400 rounded-full" />
         </div>
 
-        {/* Content will be added in next step */}
+        {/* Content */}
         <div className="px-6 pb-6 h-full overflow-hidden flex flex-col">
           {/* Price and rating header */}
-          <div className="flex justify-between items-center mb-4">
+          <div className="flex justify-between items-center mb-6">
             <div>
-              <div className="text-2xl font-bold text-primary">
+              <div className="text-3xl font-bold text-primary">
                 ¢{property.rent?.toLocaleString() || '0'}
               </div>
-              <div className="text-sm text-gray-500">per semester</div>
+              <div className="text-base text-gray-600 font-medium">per semester</div>
             </div>
-            
-            <div className="flex items-center gap-1">
-              <Star size={16} className="text-yellow-500 fill-current" />
-              <span className="font-medium">{property.rating || '4.5'}</span>
-              <span className="text-gray-500 text-sm">(24 reviews)</span>
+
+            <div className="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded-full">
+              <Star size={18} className="text-yellow-500 fill-current" />
+              <span className="font-bold text-gray-900">{property.rating || '4.5'}</span>
+              <span className="text-gray-600 text-sm font-medium">(24 reviews)</span>
             </div>
           </div>
 

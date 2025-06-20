@@ -9,9 +9,7 @@ interface EmergencyContactStepProps {
   name: string;
   relationship: string;
   phone: string;
-  alternatePhone: string;
-  onInputChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onRelationshipChange: (value: string) => void;
+  onInputChange: (field: string, value: string) => void;
   onPrevious: () => void;
   onNext: () => void;
 }
@@ -20,9 +18,7 @@ const EmergencyContactStep: React.FC<EmergencyContactStepProps> = ({
   name,
   relationship,
   phone,
-  alternatePhone,
   onInputChange,
-  onRelationshipChange,
   onPrevious,
   onNext
 }) => {
@@ -39,7 +35,7 @@ const EmergencyContactStep: React.FC<EmergencyContactStepProps> = ({
           id="name"
           name="name"
           value={name}
-          onChange={onInputChange}
+          onChange={(e) => onInputChange('emergencyName', e.target.value)}
           placeholder="Emergency contact full name"
           required
         />
@@ -47,7 +43,7 @@ const EmergencyContactStep: React.FC<EmergencyContactStepProps> = ({
       
       <div>
         <Label htmlFor="relationship">Relationship</Label>
-        <Select value={relationship} onValueChange={onRelationshipChange}>
+        <Select value={relationship} onValueChange={(value) => onInputChange('emergencyRelationship', value)}>
           <SelectTrigger>
             <SelectValue placeholder="Select relationship" />
           </SelectTrigger>
@@ -69,21 +65,9 @@ const EmergencyContactStep: React.FC<EmergencyContactStepProps> = ({
           name="phone"
           type="tel"
           value={phone}
-          onChange={onInputChange}
+          onChange={(e) => onInputChange('emergencyPhone', e.target.value)}
           placeholder="+233 XX XXX XXXX"
           required
-        />
-      </div>
-      
-      <div>
-        <Label htmlFor="alternatePhone">Alternate Phone Number (Optional)</Label>
-        <Input
-          id="alternatePhone"
-          name="alternatePhone"
-          type="tel"
-          value={alternatePhone}
-          onChange={onInputChange}
-          placeholder="+233 XX XXX XXXX"
         />
       </div>
       

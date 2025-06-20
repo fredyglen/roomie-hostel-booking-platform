@@ -3,6 +3,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import Button from '@/components/common/Button';
 import { Separator } from '@/components/ui/separator';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { ModernPaystackPayment } from '@/components/payment/ModernPaystackPayment';
+import { useAuth } from '@/context/EnhancedAuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 interface PaymentStepProps {
   totalAmount: number;
@@ -10,6 +13,7 @@ interface PaymentStepProps {
   termsAgreed: boolean;
   onTermsChange: (agreed: boolean) => void;
   onPaymentProceed: () => void;
+  onPrevious?: () => void;
 }
 
 const PaymentStep: React.FC<PaymentStepProps> = ({
@@ -17,14 +21,48 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   onPaymentMethodSelect,
   termsAgreed,
   onTermsChange,
-  onPaymentProceed
+  onPaymentProceed,
+  onPrevious
 }) => {
-  const [selectedMethod, setSelectedMethod] = useState<string>('');
+  const { user } = useAuth();
+  const { toast } = useToast();
+  const [selectedMethod, setSelectedMethod] = useState<string>('paystack');
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   
   const handleMethodSelect = (method: string) => {
     setSelectedMethod(method);
     onPaymentMethodSelect(method);
+  };
+
+  const handlePaymentSuccess = (result: any) => {
+    toast({
+      title: "Payment Successful!",
+      description: "Your payment has been processed successfully.",
+    });
+    setShowPaymentModal(false);
+    onPaymentProceed();
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment Failed",
+      description: error,
+      variant: "destructive",
+    });
+    setShowPaymentModal(false);
+  };
+
+  const handleProceedToPayment = () => {
+    if (!termsAgreed || !selectedMethod) {
+      toast({
+        title: "Missing Information",
+        description: "Please select a payment method and agree to the terms.",
+        variant: "destructive",
+      });
+      return;
+    }
+    setShowPaymentModal(true);
   };
   
   return (
@@ -46,37 +84,20 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       
       <div className="space-y-4">
         <h3 className="font-medium">Select Payment Method</h3>
-        
-        <div 
-          className={`border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedMethod === 'mobile_money' ? 'border-roomi-blue bg-blue-50' : ''}`}
-          onClick={() => handleMethodSelect('mobile_money')}
+
+        <div
+          className={`border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedMethod === 'paystack' ? 'border-roomi-blue bg-blue-50' : ''}`}
+          onClick={() => handleMethodSelect('paystack')}
         >
           <div className="flex items-start">
-            <div className={`w-5 h-5 rounded-full border mr-3 mt-1 flex items-center justify-center ${selectedMethod === 'mobile_money' ? 'border-roomi-blue' : 'border-gray-400'}`}>
-              {selectedMethod === 'mobile_money' && (
+            <div className={`w-5 h-5 rounded-full border mr-3 mt-1 flex items-center justify-center ${selectedMethod === 'paystack' ? 'border-roomi-blue' : 'border-gray-400'}`}>
+              {selectedMethod === 'paystack' && (
                 <div className="w-3 h-3 rounded-full bg-roomi-blue"></div>
               )}
             </div>
             <div>
-              <h4 className="font-medium">Mobile Money</h4>
-              <p className="text-sm text-gray-600">Pay using MTN, Vodafone, or AirtelTigo Mobile Money</p>
-            </div>
-          </div>
-        </div>
-        
-        <div 
-          className={`border rounded-lg p-4 cursor-pointer hover:bg-gray-50 transition-colors ${selectedMethod === 'bank_transfer' ? 'border-roomi-blue bg-blue-50' : ''}`}
-          onClick={() => handleMethodSelect('bank_transfer')}
-        >
-          <div className="flex items-start">
-            <div className={`w-5 h-5 rounded-full border mr-3 mt-1 flex items-center justify-center ${selectedMethod === 'bank_transfer' ? 'border-roomi-blue' : 'border-gray-400'}`}>
-              {selectedMethod === 'bank_transfer' && (
-                <div className="w-3 h-3 rounded-full bg-roomi-blue"></div>
-              )}
-            </div>
-            <div>
-              <h4 className="font-medium">Bank Transfer</h4>
-              <p className="text-sm text-gray-600">Make a direct bank transfer to our account</p>
+              <h4 className="font-medium">Paystack (Recommended)</h4>
+              <p className="text-sm text-gray-600">Secure payment with Cards, Mobile Money (MTN, Vodafone, AirtelTigo), Bank Transfer</p>
             </div>
           </div>
         </div>
@@ -111,14 +132,23 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         </div>
       </div>
       
-      <div className="pt-4">
-        <Button 
-          variant="primary" 
-          fullWidth
+      <div className="pt-4 flex gap-4">
+        {onPrevious && (
+          <Button
+            variant="outline"
+            onClick={onPrevious}
+            className="flex-1"
+          >
+            Previous
+          </Button>
+        )}
+        <Button
+          variant="primary"
+          className="flex-1"
           disabled={!termsAgreed || !selectedMethod}
-          onClick={onPaymentProceed}
+          onClick={handleProceedToPayment}
         >
-          Pay Now
+          Proceed to Payment
         </Button>
       </div>
       
@@ -176,6 +206,39 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               }}
             >
               Accept Terms
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Payment Modal */}
+      <Dialog open={showPaymentModal} onOpenChange={setShowPaymentModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Complete Payment</DialogTitle>
+            <DialogDescription>
+              Secure payment processing via Paystack
+            </DialogDescription>
+          </DialogHeader>
+
+          <ModernPaystackPayment
+            amount={totalAmount}
+            email={user?.email || ''}
+            firstName={user?.user_metadata?.first_name || ''}
+            lastName={user?.user_metadata?.last_name || ''}
+            phone={user?.user_metadata?.phone || ''}
+            onSuccess={handlePaymentSuccess}
+            onError={handlePaymentError}
+            title="ROOMi Accommodation Payment"
+            description="Complete your booking payment"
+          />
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowPaymentModal(false)}
+            >
+              Cancel
             </Button>
           </DialogFooter>
         </DialogContent>
