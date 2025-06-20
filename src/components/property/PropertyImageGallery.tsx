@@ -6,6 +6,7 @@ import { IMAGE_URLS } from '@/constants/images';
 interface PropertyImageGalleryProps {
   images: string[];
   title: string;
+  propertyId?: string;
   onError?: () => void;
 }
 
