@@ -1,13 +1,16 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Users, Bed, Bath, Lock } from 'lucide-react';
+import { MapPin, Users, Bed, Bath, Lock, Eye } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import LazyImage from '@/components/common/LazyImage';
 import { useBookingAccess } from '@/hooks/useBookingAccess';
 import RegistrationPromptModal from '@/components/auth/RegistrationPromptModal';
+import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
+import ViewingLimitOverlay from './ViewingLimitOverlay';
+import { useNavigate } from 'react-router-dom';
 import {
   WifiIcon,
   AirConditionIcon,
@@ -68,8 +71,22 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   onViewDetails,
   onViewStory
 }) => {
+  const navigate = useNavigate();
   const { accessLevel, canPerformAction, filterPropertyData, getRegistrationPrompt } = useBookingAccess();
+  const {
+    trackImageView,
+    trackStoryView,
+    trackPropertyView,
+    canViewImage,
+    canViewStory,
+    checkViewingRestriction,
+    isAnonymous
+  } = usePropertyViewingTracker();
+
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
+  const [showViewingLimitOverlay, setShowViewingLimitOverlay] = useState(false);
+  const [viewingRestriction, setViewingRestriction] = useState<any>(null);
+  const [hasTrackedView, setHasTrackedView] = useState(false);
 
   // Filter property data based on user access level
   const filteredProperty = filterPropertyData({
@@ -102,6 +119,60 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
   // Get registration prompt data
   const registrationPrompt = getRegistrationPrompt();
+
+  // Track property view on mount (for anonymous users)
+  useEffect(() => {
+    if (isAnonymous && !hasTrackedView) {
+      trackPropertyView();
+      setHasTrackedView(true);
+    }
+  }, [isAnonymous, hasTrackedView, trackPropertyView]);
+
+  // Handle image viewing with limits
+  const handleImageView = () => {
+    if (isAnonymous) {
+      if (!canViewImage()) {
+        const restriction = checkViewingRestriction('images');
+        setViewingRestriction(restriction);
+        setShowViewingLimitOverlay(true);
+        return false;
+      }
+      trackImageView();
+    }
+    return true;
+  };
+
+  // Handle story viewing with limits
+  const handleStoryViewAttempt = () => {
+    if (isAnonymous) {
+      if (!canViewStory()) {
+        const restriction = checkViewingRestriction('stories');
+        setViewingRestriction(restriction);
+        setShowViewingLimitOverlay(true);
+        return;
+      }
+      trackStoryView();
+    }
+
+    if (!canPerformAction('view_details') && onViewStory) {
+      setShowRegistrationModal(true);
+      return;
+    }
+    if (onViewStory) {
+      onViewStory();
+    }
+  };
+
+  // Handle registration/login from viewing limit overlay
+  const handleRegisterFromOverlay = () => {
+    setShowViewingLimitOverlay(false);
+    navigate('/register');
+  };
+
+  const handleLoginFromOverlay = () => {
+    setShowViewingLimitOverlay(false);
+    navigate('/login');
+  };
 
   // Calculate bed availability percentage for color coding
   const availabilityPercentage = totalBeds > 0 ? (totalBedsAvailable / totalBeds) * 100 : 0;
@@ -163,13 +234,30 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       <div className="relative h-[70px] flex-shrink-0">
         <LazyImage
           src={primaryImage || '/placeholder-property.jpg'}
-          alt={title}
-          className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+          alt={filteredProperty.title}
+          className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${
+            isAnonymous && !canViewImage() ? 'blur-sm' : ''
+          }`}
           width={400}
           height={70}
           sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           priority={false}
+          onLoad={() => {
+            if (isAnonymous) {
+              handleImageView();
+            }
+          }}
         />
+
+        {/* Image viewing limit overlay */}
+        {isAnonymous && !canViewImage() && (
+          <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+            <div className="bg-white/90 rounded-lg p-1 flex items-center gap-1 text-xs">
+              <Lock size={10} className="text-primary" />
+              <span className="font-medium text-gray-800">Register for more</span>
+            </div>
+          </div>
+        )}
 
         {/* Bed Availability Badge - Top Left */}
         <div className="absolute top-1 left-1">
@@ -309,6 +397,19 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           actionText={registrationPrompt.actionText}
           benefits={registrationPrompt.benefits}
           trigger="booking_attempt"
+        />
+      )}
+
+      {/* Viewing Limit Overlay */}
+      {viewingRestriction && (
+        <ViewingLimitOverlay
+          isVisible={showViewingLimitOverlay}
+          restrictionType={viewingRestriction.restrictionType}
+          remainingViews={viewingRestriction.remainingViews}
+          totalLimit={viewingRestriction.totalLimit}
+          message={viewingRestriction.message}
+          onRegisterClick={handleRegisterFromOverlay}
+          onLoginClick={handleLoginFromOverlay}
         />
       )}
     </Card>

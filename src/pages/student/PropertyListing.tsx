@@ -6,6 +6,8 @@ import {
 } from '@/components/ui/SolarIcons';
 import PropertyCard from '@/components/properties/PropertyCard';
 import LazyPropertyCard from '@/components/common/LazyPropertyCard';
+import ViewingProgressIndicator from '@/components/properties/ViewingProgressIndicator';
+import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
 import GhanaHostelService, { GhanaProperty } from '../../services/ghanaHostelService';
 import { getGenderRestrictionLabel, getFacilityTypeLabel, getProximityBadge } from '../../data/ghanaHostels';
 
@@ -14,6 +16,7 @@ const ghanaProperties = GhanaHostelService.convertToProperties();
 
 const PropertyListing: React.FC = () => {
   const navigate = useNavigate();
+  const { getViewingProgress, isAnonymous } = usePropertyViewingTracker();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('All');
   const [occupants, setOccupants] = useState(1);
@@ -326,6 +329,16 @@ const PropertyListing: React.FC = () => {
       </div>
 
 
+
+      {/* Viewing Progress Indicator for Anonymous Users */}
+      {isAnonymous && (
+        <div className="px-4 pb-2">
+          <ViewingProgressIndicator
+            progress={getViewingProgress()}
+            isVisible={true}
+          />
+        </div>
+      )}
 
       {/* Results Counter */}
       <div style={{
