@@ -8,7 +8,7 @@ import PropertyCard from '@/components/properties/PropertyCard';
 import LazyPropertyCard from '@/components/common/LazyPropertyCard';
 import ViewingProgressIndicator from '@/components/properties/ViewingProgressIndicator';
 import SimpleRegistrationModal from '@/components/auth/SimpleRegistrationModal';
-import PropertyDetailModal from '@/components/property/PropertyDetailModal';
+import PropertyDetailWrapper from '@/components/property/PropertyDetailWrapper';
 import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
 import { useAnonymousTimeLimit } from '@/hooks/useAnonymousTimeLimit';
 import GhanaHostelService, { GhanaProperty } from '../../services/ghanaHostelService';
@@ -480,9 +480,9 @@ const PropertyListing: React.FC = () => {
         onClose={() => setShowRegistrationModal(false)}
       />
 
-      {/* Property Detail Modal */}
+      {/* Property Detail Wrapper - Responsive */}
       {selectedProperty && (
-        <PropertyDetailModal
+        <PropertyDetailWrapper
           property={selectedProperty}
           isOpen={showPropertyModal}
           onClose={handleCloseModal}
