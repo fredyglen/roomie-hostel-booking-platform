@@ -1,62 +1,10 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { Property, PropertyCategory, PropertyType } from '@/types/property';
+import { Property } from '@/types/property';
 import { ErrorHandler } from '@/utils/ErrorHandler';
-import { ghanaHostelsSemesterPricing } from '@/data/ghana-hostels-semester-pricing';
 
-// Transform mock Ghana hostel data to Property format
-const transformMockData = (): Property[] => {
-  return ghanaHostelsSemesterPricing.map(hostel => ({
-    id: hostel.id,
-    name: hostel.name,
-    title: hostel.name,
-    status: 'available' as const,
-    price: hostel.pricePerSemester,
-    rent: hostel.pricePerSemester,
-    location: `${hostel.location.city}, ${hostel.location.state}`,
-    zip: '00000',
-    propertyCategory: 'Hostel' as PropertyCategory,
-    verified: true,
-    owner_id: hostel.owner.id,
-    description: hostel.description,
-    address: hostel.location.address,
-    city: hostel.location.city,
-    state: hostel.location.state,
-    type: hostel.propertyType as PropertyType,
-    property_category: 'Hostel' as PropertyCategory,
-    bedrooms: hostel.bedrooms,
-    bathrooms: hostel.bathrooms,
-    images: hostel.images,
-    amenities: hostel.amenities,
-    is_available: hostel.isActive,
-    available_from: hostel.availableFrom,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    verification_status: 'verified' as const,
-    gender_restriction: hostel.amenities.includes('Female Only') ? 'female' :
-                       hostel.amenities.includes('Male Only') ? 'male' : 'mixed',
-    parking_available: hostel.amenities.includes('Parking Space'),
-    total_rooms: 10,
-    rooms_available: 8,
-    beds_per_room: hostel.maxOccupants,
-    beds_available: 8 * hostel.maxOccupants,
-    max_occupants: hostel.maxOccupants,
-    has_bedframes: true,
-    has_mattresses: true,
-    has_wardrobes: true,
-    has_fan: true,
-    has_tiled_room: true,
-    has_individual_meters: hostel.amenities.includes('Self-Contained'),
-    washroom_type: hostel.bathrooms > 0 ? 'inside' : 'shared' as const,
-    meter_type: 'shared' as const,
-    owner: hostel.owner,
-    rating: 4.5,
-    house_rules: hostel.house_rules,
-    stories: hostel.stories || [],
-    features: hostel.features
-  }));
-};
+// Removed transformMockData function - no more mock data fallbacks
 
 export const useDemoProperties = () => {
   return useQuery({
@@ -73,14 +21,13 @@ export const useDemoProperties = () => {
 
         if (error) {
           ErrorHandler.handle('Error fetching properties', error.message);
-          // Fallback to mock data if database query fails
-          return transformMockData();
+          throw new Error(`Database error: ${error.message}`);
         }
 
-        // If no data from database, use mock data
+        // If no data from database, return empty array
         if (!data || data.length === 0) {
-          ErrorHandler.log('No properties in database, using mock data');
-          return transformMockData();
+          ErrorHandler.log('No properties found in database');
+          return [];
         }
 
         // Transform database properties to match our Property type

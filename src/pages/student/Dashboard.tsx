@@ -6,11 +6,10 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, Bed, Bath, Users, Search, Heart, Calendar } from 'lucide-react';
+import { MapPin, Bed, Users, Search, Heart, Calendar } from 'lucide-react';
 import { PropertyQueries, BookingQueries } from '@/services/database/standardizedQueries';
 import { FavoritesQueries } from '@/services/database/favoritesQueries';
 import { logger } from '@/utils/enhanced-logger';
-import { ErrorHandler } from '@/utils/ErrorHandler';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
@@ -45,21 +44,43 @@ const StudentDashboard: React.FC = () => {
 
         // Fetch user bookings if user is available
         if (user?.id) {
-          const bookings = await BookingQueries.getBookingsByStudent(user.id);
-          setUserBookings(bookings);
+          try {
+            const bookings = await BookingQueries.getBookingsByStudent(user.id);
+            setUserBookings(bookings);
 
-          // Get real favorites count
-          const favoritesCount = await FavoritesQueries.getFavoritesCount(user.id);
+            // Get real favorites count
+            const favoritesCount = await FavoritesQueries.getFavoritesCount(user.id);
 
-          // Calculate real stats
-          setQuickStats({
-            totalViewed: 0, // TODO: Implement view tracking
-            totalFavorites: favoritesCount,
-            activeInquiries: bookings.filter(b => b.status === 'pending').length,
-            upcomingBookings: bookings.filter(b =>
-              b.status === 'confirmed' && new Date(b.check_in_date) > new Date()
-            ).length
-          });
+            // Calculate real stats only if bookings is an array and has proper structure
+            if (Array.isArray(bookings) && bookings.length > 0 && 'status' in bookings[0]) {
+              setQuickStats({
+                totalViewed: 0, // TODO: Implement view tracking
+                totalFavorites: favoritesCount,
+                activeInquiries: bookings.filter(b => b.status === 'pending').length,
+                upcomingBookings: bookings.filter(b =>
+                  b.status === 'confirmed' && new Date(b.check_in_date) > new Date()
+                ).length
+              });
+            } else {
+              // Handle case where bookings query failed
+              setQuickStats({
+                totalViewed: 0,
+                totalFavorites: favoritesCount,
+                activeInquiries: 0,
+                upcomingBookings: 0
+              });
+            }
+          } catch (bookingError) {
+            logger.warn('Failed to fetch bookings, using fallback stats', { error: bookingError });
+            // Get favorites count only
+            const favoritesCount = await FavoritesQueries.getFavoritesCount(user.id);
+            setQuickStats({
+              totalViewed: 0,
+              totalFavorites: favoritesCount,
+              activeInquiries: 0,
+              upcomingBookings: 0
+            });
+          }
         }
 
         logger.info('Dashboard data loaded successfully', {
@@ -71,25 +92,13 @@ const StudentDashboard: React.FC = () => {
         logger.error('Error loading dashboard data', { error: err });
         setError('Failed to load dashboard data. Please try again.');
 
-        // Fallback to mock data on error
-        setFeaturedProperties([
-          {
-            id: '1',
-            title: 'Heaven\'s Gate Hostel',
-            base_price_per_semester: 2600,
-            address: 'East Legon',
-            city: 'Accra',
-            max_occupancy: 4,
-            current_occupancy: 2,
-            images: ['/api/placeholder/400/300'],
-            is_available: true
-          }
-        ]);
+        // Set empty states instead of mock data
+        setFeaturedProperties([]);
         setQuickStats({
-          totalViewed: 12,
-          totalFavorites: 5,
-          activeInquiries: 3,
-          upcomingBookings: 1
+          totalViewed: 0,
+          totalFavorites: 0,
+          activeInquiries: 0,
+          upcomingBookings: 0
         });
       } finally {
         setLoading(false);
