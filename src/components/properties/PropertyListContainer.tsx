@@ -7,7 +7,7 @@ import { usePropertiesFilter } from '@/hooks/filters';
 import { useToast } from '@/hooks/use-toast';
 import { navigateToProperty, navigateToStory } from '@/utils/navigation';
 import { ErrorHandler } from '@/utils/ErrorHandler';
-import { logger } from '@/utils/logger';
+import { logger } from '@/utils/enhanced-logger';
 
 interface PropertyListContainerProps {
   properties: Property[];
@@ -55,10 +55,14 @@ const PropertyListContainer: React.FC<PropertyListContainerProps> = ({
     });
   };
 
+  const { toast } = useToast();
+
   const handleError = (error: unknown) => {
     ErrorHandler.handle(error, 'Error in PropertyListContainer:');
-    toast.error("Something went wrong", {
-      description: "Please try again later"
+    toast({
+      title: "Something went wrong",
+      description: "Please try again later",
+      variant: "destructive"
     });
   };
   

@@ -190,7 +190,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     <Card
       className="overflow-hidden card-premium animate-fade-in-up h-[280px] sm:h-[280px] flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200 w-full"
       onClick={() => {
-        console.log(`Navigating to property details for: ${title}`);
         handlePropertyClick();
       }}
     >
@@ -261,7 +260,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('Story view icon clicked for property:', id);
               handleStoryAttempt();
             }}
             className="absolute bottom-1 left-1 bg-white/90 hover:bg-white rounded-full p-1 transition-all duration-200 shadow-md"
