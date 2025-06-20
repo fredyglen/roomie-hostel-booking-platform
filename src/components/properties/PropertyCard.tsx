@@ -334,13 +334,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           )}
         </div>
 
-        {/* Access Level Indicator */}
-        {accessLevel.accessTier === 'anonymous' && (
-          <div className="mt-2 text-xs text-gray-500 text-center">
-            <Lock size={10} className="inline mr-1" />
-            Register to view all details
-          </div>
-        )}
+
 
       </div>
 
