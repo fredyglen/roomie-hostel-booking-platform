@@ -1,4 +1,4 @@
-export type Json =
+﻿export type Json =
   | string
   | number
   | boolean
@@ -42,104 +42,88 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_roommates: {
+        Row: {
+          booking_id: string | null
+          created_at: string | null
+          id: string
+          is_primary_booker: boolean | null
+          payment_amount: number | null
+          payment_responsibility: string | null
+          payment_status: string | null
+          roommate_email: string | null
+          roommate_name: string
+          roommate_phone: string | null
+          roommate_student_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary_booker?: boolean | null
+          payment_amount?: number | null
+          payment_responsibility?: string | null
+          payment_status?: string | null
+          roommate_email?: string | null
+          roommate_name: string
+          roommate_phone?: string | null
+          roommate_student_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          created_at?: string | null
+          id?: string
+          is_primary_booker?: boolean | null
+          payment_amount?: number | null
+          payment_responsibility?: string | null
+          payment_status?: string | null
+          roommate_email?: string | null
+          roommate_name?: string
+          roommate_phone?: string | null
+          roommate_student_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_roommates_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings_enhanced"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
-          agent_fee: number | null
-          agent_id: string | null
-          booking_reference: string
-          check_in_date: string
-          check_out_date: string
           created_at: string
-          emergency_contact_name: string | null
-          emergency_contact_phone: string | null
-          emergency_contact_relationship: string | null
-          end_date: string | null
+          end_date: string
           id: string
-          metadata: Json | null
-          package_type: string | null
-          payment_method: string | null
-          payment_reference: string | null
-          payment_status: string
-          paystack_access_code: string | null
-          paystack_reference: string | null
-          platform_fee: number | null
-          property_id: string | null
-          property_owner_id: string | null
-          property_rent: number | null
-          room_id: string | null
-          special_requests: string | null
-          start_date: string | null
+          property_id: string
+          start_date: string
           status: string
-          student_id: string | null
-          total_amount: number
-          total_price: number | null
-          transaction_reference: string | null
+          student_id: string
           updated_at: string
         }
         Insert: {
-          agent_fee?: number | null
-          agent_id?: string | null
-          booking_reference?: string
-          check_in_date: string
-          check_out_date: string
           created_at?: string
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
-          emergency_contact_relationship?: string | null
-          end_date?: string | null
+          end_date: string
           id?: string
-          metadata?: Json | null
-          package_type?: string | null
-          payment_method?: string | null
-          payment_reference?: string | null
-          payment_status?: string
-          paystack_access_code?: string | null
-          paystack_reference?: string | null
-          platform_fee?: number | null
-          property_id?: string | null
-          property_owner_id?: string | null
-          property_rent?: number | null
-          room_id?: string | null
-          special_requests?: string | null
-          start_date?: string | null
-          status?: string
-          student_id?: string | null
-          total_amount: number
-          total_price?: number | null
-          transaction_reference?: string | null
+          property_id: string
+          start_date: string
+          status: string
+          student_id: string
           updated_at?: string
         }
         Update: {
-          agent_fee?: number | null
-          agent_id?: string | null
-          booking_reference?: string
-          check_in_date?: string
-          check_out_date?: string
           created_at?: string
-          emergency_contact_name?: string | null
-          emergency_contact_phone?: string | null
-          emergency_contact_relationship?: string | null
-          end_date?: string | null
+          end_date?: string
           id?: string
-          metadata?: Json | null
-          package_type?: string | null
-          payment_method?: string | null
-          payment_reference?: string | null
-          payment_status?: string
-          paystack_access_code?: string | null
-          paystack_reference?: string | null
-          platform_fee?: number | null
-          property_id?: string | null
-          property_owner_id?: string | null
-          property_rent?: number | null
-          room_id?: string | null
-          special_requests?: string | null
-          start_date?: string | null
+          property_id?: string
+          start_date?: string
           status?: string
-          student_id?: string | null
-          total_amount?: number
-          total_price?: number | null
-          transaction_reference?: string | null
+          student_id?: string
           updated_at?: string
         }
         Relationships: [
@@ -150,19 +134,13 @@ export type Database = {
             referencedRelation: "properties"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "bookings_student_id_fkey"
-            columns: ["student_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
         ]
       }
       bookings_enhanced: {
         Row: {
           agent_fee: number | null
           agent_id: string | null
+          bed_number: number | null
           booking_reference: string
           check_in_date: string
           check_out_date: string
@@ -173,6 +151,8 @@ export type Database = {
           end_date: string | null
           id: string
           metadata: Json | null
+          mobile_money_network: string | null
+          mobile_money_number: string | null
           package_type: string | null
           payment_method: string | null
           payment_reference: string | null
@@ -180,22 +160,30 @@ export type Database = {
           paystack_access_code: string | null
           paystack_reference: string | null
           platform_fee: number | null
+          program: string | null
           property_id: string | null
           property_owner_id: string | null
           property_rent: number | null
           room_id: string | null
+          room_type: string | null
+          roommates_count: number | null
+          semester_period: string | null
           special_requests: string | null
           start_date: string | null
           status: string
           student_id: string | null
+          student_id_number: string | null
+          student_verification_status: string | null
           total_amount: number
           total_price: number | null
           transaction_reference: string | null
+          university: string | null
           updated_at: string
         }
         Insert: {
           agent_fee?: number | null
           agent_id?: string | null
+          bed_number?: number | null
           booking_reference?: string
           check_in_date: string
           check_out_date: string
@@ -206,6 +194,8 @@ export type Database = {
           end_date?: string | null
           id?: string
           metadata?: Json | null
+          mobile_money_network?: string | null
+          mobile_money_number?: string | null
           package_type?: string | null
           payment_method?: string | null
           payment_reference?: string | null
@@ -213,22 +203,30 @@ export type Database = {
           paystack_access_code?: string | null
           paystack_reference?: string | null
           platform_fee?: number | null
+          program?: string | null
           property_id?: string | null
           property_owner_id?: string | null
           property_rent?: number | null
           room_id?: string | null
+          room_type?: string | null
+          roommates_count?: number | null
+          semester_period?: string | null
           special_requests?: string | null
           start_date?: string | null
           status?: string
           student_id?: string | null
+          student_id_number?: string | null
+          student_verification_status?: string | null
           total_amount: number
           total_price?: number | null
           transaction_reference?: string | null
+          university?: string | null
           updated_at?: string
         }
         Update: {
           agent_fee?: number | null
           agent_id?: string | null
+          bed_number?: number | null
           booking_reference?: string
           check_in_date?: string
           check_out_date?: string
@@ -239,6 +237,8 @@ export type Database = {
           end_date?: string | null
           id?: string
           metadata?: Json | null
+          mobile_money_network?: string | null
+          mobile_money_number?: string | null
           package_type?: string | null
           payment_method?: string | null
           payment_reference?: string | null
@@ -246,17 +246,24 @@ export type Database = {
           paystack_access_code?: string | null
           paystack_reference?: string | null
           platform_fee?: number | null
+          program?: string | null
           property_id?: string | null
           property_owner_id?: string | null
           property_rent?: number | null
           room_id?: string | null
+          room_type?: string | null
+          roommates_count?: number | null
+          semester_period?: string | null
           special_requests?: string | null
           start_date?: string | null
           status?: string
           student_id?: string | null
+          student_id_number?: string | null
+          student_verification_status?: string | null
           total_amount?: number
           total_price?: number | null
           transaction_reference?: string | null
+          university?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -351,6 +358,50 @@ export type Database = {
             columns: ["building_id"]
             isOneToOne: false
             referencedRelation: "buildings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notifications: {
+        Row: {
+          created_at: string
+          data: Json | null
+          id: string
+          message: string
+          read: boolean
+          title: string
+          type: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message: string
+          read?: boolean
+          title: string
+          type: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json | null
+          id?: string
+          message?: string
+          read?: boolean
+          title?: string
+          type?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -531,7 +582,7 @@ export type Database = {
             foreignKeyName: "payment_distributions_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: false
-            referencedRelation: "bookings"
+            referencedRelation: "bookings_enhanced"
             referencedColumns: ["id"]
           },
         ]
@@ -566,6 +617,57 @@ export type Database = {
           processed?: boolean | null
           reference?: string | null
           status?: string
+        }
+        Relationships: []
+      }
+      payments: {
+        Row: {
+          amount: number
+          channel: string | null
+          created_at: string | null
+          currency: string
+          gateway_response: Json | null
+          id: string
+          metadata: Json | null
+          payment_method: string | null
+          paystack_reference: string | null
+          reference: string
+          status: string
+          transaction_date: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          channel?: string | null
+          created_at?: string | null
+          currency?: string
+          gateway_response?: Json | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          paystack_reference?: string | null
+          reference: string
+          status?: string
+          transaction_date?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          channel?: string | null
+          created_at?: string | null
+          currency?: string
+          gateway_response?: Json | null
+          id?: string
+          metadata?: Json | null
+          payment_method?: string | null
+          paystack_reference?: string | null
+          reference?: string
+          status?: string
+          transaction_date?: string | null
+          updated_at?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -610,6 +712,7 @@ export type Database = {
           amenities: string[] | null
           available_from: string
           available_to: string | null
+          base_price_per_semester: number | null
           bathrooms: number
           bedrooms: number
           beds_available: number | null
@@ -617,6 +720,7 @@ export type Database = {
           cancellation_policy: string | null
           city: string
           created_at: string
+          currency: string | null
           description: string
           emergency_contact_name: string | null
           emergency_contact_phone: string | null
@@ -642,8 +746,6 @@ export type Database = {
           property_category: string | null
           property_type: string
           rent: number
-          base_price_per_semester: number | null
-          currency: string | null
           rooms_available: number | null
           security_features: string[] | null
           semester_availability: string[] | null
@@ -668,6 +770,7 @@ export type Database = {
           amenities?: string[] | null
           available_from: string
           available_to?: string | null
+          base_price_per_semester?: number | null
           bathrooms: number
           bedrooms: number
           beds_available?: number | null
@@ -675,6 +778,7 @@ export type Database = {
           cancellation_policy?: string | null
           city: string
           created_at?: string
+          currency?: string | null
           description: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -700,8 +804,6 @@ export type Database = {
           property_category?: string | null
           property_type: string
           rent: number
-          base_price_per_semester?: number | null
-          currency?: string | null
           rooms_available?: number | null
           security_features?: string[] | null
           semester_availability?: string[] | null
@@ -726,6 +828,7 @@ export type Database = {
           amenities?: string[] | null
           available_from?: string
           available_to?: string | null
+          base_price_per_semester?: number | null
           bathrooms?: number
           bedrooms?: number
           beds_available?: number | null
@@ -733,6 +836,7 @@ export type Database = {
           cancellation_policy?: string | null
           city?: string
           created_at?: string
+          currency?: string | null
           description?: string
           emergency_contact_name?: string | null
           emergency_contact_phone?: string | null
@@ -758,8 +862,6 @@ export type Database = {
           property_category?: string | null
           property_type?: string
           rent?: number
-          base_price_per_semester?: number | null
-          currency?: string | null
           rooms_available?: number | null
           security_features?: string[] | null
           semester_availability?: string[] | null
@@ -777,7 +879,15 @@ export type Database = {
           washroom_type?: string | null
           zip?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "fk_properties_owner"
+            columns: ["owner_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       property_verifications: {
         Row: {
@@ -847,6 +957,56 @@ export type Database = {
             columns: ["verified_by"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      property_views: {
+        Row: {
+          created_at: string | null
+          device_type: string | null
+          id: string
+          ip_address: unknown | null
+          property_id: string
+          session_id: string | null
+          source_page: string | null
+          user_agent: string | null
+          user_id: string
+          view_duration: number | null
+          viewed_at: string
+        }
+        Insert: {
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: unknown | null
+          property_id: string
+          session_id?: string | null
+          source_page?: string | null
+          user_agent?: string | null
+          user_id: string
+          view_duration?: number | null
+          viewed_at?: string
+        }
+        Update: {
+          created_at?: string | null
+          device_type?: string | null
+          id?: string
+          ip_address?: unknown | null
+          property_id?: string
+          session_id?: string | null
+          source_page?: string | null
+          user_agent?: string | null
+          user_id?: string
+          view_duration?: number | null
+          viewed_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "property_views_property_id_fkey"
+            columns: ["property_id"]
+            isOneToOne: false
+            referencedRelation: "properties"
             referencedColumns: ["id"]
           },
         ]
@@ -1055,6 +1215,45 @@ export type Database = {
           },
         ]
       }
+      subscription_plans: {
+        Row: {
+          created_at: string
+          currency: string
+          description: string
+          duration_months: number
+          features: string[]
+          id: string
+          is_active: boolean
+          name: string
+          price: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          description: string
+          duration_months: number
+          features?: string[]
+          id?: string
+          is_active?: boolean
+          name: string
+          price: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          description?: string
+          duration_months?: number
+          features?: string[]
+          id?: string
+          is_active?: boolean
+          name?: string
+          price?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       transactions: {
         Row: {
           amount: number
@@ -1106,88 +1305,64 @@ export type Database = {
         }
         Relationships: []
       }
-      notifications: {
+      user_subscriptions: {
         Row: {
+          cancel_at_period_end: boolean | null
+          cancelled_at: string | null
+          created_at: string | null
+          current_period_end: string
+          current_period_start: string
           id: string
+          last_payment_date: string | null
+          next_billing_date: string | null
+          payment_reference: string | null
+          plan_id: string
+          status: string
+          subscription_metadata: Json | null
+          updated_at: string | null
           user_id: string
-          title: string
-          message: string
-          type: string
-          read: boolean
-          data: Json | null
-          created_at: string
-          updated_at: string
         }
         Insert: {
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          current_period_end: string
+          current_period_start: string
           id?: string
+          last_payment_date?: string | null
+          next_billing_date?: string | null
+          payment_reference?: string | null
+          plan_id: string
+          status?: string
+          subscription_metadata?: Json | null
+          updated_at?: string | null
           user_id: string
-          title: string
-          message: string
-          type: string
-          read?: boolean
-          data?: Json | null
-          created_at?: string
-          updated_at?: string
         }
         Update: {
+          cancel_at_period_end?: boolean | null
+          cancelled_at?: string | null
+          created_at?: string | null
+          current_period_end?: string
+          current_period_start?: string
           id?: string
+          last_payment_date?: string | null
+          next_billing_date?: string | null
+          payment_reference?: string | null
+          plan_id?: string
+          status?: string
+          subscription_metadata?: Json | null
+          updated_at?: string | null
           user_id?: string
-          title?: string
-          message?: string
-          type?: string
-          read?: boolean
-          data?: Json | null
-          created_at?: string
-          updated_at?: string
         }
         Relationships: [
           {
-            foreignKeyName: "notifications_user_id_fkey"
-            columns: ["user_id"]
+            foreignKeyName: "user_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
             isOneToOne: false
-            referencedRelation: "profiles"
+            referencedRelation: "subscription_plans"
             referencedColumns: ["id"]
-          }
+          },
         ]
-      }
-      subscription_plans: {
-        Row: {
-          id: string
-          name: string
-          description: string
-          price: number
-          currency: string
-          duration_months: number
-          features: string[]
-          is_active: boolean
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          description: string
-          price: number
-          currency?: string
-          duration_months: number
-          features: string[]
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          description?: string
-          price?: number
-          currency?: string
-          duration_months?: number
-          features?: string[]
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
       }
       verification_requirements: {
         Row: {

@@ -6,6 +6,53 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Apple-Level Professional Animations */
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes professional-spin {
+  0% {
+    transform: rotate(0deg);
+    opacity: 0.8;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: rotate(360deg);
+    opacity: 0.8;
+  }
+}
+
+@keyframes elegant-spin {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  25% {
+    transform: rotate(90deg) scale(1.05);
+  }
+  50% {
+    transform: rotate(180deg) scale(1);
+  }
+  75% {
+    transform: rotate(270deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+/* Professional loader animations */
+.animate-professional-spin {
+  animation: professional-spin 1.2s cubic-bezier(0.4, 0.0, 0.2, 1) infinite;
+}
+
+.animate-elegant-spin {
+  animation: elegant-spin 1s cubic-bezier(0.68, -0.55, 0.265, 1.55) infinite;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -254,4 +301,48 @@
 /* Splash screen transition duration */
 .duration-7000 {
   transition-duration: 7000ms;
+}
+
+/* Apple-Level Toast Animations */
+@keyframes slide-in-from-top-full {
+  0% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slide-out-to-top-full {
+  0% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100%);
+    opacity: 0;
+  }
+}
+
+@keyframes fade-out-80 {
+  0% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.2;
+  }
+}
+
+.slide-in-from-top-full {
+  animation: slide-in-from-top-full 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.slide-out-to-top-full {
+  animation: slide-out-to-top-full 300ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fade-out-80 {
+  animation: fade-out-80 300ms cubic-bezier(0.16, 1, 0.3, 1);
 }

@@ -71,7 +71,136 @@ interface PropertyDetailModal {
 - ✅ Payment integration with terms acceptance
 
 **Carousel Architecture:**
-```typescript
+```typescriptexpress-fte-utils.js:18 [Intervention] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/browser/css/fonts/AdobeClean-Regular.otf
+express-fte-utils.js:18 [Intervention] Slow network is detected. See https://www.chromestatus.com/feature/5636954674692096 for more details. Fallback font will be used while loading: chrome-extension://efaidnbmnnnibpcajpcglclefindmkaj/browser/css/fonts/AdobeClean-Bold.otf
+client:495 [vite] connecting...
+client:618 [vite] connected.
+chunk-W6L2VRDA.js?v=4043f8b7:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+App.tsx:128 🚀 Application started
+enhanced-logger.ts:45 [INFO] Application started
+enhanced-logger.ts:43 [DEBUG] Memory usage Object
+enhanced-logger.ts:45 [INFO] Getting initial session
+enhanced-logger.ts:43 [INFO] Page load performance Object
+enhanced-logger.ts:45 [INFO] No session found
+enhanced-logger.ts:45 [INFO] Initial auth check completed
+enhanced-logger.ts:43 [INFO] Auth state changed Object
+enhanced-logger.ts:45 [INFO] No user session, clearing user state
+enhanced-logger.ts:45 [INFO] Auth state change completed, loading set to false
+The resource <URL> was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+The resource <URL> was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+The resource <URL> was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+The resource <URL> was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+The resource <URL> was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+The resource <URL> was preloaded using link preload but not used within a few seconds from the window's load event. Please make sure it has an appropriate `as` value and it is preloaded intentionally.
+enhanced-logger.ts:43 [DEBUG] Memory usage Object
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 23, totalJSHeapSize: 27, jsHeapSizeLimit: 2144}
+Login.tsx:349 🚨 EMERGENCY BYPASS - Creating mock user session
+Login.tsx:378 🚨 EMERGENCY BYPASS - Mock user created, navigating to properties
+ProtectedRoute.tsx:43 🚨 DEV BYPASS: Using development bypass user for protected route {route: '/student/properties', bypassUser: 'dev@roomi.com', role: 'student'}
+enhanced-logger.ts:45 [INFO] Fetching demo properties from database
+enhanced-logger.ts:45 [INFO] Successfully loaded 3 properties
+PropertyCard.tsx:193 Navigating to property details for: UPSA Excellence Lodge
+PropertyListing.tsx:73 View details clicked for property: 655d1fd7-effd-4f37-b50d-983952d0828d
+PropertyDetailWrapper.tsx:39 PropertyDetailWrapper: {screenWidth: 412, isMobile: false, isTablet: false, layoutType: 'desktop', shouldUseMobileLayout: false}
+[Violation] Forced reflow while executing JavaScript took 40ms
+PropertyDetailWrapper.tsx:39 PropertyDetailWrapper: {screenWidth: 412, isMobile: true, isTablet: false, layoutType: 'mobile', shouldUseMobileLayout: true}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 26, totalJSHeapSize: 31, jsHeapSizeLimit: 2144}
+PropertyDetailModal.tsx:65 Unable to preventDefault inside passive event listener invocation.
+preventDefault @ chunk-W6L2VRDA.js?v=4043f8b7:5760
+handleTouchStart @ PropertyDetailModal.tsx:65
+callCallback2 @ chunk-W6L2VRDA.js?v=4043f8b7:3674
+invokeGuardedCallbackDev @ chunk-W6L2VRDA.js?v=4043f8b7:3699
+invokeGuardedCallback @ chunk-W6L2VRDA.js?v=4043f8b7:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-W6L2VRDA.js?v=4043f8b7:3736
+executeDispatch @ chunk-W6L2VRDA.js?v=4043f8b7:7014
+processDispatchQueueItemsInOrder @ chunk-W6L2VRDA.js?v=4043f8b7:7034
+processDispatchQueue @ chunk-W6L2VRDA.js?v=4043f8b7:7043
+dispatchEventsForPlugins @ chunk-W6L2VRDA.js?v=4043f8b7:7051
+(anonymous) @ chunk-W6L2VRDA.js?v=4043f8b7:7174
+batchedUpdates$1 @ chunk-W6L2VRDA.js?v=4043f8b7:18913
+batchedUpdates @ chunk-W6L2VRDA.js?v=4043f8b7:3579
+dispatchEventForPluginEventSystem @ chunk-W6L2VRDA.js?v=4043f8b7:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-W6L2VRDA.js?v=4043f8b7:5478
+dispatchEvent @ chunk-W6L2VRDA.js?v=4043f8b7:5472
+dispatchDiscreteEvent @ chunk-W6L2VRDA.js?v=4043f8b7:5449
+PropertyDetailModal.tsx:65 Unable to preventDefault inside passive event listener invocation.
+preventDefault @ chunk-W6L2VRDA.js?v=4043f8b7:5760
+handleTouchStart @ PropertyDetailModal.tsx:65
+callCallback2 @ chunk-W6L2VRDA.js?v=4043f8b7:3674
+invokeGuardedCallbackDev @ chunk-W6L2VRDA.js?v=4043f8b7:3699
+invokeGuardedCallback @ chunk-W6L2VRDA.js?v=4043f8b7:3733
+invokeGuardedCallbackAndCatchFirstError @ chunk-W6L2VRDA.js?v=4043f8b7:3736
+executeDispatch @ chunk-W6L2VRDA.js?v=4043f8b7:7014
+processDispatchQueueItemsInOrder @ chunk-W6L2VRDA.js?v=4043f8b7:7034
+processDispatchQueue @ chunk-W6L2VRDA.js?v=4043f8b7:7043
+dispatchEventsForPlugins @ chunk-W6L2VRDA.js?v=4043f8b7:7051
+(anonymous) @ chunk-W6L2VRDA.js?v=4043f8b7:7174
+batchedUpdates$1 @ chunk-W6L2VRDA.js?v=4043f8b7:18913
+batchedUpdates @ chunk-W6L2VRDA.js?v=4043f8b7:3579
+dispatchEventForPluginEventSystem @ chunk-W6L2VRDA.js?v=4043f8b7:7173
+dispatchEventWithEnableCapturePhaseSelectiveHydrationWithoutDiscreteEventReplay @ chunk-W6L2VRDA.js?v=4043f8b7:5478
+dispatchEvent @ chunk-W6L2VRDA.js?v=4043f8b7:5472
+dispatchDiscreteEvent @ chunk-W6L2VRDA.js?v=4043f8b7:5449
+ProtectedRoute.tsx:43 🚨 DEV BYPASS: Using development bypass user for protected route {route: '/student/book/655d1fd7-effd-4f37-b50d-983952d0828d', bypassUser: 'dev@roomi.com', role: 'student'}
+BookingStepsContainer.tsx:32 Loading property with ID: 655d1fd7-effd-4f37-b50d-983952d0828d
+@supabase_supabase-js.js?v=4043f8b7:3900 
+            
+            
+           GET https://ymqnbekeqarjmxftzvks.supabase.co/rest/v1/properties?select=id%2Cowner_id%2Ctitle%2Cdescription%2Caddress%2Ccity%2Cstate%2Czip%2Crent%2Cproperty_type%2Cproperty_category%2Cis_available%2Cbedrooms%2Cbathrooms%2Camenities%2Cimages%2Cavailable_from%2Cavailable_to%2Ccreated_at%2Cupdated_at%2Cprofiles%21properties_owner_id_fkey%28id%2Cfirst_name%2Clast_name%2Cemail%2Cphone%29&id=eq.655d1fd7-effd-4f37-b50d-983952d0828d 400 (Bad Request)
+(anonymous) @ @supabase_supabase-js.js?v=4043f8b7:3900
+(anonymous) @ @supabase_supabase-js.js?v=4043f8b7:3921
+fulfilled @ @supabase_supabase-js.js?v=4043f8b7:3873
+Promise.then
+step @ @supabase_supabase-js.js?v=4043f8b7:3886
+(anonymous) @ @supabase_supabase-js.js?v=4043f8b7:3888
+__awaiter6 @ @supabase_supabase-js.js?v=4043f8b7:3870
+(anonymous) @ @supabase_supabase-js.js?v=4043f8b7:3911
+then @ @supabase_supabase-js.js?v=4043f8b7:89
+propertyDataService.ts:196 Database error: {code: 'PGRST200', details: "Searched for a foreign key relationship between 'p…n the schema 'public', but no matches were found.", hint: null, message: "Could not find a relationship between 'properties' and 'profiles' in the schema cache"}
+fetchPropertyById @ propertyDataService.ts:196
+await in fetchPropertyById
+(anonymous) @ usePropertyData.tsx:35
+loadProperty @ BookingStepsContainer.tsx:36
+(anonymous) @ BookingStepsContainer.tsx:53
+commitHookEffectListMount @ chunk-W6L2VRDA.js?v=4043f8b7:16915
+commitPassiveMountOnFiber @ chunk-W6L2VRDA.js?v=4043f8b7:18156
+commitPassiveMountEffects_complete @ chunk-W6L2VRDA.js?v=4043f8b7:18129
+commitPassiveMountEffects_begin @ chunk-W6L2VRDA.js?v=4043f8b7:18119
+commitPassiveMountEffects @ chunk-W6L2VRDA.js?v=4043f8b7:18109
+flushPassiveEffectsImpl @ chunk-W6L2VRDA.js?v=4043f8b7:19490
+flushPassiveEffects @ chunk-W6L2VRDA.js?v=4043f8b7:19447
+(anonymous) @ chunk-W6L2VRDA.js?v=4043f8b7:19328
+workLoop @ chunk-W6L2VRDA.js?v=4043f8b7:197
+flushWork @ chunk-W6L2VRDA.js?v=4043f8b7:176
+performWorkUntilDeadline @ chunk-W6L2VRDA.js?v=4043f8b7:384
+BookingStepsContainer.tsx:38 Property data received: null
+BookingStepsContainer.tsx:43 Property not found for ID: 655d1fd7-effd-4f37-b50d-983952d0828d
+loadProperty @ BookingStepsContainer.tsx:43
+await in loadProperty
+(anonymous) @ BookingStepsContainer.tsx:53
+commitHookEffectListMount @ chunk-W6L2VRDA.js?v=4043f8b7:16915
+commitPassiveMountOnFiber @ chunk-W6L2VRDA.js?v=4043f8b7:18156
+commitPassiveMountEffects_complete @ chunk-W6L2VRDA.js?v=4043f8b7:18129
+commitPassiveMountEffects_begin @ chunk-W6L2VRDA.js?v=4043f8b7:18119
+commitPassiveMountEffects @ chunk-W6L2VRDA.js?v=4043f8b7:18109
+flushPassiveEffectsImpl @ chunk-W6L2VRDA.js?v=4043f8b7:19490
+flushPassiveEffects @ chunk-W6L2VRDA.js?v=4043f8b7:19447
+(anonymous) @ chunk-W6L2VRDA.js?v=4043f8b7:19328
+workLoop @ chunk-W6L2VRDA.js?v=4043f8b7:197
+flushWork @ chunk-W6L2VRDA.js?v=4043f8b7:176
+performWorkUntilDeadline @ chunk-W6L2VRDA.js?v=4043f8b7:384
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 27, totalJSHeapSize: 29, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 27, totalJSHeapSize: 29, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 25, totalJSHeapSize: 26, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 25, totalJSHeapSize: 26, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 25, totalJSHeapSize: 26, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 25, totalJSHeapSize: 26, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 25, totalJSHeapSize: 26, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 25, totalJSHeapSize: 26, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 25, totalJSHeapSize: 26, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 25, totalJSHeapSize: 26, jsHeapSizeLimit: 2144}
+enhanced-logger.ts:43 [DEBUG] Memory usage {usedJSHeapSize: 25, totalJSHeapSize: 26, jsHeapSizeLimit: 2144}
+
 interface BookingStep {
   id: string;
   title: string;

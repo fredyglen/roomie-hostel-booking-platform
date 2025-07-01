@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Property } from '@/types/property';
-import { normalizePropertyData, getSampleProperties } from './usePropertyData';
+import { normalizePropertyData } from './usePropertyData';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface UsePropertyLoaderOptions {

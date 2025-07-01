@@ -1,10 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Property, 
-  PropertyInsert, 
-  PropertyUpdate, 
-  PropertySearchParams 
-} from '@/types/PropertyTypes';
+import {
+  Property,
+  PropertyInsert,
+  PropertyFormValues
+} from '@/types/property';
 import { ApiResponse, PaginatedResponse, PaginationParams } from '@/types/CommonTypes';
 
 // Get all properties with pagination

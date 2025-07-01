@@ -5,6 +5,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { BookingService, CreateBookingData, RoommateData } from '@/services/bookingService';
+import { PaymentFirstBookingService, type PaymentFirstBookingData, type BookingCreationResult } from '@/services/payment/PaymentFirstBookingService';
 import { Property } from '@/types/property';
 
 export interface BookingFormState {
@@ -97,7 +98,7 @@ export const useEnhancedBooking = (property: Property) => {
     loading: false,
     error: null,
     bookingId: null,
-    pricing: BookingService.calculateBookingPricing(property.rent || 0, !!property.agent_id)
+    pricing: BookingService.calculateBookingPricing(property.price?.amount || 0, !!property.owner?.id)
   });
 
   // Update form data
@@ -215,73 +216,107 @@ export const useEnhancedBooking = (property: Property) => {
     }
   }, [state]);
 
-  // Create booking
-  const createBooking = useCallback(async (): Promise<string | null> => {
+  /**
+   * Apple-Level Payment-First Booking Creation
+   *
+   * Business Purpose: Creates bookings ONLY after successful payment confirmation
+   * This ensures financial integrity and prevents phantom bookings
+   *
+   * Technical Implementation: Uses PaymentFirstBookingService to process payment
+   * before booking creation, maintaining data consistency and audit trails
+   *
+   * Critical for Revenue Protection: Eliminates booking-payment mismatches
+   */
+  const processPaymentFirstBooking = useCallback(async (): Promise<BookingCreationResult> => {
     if (!user) {
+      const error = {
+        type: 'booking' as const,
+        message: "Authentication required to complete booking",
+        details: "User session expired or not authenticated"
+      };
+
       toast({
         title: "Authentication Required",
         description: "Please log in to complete your booking.",
         variant: "destructive",
       });
-      return null;
+
+      return { success: false, error };
     }
 
     setState(prev => ({ ...prev, loading: true, error: null }));
 
     try {
       const { formData, pricing } = state;
-      
-      const bookingData: CreateBookingData = {
-        property_id: property.id,
-        student_id: user.id,
-        property_owner_id: property.owner_id,
-        agent_id: property.agent_id,
-        check_in_date: formData.startDate.toISOString().split('T')[0],
-        check_out_date: formData.endDate.toISOString().split('T')[0],
-        semester_period: formData.duration,
-        room_type: formData.roomType,
-        roommates_count: formData.roommates.length + 1,
-        total_amount: pricing.totalAmount,
-        property_rent: pricing.propertyRent,
-        platform_fee: pricing.totalPlatformFee,
-        agent_fee: pricing.agentFee,
-        emergency_contact_name: formData.emergencyName,
-        emergency_contact_phone: formData.emergencyPhone,
-        emergency_contact_relationship: formData.emergencyRelationship,
-        student_id_number: formData.studentId,
-        university: formData.university,
-        program: formData.program,
-        payment_method: formData.paymentMethod,
-        special_requests: formData.extraRequests,
-        metadata: {
-          booking_source: 'web',
-          property_title: property.title,
-          student_verification_status: formData.verified ? 'verified' : 'pending',
-          furnishing: formData.furnishing,
-          floor: formData.floor
+
+      // Prepare Apple-Level payment-first booking data
+      const paymentFirstData: PaymentFirstBookingData = {
+        property,
+        student: user,
+        bookingDetails: {
+          checkInDate: formData.startDate.toISOString().split('T')[0],
+          checkOutDate: formData.endDate.toISOString().split('T')[0],
+          semesterPeriod: formData.duration,
+          roomType: formData.roomType,
+          roommatesCount: formData.roommates.length + 1,
+          specialRequests: formData.extraRequests
+        },
+        studentInfo: {
+          emergencyContactName: formData.emergencyName,
+          emergencyContactPhone: formData.emergencyPhone,
+          emergencyContactRelationship: formData.emergencyRelationship,
+          studentIdNumber: formData.studentId,
+          university: formData.university,
+          program: formData.program,
+          verified: formData.verified
+        },
+        roommates: formData.roommates.map(roommate => ({
+          name: roommate.roommate_name || '',
+          email: roommate.roommate_email || '',
+          phone: roommate.roommate_phone || '',
+          relationship: 'friend' // Default relationship
+        })),
+        pricing: {
+          propertyRent: pricing.propertyRent,
+          platformCommission: pricing.platformCommission,
+          platformFixedFee: pricing.platformFixedFee,
+          agentFee: pricing.agentFee,
+          totalAmount: pricing.totalAmount
         }
       };
 
-      const { booking_id } = await BookingService.createBooking(bookingData, formData.roommates);
-      
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        bookingId: booking_id 
+      // Process payment-first booking with Apple-Level service
+      const result = await PaymentFirstBookingService.processPaymentFirstBooking(paymentFirstData);
+
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        bookingId: result.bookingId || null,
+        error: result.success ? null : result.error?.message || 'Booking failed'
       }));
 
-      toast({
-        title: "Booking Created",
-        description: "Your booking has been created successfully!",
-      });
+      if (result.success) {
+        toast({
+          title: "Payment Successful!",
+          description: `Your booking has been confirmed. Confirmation: ${result.confirmationNumber}`,
+        });
+      } else {
+        toast({
+          title: "Booking Failed",
+          description: result.error?.message || "Payment or booking processing failed",
+          variant: "destructive",
+        });
+      }
 
-      return booking_id;
+      return result;
+
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create booking';
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: errorMessage 
+      const errorMessage = error instanceof Error ? error.message : 'Failed to process payment and booking';
+
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: errorMessage
       }));
 
       toast({
@@ -290,9 +325,30 @@ export const useEnhancedBooking = (property: Property) => {
         variant: "destructive",
       });
 
-      return null;
+      return {
+        success: false,
+        error: {
+          type: 'booking',
+          message: errorMessage,
+          details: error
+        }
+      };
     }
   }, [user, state, property, toast]);
+
+  /**
+   * Legacy booking creation method - DEPRECATED
+   *
+   * @deprecated Use processPaymentFirstBooking instead
+   * This method creates bookings before payment and violates Apple-Level standards
+   */
+  const createBooking = useCallback(async (): Promise<string | null> => {
+    console.warn('DEPRECATED: createBooking method violates Apple-Level standards. Use processPaymentFirstBooking instead.');
+
+    // For backward compatibility, redirect to payment-first flow
+    const result = await processPaymentFirstBooking();
+    return result.success ? result.bookingId || null : null;
+  }, [processPaymentFirstBooking]);
 
   // Reset form
   const resetForm = useCallback(() => {
@@ -333,26 +389,27 @@ export const useEnhancedBooking = (property: Property) => {
   return {
     // State
     ...state,
-    
+
     // Form updates
     updateFormData,
     updateFormFields,
-    
+
     // Navigation
     nextStep,
     previousStep,
     goToStep,
-    
+
     // Roommate management
     addRoommate,
     removeRoommate,
     updateRoommate,
-    
+
     // Validation
     validateStep,
-    
-    // Actions
-    createBooking,
+
+    // Actions - Apple-Level payment-first booking
+    processPaymentFirstBooking,
+    createBooking, // Deprecated - kept for backward compatibility
     resetForm
   };
 };

@@ -45,7 +45,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  // Use our enhanced booking hook
+  // Use our enhanced booking hook with Apple-Level payment-first flow
   const {
     formData,
     currentStep,
@@ -59,7 +59,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
     removeRoommate,
     updateRoommate,
     validateStep,
-    createBooking
+    processPaymentFirstBooking
   } = useEnhancedBooking(property);
 
   const [isVerifying, setIsVerifying] = useState(false);
@@ -113,17 +113,41 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
     previousStep();
   };
 
+  /**
+   * Apple-Level Payment Processing Handler
+   *
+   * Business Purpose: Processes payment BEFORE booking creation to ensure financial integrity
+   * This implements the correct flow: Payment Success → Booking Creation → Confirmation
+   *
+   * Technical Implementation: Uses PaymentFirstBookingService for comprehensive
+   * payment processing and booking creation with proper error handling
+   *
+   * Critical for Revenue Protection: Prevents phantom bookings and ensures audit trails
+   */
   const handlePaymentProceed = async () => {
-    const bookingId = await createBooking();
+    try {
+      // Process payment-first booking with Apple-Level service
+      const result = await processPaymentFirstBooking();
 
-    if (bookingId) {
-      // Here you would integrate with Paystack payment
-      // For now, we'll simulate success
-      if (onSuccess) {
-        onSuccess(bookingId);
+      if (result.success && result.bookingId) {
+        // Payment successful and booking created
+        if (onSuccess) {
+          onSuccess(result.bookingId);
+        } else {
+          navigate(`/student/booking-confirmation?id=${result.bookingId}`, {
+            state: {
+              confirmationNumber: result.confirmationNumber,
+              paymentReference: result.paymentReference
+            }
+          });
+        }
       } else {
-        navigate(`/student/booking-confirmation?id=${bookingId}`);
+        // Payment or booking failed - error already handled by service
+        console.error('Payment-first booking failed:', result.error);
       }
+    } catch (error) {
+      console.error('Critical error in payment processing:', error);
+      // Error handling is managed by the service and hook
     }
   };
 

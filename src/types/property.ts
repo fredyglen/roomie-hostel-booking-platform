@@ -1,30 +1,77 @@
 
 import { User, UserRole } from './core';
+import { Database } from '@/integrations/supabase/types';
 
-// Property types
+// Database property type from Supabase
+export type DatabaseProperty = Database['public']['Tables']['properties']['Row'];
+export type DatabasePropertyInsert = Database['public']['Tables']['properties']['Insert'];
+export type DatabasePropertyUpdate = Database['public']['Tables']['properties']['Update'];
+
+// Main Property interface that exactly matches database structure
 export interface Property {
   id: string;
-  name: string;
+  title: string;
   description: string;
-  type: PropertyType;
-  status: PropertyStatus;
-  address: Address;
-  price: PropertyPrice;
-  features: PropertyFeatures;
-  media: PropertyMedia[];
-  buildings: Building[];
-  ownerId: string;
+  property_type: string;
+  property_category: string | null;
+  address: string;
+  city: string;
+  state: string;
+  zip: string; // Added to match database
+  rent: number;
+  currency: string | null;
+  bedrooms: number;
+  bathrooms: number;
+  max_occupants: number | null;
+  is_available: boolean | null;
+  is_furnished: boolean | null;
+  amenities: string[] | null;
+  images: string[] | null;
+  owner_id: string;
   owner?: User;
-  createdAt: string;
-  updatedAt: string;
-  verificationStatus: VerificationStatus;
-  verificationDetails?: VerificationDetails;
+  available_from: string;
+  available_to: string | null;
+  created_at: string;
+  updated_at: string;
+  verification_status: string | null; // Made non-optional to match database
+  // Additional database fields - all exactly matching database schema
+  advance_payment_months: number | null;
+  allow_bill_sharing: boolean | null;
+  base_price_per_semester: number | null; // Added to match database
+  beds_available: number | null;
+  beds_per_room: number | null;
+  cancellation_policy: string | null;
+  emergency_contact_name: string | null;
+  emergency_contact_phone: string | null;
+  gender_restriction: string | null;
+  has_accessibility_features: boolean | null;
+  has_bedframes: boolean | null;
+  has_fan: boolean | null;
+  has_individual_meters: boolean | null;
+  has_mattresses: boolean | null;
+  has_tiled_room: boolean | null;
+  has_wardrobes: boolean | null;
+  internet_speed: string | null;
+  meter_type: string | null;
+  parking_available: boolean | null;
+  parking_cost: number | null;
+  pet_policy: string | null;
+  rooms_available: number | null;
+  security_features: string[] | null;
+  semester_availability: string[] | null;
+  shared_meter_count: number | null;
+  shared_washroom_count: number | null;
+  size: number | null;
+  subscription_expires_at: string | null;
+  subscription_status: string | null;
+  total_rooms: number | null; // Added to match database
+  virtual_tour_url: string | null; // Added to match database
+  washroom_type: string | null; // Added to match database
 }
 
-export type PropertyType = 'hostel' | 'homestel' | 'apartment';
-
+// Legacy types for backward compatibility
+export type PropertyType = 'hostel' | 'homestel' | 'apartment' | 'shared_room';
 export type PropertyStatus = 'active' | 'inactive' | 'pending' | 'rejected';
-
 export type VerificationStatus = 'pending' | 'verified' | 'rejected';
 
 export interface VerificationDetails {
@@ -34,6 +81,7 @@ export interface VerificationDetails {
   notes?: string;
 }
 
+// Simplified Address interface for backward compatibility
 export interface Address {
   street: string;
   city: string;
@@ -44,6 +92,7 @@ export interface Address {
   longitude?: number;
 }
 
+// Simplified PropertyPrice interface for backward compatibility
 export interface PropertyPrice {
   amount: number;
   currency: string;
@@ -58,6 +107,7 @@ export interface Discount {
   description: string;
 }
 
+// Simplified PropertyFeatures interface for backward compatibility
 export interface PropertyFeatures {
   bedrooms: number;
   bathrooms: number;
@@ -111,25 +161,66 @@ export interface Room {
 
 export type RoomType = 'single' | 'double' | 'triple' | 'quad' | 'suite';
 
-// Property form values
+// Property form values - updated to match database structure
 export interface PropertyFormValues {
-  name: string;
+  title: string;
   description: string;
-  type: PropertyType;
-  address: Address;
-  price: PropertyPrice;
-  features: PropertyFeatures;
-  media: PropertyMedia[];
-  buildings: Building[];
+  property_type: string;
+  property_category?: string;
+  address: string;
+  city: string;
+  state: string;
+  zip?: string; // Added to match database
+  rent: number;
+  currency?: string;
+  bedrooms: number;
+  bathrooms: number;
+  max_occupants?: number;
+  is_furnished?: boolean;
+  amenities?: string[];
+  images?: string[];
+  available_from: string; // Made required to match database
+  available_to?: string;
+  gender_restriction?: string;
+  parking_available?: boolean;
+  has_accessibility_features?: boolean;
+  pet_policy?: string;
+  cancellation_policy?: string;
+  internet_speed?: string;
+  virtual_tour_url?: string;
+  // Additional form fields that might be needed
+  base_price_per_semester?: number;
+  advance_payment_months?: number;
+  allow_bill_sharing?: boolean;
+  beds_available?: number;
+  beds_per_room?: number;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
+  has_bedframes?: boolean;
+  has_fan?: boolean;
+  has_individual_meters?: boolean;
+  has_mattresses?: boolean;
+  has_tiled_room?: boolean;
+  has_wardrobes?: boolean;
+  meter_type?: string;
+  parking_cost?: number;
+  rooms_available?: number;
+  security_features?: string[];
+  semester_availability?: string[];
+  shared_meter_count?: number;
+  shared_washroom_count?: number;
+  size?: number;
+  total_rooms?: number;
+  washroom_type?: string;
 }
 
-// Property insert type (for database operations)
-export type PropertyInsert = Omit<Property, 'id' | 'createdAt' | 'updatedAt' | 'owner'>;
+// Property insert type (for database operations) - matches database structure
+export type PropertyInsert = DatabasePropertyInsert;
 
-// Ghana-specific hostel types for semester-based pricing
+// Ghana-specific hostel types for semester-based pricing - updated to match database
 export interface GhanaHostelProperty {
   id: string;
-  name: string;
+  title: string; // Changed from 'name' to match database
   description: string;
   images: string[];
   location: {
@@ -158,11 +249,17 @@ export interface GhanaHostelProperty {
     verified?: boolean;
   };
   availableFrom: string;
-  availableTo: string;
+  availableTo?: string; // Made optional for backward compatibility
   isActive: boolean;
-  features: string[];
-  house_rules: string;
+  features?: string[]; // Made optional
+  house_rules?: string[]; // Changed to array and made optional
   stories?: string[];
+  // Additional fields for compatibility
+  estimatedPrice?: number; // For filtering
+  genderRestriction?: 'male' | 'female' | 'mixed';
+  verificationStatus?: 'pending' | 'verified' | 'rejected';
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface RoomOption {

@@ -11,7 +11,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { ROOMiLogo } from '@/components/ui/SocialIcons';
 import { toast } from "@/components/ui/use-toast";
 import { ErrorHandler } from '@/utils/ErrorHandler';
-import { Loader } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 import { UserRole } from '@/types/auth';
 import { logger } from '@/utils/enhanced-logger';
 import SuccessAnimation from '@/components/ui/SuccessAnimation';

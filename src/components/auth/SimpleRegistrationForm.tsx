@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Loader } from 'lucide-react';
+import { Loader } from '@/components/ui/loader';
 
 interface RegisterFormValues {
   email: string;
@@ -298,7 +298,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
           disabled={isSubmitting}
         >
           {isSubmitting && (
-            <Loader className="animate-spin" size={16} />
+            <Loader size="sm" variant="professional" className="text-white" />
           )}
           {isSubmitting ? "Creating account..." : "Create account"}
         </Button>

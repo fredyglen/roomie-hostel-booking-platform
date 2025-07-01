@@ -10,12 +10,12 @@ import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
 import AuthRedirect from '@/components/auth/AuthRedirect';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { DevBypassIndicator } from '@/components/dev/DevBypassIndicator';
 import AnalyticsDashboard from '@/pages/owner/AnalyticsDashboard';
 import { UserRole } from '@/types/roles';
 import { initializePerformanceOptimizations } from '@/utils/bundleOptimization';
 import PerformanceMonitor from '@/components/common/PerformanceMonitor';
 import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
-import { DevBypassIndicator } from '@/components/dev/DevBypassIndicator';
 
 // Lazy load all pages for better performance
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -89,7 +89,7 @@ const queryClient = new QueryClient({
         logger.error('Mutation error', error instanceof Error ? error : new Error(String(error)));
       }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
        logger.error('Query error - Global Handler', error instanceof Error ? error : new Error(String(error)));
     }
   } as DefaultOptions,

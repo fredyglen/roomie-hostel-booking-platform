@@ -11,12 +11,7 @@
 
 import {
   Property,
-  PropertyType,
-  PropertyStatus,
-  Address,
-  PropertyPrice,
-  PropertyFeatures,
-  PropertyMedia
+  PropertyType
 } from '@/types/property';
 import { User } from '@/types/core';
 import { logger } from '@/utils/enhanced-logger';
@@ -30,46 +25,66 @@ import { PROPERTY_CONSTANTS } from '@/config/property-constants';
 
 /**
  * Database Property Item Interface
- * Defines exact structure expected from database queries
+ * Defines exact structure expected from database queries - matches actual database schema
  */
 export interface DatabasePropertyItem {
   id: string;
   title?: string;
-  name?: string;
   description?: string;
   property_type?: string;
-  verification_status?: string;
+  property_category?: string | null;
   address?: string;
   city?: string;
   state?: string;
-  country?: string;
   zip?: string;
-  latitude?: number;
-  longitude?: number;
-  base_price_per_semester?: number;
   rent?: number;
-  currency?: string;
-  is_negotiable?: boolean;
+  currency?: string | null;
   bedrooms?: number;
   bathrooms?: number;
-  kitchens?: number;
-  parking_spaces?: number;
-  furnished?: boolean;
-  pets_allowed?: boolean;
-  has_water?: boolean;
-  has_electricity?: boolean;
-  has_internet?: boolean;
-  has_gas?: boolean;
-  has_cleaning?: boolean;
-  has_security?: boolean;
-  amenities?: string[];
-  rules?: string[];
+  max_occupants?: number | null;
+  is_available?: boolean | null;
+  is_furnished?: boolean | null;
+  amenities?: string[] | null;
+  images?: string[] | null;
   owner_id?: string;
-  is_available?: boolean;
-  images?: string[];
+  available_from?: string;
+  available_to?: string | null;
   created_at?: string;
   updated_at?: string;
-  verification_details?: Record<string, unknown>;
+  verification_status?: string | null;
+  // Additional database fields that exactly match the schema
+  advance_payment_months?: number | null;
+  allow_bill_sharing?: boolean | null;
+  base_price_per_semester?: number | null;
+  beds_available?: number | null;
+  beds_per_room?: number | null;
+  cancellation_policy?: string | null;
+  emergency_contact_name?: string | null;
+  emergency_contact_phone?: string | null;
+  gender_restriction?: string | null;
+  has_accessibility_features?: boolean | null;
+  has_bedframes?: boolean | null;
+  has_fan?: boolean | null;
+  has_individual_meters?: boolean | null;
+  has_mattresses?: boolean | null;
+  has_tiled_room?: boolean | null;
+  has_wardrobes?: boolean | null;
+  internet_speed?: string | null;
+  meter_type?: string | null;
+  parking_available?: boolean | null;
+  parking_cost?: number | null;
+  pet_policy?: string | null;
+  rooms_available?: number | null;
+  security_features?: string[] | null;
+  semester_availability?: string[] | null;
+  shared_meter_count?: number | null;
+  shared_washroom_count?: number | null;
+  size?: number | null;
+  subscription_expires_at?: string | null;
+  subscription_status?: string | null;
+  total_rooms?: number | null;
+  virtual_tour_url?: string | null;
+  washroom_type?: string | null;
   profiles?: DatabaseProfileItem | DatabaseProfileItem[];
 }
 
@@ -233,69 +248,15 @@ class PropertyTransformer {
       ? dbItem.profiles[0]
       : dbItem.profiles;
 
-    // Create proper Address object with validation
-    const address: Address = {
-      street: String(dbItem.address || ''),
-      city: String(dbItem.city || ''),
-      state: String(dbItem.state || ''),
-      country: String(dbItem.country || 'Ghana'),
-      postalCode: dbItem.zip || undefined,
-      latitude: dbItem.latitude || undefined,
-      longitude: dbItem.longitude || undefined
-    };
-
-    // Create proper PropertyPrice object with validation
-    const priceAmount = dbItem.base_price_per_semester || dbItem.rent;
-    if (!priceAmount) {
+    // Validate required fields
+    if (!dbItem.rent && !dbItem.base_price_per_semester) {
       throw new MissingPriceError('Property must have a valid price', dbItem.id);
     }
 
+    const priceAmount = dbItem.rent || dbItem.base_price_per_semester || 0;
     if (typeof priceAmount !== 'number' || priceAmount < 0) {
-      throw new InvalidPriceError('Invalid price amount', priceAmount, dbItem.currency);
+      throw new InvalidPriceError('Invalid price amount', priceAmount, dbItem.currency || undefined);
     }
-
-    const price: PropertyPrice = {
-      amount: priceAmount,
-      currency: String(dbItem.currency || 'GHS'),
-      period: 'semester',
-      isNegotiable: Boolean(dbItem.is_negotiable || false),
-      discounts: []
-    };
-
-    // Create proper PropertyFeatures object
-    const features: PropertyFeatures = {
-      bedrooms: Math.max(1, Number(dbItem.bedrooms || 1)),
-      bathrooms: Math.max(1, Number(dbItem.bathrooms || 1)),
-      kitchens: Math.max(0, Number(dbItem.kitchens || 1)),
-      parkingSpaces: Math.max(0, Number(dbItem.parking_spaces || 0)),
-      furnished: Boolean(dbItem.furnished || false),
-      petsAllowed: Boolean(dbItem.pets_allowed || false),
-      utilities: {
-        water: Boolean(dbItem.has_water ?? true),
-        electricity: Boolean(dbItem.has_electricity ?? true),
-        internet: Boolean(dbItem.has_internet || false),
-        gas: Boolean(dbItem.has_gas || false),
-        cleaning: Boolean(dbItem.has_cleaning || false),
-        security: Boolean(dbItem.has_security || false)
-      },
-      amenities: Array.isArray(dbItem.amenities)
-        ? dbItem.amenities
-        : [...PROPERTY_CONSTANTS.DEFAULT_AMENITIES],
-      rules: Array.isArray(dbItem.rules)
-        ? dbItem.rules
-        : [...PROPERTY_CONSTANTS.DEFAULT_RULES]
-    };
-
-    // Create proper PropertyMedia array
-    const media: PropertyMedia[] = Array.isArray(dbItem.images)
-      ? dbItem.images.map((imageUrl: string, index: number) => ({
-          id: `${dbItem.id}_image_${index}`,
-          url: imageUrl,
-          type: 'image' as const,
-          isCover: index === 0,
-          caption: undefined
-        }))
-      : [];
 
     // Create proper User object for owner
     const owner: User | undefined = profileData ? {
@@ -312,31 +273,66 @@ class PropertyTransformer {
       updatedAt: String(profileData.updated_at || new Date().toISOString())
     } : undefined;
 
-    // Map verification status to property status
-    const mapVerificationToStatus = (verificationStatus?: string): PropertyStatus => {
-      const statusMapping = PROPERTY_CONSTANTS.STATUS_MAPPING;
-      return statusMapping[verificationStatus as keyof typeof statusMapping] ||
-             (dbItem.is_available ? 'active' : 'inactive');
-    };
-
-    // Create properly typed Property object
+    // Create properly typed Property object matching database structure
     const property: Property = {
       id: String(dbItem.id),
-      name: String(dbItem.title || dbItem.name || ''),
+      title: String(dbItem.title || ''),
       description: String(dbItem.description || ''),
-      type: (PROPERTY_CONSTANTS.TYPE_MAPPING[dbItem.property_type as keyof typeof PROPERTY_CONSTANTS.TYPE_MAPPING] as PropertyType) || 'hostel',
-      status: mapVerificationToStatus(dbItem.verification_status),
-      address,
-      price,
-      features,
-      media,
-      buildings: [], // Proper abstraction - no TODO comments
-      ownerId: String(dbItem.owner_id || ''),
+      property_type: String(dbItem.property_type || 'hostel'),
+      property_category: dbItem.property_category || null,
+      address: String(dbItem.address || ''),
+      city: String(dbItem.city || ''),
+      state: String(dbItem.state || ''),
+      zip: String(dbItem.zip || ''),
+      rent: Number(dbItem.rent || 0),
+      currency: dbItem.currency || null,
+      bedrooms: Number(dbItem.bedrooms || 1),
+      bathrooms: Number(dbItem.bathrooms || 1),
+      max_occupants: dbItem.max_occupants || null,
+      is_available: dbItem.is_available || null,
+      is_furnished: dbItem.is_furnished || null,
+      amenities: dbItem.amenities || null,
+      images: dbItem.images || null,
+      owner_id: String(dbItem.owner_id || ''),
       owner,
-      createdAt: String(dbItem.created_at || new Date().toISOString()),
-      updatedAt: String(dbItem.updated_at || new Date().toISOString()),
-      verificationStatus: (dbItem.verification_status as Property['verificationStatus']) || 'pending',
-      verificationDetails: dbItem.verification_details || undefined
+      available_from: String(dbItem.available_from || new Date().toISOString()),
+      available_to: dbItem.available_to || null,
+      created_at: String(dbItem.created_at || new Date().toISOString()),
+      updated_at: String(dbItem.updated_at || new Date().toISOString()),
+      verification_status: dbItem.verification_status || null,
+      // Additional database fields
+      advance_payment_months: dbItem.advance_payment_months || null,
+      allow_bill_sharing: dbItem.allow_bill_sharing || null,
+      base_price_per_semester: dbItem.base_price_per_semester || null,
+      beds_available: dbItem.beds_available || null,
+      beds_per_room: dbItem.beds_per_room || null,
+      cancellation_policy: dbItem.cancellation_policy || null,
+      emergency_contact_name: dbItem.emergency_contact_name || null,
+      emergency_contact_phone: dbItem.emergency_contact_phone || null,
+      gender_restriction: dbItem.gender_restriction || null,
+      has_accessibility_features: dbItem.has_accessibility_features || null,
+      has_bedframes: dbItem.has_bedframes || null,
+      has_fan: dbItem.has_fan || null,
+      has_individual_meters: dbItem.has_individual_meters || null,
+      has_mattresses: dbItem.has_mattresses || null,
+      has_tiled_room: dbItem.has_tiled_room || null,
+      has_wardrobes: dbItem.has_wardrobes || null,
+      internet_speed: dbItem.internet_speed || null,
+      meter_type: dbItem.meter_type || null,
+      parking_available: dbItem.parking_available || null,
+      parking_cost: dbItem.parking_cost || null,
+      pet_policy: dbItem.pet_policy || null,
+      rooms_available: dbItem.rooms_available || null,
+      security_features: dbItem.security_features || null,
+      semester_availability: dbItem.semester_availability || null,
+      shared_meter_count: dbItem.shared_meter_count || null,
+      shared_washroom_count: dbItem.shared_washroom_count || null,
+      size: dbItem.size || null,
+      subscription_expires_at: dbItem.subscription_expires_at || null,
+      subscription_status: dbItem.subscription_status || null,
+      total_rooms: dbItem.total_rooms || null,
+      virtual_tour_url: dbItem.virtual_tour_url || null,
+      washroom_type: dbItem.washroom_type || null,
     };
 
     return property;
@@ -385,36 +381,59 @@ export function transformDbPropertySync(dbItem: DatabasePropertyItem): Property 
  */
 export function transformPropertyToDb(property: Property): Record<string, unknown> {
   return {
-    title: property.name,
+    title: property.title,
     description: property.description,
-    property_type: property.type,
-    verification_status: property.verificationStatus,
-    address: property.address.street,
-    city: property.address.city,
-    state: property.address.state,
-    country: property.address.country,
-    zip: property.address.postalCode || null,
-    latitude: property.address.latitude || null,
-    longitude: property.address.longitude || null,
-    base_price_per_semester: property.price.amount,
-    currency: property.price.currency,
-    is_negotiable: property.price.isNegotiable,
-    bedrooms: property.features.bedrooms,
-    bathrooms: property.features.bathrooms,
-    kitchens: property.features.kitchens,
-    parking_spaces: property.features.parkingSpaces,
-    furnished: property.features.furnished,
-    pets_allowed: property.features.petsAllowed,
-    has_water: property.features.utilities.water,
-    has_electricity: property.features.utilities.electricity,
-    has_internet: property.features.utilities.internet,
-    has_gas: property.features.utilities.gas,
-    has_cleaning: property.features.utilities.cleaning,
-    has_security: property.features.utilities.security,
-    amenities: property.features.amenities,
-    rules: property.features.rules,
-    owner_id: property.ownerId,
-    is_available: property.status === 'active',
-    images: property.media.map(m => m.url)
+    property_type: property.property_type,
+    property_category: property.property_category,
+    address: property.address,
+    city: property.city,
+    state: property.state,
+    zip: property.zip,
+    rent: property.rent,
+    currency: property.currency,
+    bedrooms: property.bedrooms,
+    bathrooms: property.bathrooms,
+    max_occupants: property.max_occupants,
+    is_available: property.is_available,
+    is_furnished: property.is_furnished,
+    amenities: property.amenities,
+    images: property.images,
+    owner_id: property.owner_id,
+    available_from: property.available_from,
+    available_to: property.available_to,
+    verification_status: property.verification_status,
+    // Additional fields
+    advance_payment_months: property.advance_payment_months,
+    allow_bill_sharing: property.allow_bill_sharing,
+    base_price_per_semester: property.base_price_per_semester,
+    beds_available: property.beds_available,
+    beds_per_room: property.beds_per_room,
+    cancellation_policy: property.cancellation_policy,
+    emergency_contact_name: property.emergency_contact_name,
+    emergency_contact_phone: property.emergency_contact_phone,
+    gender_restriction: property.gender_restriction,
+    has_accessibility_features: property.has_accessibility_features,
+    has_bedframes: property.has_bedframes,
+    has_fan: property.has_fan,
+    has_individual_meters: property.has_individual_meters,
+    has_mattresses: property.has_mattresses,
+    has_tiled_room: property.has_tiled_room,
+    has_wardrobes: property.has_wardrobes,
+    internet_speed: property.internet_speed,
+    meter_type: property.meter_type,
+    parking_available: property.parking_available,
+    parking_cost: property.parking_cost,
+    pet_policy: property.pet_policy,
+    rooms_available: property.rooms_available,
+    security_features: property.security_features,
+    semester_availability: property.semester_availability,
+    shared_meter_count: property.shared_meter_count,
+    shared_washroom_count: property.shared_washroom_count,
+    size: property.size,
+    subscription_expires_at: property.subscription_expires_at,
+    subscription_status: property.subscription_status,
+    total_rooms: property.total_rooms,
+    virtual_tour_url: property.virtual_tour_url,
+    washroom_type: property.washroom_type,
   };
 }

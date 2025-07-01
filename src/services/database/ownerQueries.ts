@@ -37,9 +37,9 @@ export interface PropertyPerformance {
   occupancy_rate: number;
   total_earnings: number;
   total_bookings: number;
-  current_occupancy: number;
-  max_occupancy: number;
-  is_available: boolean;
+  beds_available: number | null;
+  max_occupants: number | null;
+  is_available: boolean | null;
 }
 
 export class OwnerQueries {
@@ -99,22 +99,24 @@ export class OwnerQueries {
 
       const monthlyEarnings = earningsData?.reduce((sum, booking) => sum + booking.total_amount, 0) || 0;
 
-      // Calculate occupancy rate
+      // Calculate occupancy rate using available beds and max occupants
       const { data: propertiesData, error: occupancyError } = await supabase
         .from('properties')
-        .select('current_occupancy, max_occupancy')
+        .select('beds_available, max_occupants')
         .eq('owner_id', ownerId);
 
       if (occupancyError) throw occupancyError;
 
-      let totalOccupied = 0;
+      let totalAvailable = 0;
       let totalCapacity = 0;
-      
+
       propertiesData?.forEach(property => {
-        totalOccupied += property.current_occupancy || 0;
-        totalCapacity += property.max_occupancy || 0;
+        totalAvailable += property.beds_available || 0;
+        totalCapacity += property.max_occupants || 0;
       });
 
+      // Calculate occupancy as (capacity - available) / capacity
+      const totalOccupied = totalCapacity - totalAvailable;
       const occupancyRate = totalCapacity > 0 ? Math.round((totalOccupied / totalCapacity) * 100) : 0;
 
       // TODO: Implement reviews system
@@ -200,8 +202,8 @@ export class OwnerQueries {
         .select(`
           id,
           title,
-          current_occupancy,
-          max_occupancy,
+          beds_available,
+          max_occupants,
           is_available
         `)
         .eq('owner_id', ownerId)
@@ -235,8 +237,11 @@ export class OwnerQueries {
           logger.warn('Error fetching bookings count for property', { propertyId: property.id, error: bookingsError });
         }
 
-        const occupancyRate = property.max_occupancy > 0 
-          ? Math.round((property.current_occupancy / property.max_occupancy) * 100) 
+        const maxOccupants = property.max_occupants || 0;
+        const bedsAvailable = property.beds_available || 0;
+        const currentOccupancy = maxOccupants - bedsAvailable;
+        const occupancyRate = maxOccupants > 0
+          ? Math.round((currentOccupancy / maxOccupants) * 100)
           : 0;
 
         performanceData.push({
@@ -245,8 +250,8 @@ export class OwnerQueries {
           occupancy_rate: occupancyRate,
           total_earnings: totalEarnings,
           total_bookings: totalBookings || 0,
-          current_occupancy: property.current_occupancy,
-          max_occupancy: property.max_occupancy,
+          beds_available: property.beds_available,
+          max_occupants: property.max_occupants,
           is_available: property.is_available,
         });
       }

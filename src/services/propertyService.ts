@@ -306,37 +306,28 @@ export const propertyService = {
    * @returns Database-compatible property object
    * @private
    */
-  transformPropertyToDatabase(property: Omit<Property, 'id' | 'createdAt' | 'updatedAt'>): Record<string, unknown> {
+  transformPropertyToDatabase(property: Omit<Property, 'id' | 'created_at' | 'updated_at'>): Record<string, unknown> {
     return {
-      title: property.name,
+      title: property.title,
       description: property.description,
-      address: property.address.street,
-      city: property.address.city,
-      state: property.address.state,
-      country: property.address.country,
-      zip: property.address.postalCode || null,
-      latitude: property.address.latitude || null,
-      longitude: property.address.longitude || null,
-      base_price_per_semester: property.price.amount,
-      currency: property.price.currency,
-      is_negotiable: property.price.isNegotiable,
-      property_type: property.type,
-      verification_status: property.verificationStatus || 'pending',
-      bedrooms: property.features.bedrooms,
-      bathrooms: property.features.bathrooms,
-      kitchens: property.features.kitchens,
-      parking_spaces: property.features.parkingSpaces,
-      furnished: property.features.furnished,
-      pets_allowed: property.features.petsAllowed,
-      has_internet: property.features.utilities.internet,
-      has_gas: property.features.utilities.gas,
-      has_cleaning: property.features.utilities.cleaning,
-      has_security: property.features.utilities.security,
-      amenities: property.features.amenities,
-      rules: property.features.rules,
-      owner_id: property.ownerId,
-      is_available: property.status === 'active',
-      images: property.media.map(m => m.url)
+      property_type: property.property_type,
+      property_category: property.property_category,
+      address: property.address,
+      city: property.city,
+      state: property.state,
+      rent: property.rent,
+      currency: property.currency,
+      bedrooms: property.bedrooms,
+      bathrooms: property.bathrooms,
+      max_occupants: property.max_occupants,
+      is_available: property.is_available,
+      is_furnished: property.is_furnished,
+      amenities: property.amenities,
+      images: property.images,
+      owner_id: property.owner_id,
+      available_from: property.available_from,
+      available_to: property.available_to,
+      verification_status: property.verification_status || 'pending',
     };
   },
   
@@ -359,7 +350,7 @@ export const propertyService = {
       // Check if property exists and user has permission
       const existingProperty = await this.getPropertyById(id);
 
-      if (userId && existingProperty.ownerId !== userId) {
+      if (userId && existingProperty.owner_id !== userId) {
         throw new PropertyOwnershipError(
           'User does not have permission to update this property',
           id,
@@ -422,49 +413,27 @@ export const propertyService = {
   transformPropertyUpdatesToDatabase(updates: Partial<Property>): Record<string, unknown> {
     const dbUpdates: Record<string, unknown> = {};
 
-    if (updates.name) dbUpdates.title = updates.name;
+    if (updates.title) dbUpdates.title = updates.title;
     if (updates.description) dbUpdates.description = updates.description;
-    if (updates.type) dbUpdates.property_type = updates.type;
-    if (updates.verificationStatus) dbUpdates.verification_status = updates.verificationStatus;
+    if (updates.property_type) dbUpdates.property_type = updates.property_type;
+    if (updates.property_category) dbUpdates.property_category = updates.property_category;
+    if (updates.verification_status) dbUpdates.verification_status = updates.verification_status;
 
-    if (updates.address) {
-      dbUpdates.address = updates.address.street;
-      dbUpdates.city = updates.address.city;
-      dbUpdates.state = updates.address.state;
-      dbUpdates.country = updates.address.country;
-      dbUpdates.zip = updates.address.postalCode || null;
-      dbUpdates.latitude = updates.address.latitude || null;
-      dbUpdates.longitude = updates.address.longitude || null;
-    }
+    if (updates.address) dbUpdates.address = updates.address;
+    if (updates.city) dbUpdates.city = updates.city;
+    if (updates.state) dbUpdates.state = updates.state;
 
-    if (updates.price) {
-      dbUpdates.base_price_per_semester = updates.price.amount;
-      dbUpdates.currency = updates.price.currency;
-      dbUpdates.is_negotiable = updates.price.isNegotiable;
-    }
-
-    if (updates.features) {
-      dbUpdates.bedrooms = updates.features.bedrooms;
-      dbUpdates.bathrooms = updates.features.bathrooms;
-      dbUpdates.kitchens = updates.features.kitchens;
-      dbUpdates.parking_spaces = updates.features.parkingSpaces;
-      dbUpdates.furnished = updates.features.furnished;
-      dbUpdates.pets_allowed = updates.features.petsAllowed;
-      dbUpdates.has_internet = updates.features.utilities.internet;
-      dbUpdates.has_gas = updates.features.utilities.gas;
-      dbUpdates.has_cleaning = updates.features.utilities.cleaning;
-      dbUpdates.has_security = updates.features.utilities.security;
-      dbUpdates.amenities = updates.features.amenities;
-      dbUpdates.rules = updates.features.rules;
-    }
-
-    if (updates.status) {
-      dbUpdates.is_available = updates.status === 'active';
-    }
-
-    if (updates.media) {
-      dbUpdates.images = updates.media.map(m => m.url);
-    }
+    if (updates.rent !== undefined) dbUpdates.rent = updates.rent;
+    if (updates.currency) dbUpdates.currency = updates.currency;
+    if (updates.bedrooms !== undefined) dbUpdates.bedrooms = updates.bedrooms;
+    if (updates.bathrooms !== undefined) dbUpdates.bathrooms = updates.bathrooms;
+    if (updates.max_occupants !== undefined) dbUpdates.max_occupants = updates.max_occupants;
+    if (updates.is_available !== undefined) dbUpdates.is_available = updates.is_available;
+    if (updates.is_furnished !== undefined) dbUpdates.is_furnished = updates.is_furnished;
+    if (updates.amenities) dbUpdates.amenities = updates.amenities;
+    if (updates.images) dbUpdates.images = updates.images;
+    if (updates.available_from) dbUpdates.available_from = updates.available_from;
+    if (updates.available_to) dbUpdates.available_to = updates.available_to;
 
     return dbUpdates;
   },
@@ -488,7 +457,7 @@ export const propertyService = {
       if (userId) {
         const existingProperty = await this.getPropertyById(id);
 
-        if (existingProperty.ownerId !== userId) {
+        if (existingProperty.owner_id !== userId) {
           throw new PropertyOwnershipError(
             'User does not have permission to delete this property',
             id,

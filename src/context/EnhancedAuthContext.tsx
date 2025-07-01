@@ -18,7 +18,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role: string) => Promise<void>;
+  signUp: (email: string, password: string, role: string, profileData?: { firstName?: string; lastName?: string; phone?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
   isSessionValid: () => boolean;
@@ -44,13 +44,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return null;
       }
 
-      // Try to fetch profile (no timeout)
+      // Add timeout to profile fetch to prevent hanging
       logger.info('Attempting to fetch profile from database', { userId });
-      const { data: profile, error } = await supabase
+
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
+
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000);
+      });
+
+      const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
 
       logger.info('Profile fetch result', { profile, error: error?.message });
 
@@ -188,10 +195,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           if (session?.user) {
             logger.info('User session detected, fetching profile', { userId: session.user.id });
-            const userWithProfile = await fetchUserProfile(session.user.id);
-            if (isMounted) {
-              setUser(userWithProfile);
-              logger.info('Profile fetch completed, setting loading to false');
+
+            try {
+              const userWithProfile = await fetchUserProfile(session.user.id);
+              if (isMounted) {
+                setUser(userWithProfile);
+                logger.info('Profile fetch completed, setting loading to false');
+              }
+            } catch (profileError) {
+              logger.error('Profile fetch failed in auth state change', { profileError });
+              // Use fallback user data from session
+              if (isMounted && session.user) {
+                const fallbackUser = {
+                  ...session.user,
+                  role: UserRole.STUDENT,
+                  firstName: session.user.user_metadata?.first_name || '',
+                  lastName: session.user.user_metadata?.last_name || '',
+                  phone: session.user.user_metadata?.phone || '',
+                  avatarUrl: session.user.user_metadata?.avatar_url
+                } as AuthUser;
+                setUser(fallbackUser);
+                logger.info('Using fallback user data');
+              }
             }
           } else {
             logger.info('No user session, clearing user state');
@@ -225,7 +250,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setLoading(true);
       logger.info('Attempting sign in', { email });
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
         password
       });
@@ -236,9 +261,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
 
-      // Don't manually fetch profile here - let the auth state change handler do it
-      // This prevents the race condition and infinite loading
       logger.info('Sign in successful, auth state change will handle profile fetch');
+
+      // Add timeout to prevent infinite loading if auth state change doesn't fire
+      setTimeout(() => {
+        if (loading) {
+          logger.warn('Sign in timeout, forcing loading to false');
+          setLoading(false);
+        }
+      }, 8000);
 
     } catch (error) {
       logger.error('Error signing in', { error });

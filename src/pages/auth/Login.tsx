@@ -8,11 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { GoogleIcon, FacebookIcon, ROOMiLogo } from '@/components/ui/SocialIcons';
-import { toast } from "@/components/ui/use-toast";
-import { Loader } from 'lucide-react';
-// Removed unused import
+import { Loader } from '@/components/ui/loader';
+import { showAuthSuccess, showAuthError, showAuthLoading } from '@/components/auth/AuthFeedback';
 import { logger } from '@/utils/enhanced-logger';
-import LoginRedirect from '@/components/auth/LoginRedirect';
 
 // JSX namespace is handled by React types - removing unnecessary declaration
 
@@ -32,7 +30,6 @@ const Login: React.FC = () => {
   const location = useLocation();
   const { signIn, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  // Error handling is done through form validation and toast notifications
   
   // Initialize form with react-hook-form and zod validation
   const form = useForm<LoginFormValues>({
@@ -46,10 +43,7 @@ const Login: React.FC = () => {
   // Show registration success message if coming from registration
   useEffect(() => {
     if (location.state?.message) {
-      toast({
-        title: "Registration Successful",
-        description: location.state.message,
-      });
+      showAuthSuccess();
 
       // Pre-fill email if provided
       if (location.state.email) {
@@ -59,7 +53,7 @@ const Login: React.FC = () => {
       // Clear the state to prevent showing message again
       navigate(location.pathname, { replace: true, state: {} });
     }
-  }, [location.state, navigate, toast]);
+  }, [location.state, navigate]);
 
   // Redirect if user is already logged in
   useEffect(() => {
@@ -76,10 +70,7 @@ const Login: React.FC = () => {
       setIsSubmitting(false);
 
       // Show success message
-      toast({
-        title: "Login successful",
-        description: `Welcome back! Redirecting to your ${userRole} dashboard...`,
-      });
+      showAuthSuccess(user.firstName, userRole);
 
       const from = location.state?.from ||
         (userRole === 'student' ? '/student/properties' :
@@ -88,16 +79,20 @@ const Login: React.FC = () => {
 
       navigate(from, { replace: true });
     }
-  }, [user, navigate, location, toast]);
+  }, [user, navigate, location]);
 
   // Form submission handler
   const onSubmit = async (values: LoginFormValues): Promise<void> => {
     setIsSubmitting(true);
+
     try {
       logger.info('Login form submitted', { email: values.email });
+
+      // Show loading feedback
+      showAuthLoading('Authenticating your credentials...');
+
       await signIn(values.email, values.password);
 
-      // Don't show success toast immediately - wait for navigation
       logger.info('Sign in completed, waiting for auth state change and navigation');
 
       // The redirection will be handled by the useEffect above when the user state updates
@@ -118,11 +113,8 @@ const Login: React.FC = () => {
         }
       }
 
-      toast({
-        title: "Login failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
+      // Show error feedback
+      showAuthError(errorMessage);
 
       // Reset submitting state on error
       setIsSubmitting(false);
@@ -132,9 +124,9 @@ const Login: React.FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center" style={{
-      background: '#e8eaed',
-      padding: '16px'
-    }}>
+        background: '#e8eaed',
+        padding: '16px'
+      }}>
       <div className="bg-white shadow-lg" style={{
         borderRadius: '12px',
         width: '100%',
@@ -328,12 +320,13 @@ const Login: React.FC = () => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                gap: '8px'
+                gap: '8px',
+                transition: 'all 0.2s ease-in-out'
               }}
               disabled={isSubmitting}
             >
               {isSubmitting && (
-                <Loader className="animate-spin" size={16} />
+                <Loader size="sm" variant="professional" className="text-white" />
               )}
               {isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
