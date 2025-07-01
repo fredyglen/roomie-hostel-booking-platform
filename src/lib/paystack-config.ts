@@ -1,13 +1,13 @@
 import { PaystackPop } from '@paystack/inline-js';
-import { APP_CONFIG } from '@/config/constants';
+import { config } from '@/config';
 import { logger } from '@/utils/enhanced-logger';
 import type { PaymentData } from '@/types/common';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
 export const PAYSTACK_CONFIG = {
-  publicKey: APP_CONFIG.PAYSTACK.PUBLIC_KEY,
-  currency: APP_CONFIG.PAYSTACK.CURRENCY,
-  channels: APP_CONFIG.PAYSTACK.CHANNELS,
+  publicKey: config.paystack.publicKey,
+  currency: config.paystack.currency,
+  channels: config.paystack.channels,
 } as const;
 
 export interface PaystackPaymentData extends PaymentData {

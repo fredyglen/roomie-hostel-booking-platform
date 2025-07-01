@@ -1,56 +1,10 @@
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Property } from '@/types/property';
 import { logger } from '@/utils/logger';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
-// Sample properties data as fallback (keeping existing implementation)
-const getSampleProperties = (): Property[] => {
-  return [
-    {
-      id: '1',
-      name: 'Modern Apartment',
-      title: 'Modern Apartment',
-      description: 'A modern apartment in Accra.',
-      type: 'apartment',
-      status: 'available',
-      price: 1200,
-      rent: 1200,
-      location: {
-        address: '123 Main St',
-        city: 'Accra',
-        state: 'Greater Accra',
-      },
-      address: '123 Main St',
-      city: 'Accra',
-      state: 'Greater Accra',
-      zip: '00233',
-      owner_id: 'owner1',
-      propertyCategory: 'Apartment',
-      verified: true,
-      is_available: true,
-      bedrooms: 2,
-      bathrooms: 1,
-      available_from: '2024-01-01',
-      amenities: ['WiFi', 'AC', 'Parking'],
-      images: ['/placeholder.svg'],
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-      owner: {
-        id: 'owner1',
-        name: 'John Owner',
-        email: 'owner@example.com',
-        phone: '+233123456789',
-        verified: true,
-        responseRate: '95%'
-      },
-      house_rules: 'No smoking, no pets',
-      stories: [],
-      features: ['balcony', 'ensuite']
-    }
-    // ... other sample properties
-  ];
-};
+// Removed getSampleProperties function - no more mock data fallbacks
 
 export const normalizePropertyData = (dbProperty: Record<string, unknown>): Property => {
   const profileData = Array.isArray(dbProperty.profiles) ? dbProperty.profiles[0] : dbProperty.profiles;
@@ -129,10 +83,7 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
 
       if (fetchError) {
         ErrorHandler.handle(fetchError, 'usePropertyData error fetching properties from database');
-        // Fall back to sample data
-        logger.info('Falling back to sample properties after fetch error');
-        setProperties(getSampleProperties());
-        return;
+        throw new Error(`Database error: ${fetchError.message}`);
       }
 
       if (data && data.length > 0) {
@@ -141,9 +92,9 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
         setProperties(transformedProperties);
         logger.info(`Successfully loaded ${transformedProperties.length} properties from database`);
       } else {
-        // No data in database, use sample data
-        logger.info('No properties in database, using sample data');
-        setProperties(getSampleProperties());
+        // No data in database, return empty array
+        logger.info('No properties found in database');
+        setProperties([]);
       }
       
     } catch (err) {
@@ -177,14 +128,7 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
 
       if (error) {
         ErrorHandler.handle(error, 'usePropertyData error fetching property by ID from database');
-        // Fall back to sample data
-        const sampleProperties = getSampleProperties();
-        const sampleProperty = sampleProperties.find(p => p.id === id);
-        if (sampleProperty) {
-          ErrorHandler.log(`Found property in sample data: ${sampleProperty.name}`);
-          return sampleProperty;
-        }
-        return null;
+        throw new Error(`Database error: ${error.message}`);
       }
 
       if (data) {
@@ -193,25 +137,14 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
         return transformedProperty;
       }
 
-      // Fall back to sample data
-      const sampleProperties = getSampleProperties();
-      const sampleProperty = sampleProperties.find(p => p.id === id);
-      if (sampleProperty) {
-        ErrorHandler.log(`Found property in sample data: ${sampleProperty.name}`);
-        return sampleProperty;
-      }
+      // Property not found in database
+      logger.info(`Property with ID ${id} not found in database`);
       return null;
       
     } catch (err) {
       ErrorHandler.handle(err, 'usePropertyData property fetch by ID error');
-      // Fall back to sample data
-      const sampleProperties = getSampleProperties();
-      const sampleProperty = sampleProperties.find(p => p.id === id);
-      if (sampleProperty) {
-        ErrorHandler.log(`Found property in sample data: ${sampleProperty.name}`);
-        return sampleProperty;
-      }
-      return null;
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch property';
+      throw new Error(errorMessage);
     }
   };
 
@@ -222,5 +155,4 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
   return [properties, loading, error];
 };
 
-// Export the getSampleProperties for use in other components
-export { getSampleProperties };
+// Removed getSampleProperties export - no more mock data

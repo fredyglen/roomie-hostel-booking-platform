@@ -20,14 +20,43 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        'space-grotesk': ['Space Grotesk', 'sans-serif'],
+        'bricolage': ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
+        'sans': ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
+        'space-grotesk': ['Space Grotesk', 'sans-serif'], // Keep for backward compatibility
+      },
+      spacing: {
+        '1': '0.5rem',   // 8px
+        '2': '1rem',     // 16px
+        '3': '1.5rem',   // 24px
+        '4': '2rem',     // 32px
+        '5': '2.5rem',   // 40px
+        '6': '3rem',     // 48px
+        '8': '4rem',     // 64px
+        '10': '5rem',    // 80px
+        '12': '6rem',    // 96px
+        '16': '8rem',    // 128px
+        '20': '10rem',   // 160px
       },
       colors: {
         roomi: {
-          blue: 'hsl(var(--roomi-blue))',
-          teal: 'hsl(var(--roomi-teal))',
-          dark: 'hsl(var(--roomi-dark))',
-          light: 'hsl(var(--roomi-light))',
+          blue: {
+            50: 'rgb(var(--roomi-blue-50))',
+            100: 'rgb(var(--roomi-blue-100))',
+            500: 'rgb(var(--roomi-blue-500))',
+            600: 'rgb(var(--roomi-blue-600))',
+            700: 'rgb(var(--roomi-blue-700))',
+            900: 'rgb(var(--roomi-blue-900))',
+          },
+          teal: {
+            50: 'rgb(var(--roomi-teal-50))',
+            500: 'rgb(var(--roomi-teal-500))',
+            600: 'rgb(var(--roomi-teal-600))',
+          },
+          orange: {
+            50: 'rgb(var(--roomi-orange-50))',
+            500: 'rgb(var(--roomi-orange-500))',
+            600: 'rgb(var(--roomi-orange-600))',
+          },
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -64,9 +93,10 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "6px",      // Reduced from 8px
+        md: "4px",      // Reduced from 6px
+        sm: "2px",      // Reduced from 4px
+        DEFAULT: "4px", // Minimal rounding as default
       },
       keyframes: {
         "accordion-down": {

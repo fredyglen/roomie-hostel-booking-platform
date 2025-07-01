@@ -1,4 +1,13 @@
 
+/**
+ * Property List Component for ROOMi Platform
+ * Displays a grid of property cards with proper type safety
+ *
+ * @fileoverview Apple-Level Property List Implementation
+ * @author ROOMi Development Team
+ * @version 1.0.0
+ */
+
 import React from 'react';
 import PropertyCard from './PropertyCard';
 import EmptyState from '@/components/common/EmptyState';
@@ -36,26 +45,49 @@ const PropertyList: React.FC<PropertyListProps> = ({
   }
 
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      {properties.map((property) => (
-        <PropertyCard
-          key={property.id}
-          id={property.id}
-          title={property.title}
-          rent={property.price || property.rent}
-          location={typeof property.location === 'string' ? property.location : `${property.city}, ${property.state}`}
-          bedrooms={property.bedrooms}
-          bathrooms={property.bathrooms}
-          maxOccupants={property.max_occupants || 1}
-          images={property.images}
-          amenities={Array.isArray(property.amenities) ? property.amenities as string[] : []}
-          propertyType={property.propertyCategory}
-          genderRestriction={property.gender_restriction}
-          isAvailable={property.is_available}
-          onViewDetails={() => onViewProperty(property.id)}
-          onViewStory={() => onViewStory(property.id)}
-        />
-      ))}
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+      {properties.map((property) => {
+        // Extract data using the correct Property interface
+        const {
+          id,
+          name,
+          address,
+          price,
+          features,
+          media,
+          type,
+          status
+        } = property;
+
+        // Format location string
+        const locationString = `${address.city}, ${address.state}`;
+
+        // Get images array
+        const imagesArray = media.map(m => m.url);
+
+        // Check availability
+        const isAvailable = status === 'active';
+
+        return (
+          <PropertyCard
+            key={id}
+            id={id}
+            title={name}
+            rent={price.amount}
+            location={locationString}
+            bedrooms={features.bedrooms}
+            bathrooms={features.bathrooms}
+            maxOccupants={features.bedrooms} // Simplified calculation
+            images={imagesArray}
+            amenities={features.amenities}
+            propertyType={type}
+            genderRestriction="mixed" // TODO: Add gender restriction to Property interface
+            isAvailable={isAvailable}
+            onViewDetails={() => onViewProperty(id)}
+            onViewStory={() => onViewStory(id)}
+          />
+        );
+      })}
     </div>
   );
 };

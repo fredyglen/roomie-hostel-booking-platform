@@ -1,8 +1,9 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Booking } from '@/types/booking';
 import { ErrorHandler } from '@/utils/ErrorHandler';
+import { BookingQueries } from '@/services/database/standardizedQueries';
 
 interface CreateBookingData {
   property_id: string;
@@ -21,8 +22,9 @@ export const useBookingService = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error('User not authenticated');
 
+      // Use the standardized bookings table
       const { data, error } = await supabase
-        .from('bookings_enhanced')
+        .from('bookings')
         .insert({
           student_id: user.id,
           property_id: bookingData.property_id,
@@ -30,12 +32,14 @@ export const useBookingService = () => {
           check_out_date: bookingData.end_date,
           total_amount: bookingData.total_amount,
           special_requests: bookingData.special_requests,
-          status: 'pending'
+          status: 'pending',
+          payment_status: 'pending'
         })
         .select()
         .single();
 
       if (error) throw error;
+
       return data as unknown as Booking;
     },
     onSuccess: () => {
@@ -53,7 +57,7 @@ export const useBookingService = () => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('bookings_enhanced')
+        .from('bookings')
         .select('*')
         .eq('student_id', user.id)
         .order('created_at', { ascending: false });

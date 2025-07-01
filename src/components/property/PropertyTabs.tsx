@@ -1,6 +1,16 @@
 
+/**
+ * Property Tabs Component for ROOMi Platform
+ * Displays property information in organized tabs with proper type safety
+ *
+ * @fileoverview Apple-Level Property Tabs Implementation
+ * @author ROOMi Development Team
+ * @version 1.0.0
+ */
+
 import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PropertyFeatures } from '@/types/property';
 import PropertyAboutTab from './PropertyAboutTab';
 import PropertyLocationTab from './PropertyLocationTab';
 import PropertyAmenitiesTab from './PropertyAmenitiesTab';
@@ -14,10 +24,15 @@ interface PropertyTabsProps {
   amenities?: string[];
   type?: string;
   location?: string;
-  availableUnits?: number;
+  features?: PropertyFeatures;
+  verificationStatus?: string;
   onTabChange?: (tab: string) => void;
 }
 
+/**
+ * Property Tabs Component
+ * Organizes property information into accessible tabs
+ */
 const PropertyTabs: React.FC<PropertyTabsProps> = ({
   description,
   address,
@@ -26,15 +41,19 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
   amenities = [],
   type,
   location,
-  availableUnits,
+  features,
+  verificationStatus,
   onTabChange
 }) => {
   const [activeTab, setActiveTab] = useState('about');
-  
+
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     if (onTabChange) onTabChange(value);
   };
+
+  // Calculate available units from features if available
+  const availableUnits = features?.bedrooms || 0;
 
   return (
     <Tabs defaultValue="about" value={activeTab} onValueChange={handleTabChange}>

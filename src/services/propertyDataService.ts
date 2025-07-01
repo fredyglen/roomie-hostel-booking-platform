@@ -1,7 +1,19 @@
 
-import { supabase } from '@/lib/supabase';
+/**
+ * Property Data Service for ROOMi Platform
+ * Handles property data fetching with proper type safety and error handling
+ *
+ * @fileoverview Apple-Level Property Data Service Implementation
+ * @author ROOMi Development Team
+ * @version 1.0.0
+ */
+
+import { supabase } from '@/integrations/supabase/client';
 import { Property, PropertyType, PropertyStatus } from '@/types/property';
 import { transformDbProperty } from '@/utils/propertyTransforms';
+import { ErrorHandler } from '@/utils/ErrorHandler';
+import { PropertyNotFoundError } from '@/errors/property-errors';
+import { InternalServerError } from '@/errors/base';
 
 export interface PropertyQueryOptions {
   limit?: number;
@@ -52,10 +64,17 @@ interface SimpleDbProperty {
   };
 }
 
+/**
+ * Fetch properties with filtering and pagination
+ *
+ * @param options - Query options for filtering and pagination
+ * @returns Promise<PropertyData> - Properties with metadata
+ * @throws InternalServerError - When database operation fails
+ */
 export async function fetchProperties(options: PropertyQueryOptions = {}): Promise<PropertyData> {
   try {
-    // Simple, explicit query without problematic columns
-    const { data, error, count } = await supabase
+    // Build query with proper column selection
+    let query = supabase
       .from('properties')
       .select(`
         id,
@@ -67,15 +86,21 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
         state,
         zip,
         rent,
+        base_price_per_semester,
+        currency,
         property_type,
-        property_category,
+        verification_status,
         is_available,
         bedrooms,
         bathrooms,
+        parking_available,
+        is_furnished,
+        has_accessibility_features,
+        has_cleaning,
+        has_security,
         amenities,
+        rules,
         images,
-        available_from,
-        available_to,
         created_at,
         updated_at,
         profiles!properties_owner_id_fkey (
@@ -83,59 +108,88 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
           first_name,
           last_name,
           email,
-          phone
+          phone,
+          avatar,
+          created_at,
+          updated_at
         )
-      `, { count: 'exact' })
-      .eq('is_available', true)
-      .order('created_at', { ascending: false })
-      .limit(options.limit || 10);
+      `, { count: 'exact' });
 
-    if (error) {
-      console.error('Database error:', error);
-      return {
-        properties: [],
-        totalCount: 0,
-        hasMore: false
-      };
+    // Apply filters
+    if (options.filters) {
+      const { type, status, minPrice, maxPrice, city } = options.filters;
+
+      if (type) {
+        query = query.eq('property_type', type);
+      }
+
+      if (status === 'active') {
+        query = query.eq('is_available', true);
+      } else if (status === 'inactive') {
+        query = query.eq('is_available', false);
+      }
+
+      if (minPrice) {
+        query = query.gte('base_price_per_semester', minPrice);
+      }
+
+      if (maxPrice) {
+        query = query.lte('base_price_per_semester', maxPrice);
+      }
+
+      if (city) {
+        query = query.ilike('city', `%${city}%`);
+      }
+    } else {
+      // Default to available properties only
+      query = query.eq('is_available', true);
     }
 
-    const properties = (data || []).map((item: any) => {
+    // Apply pagination and ordering
+    query = query
+      .order('created_at', { ascending: false })
+      .range(options.offset || 0, (options.offset || 0) + (options.limit || 10) - 1);
+
+    const { data, error, count } = await query;
+
+    if (error) {
+      throw new InternalServerError(`Database query failed: ${error.message}`, {
+        operation: 'fetchProperties',
+        error: error.message
+      });
+    }
+
+    // Transform database results to Property interface
+    const properties: Property[] = [];
+
+    for (const item of data || []) {
       try {
-        return transformDbProperty(item);
+        const transformResult = await transformDbProperty(item);
+        if (transformResult.success) {
+          properties.push(transformResult.data);
+        } else {
+          // Log transformation error but continue processing other properties
+          ErrorHandler.handle(transformResult.error, {
+            operation: 'transformDbProperty',
+            propertyId: item.id,
+            propertyTitle: item.title,
+            context: transformResult.context
+          });
+
+          // Skip this property rather than returning invalid data
+          continue;
+        }
       } catch (transformError) {
-        console.error('Transform error:', transformError);
-        // Return a basic property on transform error
-        return {
-          id: item.id || 'unknown',
-          owner_id: item.owner_id || 'unknown',
-          name: item.title || 'Unknown Property',
-          title: item.title || 'Unknown Property',
-          description: item.description || '',
-          type: 'hostel' as PropertyType,
-          status: 'available' as PropertyStatus,
-          price: item.rent || 0,
-          rent: item.rent || 0,
-          location: item.address || '',
-          address: item.address || '',
-          city: item.city || '',
-          state: item.state || '',
-          zip: item.zip || '',
-          propertyCategory: 'Hostel' as any,
-          verified: true,
-          is_available: true,
-          bedrooms: item.bedrooms || 1,
-          bathrooms: item.bathrooms || 1,
-          amenities: [],
-          images: [],
-          available_from: '',
-          created_at: item.created_at || '',
-          updated_at: item.updated_at || '',
-          house_rules: 'No smoking, no pets',
-          stories: [],
-          features: []
-        } as Property;
+        // Handle unexpected errors
+        ErrorHandler.handle(transformError, {
+          operation: 'transformDbProperty',
+          propertyId: item.id,
+          propertyTitle: item.title
+        });
+
+        continue;
       }
-    });
+    }
 
     const totalCount = count || 0;
     const limit = options.limit || 10;
@@ -156,7 +210,19 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
   }
 }
 
+/**
+ * Fetch a single property by ID
+ *
+ * @param id - Property ID to fetch
+ * @returns Promise<Property | null> - The property or null if not found
+ * @throws PropertyNotFoundError - When property doesn't exist
+ * @throws InternalServerError - When database operation fails
+ */
 export async function fetchPropertyById(id: string): Promise<Property | null> {
+  if (!id) {
+    throw new PropertyNotFoundError('Property ID is required', id);
+  }
+
   try {
     const { data, error } = await supabase
       .from('properties')
@@ -170,15 +236,21 @@ export async function fetchPropertyById(id: string): Promise<Property | null> {
         state,
         zip,
         rent,
+        base_price_per_semester,
+        currency,
         property_type,
-        property_category,
+        verification_status,
         is_available,
         bedrooms,
         bathrooms,
+        parking_available,
+        is_furnished,
+        has_accessibility_features,
+        has_cleaning,
+        has_security,
         amenities,
+        rules,
         images,
-        available_from,
-        available_to,
         created_at,
         updated_at,
         profiles!properties_owner_id_fkey (
@@ -186,22 +258,47 @@ export async function fetchPropertyById(id: string): Promise<Property | null> {
           first_name,
           last_name,
           email,
-          phone
+          phone,
+          avatar,
+          created_at,
+          updated_at
         )
       `)
       .eq('id', id)
       .single();
 
     if (error) {
-      console.error('Database error:', error);
-      return null;
+      if (error.code === 'PGRST116') {
+        throw new PropertyNotFoundError(`Property with ID ${id} not found`, id);
+      }
+      throw new InternalServerError(`Database query failed: ${error.message}`, {
+        operation: 'fetchPropertyById',
+        propertyId: id,
+        error: error.message
+      });
     }
-    
-    if (!data) return null;
 
-    return transformDbProperty(data as any);
+    if (!data) {
+      throw new PropertyNotFoundError(`Property with ID ${id} not found`, id);
+    }
+
+    // Transform database result to Property interface
+    const transformResult = await transformDbProperty(data);
+
+    if (!transformResult.success) {
+      throw transformResult.error;
+    }
+
+    return transformResult.data;
   } catch (error) {
-    console.error('Fetch property by ID error:', error);
-    return null;
+    if (error instanceof PropertyNotFoundError) {
+      throw error;
+    }
+
+    const appError = ErrorHandler.handle(error, {
+      operation: 'fetchPropertyById',
+      propertyId: id
+    });
+    throw appError;
   }
 }

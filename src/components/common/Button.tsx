@@ -26,11 +26,11 @@ const Button: React.FC<ButtonProps> = ({
   const baseStyles = "inline-flex items-center justify-center rounded-md font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50";
   
   const variantStyles = {
-    primary: "bg-roomi-blue hover:bg-blue-700 text-white",
-    secondary: "bg-roomi-teal hover:bg-teal-700 text-white",
-    accent: "bg-roomi-orange hover:bg-orange-600 text-white",
-    outline: "border border-roomi-blue text-roomi-blue hover:bg-roomi-blue hover:text-white",
-    ghost: "hover:bg-slate-100 text-roomi-blue"
+    primary: "bg-blue-600 hover:bg-blue-700 text-white",
+    secondary: "bg-teal-600 hover:bg-teal-700 text-white",
+    accent: "bg-orange-500 hover:bg-orange-600 text-white",
+    outline: "border border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white",
+    ghost: "hover:bg-slate-100 text-blue-600"
   };
   
   const sizeStyles = {

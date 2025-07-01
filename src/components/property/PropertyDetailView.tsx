@@ -1,4 +1,13 @@
 
+/**
+ * Property Detail View Component for ROOMi Platform
+ * Displays comprehensive property information with proper type safety
+ *
+ * @fileoverview Apple-Level Property Detail View Implementation
+ * @author ROOMi Development Team
+ * @version 1.0.0
+ */
+
 import React from 'react';
 import { Property } from '@/types/property';
 import PropertyImageGallery from './PropertyImageGallery';
@@ -11,61 +20,40 @@ interface PropertyDetailViewProps {
   onBook?: () => void;
 }
 
+/**
+ * Property Detail View Component
+ * Displays property information using the correct Property interface
+ */
 const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBook }) => {
-  // Helper functions to safely extract data
-  const getLocationText = (location: string | { city: string; state: string; address: string }): string => {
-    if (typeof location === 'string') {
-      return location;
-    }
-    return `${location.address}, ${location.city}, ${location.state}`;
-  };
+  // Extract data using the correct Property interface structure
+  const {
+    id,
+    name,
+    description,
+    type,
+    status,
+    address,
+    price,
+    features,
+    media,
+    owner,
+    verificationStatus
+  } = property;
 
-  const getAmenityText = (amenity: string | { id: string; name: string }): string => {
-    return typeof amenity === 'string' ? amenity : amenity.name;
-  };
+  // Format location string from address
+  const locationText = `${address.street}, ${address.city}, ${address.state}`;
 
-  const getAmenitiesArray = (amenities: (string | { id: string; name: string })[]): string[] => {
-    return amenities.map(getAmenityText);
-  };
+  // Get amenities array from features
+  const amenitiesArray = features.amenities || [];
 
-  const getPriceNumber = (): number => {
-    const price = property.price || property.rent;
-    return typeof price === 'number' ? price : parseFloat(String(price) || '0') || 0;
-  };
+  // Get house rules array from features
+  const houseRulesArray = features.rules || [];
 
-  const getDistanceText = (): string => {
-    const distance = property.distance_to_campus || property.distanceToCampus;
-    if (distance === undefined || distance === null) return '';
-    return String(distance);
-  };
+  // Get images array from media
+  const imagesArray = media.map(m => m.url);
 
-  const getOwnerResponseRate = (): string => {
-    const rate = property.owner?.responseRate;
-    if (rate === undefined || rate === null) return 'N/A';
-    return typeof rate === 'number' ? `${rate}%` : String(rate);
-  };
-
-  const getHouseRulesArray = (): string[] => {
-    const rules = property.house_rules;
-    if (!rules) return [];
-    if (typeof rules === 'string') return [rules];
-    return Array.isArray(rules) ? rules : [];
-  };
-
-  // Safe data extraction
-  const safeProperty = {
-    ...property,
-    location: getLocationText(property.location),
-    amenities: property.amenities ? getAmenitiesArray(property.amenities) : [],
-    price: getPriceNumber(),
-    distance_to_campus: getDistanceText(),
-    price_unit: property.price_unit || property.priceUnit || 'month',
-    house_rules: getHouseRulesArray().join(', '),
-    owner: property.owner ? {
-      ...property.owner,
-      responseRate: getOwnerResponseRate()
-    } : undefined
-  };
+  // Calculate distance to campus (placeholder - would come from external service)
+  const distanceToCampus = '2.5 km'; // TODO: Implement distance calculation
 
   return (
     <div className="max-w-7xl mx-auto p-6">
@@ -73,21 +61,26 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-6">
           {/* Image Gallery */}
-          <PropertyImageGallery images={property.images} title={property.title} />
-          
+          <PropertyImageGallery
+            images={imagesArray}
+            title={name}
+            propertyId={id}
+          />
+
           {/* Property Details Tabs */}
           <PropertyTabs
-            description={property.description}
-            address={property.address}
-            distanceToCampus={safeProperty.distance_to_campus}
-            houseRules={getHouseRulesArray()}
-            amenities={safeProperty.amenities}
-            type={property.type}
-            location={safeProperty.location}
-            availableUnits={property.availableUnits}
+            description={description}
+            address={locationText}
+            distanceToCampus={distanceToCampus}
+            houseRules={houseRulesArray}
+            amenities={amenitiesArray}
+            type={type}
+            location={locationText}
+            features={features}
+            verificationStatus={verificationStatus}
           />
         </div>
-        
+
         {/* Sidebar */}
         <div className="space-y-6">
           {/* Booking Card */}
@@ -95,10 +88,10 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             property={property}
             onBook={onBook}
           />
-          
+
           {/* Owner Card */}
-          {property.owner && (
-            <PropertyOwnerCard owner={property.owner} />
+          {owner && (
+            <PropertyOwnerCard owner={owner} />
           )}
         </div>
       </div>

@@ -1,8 +1,10 @@
 
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
-import { Property, PropertyCategory, PropertyType } from '@/types/property';
+import { supabase } from '@/integrations/supabase/client';
+import { Property } from '@/types/property';
 import { ErrorHandler } from '@/utils/ErrorHandler';
+
+// Removed transformMockData function - no more mock data fallbacks
 
 export const useDemoProperties = () => {
   return useQuery({
@@ -13,26 +15,23 @@ export const useDemoProperties = () => {
         
         const { data, error } = await supabase
           .from('properties')
-          .select(`
-            *,
-            profiles!owner_id (
-              first_name,
-              last_name,
-              email,
-              phone
-            )
-          `)
+          .select('*')
           .eq('is_available', true)
           .order('created_at', { ascending: false });
 
         if (error) {
           ErrorHandler.handle('Error fetching properties', error.message);
-          throw new Error(error.message);
+          throw new Error(`Database error: ${error.message}`);
+        }
+
+        // If no data from database, return empty array
+        if (!data || data.length === 0) {
+          ErrorHandler.log('No properties found in database');
+          return [];
         }
 
         // Transform database properties to match our Property type
         const transformedProperties: Property[] = (data || []).map(property => {
-          const profileData = Array.isArray(property.profiles) ? property.profiles[0] : property.profiles;
           
           return {
             id: property.id,
@@ -76,15 +75,8 @@ export const useDemoProperties = () => {
             has_individual_meters: property.has_individual_meters,
             washroom_type: property.washroom_type as 'inside' | 'outside' | 'shared',
             meter_type: property.meter_type as 'self' | 'shared',
-            owner: profileData ? {
-              id: 'unknown',
-              name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim(),
-              email: profileData.email,
-              phone: profileData.phone || '',
-              responseRate: '95%',
-              verified: true
-            } : {
-              id: 'unknown',
+            owner: {
+              id: property.owner_id || 'unknown',
               name: 'Property Owner',
               email: 'owner@example.com',
               phone: '+233 50 123 4567',

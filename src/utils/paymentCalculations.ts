@@ -1,13 +1,15 @@
 
 import { Property } from '@/types/property';
 
-// Payment configuration constants
+import { paymentConfig } from '@/config/environment';
+
+// Payment configuration from environment
 const PAYMENT_CONFIG = {
-  platformFeePercentage: 0.05, // 5% platform fee
-  paymentProcessorFeePercentage: 0.015, // 1.5% Paystack fee
-  agentCommissionPercentage: 0.10, // 10% agent commission
-  vatRate: 0.125, // 12.5% VAT in Ghana
-  currency: 'GHS'
+  platformFeePercentage: paymentConfig.commissionRate,
+  paymentProcessorFeePercentage: 0.015, // 1.5% Paystack fee (external rate)
+  agentCommissionPercentage: 0.10, // 10% agent commission (business rule)
+  vatRate: 0.125, // 12.5% VAT in Ghana (legal requirement)
+  currency: paymentConfig.currency
 };
 
 export interface PaymentBreakdown {
@@ -63,7 +65,7 @@ export const calculateBookingCosts = (
   durationMonths: number = 1,
   packageType: 'standard' | 'premium' | 'luxury' = 'standard'
 ): BookingCosts => {
-  const baseRent = property.rent || property.price;
+  const baseRent = property.price.amount;
   const subtotal = baseRent * durationMonths;
   
   const platformFee = subtotal * PAYMENT_CONFIG.platformFeePercentage;

@@ -1,14 +1,12 @@
 
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
-import { cleanupAuthState } from '@/lib/auth-utils';
-import { ErrorHandler } from '@/utils/ErrorHandler';
-import { useNavigate } from 'react-router-dom';
 import { logger } from '@/utils/enhanced-logger';
+import { UserRole, isValidRole } from '@/types/roles';
 
 interface AuthUser extends User {
-  role: 'owner' | 'student' | 'admin';
+  role: UserRole;
   firstName?: string;
   lastName?: string;
   phone?: string;
@@ -20,388 +18,408 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, role: string) => Promise<void>;
+  signUp: (email: string, password: string, role: string, profileData?: { firstName?: string; lastName?: string; phone?: string }) => Promise<void>;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+  isSessionValid: () => boolean;
+  getSessionTimeRemaining: () => number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
-
-interface AuthProviderProps {
-  children: ReactNode;
-}
-
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
-  // Enhanced profile fetcher with comprehensive fallback handling
-  const fetchOrCreateUserProfile = async (userId: string, email: string): Promise<AuthUser | null> => {
+  const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
     try {
-      console.log('🔍 Fetching profile for user:', userId);
-      logger.info('Fetching user profile', { userId, email });
-      
-      // First try to fetch existing profile
-      const { data: existingProfile, error: fetchError } = await supabase
+      logger.info('Fetching user profile', { userId });
+
+      // Get the base user data from auth first
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+
+      if (!authUser || authUser.id !== userId) {
+        logger.error('Auth user mismatch', { authUserId: authUser?.id, expectedUserId: userId });
+        return null;
+      }
+
+      // Add timeout to profile fetch to prevent hanging
+      logger.info('Attempting to fetch profile from database', { userId });
+
+      const profilePromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
-        .maybeSingle();
+        .single();
 
-      if (existingProfile && !fetchError) {
-        console.log('✅ Profile found:', existingProfile);
-        logger.info('User profile found', { role: existingProfile.role });
-        
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout')), 5000);
+      });
+
+      const { data: profile, error } = await Promise.race([profilePromise, timeoutPromise]) as any;
+
+      logger.info('Profile fetch result', { profile, error: error?.message });
+
+      if (error) {
+        logger.warn('Profile fetch error, using auth user data only', {
+          error: error.message,
+          code: error.code,
+          userId: userId
+        });
+        // Return auth user with default role if profile doesn't exist
+        const fallbackRole = isValidRole(authUser.user_metadata?.role)
+          ? authUser.user_metadata.role as UserRole
+          : UserRole.STUDENT;
+
         return {
-          id: userId,
-          email: existingProfile.email || email,
-          role: existingProfile.role as 'owner' | 'student' | 'admin',
-          firstName: existingProfile.first_name,
-          lastName: existingProfile.last_name,
-          phone: existingProfile.phone,
-          avatarUrl: existingProfile.avatar_url,
-          aud: 'authenticated',
-          created_at: existingProfile.created_at,
-          app_metadata: {},
-          user_metadata: {},
-          identities: [],
-          updated_at: existingProfile.created_at
-        };
+          ...authUser,
+          role: fallbackRole,
+          firstName: authUser.user_metadata?.first_name || '',
+          lastName: authUser.user_metadata?.last_name || '',
+          phone: authUser.user_metadata?.phone || '',
+          avatarUrl: authUser.user_metadata?.avatar_url
+        } as AuthUser;
       }
 
-      console.log('🔄 Creating new profile for user:', userId);
-      logger.info('Creating new user profile', { userId, email });
-      
-      // Create new profile with comprehensive error handling
-      const { data: newProfile, error: insertError } = await supabase
-        .from('profiles')
-        .insert({
-          id: userId,
-          email: email,
-          role: 'student' // Default role
-        })
-        .select()
-        .maybeSingle();
+      logger.info('Profile fetched successfully', { profile });
 
-      if (insertError) {
-        console.error('❌ Profile creation failed:', insertError);
-        logger.error('Profile creation failed', { error: insertError });
-        
-        // CRITICAL: Provide fallback profile to prevent loading loop
-        console.log('🔄 Using fallback profile to prevent loading loop');
-        return {
-          id: userId,
-          email: email,
-          role: 'student',
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-          app_metadata: {},
-          user_metadata: {},
-          identities: [],
-          updated_at: new Date().toISOString()
-        };
+      // Validate and combine auth user data with profile data
+      const profileRole = profile.role || authUser.user_metadata?.role;
+      const validatedRole = isValidRole(profileRole) ? profileRole as UserRole : UserRole.STUDENT;
+
+      if (profile.role && !isValidRole(profile.role)) {
+        logger.warn('Invalid role in profile, using fallback', {
+          invalidRole: profile.role,
+          fallbackRole: validatedRole,
+          userId
+        });
       }
 
-      if (newProfile) {
-        console.log('✅ Profile created successfully:', newProfile);
-        logger.info('User profile created successfully', { role: newProfile.role });
-        
-        return {
-          id: userId,
-          email: newProfile.email,
-          role: newProfile.role as 'owner' | 'student' | 'admin',
-          firstName: newProfile.first_name,
-          lastName: newProfile.last_name,
-          phone: newProfile.phone,
-          avatarUrl: newProfile.avatar_url,
-          aud: 'authenticated',
-          created_at: newProfile.created_at,
-          app_metadata: {},
-          user_metadata: {},
-          identities: [],
-          updated_at: newProfile.created_at
-        };
-      }
+      const combinedUser = {
+        ...authUser,
+        role: validatedRole,
+        firstName: profile.first_name || authUser.user_metadata?.first_name,
+        lastName: profile.last_name || authUser.user_metadata?.last_name,
+        phone: profile.phone || authUser.user_metadata?.phone,
+        avatarUrl: profile.avatar_url || authUser.user_metadata?.avatar_url
+      } as AuthUser;
 
-      // Final fallback if everything else fails
-      console.log('🔄 Final fallback - creating minimal profile');
-      return {
-        id: userId,
-        email: email,
-        role: 'student',
-        aud: 'authenticated',
-        created_at: new Date().toISOString(),
-        app_metadata: {},
-        user_metadata: {},
-        identities: [],
-        updated_at: new Date().toISOString()
-      };
-      
+      logger.info('User profile combined', { role: combinedUser.role, email: combinedUser.email });
+      return combinedUser;
     } catch (error) {
-      console.error('❌ Critical profile fetch/create error:', error);
-      logger.error('Critical error in fetchOrCreateUserProfile', { error });
-      
-      // CRITICAL: Always return a profile to prevent infinite loading
-      console.log('🚨 Emergency fallback - creating emergency profile to prevent app crash');
-      return {
-        id: userId,
-        email: email,
-        role: 'student',
-        aud: 'authenticated',
-        created_at: new Date().toISOString(),
-        app_metadata: {},
-        user_metadata: {},
-        identities: [],
-        updated_at: new Date().toISOString()
-      };
+      logger.error('Error in fetchUserProfile', { error });
+      // Return auth user with fallback data
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser && authUser.id === userId) {
+          const fallbackRole = isValidRole(authUser.user_metadata?.role)
+            ? authUser.user_metadata.role as UserRole
+            : UserRole.STUDENT;
+
+          return {
+            ...authUser,
+            role: fallbackRole,
+            firstName: authUser.user_metadata?.first_name,
+            lastName: authUser.user_metadata?.last_name,
+            phone: authUser.user_metadata?.phone,
+            avatarUrl: authUser.user_metadata?.avatar_url
+          } as AuthUser;
+        }
+      } catch (fallbackError) {
+        logger.error('Fallback auth user fetch failed', { fallbackError });
+      }
+      return null;
     }
   };
 
-  const handleAuthStateChange = async (event: string, session: Session | null) => {
-    console.log(`🔄 Auth state changed: ${event}`, { hasSession: !!session });
-    logger.info('Auth state changed', { event, hasSession: !!session });
-    
-    try {
-      setLoading(true);
-      setSession(session);
-      
-      if (session?.user) {
-        console.log('👤 User session found, fetching profile...');
-        const userProfile = await fetchOrCreateUserProfile(session.user.id, session.user.email!);
-        
-        if (userProfile) {
-          console.log('✅ Setting user profile:', { role: userProfile.role });
-          logger.info('Setting user profile', { role: userProfile.role });
-          setUser(userProfile);
+  useEffect(() => {
+    let isMounted = true;
+
+    // Check active sessions and set the user
+    const getSession = async () => {
+      try {
+        logger.info('Getting initial session');
+        const { data: { session } } = await supabase.auth.getSession();
+
+        if (!isMounted) return;
+
+        setSession(session);
+
+        if (session?.user) {
+          logger.info('Session found, fetching user profile', { userId: session.user.id });
+          const userWithProfile = await fetchUserProfile(session.user.id);
+          if (isMounted) {
+            setUser(userWithProfile);
+          }
         } else {
-          console.error('❌ Failed to create user profile, clearing user state');
-          logger.warn('Failed to fetch user profile, clearing user state');
+          logger.info('No session found');
+          if (isMounted) {
+            setUser(null);
+          }
+        }
+      } catch (error) {
+        logger.error('Error getting session:', error);
+        if (isMounted) {
           setUser(null);
         }
-      } else {
-        console.log('🚫 No session, clearing user state');
-        logger.info('No session, clearing user state');
-        setUser(null);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+          logger.info('Initial auth check completed');
+        }
       }
-    } catch (error) {
-      console.error('❌ Error in handleAuthStateChange:', error);
-      logger.error('Error in handleAuthStateChange', { error });
-      
-      // Emergency fallback - don't leave user in loading state
-      if (session?.user) {
-        console.log('🚨 Emergency: Creating minimal user to prevent loading loop');
-        setUser({
-          id: session.user.id,
-          email: session.user.email || 'unknown@example.com',
-          role: 'student',
-          aud: 'authenticated',
-          created_at: new Date().toISOString(),
-          app_metadata: {},
-          user_metadata: {},
-          identities: [],
-          updated_at: new Date().toISOString()
-        });
-      } else {
-        setUser(null);
+    };
+
+    // Add timeout to prevent infinite loading
+    const timeoutId = setTimeout(() => {
+      if (isMounted) {
+        logger.warn('Auth initialization timeout, setting loading to false');
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-      console.log('✅ Auth state change complete');
-    }
-  };
+    }, 3000); // Reduced to 3 seconds for faster feedback
+
+    getSession().finally(() => {
+      clearTimeout(timeoutId);
+    });
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        try {
+          logger.info('Auth state changed', { event, hasSession: !!session });
+
+          if (!isMounted) return;
+
+          setSession(session);
+
+          if (session?.user) {
+            logger.info('User session detected, fetching profile', { userId: session.user.id });
+
+            try {
+              const userWithProfile = await fetchUserProfile(session.user.id);
+              if (isMounted) {
+                setUser(userWithProfile);
+                logger.info('Profile fetch completed, setting loading to false');
+              }
+            } catch (profileError) {
+              logger.error('Profile fetch failed in auth state change', { profileError });
+              // Use fallback user data from session
+              if (isMounted && session.user) {
+                const fallbackUser = {
+                  ...session.user,
+                  role: UserRole.STUDENT,
+                  firstName: session.user.user_metadata?.first_name || '',
+                  lastName: session.user.user_metadata?.last_name || '',
+                  phone: session.user.user_metadata?.phone || '',
+                  avatarUrl: session.user.user_metadata?.avatar_url
+                } as AuthUser;
+                setUser(fallbackUser);
+                logger.info('Using fallback user data');
+              }
+            }
+          } else {
+            logger.info('No user session, clearing user state');
+            if (isMounted) {
+              setUser(null);
+            }
+          }
+        } catch (error) {
+          logger.error('Error in auth state change handler', { error });
+          if (isMounted) {
+            setUser(null);
+          }
+        } finally {
+          if (isMounted) {
+            setLoading(false);
+            logger.info('Auth state change completed, loading set to false');
+          }
+        }
+      }
+    );
+
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+      clearTimeout(timeoutId);
+    };
+  }, []);
 
   const signIn = async (email: string, password: string): Promise<void> => {
     try {
       setLoading(true);
-      console.log('🔐 Attempting sign in for:', email);
       logger.info('Attempting sign in', { email });
-      
-      // Clean up any existing auth state
-      cleanupAuthState();
-      
-      // Attempt global sign out first
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        console.warn('⚠️ Global signout failed, continuing...', err);
-        logger.warn('Global signout failed, continuing...', { error: err });
-      }
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email,
-        password,
+        password
       });
 
       if (error) {
-        console.error('❌ Sign in failed:', error);
         logger.error('Sign in failed', { error });
+        setLoading(false);
         throw error;
       }
 
-      if (data.user) {
-        console.log('✅ Sign in successful, auth state change will handle the rest');
-        logger.info('Sign in successful, waiting for auth state change');
-      }
+      logger.info('Sign in successful, auth state change will handle profile fetch');
+
+      // Add timeout to prevent infinite loading if auth state change doesn't fire
+      setTimeout(() => {
+        if (loading) {
+          logger.warn('Sign in timeout, forcing loading to false');
+          setLoading(false);
+        }
+      }, 8000);
+
     } catch (error) {
-      console.error('❌ Sign in error:', error);
-      logger.error('Sign in error', { error });
-      ErrorHandler.handle(error, 'Sign In error');
-      throw error;
-    } finally {
+      logger.error('Error signing in', { error });
       setLoading(false);
+      throw error;
     }
   };
 
-  const signUp = async (email: string, password: string, role: string): Promise<void> => {
+  const signUp = async (
+    email: string,
+    password: string,
+    role: string,
+    profileData?: { firstName?: string; lastName?: string; phone?: string }
+  ): Promise<void> => {
     try {
       setLoading(true);
-      console.log('📝 Attempting sign up for:', email, 'with role:', role);
-      logger.info('Attempting sign up', { email, role });
-      
-      // Clean up any existing auth state
-      cleanupAuthState();
+
+      // Limit password length to avoid Supabase errors
+      if (password.length > 72) {
+        throw new Error('Password cannot be longer than 72 characters');
+      }
 
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
         options: {
           data: {
-            role: role,
+            role,
+            first_name: profileData?.firstName || '',
+            last_name: profileData?.lastName || '',
+            phone: profileData?.phone || ''
           }
         }
       });
 
       if (error) {
-        console.error('❌ Sign up failed:', error);
-        logger.error('Sign up failed', { error });
+        setLoading(false);
         throw error;
       }
 
+      // Profile will be created automatically by database trigger
       if (data.user) {
-        console.log('✅ Sign up successful, creating profile...');
-        logger.info('Creating user profile', { userId: data.user.id });
-        
-        // Create profile record
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: data.user.id,
-            email: data.user.email!,
-            role: role,
-          });
-
-        if (profileError) {
-          console.error('❌ Error creating profile:', profileError);
-          logger.error('Error creating profile', { error: profileError });
-          ErrorHandler.handle(profileError, 'Error creating profile');
-        }
-
-        console.log('✅ Sign up successful, auth state change will handle navigation');
-        logger.info('Sign up successful, waiting for auth state change');
+        logger.info('User created successfully, profile will be created by trigger', { userId: data.user.id });
       }
-    } catch (error) {
-      console.error('❌ Sign up error:', error);
-      logger.error('Sign up error', { error });
-      ErrorHandler.handle(error, "Registration submission error");
-      throw error;
-    } finally {
+
       setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      throw error;
     }
   };
 
   const signOut = async (): Promise<void> => {
     try {
-      console.log('🚪 Attempting sign out');
-      logger.info('Attempting sign out');
       setLoading(true);
-      
-      // Clean up auth state first
-      cleanupAuthState();
-      
-      // Attempt global sign out
-      try {
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (err) {
-        console.warn('⚠️ Sign out error during global signout attempt:', err);
-        logger.warn('Sign out error during global signout attempt', { error: err });
-      }
-      
-      // Clear local state
+      await supabase.auth.signOut();
       setUser(null);
       setSession(null);
-      
-      console.log('✅ Sign out successful, redirecting to root');
-      logger.info('Sign out successful, redirecting to root');
-      navigate('/', { replace: true });
-    } catch (error) {
-      console.error('❌ Sign out error:', error);
-      logger.error('Sign out error', { error });
-      ErrorHandler.handle(error, 'Sign out error');
-      // Still clear local state and redirect
-      setUser(null);
-      setSession(null);
-      navigate('/', { replace: true });
-    } finally {
       setLoading(false);
+      logger.info('User signed out');
+    } catch (error) {
+      logger.error('Error signing out', { error });
+      setLoading(false);
+      throw error;
     }
   };
 
   const refreshAuth = async (): Promise<void> => {
     try {
-      console.log('🔄 Refreshing auth state');
-      logger.info('Refreshing auth state');
-      setLoading(true);
       const { data: { session } } = await supabase.auth.getSession();
-      await handleAuthStateChange('REFRESH', session);
+      setSession(session);
+
+      if (session?.user) {
+        const userWithProfile = await fetchUserProfile(session.user.id);
+        setUser(userWithProfile);
+      } else {
+        setUser(null);
+      }
     } catch (error) {
-      console.error('❌ Error refreshing auth:', error);
       logger.error('Error refreshing auth', { error });
-      ErrorHandler.handle(error, 'Error refreshing auth');
-    } finally {
-      setLoading(false);
     }
   };
 
-  useEffect(() => {
-    console.log('🚀 Setting up auth state listener');
-    logger.info('Setting up auth state listener');
-    
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(handleAuthStateChange);
+  // Session validation and security monitoring
+  const isSessionValid = (): boolean => {
+    if (!session) return false;
 
-    // Check for existing session
-    const initializeAuth = async () => {
-      try {
-        console.log('🔍 Initializing auth state...');
-        logger.info('Initializing auth state');
-        const { data: { session } } = await supabase.auth.getSession();
-        await handleAuthStateChange('INITIAL_SESSION', session);
-      } catch (error) {
-        console.error('❌ Error initializing auth:', error);
-        logger.error('Error initializing auth', { error });
-        ErrorHandler.handle(error, 'Error initializing auth');
-        setLoading(false);
+    const now = Math.floor(Date.now() / 1000);
+    const expiresAt = session.expires_at;
+
+    if (!expiresAt) return false;
+
+    // Check if session expires within next 5 minutes
+    const fiveMinutes = 5 * 60;
+    return expiresAt > (now + fiveMinutes);
+  };
+
+  const getSessionTimeRemaining = (): number => {
+    if (!session?.expires_at) return 0;
+
+    const now = Math.floor(Date.now() / 1000);
+    const remaining = session.expires_at - now;
+
+    return Math.max(0, remaining);
+  };
+
+  // Auto-refresh session when it's about to expire
+  useEffect(() => {
+    if (!session) return;
+
+    const checkSessionExpiry = () => {
+      const timeRemaining = getSessionTimeRemaining();
+
+      // Refresh session if less than 10 minutes remaining
+      if (timeRemaining > 0 && timeRemaining < 600) {
+        logger.info('Session expiring soon, refreshing', { timeRemaining });
+        refreshAuth();
+      }
+
+      // Log security warning if session is about to expire
+      if (timeRemaining < 300 && timeRemaining > 0) {
+        logger.warn('Session expires soon', { timeRemaining });
       }
     };
 
-    initializeAuth();
+    // Check every minute
+    const interval = setInterval(checkSessionExpiry, 60000);
 
-    return () => {
-      console.log('🧹 Cleaning up auth state listener');
-      logger.info('Cleaning up auth state listener');
-      subscription.unsubscribe();
+    return () => clearInterval(interval);
+  }, [session]);
+
+  // Security monitoring for suspicious activity
+  useEffect(() => {
+    if (!user) return;
+
+    const monitorActivity = () => {
+      // Log user activity for security monitoring
+      logger.info('User activity monitored', {
+        userId: user.id,
+        role: user.role,
+        lastActivity: new Date().toISOString(),
+        sessionValid: isSessionValid()
+      });
     };
-  }, []);
+
+    // Monitor activity every 5 minutes
+    const interval = setInterval(monitorActivity, 300000);
+
+    return () => clearInterval(interval);
+  }, [user]);
 
   const value: AuthContextType = {
     user,
@@ -411,11 +429,20 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     signUp,
     signOut,
     refreshAuth,
+    isSessionValid,
+    getSessionTimeRemaining,
   };
 
-  return (
-    <AuthContext.Provider value={value}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+
+  // REMOVED: Development bypass logic - SECURITY RISK eliminated
+
+  return context;
+}

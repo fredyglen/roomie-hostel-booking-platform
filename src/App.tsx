@@ -3,14 +3,19 @@ import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, DefaultOptions } from '@tanstack/react-query';
 import { Toaster } from '@/components/ui/toaster';
-import { Toaster as SonnerToaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/context/EnhancedAuthContext';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
+import { EnhancedErrorBoundary } from '@/components/common/EnhancedErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
 import AuthRedirect from '@/components/auth/AuthRedirect';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { DevBypassIndicator } from '@/components/dev/DevBypassIndicator';
 import AnalyticsDashboard from '@/pages/owner/AnalyticsDashboard';
+import { UserRole } from '@/types/roles';
+import { initializePerformanceOptimizations } from '@/utils/bundleOptimization';
+import PerformanceMonitor from '@/components/common/PerformanceMonitor';
+import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
 
 // Lazy load all pages for better performance
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -19,6 +24,7 @@ const Welcome = React.lazy(() => import('@/pages/Welcome'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 const PaymentSuccess = React.lazy(() => import('@/pages/PaymentSuccess'));
 const TestPayment = React.lazy(() => import('@/pages/TestPayment'));
+const TestAuth = React.lazy(() => import('@/pages/TestAuth'));
 
 // Auth Pages
 const Login = React.lazy(() => import('@/pages/auth/Login'));
@@ -37,6 +43,9 @@ const Favorites = React.lazy(() => import('@/pages/student/Favorites'));
 const StoryView = React.lazy(() => import('@/pages/student/StoryView'));
 const StoryViewEnhanced = React.lazy(() => import('@/pages/student/StoryViewEnhanced'));
 const EnhancedStoryPage = React.lazy(() => import('@/pages/student/EnhancedStoryPage'));
+const PropertyListing = React.lazy(() => import('@/pages/student/PropertyListing'));
+const PropertyStory = React.lazy(() => import('@/pages/student/PropertyStory'));
+const BookingConfirmation = React.lazy(() => import('@/pages/student/BookingConfirmation'));
 
 // Owner Pages
 const OwnerDashboard = React.lazy(() => import('@/pages/owner/Dashboard'));
@@ -80,7 +89,7 @@ const queryClient = new QueryClient({
         logger.error('Mutation error', error instanceof Error ? error : new Error(String(error)));
       }
     },
-    onError: (error) => {
+    onError: (error: Error) => {
        logger.error('Query error - Global Handler', error instanceof Error ? error : new Error(String(error)));
     }
   } as DefaultOptions,
@@ -92,7 +101,7 @@ const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => {
     <ErrorBoundary
       onError={(error, errorInfo) => {
         logger.error('SafeRoute: ErrorBoundary caught an error', { error, errorInfo });
-        console.error('🚨 Route Error:', error, errorInfo);
+        // Removed console.error - using logger only
       }}
     >
       <Suspense fallback={
@@ -107,7 +116,12 @@ const SafeRoute: React.FC<{element: React.ReactElement}> = ({ element }) => {
 };
 
 function App() {
-  console.log('🚀 Application started');
+  // Initialize performance optimizations
+  React.useEffect(() => {
+    initializePerformanceOptimizations();
+  }, []);
+
+  // Removed console.log - using logger only
   logger.info('Application started');
 
   return (
@@ -116,10 +130,11 @@ function App() {
         <ErrorBoundary
           onError={(error, errorInfo) => {
             logger.error('App: Top-level ErrorBoundary caught an error', { error, errorInfo });
-            console.error('🚨 Critical App Error:', error, errorInfo);
+            // Removed console.error - using logger only
           }}
         >
           <AuthProvider>
+            <DevBypassIndicator />
             <div className="min-h-screen bg-gray-50">
               <Routes>
                 {/* Public Routes */}
@@ -130,58 +145,231 @@ function App() {
                 <Route path="/register" element={<SafeRoute element={<Register />} />} />
                 <Route path="/payment-success" element={<SafeRoute element={<PaymentSuccess />} />} />
                 <Route path="/test-payment" element={<SafeRoute element={<TestPayment />} />} />
+                <Route path="/test-auth" element={<SafeRoute element={<TestAuth />} />} />
+
+                {/* Test Route for Flow Verification */}
+                <Route path="/test-flow" element={
+                  <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                    <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md">
+                      <h1 className="text-2xl font-bold mb-4">Flow Test Page</h1>
+                      <p className="text-gray-600 mb-6">This page verifies the application flow is working correctly.</p>
+                      <div className="space-y-4">
+                        <a href="/welcome" className="block w-full bg-blue-600 text-white text-center py-2 px-4 rounded hover:bg-blue-700">
+                          Start from Welcome
+                        </a>
+                        <a href="/landing" className="block w-full bg-green-600 text-white text-center py-2 px-4 rounded hover:bg-green-700">
+                          Go to Landing
+                        </a>
+                        <a href="/login" className="block w-full bg-purple-600 text-white text-center py-2 px-4 rounded hover:bg-purple-700">
+                          Go to Login
+                        </a>
+                        <a href="/test-auth" className="block w-full bg-red-600 text-white text-center py-2 px-4 rounded hover:bg-red-700">
+                          Test Authentication
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                } />
 
                 {/* Student Routes */}
-                <Route path="/student/dashboard" element={<SafeRoute element={<StudentDashboard />} />} />
-                <Route path="/student/properties" element={<SafeRoute element={<Properties />} />} />
-                <Route path="/student/property/:id" element={<SafeRoute element={<PropertyDetail />} />} />
-                <Route path="/student/book-property/:id" element={<SafeRoute element={<BookProperty />} />} />
-                <Route path="/student/book/:id" element={<SafeRoute element={<BookingStepsContainer />} />} />
-                <Route path="/student/booking-history" element={<SafeRoute element={<BookingHistory />} />} />
-                <Route path="/student/profile" element={<SafeRoute element={<StudentProfile />} />} />
-                <Route path="/student/subscription" element={<SafeRoute element={<StudentSubscription />} />} />
-                <Route path="/student/explore" element={<SafeRoute element={<Explore />} />} />
-                <Route path="/student/favorites" element={<SafeRoute element={<Favorites />} />} />
-                <Route path="/student/story/:id" element={<SafeRoute element={<StoryView />} />} />
-                <Route path="/student/story-enhanced/:id" element={<SafeRoute element={<StoryViewEnhanced />} />} />
-                <Route path="/student/property/:id/enhanced-story" element={<SafeRoute element={<EnhancedStoryPage />} />} />
+                <Route path="/student/dashboard" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<StudentDashboard />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/properties" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<PropertyListing />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/property/:propertyId/story" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<PropertyStory />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/property/:id" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<PropertyDetail />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/book-property/:id" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<BookProperty />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/book/:id" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<BookingStepsContainer />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/booking-confirmation" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<BookingConfirmation />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/booking-history" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<BookingHistory />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/profile" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<StudentProfile />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/subscription" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<StudentSubscription />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/explore" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<Explore />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/favorites" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<Favorites />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/story/:id" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<StoryView />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/story-enhanced/:id" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<StoryViewEnhanced />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/property/:id/enhanced-story" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<EnhancedStoryPage />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/property-listing" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<PropertyListing />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/unauthorized" element={
+                  <SafeRoute element={
+                    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+                      <div className="max-w-md w-full bg-white p-8 rounded-lg shadow-md text-center">
+                        <h1 className="text-2xl font-bold text-red-600 mb-4">Access Denied</h1>
+                        <p className="text-gray-600 mb-6">You don't have permission to access this page.</p>
+                        <button
+                          onClick={() => window.history.back()}
+                          className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                        >
+                          Go Back
+                        </button>
+                      </div>
+                    </div>
+                  } />
+                } />
 
                 {/* Owner Routes */}
                 <Route path="/owner/dashboard" element={
-                  <ProtectedRoute allowedRoles={['owner']}>
-                    <OwnerDashboard />
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER]}>
+                    <SafeRoute element={<OwnerDashboard />} />
                   </ProtectedRoute>
                 } />
                 <Route path="/owner/analytics" element={
-                  <ProtectedRoute allowedRoles={['owner']}>
-                    <AnalyticsDashboard />
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER]}>
+                    <SafeRoute element={<AnalyticsDashboard />} />
                   </ProtectedRoute>
                 } />
-                <Route path="/owner/properties" element={<SafeRoute element={<OwnerProperties />} />} />
-                <Route path="/owner/property/new" element={<SafeRoute element={<PropertyNew />} />} />
-                <Route path="/owner/properties/:id/edit" element={<SafeRoute element={<PropertyEdit />} />} />
-                <Route path="/owner/bookings" element={<SafeRoute element={<OwnerBookings />} />} />
-                <Route path="/owner/profile" element={<SafeRoute element={<OwnerProfile />} />} />
-                <Route path="/owner/settings" element={<SafeRoute element={<OwnerSettings />} />} />
-                <Route path="/owner/subscription" element={<SafeRoute element={<OwnerSubscription />} />} />
+                <Route path="/owner/properties" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<OwnerProperties />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/property/new" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<PropertyNew />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/properties/:id/edit" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<PropertyEdit />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/bookings" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<OwnerBookings />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/profile" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<OwnerProfile />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/settings" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<OwnerSettings />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/subscription" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<OwnerSubscription />} />
+                  </ProtectedRoute>
+                } />
 
                 {/* Admin Routes */}
-                <Route path="/admin/dashboard" element={<SafeRoute element={<AdminDashboard />} />} />
-                <Route path="/admin/properties" element={<SafeRoute element={<AdminProperties />} />} />
-                <Route path="/admin/bookings" element={<SafeRoute element={<AdminBookings />} />} />
-                <Route path="/admin/users" element={<SafeRoute element={<AdminUsers />} />} />
-                <Route path="/admin/settings" element={<SafeRoute element={<AdminSettings />} />} />
-                <Route path="/admin/features" element={<SafeRoute element={<FeatureManagement />} />} />
-                <Route path="/admin/subscriptions" element={<SafeRoute element={<SubscriptionManagement />} />} />
-                <Route path="/admin/verification" element={<SafeRoute element={<VerificationManagement />} />} />
-                <Route path="/admin/owner-settings" element={<SafeRoute element={<OwnerSettingsAdmin />} />} />
+                <Route path="/admin/dashboard" element={
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <SafeRoute element={<AdminDashboard />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/properties" element={
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <SafeRoute element={<AdminProperties />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/bookings" element={
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <SafeRoute element={<AdminBookings />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/users" element={
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <SafeRoute element={<AdminUsers />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/settings" element={
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <SafeRoute element={<AdminSettings />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/features" element={
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <SafeRoute element={<FeatureManagement />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/subscriptions" element={
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <SafeRoute element={<SubscriptionManagement />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/verification" element={
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <SafeRoute element={<VerificationManagement />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/admin/owner-settings" element={
+                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                    <SafeRoute element={<OwnerSettingsAdmin />} />
+                  </ProtectedRoute>
+                } />
 
                 {/* Catch all route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </div>
             <Toaster />
-            <SonnerToaster />
+            <PerformanceMonitor />
+            <AuthDebugPanel />
           </AuthProvider>
         </ErrorBoundary>
       </Router>

@@ -1,8 +1,33 @@
-import { supabase } from '@/lib/supabase';
-import { formatCurrency } from './currency';
+import { supabase } from '@/integrations/supabase/client';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { config } from '@/config';
-import { PAYMENT_CONSTANTS } from '@/constants/payment';
+import PaystackPop from '@paystack/inline-js';
+import { logger } from '@/utils/enhanced-logger';
+import type { PaymentData, PaymentTransaction, MobileMoneyNetwork } from '@/types/payment';
+
+// Validate Paystack configuration
+export const validatePaystackConfig = (): string => {
+  const publicKey = config.paystack.publicKey;
+  
+  if (!publicKey || publicKey === 'pk_test_placeholder') {
+    const error = 'VITE_PAYSTACK_PUBLIC_KEY is not set in environment variables';
+    ErrorHandler.handle(new Error(error), 'Paystack configuration error');
+    throw new Error(error);
+  }
+  
+  if (!publicKey.startsWith('pk_test_') && !publicKey.startsWith('pk_live_')) {
+    const error = 'Invalid Paystack public key format';
+    ErrorHandler.handle(new Error(error), 'Paystack configuration error');
+    throw new Error(error);
+  }
+  
+  logger.debug('Paystack configuration validated', { 
+    isTestMode: publicKey.startsWith('pk_test_'),
+    keyPrefix: publicKey.substring(0, 8)
+  });
+  
+  return publicKey;
+};
 
 export interface PaystackConfig {
   email: string;
@@ -21,12 +46,13 @@ export interface PaystackConfig {
 
 export interface MobileMoneyConfig {
   amount: number;
-  phoneNumber: string;
-  network: 'mtn' | 'vodafone' | 'airtel';
   email: string;
-  metadata?: Record<string, any>;
-  onSuccess: (reference: any) => void;
-  onError: (error: any) => void;
+  phone: string;
+  network: MobileMoneyNetwork;
+  reference?: string;
+  metadata?: Record<string, unknown>;
+  onSuccess: (transaction: PaymentTransaction) => void;
+  onError: (error: Error) => void;
 }
 
 export interface PaystackPaymentOptions {
@@ -39,124 +65,112 @@ export interface PaystackPaymentOptions {
   onError?: (error: unknown) => void;
 }
 
+export interface PaymentInitResult {
+  success: boolean;
+  message: string;
+  error?: unknown;
+  paymentData?: any;
+}
+
 // Initialize Paystack payment
-export const initializePaystackPayment = async (config: PaystackConfig) => {
+export const initializePaystackPayment = (paymentData: PaymentData): void => {
   try {
-    ErrorHandler.log('Initializing Paystack payment: ' + JSON.stringify({
-      amount: formatCurrency(config.amount),
-      email: config.email,
-      currency: config.currency || 'GHS'
-    }));
-
-    // Call our Supabase Edge Function to initialize payment
-    const { data, error } = await supabase.functions.invoke('initialize-payment', {
-      body: {
-        email: config.email,
-        amount: config.amount,
-        currency: config.currency || 'GHS',
-        metadata: config.metadata,
-        channels: config.channels,
-        split_code: config.split_code,
-        subaccount: config.subaccount,
-        callback_url: config.callback_url
-      }
+    const publicKey = validatePaystackConfig();
+    
+    const paystack = PaystackPop.setup({
+      key: publicKey,
+      email: paymentData.email,
+      amount: convertToPesewas(paymentData.amount),
+      currency: config.paystack.currency,
+      channels: config.paystack.channels as unknown as string[],
+      ref: paymentData.reference || generatePaymentReference(),
+      metadata: paymentData.metadata,
+      onSuccess: (transaction: PaymentTransaction) => {
+        logger.info('Payment successful', { 
+          reference: transaction?.reference || 'unknown',
+          amount: paymentData.amount 
+        });
+        paymentData.onSuccess(transaction);
+      },
+      onCancel: () => {
+        logger.info('Payment cancelled by user');
+        paymentData.onCancel();
+      },
     });
-
-    if (error) {
-      throw new Error(error.message);
-    }
-
-    if (!data.status) {
-      throw new Error(data.message);
-    }
-
-    // Use Paystack Popup for frontend payment
-    if (typeof window !== 'undefined' && (window as any).PaystackPop) {
-      const popup = new (window as any).PaystackPop();
-      
-      popup.resumeTransaction(data.data.access_code, {
-        onSuccess: (transaction: { reference: string }) => {
-          ErrorHandler.log('Payment successful:', JSON.stringify(transaction));
-          config.onSuccess(transaction.reference);
-        },
-        onCancel: () => {
-          ErrorHandler.log('Payment cancelled');
-          config.onCancel();
-        },
-        onClose: config.onClose,
-        onError: (error: unknown) => {
-          ErrorHandler.handle(error, 'Paystack payment error');
-          config.onError && config.onError(error);
-        }
-      });
-    } else {
-      // Fallback to redirect
-      window.location.href = data.data.authorization_url;
-    }
-
+    
+    paystack.openIframe();
   } catch (error) {
-    ErrorHandler.handle('Payment initialization error:', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    ErrorHandler.handle(err, 'Failed to initialize Paystack payment');
+    throw err;
   }
 };
 
-// Mobile Money Integration using Paystack Charge API
-export const initializeMobileMoneyPayment = async (config: MobileMoneyConfig) => {
+// Initialize Mobile Money payment
+export const initializeMobileMoneyPayment = async (mobileConfig: MobileMoneyConfig): Promise<void> => {
   try {
-    ErrorHandler.log('Initializing Mobile Money payment: ' + JSON.stringify({
-      amount: formatCurrency(config.amount),
-      network: config.network.toUpperCase(),
-      phone: config.phoneNumber
-    }));
+    const publicKey = validatePaystackConfig();
 
-    // Initialize transaction first
-    const { data, error } = await supabase.functions.invoke('initialize-payment', {
-      body: {
-        email: config.email,
-        amount: config.amount,
-        currency: 'GHS',
-        metadata: {
-          ...config.metadata,
-          payment_method: 'mobile_money',
-          mobile_money: {
-            phone: config.phoneNumber,
-            provider: config.network.toUpperCase()
-          }
+    const response = await fetch(`${config.paystack.baseUrl}/charge/mobile_money`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${publicKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: mobileConfig.email,
+        amount: convertToPesewas(mobileConfig.amount),
+        mobile_money: {
+          phone: mobileConfig.phone,
+          provider: mobileConfig.network
         },
-        channels: ['mobile_money']
-      }
+        reference: mobileConfig.reference || generatePaymentReference(),
+        metadata: mobileConfig.metadata
+      })
     });
-
-    if (error) {
-      throw new Error(error.message);
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to initialize mobile money payment');
     }
-
-    if (!data.status) {
-      throw new Error(data.message);
+    
+    if (data.status === 'success') {
+      mobileConfig.onSuccess(data.data as PaymentTransaction);
+    } else {
+      throw new Error(data.message || 'Mobile money payment failed');
     }
-
-    // For mobile money, we'll redirect to Paystack's mobile money flow
-    window.location.href = data.data.authorization_url;
-
   } catch (error) {
-    ErrorHandler.handle('Mobile Money payment error:', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    ErrorHandler.handle(err, 'Mobile money payment failed');
+    mobileConfig.onError(err);
   }
 };
 
 // Verify payment status
-export const verifyPayment = async (reference: string) => {
+export const verifyPayment = async (reference: string): Promise<PaymentTransaction> => {
   try {
-    const { data, error } = await supabase.functions.invoke('verify-payment', {
-      body: { reference }
+    const publicKey = validatePaystackConfig();
+
+    const response = await fetch(`${config.paystack.baseUrl}/transaction/verify/${reference}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': `Bearer ${publicKey}`,
+        'Content-Type': 'application/json'
+      }
     });
-
-    if (error) {
-      throw new Error(error.message);
+    
+    const data = await response.json();
+    
+    if (!response.ok) {
+      throw new Error(data.message || 'Payment verification failed');
     }
-
-    return data;
+    
+    return data.data as PaymentTransaction;
   } catch (error) {
-    ErrorHandler.handle('Payment verification error:', error);
-    throw error;
+    const err = error instanceof Error ? error : new Error(String(error));
+    ErrorHandler.handle(err, 'Payment verification failed');
+    throw err;
   }
 };
 

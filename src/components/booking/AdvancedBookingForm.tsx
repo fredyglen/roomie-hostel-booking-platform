@@ -4,7 +4,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useMutation } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { useToast } from '@/components/ui/use-toast';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
@@ -78,7 +78,7 @@ const AdvancedBookingForm: React.FC<AdvancedBookingFormProps> = ({
       };
 
       const { data: result, error } = await supabase
-        .from('bookings_enhanced')
+        .from('bookings')
         .insert(bookingData)
         .select()
         .single();

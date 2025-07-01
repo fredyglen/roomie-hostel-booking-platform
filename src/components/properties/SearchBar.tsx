@@ -18,20 +18,24 @@ const SearchBar: React.FC<SearchBarProps> = ({ value, onChange, onToggleFilters,
         <Icon icon="solar:search-linear" className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" width={20} height={20} />
         <Input
           type="text"
-          placeholder="Search by property name, address or type"
+          placeholder="Search properties, locations..."
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="pl-10"
+          className="pl-10 pr-12"
         />
+        <button
+          onClick={onToggleFilters}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 rounded-md hover:bg-gray-100 transition-colors"
+          title={showFilters ? 'Hide Filters' : 'Show Filters'}
+        >
+          <Icon
+            icon="solar:filter-linear"
+            className={`${showFilters ? 'text-primary' : 'text-gray-400'} hover:text-primary`}
+            width={18}
+            height={18}
+          />
+        </button>
       </div>
-      <Button 
-        onClick={onToggleFilters}
-        className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white"
-        variant="default"
-      >
-        <Icon icon="solar:filter-linear" className="text-white" width={18} height={18} />
-        {showFilters ? 'Hide Filters' : 'Show Filters'}
-      </Button>
     </div>
   );
 };

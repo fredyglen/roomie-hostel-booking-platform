@@ -175,6 +175,9 @@ const DemoShowcase: React.FC = () => {
 
                 <div className="text-center pt-6 border-t">
                   <div className="flex flex-wrap justify-center gap-4">
+                    <Button onClick={() => window.open('/demo/property-cards', '_blank')}>
+                      🎨 Enhanced Property Cards Demo
+                    </Button>
                     <Button onClick={() => window.open('/owner/properties/new', '_blank')}>
                       Test Property Creation
                     </Button>

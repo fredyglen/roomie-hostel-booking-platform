@@ -1,122 +1,81 @@
 
 type LogLevel = 'debug' | 'info' | 'warn' | 'error';
 
-interface LogContext {
-  [key: string]: unknown;
-}
-
 interface LogEntry {
   timestamp: string;
   level: LogLevel;
   message: string;
-  context?: LogContext;
-  userId?: string;
-  sessionId?: string;
+  data?: unknown;
 }
 
-class EnhancedLogger {
-  private isDevelopment = import.meta.env.MODE === 'development';
-  private userId?: string;
-  private sessionId: string;
+class Logger {
+  private isDevelopment: boolean;
+  private logHistory: LogEntry[] = [];
+  private maxHistorySize = 100;
 
   constructor() {
-    this.sessionId = this.generateSessionId();
+    this.isDevelopment = import.meta.env.MODE === 'development';
   }
 
-  setUserId(userId: string) {
-    this.userId = userId;
-  }
-
-  private generateSessionId(): string {
-    return `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  private createLogEntry(level: LogLevel, message: string, context?: LogContext): LogEntry {
-    return {
+  private createLogEntry(level: LogLevel, message: string, data?: unknown): LogEntry {
+    const entry = {
       timestamp: new Date().toISOString(),
       level,
       message,
-      context,
-      userId: this.userId,
-      sessionId: this.sessionId
+      data
     };
-  }
 
-  private shouldLog(level: LogLevel): boolean {
-    if (!this.isDevelopment && level === 'debug') return false;
-    return true;
-  }
-
-  private formatMessage(entry: LogEntry): string {
-    const prefix = `[${entry.timestamp}] ${entry.level.toUpperCase()}`;
-    const userInfo = entry.userId ? ` [User: ${entry.userId}]` : '';
-    const sessionInfo = ` [Session: ${entry.sessionId.slice(-6)}]`;
-    return `${prefix}${userInfo}${sessionInfo}: ${entry.message}`;
-  }
-
-  private log(level: LogLevel, message: string, context?: LogContext) {
-    if (!this.shouldLog(level)) return;
-
-    const entry = this.createLogEntry(level, message, context);
-    const formattedMessage = this.formatMessage(entry);
-
-    if (context) {
-      console[level](formattedMessage, context);
-    } else {
-      console[level](formattedMessage);
+    // Add to history, maintaining max size
+    this.logHistory.push(entry);
+    if (this.logHistory.length > this.maxHistorySize) {
+      this.logHistory.shift();
     }
 
-    // In production, you could send logs to a service like LogRocket, Sentry, etc.
-    if (!this.isDevelopment && (level === 'error' || level === 'warn')) {
-      this.sendToLoggingService(entry);
+    return entry;
+  }
+
+  private log(level: LogLevel, message: string, data?: unknown) {
+    const entry = this.createLogEntry(level, message, data);
+    
+    if (this.isDevelopment) {
+      const consoleMethod = level === 'debug' ? 'log' : level;
+      if (data) {
+        console[consoleMethod](`[${level.toUpperCase()}] ${message}`, data);
+      } else {
+        console[consoleMethod](`[${level.toUpperCase()}] ${message}`);
+      }
+    }
+
+    // In production, you might want to send logs to a service
+    if (!this.isDevelopment && level === 'error') {
+      // Send to error tracking service
+      // Example: sendToErrorService(entry);
     }
   }
 
-  private sendToLoggingService(entry: LogEntry) {
-    // Placeholder for external logging service integration
-    // Example: Send to Sentry, LogRocket, or custom logging endpoint
+  debug(message: string, data?: unknown) {
+    this.log('debug', message, data);
   }
 
-  debug(message: string, context?: LogContext) {
-    this.log('debug', message, context);
+  info(message: string, data?: unknown) {
+    this.log('info', message, data);
   }
 
-  info(message: string, context?: LogContext) {
-    this.log('info', message, context);
+  warn(message: string, data?: unknown) {
+    this.log('warn', message, data);
   }
 
-  warn(message: string, context?: LogContext) {
-    this.log('warn', message, context);
+  error(message: string, data?: unknown) {
+    this.log('error', message, data);
   }
 
-  error(message: string, context?: LogContext | Error) {
-    if (context instanceof Error) {
-      this.log('error', message, {
-        name: context.name,
-        message: context.message,
-        stack: context.stack
-      });
-    } else {
-      this.log('error', message, context);
-    }
+  getHistory(): LogEntry[] {
+    return [...this.logHistory];
   }
 
-  // Specialized logging methods
-  apiRequest(method: string, url: string, context?: LogContext) {
-    this.debug(`API Request: ${method} ${url}`, context);
-  }
-
-  apiResponse(method: string, url: string, status: number, duration: number) {
-    this.debug(`API Response: ${method} ${url} - ${status} (${duration}ms)`);
-  }
-
-  userAction(action: string, context?: LogContext) {
-    this.info(`User Action: ${action}`, context);
-  }
-
-  performanceMetric(metric: string, value: number, unit: string = 'ms') {
-    this.info(`Performance: ${metric} = ${value}${unit}`);
+  clearHistory() {
+    this.logHistory = [];
   }
 }
 
-export const logger = new EnhancedLogger();
+export const logger = new Logger();

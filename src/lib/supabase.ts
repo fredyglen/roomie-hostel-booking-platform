@@ -1,21 +1,11 @@
 
 import { createClient } from '@supabase/supabase-js';
-import { supabase as supabaseClient } from '@/integrations/supabase/client';
-import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
 
-// Export the supabase client from the Lovable-generated integration
-export const supabase = supabaseClient;
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export type AuthUser = {
-  id: string;
-  email: string;
-  role: 'owner' | 'student' | 'admin';
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  avatarUrl?: string;
-  createdAt?: string;
-};
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables');
+}
 
-// Re-export the Property type from our consolidated definition
-export type { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);

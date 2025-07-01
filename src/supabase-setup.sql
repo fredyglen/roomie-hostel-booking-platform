@@ -146,3 +146,134 @@ CREATE TRIGGER update_properties_updated_at
 CREATE TRIGGER update_bookings_updated_at
     BEFORE UPDATE ON bookings
     FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Create enhanced bookings table (used by components)
+CREATE TABLE IF NOT EXISTS bookings_enhanced (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  booking_reference TEXT UNIQUE NOT NULL DEFAULT 'ROOMI_' || extract(epoch from now()) || '_' || substr(md5(random()::text), 1, 6),
+  property_id UUID REFERENCES properties(id) ON DELETE CASCADE,
+  student_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  property_owner_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  agent_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  room_id UUID,
+  check_in_date TIMESTAMPTZ NOT NULL,
+  check_out_date TIMESTAMPTZ NOT NULL,
+  start_date TIMESTAMPTZ,
+  end_date TIMESTAMPTZ,
+  total_amount NUMERIC NOT NULL,
+  property_rent NUMERIC,
+  platform_fee NUMERIC DEFAULT 0,
+  agent_fee NUMERIC DEFAULT 0,
+  package_type TEXT,
+  payment_status TEXT NOT NULL DEFAULT 'pending',
+  payment_method TEXT,
+  payment_reference TEXT,
+  paystack_reference TEXT,
+  paystack_access_code TEXT,
+  transaction_reference TEXT,
+  status TEXT NOT NULL DEFAULT 'pending',
+  emergency_contact_name TEXT,
+  emergency_contact_phone TEXT,
+  emergency_contact_relationship TEXT,
+  special_requests TEXT,
+  metadata JSONB,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Set up RLS for bookings_enhanced
+ALTER TABLE bookings_enhanced ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Students can read their own enhanced bookings"
+  ON bookings_enhanced
+  FOR SELECT
+  USING (auth.uid() = student_id);
+
+CREATE POLICY "Owners can read enhanced bookings for their properties"
+  ON bookings_enhanced
+  FOR SELECT
+  USING (auth.uid() = property_owner_id);
+
+CREATE POLICY "Students can create enhanced bookings"
+  ON bookings_enhanced
+  FOR INSERT
+  WITH CHECK (auth.uid() = student_id);
+
+CREATE POLICY "Owners can update enhanced booking status"
+  ON bookings_enhanced
+  FOR UPDATE
+  USING (auth.uid() = property_owner_id);
+
+-- Create trigger for bookings_enhanced
+CREATE TRIGGER update_bookings_enhanced_updated_at
+    BEFORE UPDATE ON bookings_enhanced
+    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Student verification system
+CREATE TABLE IF NOT EXISTS student_verifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  student_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  university_name TEXT,
+  student_id_number TEXT,
+  verification_status TEXT DEFAULT 'pending',
+  documents JSONB,
+  verified_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE student_verifications ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Students can read their own verifications"
+  ON student_verifications
+  FOR SELECT
+  USING (auth.uid() = student_id);
+
+CREATE POLICY "Students can create their own verifications"
+  ON student_verifications
+  FOR INSERT
+  WITH CHECK (auth.uid() = student_id);
+
+-- Saved searches
+CREATE TABLE IF NOT EXISTS saved_searches (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  search_criteria JSONB,
+  search_name TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE saved_searches ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their own saved searches"
+  ON saved_searches
+  FOR ALL
+  USING (auth.uid() = user_id);
+
+-- User preferences
+CREATE TABLE IF NOT EXISTS user_preferences (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  preferences JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+ALTER TABLE user_preferences ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Users can manage their own preferences"
+  ON user_preferences
+  FOR ALL
+  USING (auth.uid() = user_id);
+
+-- Platform analytics
+CREATE TABLE IF NOT EXISTS platform_analytics (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  metric_name TEXT NOT NULL,
+  metric_value NUMERIC,
+  metric_data JSONB,
+  recorded_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Only admins can access analytics (no RLS policy for regular users)
+ALTER TABLE platform_analytics ENABLE ROW LEVEL SECURITY;
