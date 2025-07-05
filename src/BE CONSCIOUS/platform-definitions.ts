@@ -469,32 +469,8 @@ export interface PropertySearchFilters {
 }
 
 // =====================================================
-// EXPORT ALL TYPES
+// ALL TYPES EXPORTED ABOVE
 // =====================================================
 
-export type {
-  // Core entities
-  User,
-  UserProfile,
-  Property,
-  Booking,
-  PaymentTransaction,
-  
-  // Enums and unions
-  UserRole,
-  PropertyType,
-  BookingStatus,
-  PaymentStatus,
-  GhanaRegion,
-  GhanaUniversity,
-  
-  // Business logic
-  CommissionStructure,
-  SemesterPricing,
-  PropertySearchFilters,
-  
-  // API types
-  ApiResponse,
-  ApiError,
-  ResponseMetadata
-};
+// All types and interfaces in this file are already exported individually
+// with the 'export' keyword in their declarations above.
