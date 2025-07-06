@@ -35,12 +35,12 @@ export interface Booking {
   payment_status: PaymentStatus;
   total_amount: number;
   deposit_amount?: number;
-  payment_details?: Record<string, any>;
+  payment_details?: Record<string, unknown>;
   notes?: string;
   created_at: string;
   updated_at: string;
-  property?: any; // This would be the Property type
-  student?: any; // This would be the User type
+  property?: Record<string, unknown>; // Property data from join
+  student?: Record<string, unknown>; // Student data from join
   payments?: BookingPayment[];
 }
 

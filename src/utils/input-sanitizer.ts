@@ -254,29 +254,29 @@ export class InputSanitizer {
   /**
    * Validate and sanitize JSON input
    */
-  static sanitizeJson(input: string): object {
+  static sanitizeJson(input: string): unknown {
     try {
       const parsed = JSON.parse(input);
       
       // Recursively sanitize string values in the object
-      const sanitizeObject = (obj: any): any => {
+      const sanitizeObject = (obj: unknown): unknown => {
         if (typeof obj === 'string') {
           return this.sanitizeInput(obj);
         }
-        
+
         if (Array.isArray(obj)) {
           return obj.map(sanitizeObject);
         }
-        
+
         if (obj && typeof obj === 'object') {
-          const sanitizedObj: any = {};
+          const sanitizedObj: Record<string, unknown> = {};
           for (const [key, value] of Object.entries(obj)) {
             const sanitizedKey = this.sanitizeInput(key);
             sanitizedObj[sanitizedKey] = sanitizeObject(value);
           }
           return sanitizedObj;
         }
-        
+
         return obj;
       };
 

@@ -4,14 +4,32 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { X, Heart, Share2, MapPin, Star } from 'lucide-react';
-import { Property } from '@/types/property';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/utils/currency';
 import PropertyDetailTabs from './PropertyDetailTabs';
 
+// Property interface for detail components
+interface PropertyDetailData {
+  id: string | number;
+  title: string;
+  rent?: number;
+  location?: string | { address?: string; city?: string };
+  images?: string[];
+  amenities?: string[] | Array<{ name: string }>;
+  propertyType?: string;
+  genderRestriction?: string;
+  distanceToCampus?: string;
+  distance_to_campus?: string;
+  rating?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  maxOccupants?: number;
+  description?: string;
+}
+
 interface PropertyDetailModalProps {
-  property: Property;
+  property: PropertyDetailData;
   isOpen: boolean;
   onClose: () => void;
   onBookNow: () => void;

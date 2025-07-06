@@ -15,7 +15,7 @@ import { ErrorHandler } from '@/utils/ErrorHandler';
 import { ghanaHostelsSemesterPricing } from '@/data/ghana-hostels-semester-pricing';
 import { ghanaHostelsExtended } from '@/data/ghana-hostels-extended';
 import { allGhanaHostels } from '@/data/mock-properties';
-import type { GhanaHostelProperty } from '@/types/property';
+import type { GhanaHostelProperty, Property } from '@/types/property';
 
 /**
  * Database property interface matching Supabase schema
@@ -153,7 +153,7 @@ export class HostelDataTransformationService {
   /**
    * Transform standard property to database format
    */
-  private transformPropertyToDatabase(property: any): DatabaseProperty {
+  private transformPropertyToDatabase(property: Property | Record<string, unknown>): DatabaseProperty {
     const genderRestriction = property.amenities?.includes('Female Only') 
       ? 'female' 
       : property.amenities?.includes('Male Only') 

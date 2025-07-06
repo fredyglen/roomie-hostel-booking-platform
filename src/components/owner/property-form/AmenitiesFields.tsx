@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { FormSection } from "./FormSection";
 
-export function AmenitiesFields({ form }: { form: any }) {
+export function AmenitiesFields({ form }: { form: UseFormReturn<PropertyFormValues> }) {
   const [customAmenityOpen, setCustomAmenityOpen] = useState(false);
   const [currentTab, setCurrentTab] = useState("basic");
   const [newAmenityName, setNewAmenityName] = useState("");

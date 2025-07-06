@@ -246,7 +246,7 @@ export class HostelSeedingService {
   async validateSeededData(): Promise<{
     isValid: boolean;
     issues: string[];
-    sampleHostels: any[];
+    sampleHostels: Record<string, unknown>[];
   }> {
     try {
       const issues: string[] = [];

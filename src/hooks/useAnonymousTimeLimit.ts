@@ -28,7 +28,7 @@ const generateSessionId = () => {
 };
 
 // Store session data in multiple locations to prevent easy clearing
-const storeSessionData = (data: any) => {
+const storeSessionData = (data: Record<string, unknown>) => {
   const serialized = JSON.stringify(data);
   
   // Store in localStorage

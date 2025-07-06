@@ -12,7 +12,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
-import { usePerformanceMonitor } from '@/hooks/usePerformanceMonitor';
+
 import type { 
   HostelProperty, 
   HostelId, 
@@ -94,8 +94,7 @@ export const AppleGradeHostelDisplay: React.FC<HostelDisplayProps> = memo(({
   enableVirtualization = true,
   preloadCount = PERFORMANCE_CONSTANTS.PRELOAD_THRESHOLD
 }) => {
-  // Performance monitoring
-  const { startMeasure, endMeasure, recordMetric } = usePerformanceMonitor('HostelDisplay');
+
 
   // State management with immutable updates
   const [state, setState] = useState<HostelDisplayState>({
@@ -112,10 +111,10 @@ export const AppleGradeHostelDisplay: React.FC<HostelDisplayProps> = memo(({
     new HostelManagementService(
       import.meta.env.VITE_SUPABASE_URL!,
       import.meta.env.VITE_SUPABASE_ANON_KEY!,
-      { increment: recordMetric, timing: recordMetric },
+      { increment: () => {}, timing: () => {} },
       console
     ),
-    [recordMetric]
+    []
   );
 
   // Memoized search criteria to prevent unnecessary re-renders
@@ -133,8 +132,6 @@ export const AppleGradeHostelDisplay: React.FC<HostelDisplayProps> = memo(({
     criteria: typeof memoizedCriteria,
     append: boolean = false
   ): Promise<void> => {
-    const measureId = startMeasure('loadHostels');
-
     try {
       setState(prev => ({ ...prev, loading: true, error: null }));
 
@@ -164,7 +161,7 @@ export const AppleGradeHostelDisplay: React.FC<HostelDisplayProps> = memo(({
         totalCount: pagination.total
       }));
 
-      recordMetric('hostels.loaded', hostels.length);
+
 
     } catch (error) {
       const displayError: HostelDisplayError = {
@@ -177,10 +174,8 @@ export const AppleGradeHostelDisplay: React.FC<HostelDisplayProps> = memo(({
       setState(prev => ({ ...prev, loading: false, error: displayError }));
       onError?.(displayError);
 
-    } finally {
-      endMeasure(measureId);
     }
-  }, [hostelService, startMeasure, endMeasure, recordMetric, onError]);
+  }, [hostelService, onError]);
 
   // Initial load and search criteria changes
   useEffect(() => {
@@ -221,9 +216,8 @@ export const AppleGradeHostelDisplay: React.FC<HostelDisplayProps> = memo(({
   // ============================================================================
 
   const handleHostelSelect = useCallback((hostel: HostelProperty) => {
-    recordMetric('hostel.selected', 1);
     onHostelSelect?.(hostel);
-  }, [onHostelSelect, recordMetric]);
+  }, [onHostelSelect]);
 
   const handleRetry = useCallback(() => {
     setState(prev => ({ ...prev, page: 1 }));
@@ -329,7 +323,7 @@ export const AppleGradeHostelDisplay: React.FC<HostelDisplayProps> = memo(({
   return (
     <ErrorBoundary
       fallback={<div>Something went wrong with the hostel display</div>}
-      onError={(error) => recordMetric('component.error', 1)}
+      onError={(error) => console.error('HostelDisplay Error:', error)}
     >
       <div
         className={`apple-grade-hostel-display ${className}`}

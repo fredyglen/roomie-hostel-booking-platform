@@ -1,6 +1,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Property, PropertyType, PropertyStatus } from '@/types/property';
+import { PropertyCategory } from '@/types/platform-core';
 import { transformDbProperty } from '@/utils/propertyTransforms';
 
 export interface PropertyQueryOptions {
@@ -99,7 +100,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
       };
     }
 
-    const properties = (data || []).map((item: any) => {
+    const properties = (data || []).map((item: SimpleDbProperty) => {
       try {
         return transformDbProperty(item);
       } catch (transformError) {
@@ -120,7 +121,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
           city: item.city || '',
           state: item.state || '',
           zip: item.zip || '',
-          propertyCategory: 'Hostel' as any,
+          propertyCategory: PropertyCategory.HOSTEL,
           verified: true,
           is_available: true,
           bedrooms: item.bedrooms || 1,

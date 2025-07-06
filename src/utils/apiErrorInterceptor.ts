@@ -1,4 +1,5 @@
 import { ErrorHandler } from './ErrorHandler';
+import { config } from '@/config';
 
 export async function apiRequestWithRetry<T>(
   fetcher: () => Promise<T>,
@@ -13,10 +14,12 @@ export async function apiRequestWithRetry<T>(
       lastError = error;
       ErrorHandler.log(error, `${context} (attempt ${attempt + 1})`);
       if (attempt < retries) {
-        await new Promise((resolve) => setTimeout(resolve, 500 * (attempt + 1)));
+        // Use configurable delay based on timeout settings
+        const baseDelay = config.supabase.timeout / 60; // Base delay from timeout
+        await new Promise((resolve) => setTimeout(resolve, baseDelay * (attempt + 1)));
       }
     }
   }
   ErrorHandler.handle(lastError, context);
   throw lastError;
-} 
+}

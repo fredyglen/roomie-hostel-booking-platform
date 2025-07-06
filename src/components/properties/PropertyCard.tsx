@@ -7,7 +7,7 @@ import { MapPin, Users, Bed, Bath, Lock, Eye } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import LazyImage from '@/components/common/LazyImage';
 
-import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
+import { usePropertyViewingTracker, ViewingRestriction } from '@/hooks/usePropertyViewingTracker';
 import ViewingLimitOverlay from './ViewingLimitOverlay';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -82,7 +82,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   } = usePropertyViewingTracker();
 
   const [showViewingLimitOverlay, setShowViewingLimitOverlay] = useState(false);
-  const [viewingRestriction, setViewingRestriction] = useState<any>(null);
+  const [viewingRestriction, setViewingRestriction] = useState<ViewingRestriction | null>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
   const primaryImage = images && images.length > 0 ? images[0] : undefined;

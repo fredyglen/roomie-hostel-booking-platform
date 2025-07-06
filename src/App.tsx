@@ -8,14 +8,13 @@ import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { EnhancedErrorBoundary } from '@/components/common/EnhancedErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
+import { config } from '@/config';
 import AuthRedirect from '@/components/auth/AuthRedirect';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import AnalyticsDashboard from '@/pages/owner/AnalyticsDashboard';
 import { UserRole } from '@/types/roles';
 import { initializePerformanceOptimizations } from '@/utils/bundleOptimization';
-import PerformanceMonitor from '@/components/common/PerformanceMonitor';
-import AuthDebugPanel from '@/components/auth/AuthDebugPanel';
-import { DevBypassIndicator } from '@/components/dev/DevBypassIndicator';
+
 
 // Lazy load all pages for better performance
 const Index = React.lazy(() => import('@/pages/Index'));
@@ -75,13 +74,13 @@ const BookingStepsContainer = React.lazy(() => import('@/components/booking/Book
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 1000 * 60 * 5, // 5 minutes
+      staleTime: config.supabase.timeout / 6, // Based on configured timeout
       retry: (failureCount, error) => {
-        logger.warn('Query retry attempt', { 
-          failureCount, 
-          error: error instanceof Error ? error.message : String(error) 
+        logger.warn('Query retry attempt', {
+          failureCount,
+          error: error instanceof Error ? error.message : String(error)
         });
-        return failureCount < 2;
+        return failureCount < config.supabase.retryAttempts;
       },
     },
     mutations: {
@@ -89,7 +88,7 @@ const queryClient = new QueryClient({
         logger.error('Mutation error', error instanceof Error ? error : new Error(String(error)));
       }
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
        logger.error('Query error - Global Handler', error instanceof Error ? error : new Error(String(error)));
     }
   } as DefaultOptions,
@@ -139,7 +138,6 @@ function App() {
           }}
         >
           <AuthProvider>
-            <DevBypassIndicator />
             <div className="min-h-screen bg-gray-50">
               <Routes>
                 {/* Public Routes */}
@@ -373,8 +371,6 @@ function App() {
               </Routes>
             </div>
             <Toaster />
-            <PerformanceMonitor />
-            <AuthDebugPanel />
           </AuthProvider>
         </ErrorBoundary>
       </Router>

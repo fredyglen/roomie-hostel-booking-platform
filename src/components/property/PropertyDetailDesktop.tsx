@@ -3,13 +3,31 @@
 
 import React, { useState } from 'react';
 import { X, Heart, Share2, MapPin, Star, Play, Camera, ArrowLeft } from 'lucide-react';
-import { Property } from '@/types/property';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PropertyDetailTabs from './PropertyDetailTabs';
 
+// Property interface for detail components
+interface PropertyDetailData {
+  id: string | number;
+  title: string;
+  rent?: number;
+  location?: string | { address?: string; city?: string };
+  images?: string[];
+  amenities?: string[] | Array<{ name: string }>;
+  propertyType?: string;
+  genderRestriction?: string;
+  distanceToCampus?: string;
+  distance_to_campus?: string;
+  rating?: number;
+  bedrooms?: number;
+  bathrooms?: number;
+  maxOccupants?: number;
+  description?: string;
+}
+
 interface PropertyDetailDesktopProps {
-  property: Property;
+  property: PropertyDetailData;
   isOpen: boolean;
   onClose: () => void;
   onBookNow: () => void;
@@ -59,45 +77,52 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-white overflow-hidden">
-      {/* Header */}
-      <div className="absolute top-0 left-0 right-0 h-16 bg-white border-b border-gray-200 flex items-center justify-between px-6 z-10">
-        <div className="flex items-center gap-4">
-          <button
-            onClick={onClose}
-            className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
-          >
-            <ArrowLeft size={20} className="text-gray-700" />
-          </button>
-          <div>
-            <h1 className="text-xl font-bold text-gray-900">{property.title}</h1>
-            <div className="flex items-center gap-2 text-sm text-gray-600">
-              <MapPin size={14} />
-              <span>{getLocationText()}</span>
-              {getDistanceText() && (
-                <>
-                  <span>•</span>
-                  <span>{getDistanceText()}</span>
-                </>
-              )}
+    // 🎯 APPLE-GRADE SOLUTION: Proper Modal Container with Backdrop
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+      onClick={(e) => e.target === e.currentTarget && onClose()}
+    >
+      {/* 🎯 SOLUTION: Centered Modal Dialog with Proper Sizing */}
+      <div className="relative w-full max-w-7xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden">
+
+        {/* Header - Now Relative Instead of Absolute */}
+        <div className="relative h-16 bg-white border-b border-gray-200 flex items-center justify-between px-4 lg:px-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={onClose}
+              className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors"
+            >
+              <ArrowLeft size={18} className="text-gray-700" />
+            </button>
+            <div>
+              <h1 className="text-lg lg:text-xl font-bold text-gray-900">{property.title}</h1>
+              <div className="flex items-center gap-2 text-sm text-gray-600">
+                <MapPin size={14} />
+                <span>{getLocationText()}</span>
+                {getDistanceText() && (
+                  <>
+                    <span>•</span>
+                    <span>{getDistanceText()}</span>
+                  </>
+                )}
+              </div>
             </div>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <button className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
+              <Heart size={18} className="text-gray-700" />
+            </button>
+            <button className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
+              <Share2 size={18} className="text-gray-700" />
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <button className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
-            <Heart size={18} className="text-gray-700" />
-          </button>
-          <button className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
-            <Share2 size={18} className="text-gray-700" />
-          </button>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="pt-16 h-full flex">
-        {/* Left Side - Media Bento Grid (65%) */}
-        <div className="w-[65%] h-full bg-gray-50 p-8">
+        {/* Main Content - Subtract Header Height */}
+        <div className="flex h-[calc(100%-4rem)]">
+        {/* Left Side - Media Bento Grid (60% for better proportions) */}
+        <div className="w-[60%] h-full bg-gray-50 p-6 lg:p-8">
           <div className="h-full grid grid-cols-4 grid-rows-3 gap-4">
             {/* Main Image - Takes up 3x2 grid */}
             <div className="col-span-3 row-span-2 relative group overflow-hidden rounded-2xl bg-white shadow-xl">
@@ -179,16 +204,16 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
           </div>
         </div>
 
-        {/* Right Side - Property Details (35%) */}
-        <div className="w-[35%] h-full bg-white flex flex-col border-l border-gray-100">
+        {/* Right Side - Property Details (40% for better proportions) */}
+        <div className="w-[40%] h-full bg-white flex flex-col border-l border-gray-100">
           {/* Property Info Header */}
-          <div className="p-8 border-b border-gray-100">
+          <div className="p-6 lg:p-8 border-b border-gray-100">
             <div className="flex justify-between items-start mb-6">
               <div>
-                <div className="text-4xl font-bold text-primary mb-2">
+                <div className="text-3xl lg:text-4xl font-bold text-primary mb-2">
                   ¢{property.rent?.toLocaleString() || '0'}
                 </div>
-                <div className="text-lg text-gray-600 font-medium">per semester</div>
+                <div className="text-base lg:text-lg text-gray-600 font-medium">per semester</div>
               </div>
 
               <div className="text-right">
@@ -215,17 +240,17 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
             </div>
 
             {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-6 text-center">
+            <div className="grid grid-cols-3 gap-4 lg:gap-6 text-center">
               <div className="p-4 bg-gray-50 rounded-xl">
-                <div className="text-2xl font-bold text-gray-900">{property.bedrooms || 'N/A'}</div>
+                <div className="text-xl lg:text-2xl font-bold text-gray-900">{property.bedrooms || 'N/A'}</div>
                 <div className="text-sm text-gray-600 font-medium mt-1">Bedrooms</div>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl">
-                <div className="text-2xl font-bold text-gray-900">{property.bathrooms || 'N/A'}</div>
+                <div className="text-xl lg:text-2xl font-bold text-gray-900">{property.bathrooms || 'N/A'}</div>
                 <div className="text-sm text-gray-600 font-medium mt-1">Bathrooms</div>
               </div>
               <div className="p-4 bg-gray-50 rounded-xl">
-                <div className="text-2xl font-bold text-gray-900">{property.maxOccupants || 'N/A'}</div>
+                <div className="text-xl lg:text-2xl font-bold text-gray-900">{property.maxOccupants || 'N/A'}</div>
                 <div className="text-sm text-gray-600 font-medium mt-1">Max Guests</div>
               </div>
             </div>
@@ -241,7 +266,7 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
           </div>
 
           {/* Sticky Bottom Actions */}
-          <div className="p-8 border-t border-gray-100 bg-white">
+          <div className="p-6 lg:p-8 border-t border-gray-100 bg-white">
             <div className="flex gap-4">
               {onViewStory && (
                 <Button

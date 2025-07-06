@@ -4,6 +4,7 @@ import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/enhanced-logger';
 import { UserRole, isValidRole } from '@/types/roles';
+import { config } from '@/config';
 
 interface AuthUser extends User {
   role: UserRole;
@@ -170,7 +171,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         logger.warn('Auth initialization timeout, setting loading to false');
         setLoading(false);
       }
-    }, 3000); // Reduced to 3 seconds for faster feedback
+    }, config.supabase.timeout / 10); // Use configured timeout divided by 10 for auth initialization
 
     getSession().finally(() => {
       clearTimeout(timeoutId);
@@ -331,9 +332,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     if (!expiresAt) return false;
 
-    // Check if session expires within next 5 minutes
-    const fiveMinutes = 5 * 60;
-    return expiresAt > (now + fiveMinutes);
+    // Check if session expires within next 5 minutes (configurable)
+    const sessionBuffer = config.security.sessionTimeout / 1000 / 12; // 5 minutes for 1 hour timeout
+    return expiresAt > (now + sessionBuffer);
   };
 
   const getSessionTimeRemaining = (): number => {
@@ -411,17 +412,7 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
 
-  // In development, check for bypass user
-  if (process.env.NODE_ENV === 'development') {
-    const devBypassUser = window.__DEV_BYPASS_USER__;
-    if (devBypassUser && !context.user) {
-      return {
-        ...context,
-        user: devBypassUser as AuthUser,
-        loading: false
-      };
-    }
-  }
+
 
   return context;
 }

@@ -57,18 +57,18 @@ interface DatabaseProperty {
 
 const DEFAULT_OWNER_ID = '8b6ccc62-7653-4729-ba13-b31e679bfa95';
 
-function transformGhanaHostelToDatabase(hostel: any): DatabaseProperty {
-  const genderRestriction = hostel.amenities?.includes('Female Only') 
-    ? 'female' 
-    : hostel.amenities?.includes('Male Only') 
-      ? 'male' 
+function transformGhanaHostelToDatabase(hostel: Record<string, unknown>): DatabaseProperty {
+  const genderRestriction = (hostel.amenities as string[])?.includes('Female Only')
+    ? 'female'
+    : (hostel.amenities as string[])?.includes('Male Only')
+      ? 'male'
       : 'mixed';
 
-  const washroom_type = (hostel.bathrooms || 0) > 0 ? 'self_contained' : 'shared';
-  
-  const roomOptions = hostel.roomOptions || [];
-  const maxOccupants = Math.max(...roomOptions.map((r: any) => r.maxOccupants), hostel.maxOccupants || 1);
-  const minPrice = Math.min(...roomOptions.map((r: any) => r.price), hostel.pricePerSemester || hostel.price || 3000);
+  const washroom_type = ((hostel.bathrooms as number) || 0) > 0 ? 'self_contained' : 'shared';
+
+  const roomOptions = (hostel.roomOptions as Array<Record<string, unknown>>) || [];
+  const maxOccupants = Math.max(...roomOptions.map((r: Record<string, unknown>) => (r.maxOccupants as number)), (hostel.maxOccupants as number) || 1);
+  const minPrice = Math.min(...roomOptions.map((r: Record<string, unknown>) => (r.price as number)), (hostel.pricePerSemester as number) || (hostel.price as number) || 3000);
 
   return {
     id: randomUUID(), // Generate proper UUID for database

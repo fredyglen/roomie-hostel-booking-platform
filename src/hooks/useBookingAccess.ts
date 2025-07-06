@@ -132,7 +132,7 @@ export const useBookingAccess = () => {
   };
 
   // Get filtered property data based on access level
-  const filterPropertyData = (propertyData: any) => {
+  const filterPropertyData = (propertyData: Record<string, unknown>) => {
     const accessLevel = getAccessLevel();
 
     const filteredData = { ...propertyData };

@@ -21,9 +21,9 @@ export interface LegacyProperty {
   price: PropertyPrice;
   features: PropertyFeatures;
   media: PropertyMedia[];
-  buildings: any[];
+  buildings: Record<string, unknown>[];
   ownerId: string;
-  owner?: any;
+  owner?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   verificationStatus: string;
