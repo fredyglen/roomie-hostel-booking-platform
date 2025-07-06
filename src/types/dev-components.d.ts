@@ -64,13 +64,39 @@ declare global {
       readonly securityLevel: SecurityLevel;
       readonly sessionTimeout: number;
     }
-    
+
     interface State {
       readonly isEnabled: boolean;
       readonly lastToggleTime: Date;
       readonly sessionId: string;
       readonly isSecure: boolean;
     }
+  }
+
+  /**
+   * Development window extensions for bypass functionality
+   * Only available in development environment
+   */
+  interface Window {
+    __DEV_BYPASS_USER__?: {
+      id: string;
+      email: string;
+      role: string;
+      firstName?: string;
+      lastName?: string;
+      phone?: string;
+      avatarUrl?: string;
+      user_metadata?: Record<string, unknown>;
+      app_metadata?: Record<string, unknown>;
+      aud: string;
+      created_at: string;
+      updated_at?: string;
+      email_confirmed_at?: string;
+      phone_confirmed_at?: string;
+      last_sign_in_at?: string;
+      identities: unknown[];
+      factors: unknown[];
+    };
   }
 }
 

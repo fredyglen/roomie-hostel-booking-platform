@@ -2,6 +2,34 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Property, PropertyType, PropertyCategory } from '@/types/property';
 import { PropertyQueries } from '@/services/database/standardizedQueries';
+import { Database } from '@/integrations/supabase/types';
+
+// Type-safe database update interface
+type DatabasePropertyUpdate = Partial<Database['public']['Tables']['properties']['Update']>;
+
+// Property field mapping for database updates
+interface PropertyUpdateMapping {
+  readonly title?: string;
+  readonly description?: string;
+  readonly address?: string;
+  readonly city?: string;
+  readonly state?: string;
+  readonly zip?: string;
+  readonly rent?: number;
+  readonly property_type?: string;
+  readonly property_category?: string;
+  readonly bedrooms?: number;
+  readonly bathrooms?: number;
+  readonly is_available?: boolean;
+  readonly available_from?: string;
+  readonly amenities?: string[];
+  readonly images?: string[];
+  readonly base_price_per_semester?: number;
+  readonly gender_type?: string;
+  readonly max_occupancy?: number;
+  readonly current_occupancy?: number;
+  readonly verification_status?: string;
+}
 
 export const propertyService = {
   async getProperties(): Promise<Property[]> {
@@ -149,32 +177,66 @@ export const propertyService = {
   },
   
   async updateProperty(id: string, updates: Partial<Property>): Promise<Property> {
-    // Convert Property updates to database format
-    const dbUpdates: Record<string, any> = {};
-    
-    if (updates.title) dbUpdates.title = updates.title;
-    if (updates.description) dbUpdates.description = updates.description;
-    if (updates.address) dbUpdates.address = updates.address;
-    if (updates.city) dbUpdates.city = updates.city;
-    if (updates.state) dbUpdates.state = updates.state;
-    if (updates.zip) dbUpdates.zip = updates.zip;
-    if (updates.rent) dbUpdates.rent = updates.rent;
-    if (updates.type) dbUpdates.property_type = updates.type;
-    if (updates.propertyCategory) dbUpdates.property_category = updates.propertyCategory;
-    if (updates.bedrooms) dbUpdates.bedrooms = updates.bedrooms;
-    if (updates.bathrooms) dbUpdates.bathrooms = updates.bathrooms;
+    // Type-safe conversion from Property updates to database format
+    const dbUpdates: PropertyUpdateMapping = {};
+
+    // Direct field mappings
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (updates.address !== undefined) dbUpdates.address = updates.address;
+    if (updates.city !== undefined) dbUpdates.city = updates.city;
+    if (updates.state !== undefined) dbUpdates.state = updates.state;
+    if (updates.zip !== undefined) dbUpdates.zip = updates.zip;
     if (updates.is_available !== undefined) dbUpdates.is_available = updates.is_available;
-    if (updates.available_from) dbUpdates.available_from = updates.available_from;
-    if (updates.amenities) dbUpdates.amenities = Array.isArray(updates.amenities) ? updates.amenities as string[] : [];
-    if (updates.images) dbUpdates.images = updates.images;
-    
+    if (updates.available_from !== undefined) dbUpdates.available_from = updates.available_from;
+
+    // Field name transformations
+    if (updates.rent !== undefined) {
+      dbUpdates.base_price_per_semester = updates.rent;
+    }
+    if (updates.type !== undefined) {
+      dbUpdates.property_type = updates.type;
+    }
+    if (updates.propertyCategory !== undefined) {
+      dbUpdates.property_category = updates.propertyCategory;
+    }
+    if (updates.genderType !== undefined) {
+      dbUpdates.gender_type = updates.genderType;
+    }
+    if (updates.maxOccupancy !== undefined) {
+      dbUpdates.max_occupancy = updates.maxOccupancy;
+    }
+    if (updates.currentOccupancy !== undefined) {
+      dbUpdates.current_occupancy = updates.currentOccupancy;
+    }
+    if (updates.verificationStatus !== undefined) {
+      dbUpdates.verification_status = updates.verificationStatus;
+    }
+
+    // Array fields with validation
+    if (updates.amenities !== undefined) {
+      dbUpdates.amenities = Array.isArray(updates.amenities) ? updates.amenities : [];
+    }
+    if (updates.images !== undefined) {
+      dbUpdates.images = Array.isArray(updates.images) ? updates.images : [];
+    }
+
+    // Perform the database update with type safety
     const { data, error } = await supabase
       .from('properties')
-      .update(dbUpdates)
+      .update(dbUpdates as DatabasePropertyUpdate)
       .eq('id', id)
       .select()
       .single();
-    if (error) throw error;
+
+    if (error) {
+      throw new Error(`Failed to update property: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('Property update returned no data');
+    }
+
     return data as Property;
   },
   

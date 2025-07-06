@@ -2,7 +2,7 @@ import { ReactNode } from 'react';
 import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Loader } from '@/components/ui/loader';
-import { UserRole } from '@/types/roles';
+import { UserRole, isValidRole } from '@/types/roles';
 
 interface ProtectedRouteProps {
   children: ReactNode;
@@ -14,7 +14,7 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
   const location = useLocation();
 
   // Check for development bypass user
-  const devBypassUser = process.env.NODE_ENV === 'development' ? (window as any).__DEV_BYPASS_USER__ : null;
+  const devBypassUser = process.env.NODE_ENV === 'development' ? window.__DEV_BYPASS_USER__ : null;
   const effectiveUser = user || devBypassUser;
 
   // Show loading spinner while auth is being determined
@@ -33,7 +33,9 @@ export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps) 
 
   // Check for required role if specified
   if (allowedRoles && allowedRoles.length > 0) {
-    if (!allowedRoles.includes(effectiveUser.role)) {
+    // Type-safe role checking with validation for dev bypass users
+    const userRole = isValidRole(effectiveUser.role) ? effectiveUser.role as UserRole : UserRole.STUDENT;
+    if (!allowedRoles.includes(userRole)) {
       return <Navigate to="/unauthorized" replace />;
     }
   }

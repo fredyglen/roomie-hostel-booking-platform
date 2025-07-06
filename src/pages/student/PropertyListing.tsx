@@ -14,6 +14,8 @@ import { useAnonymousTimeLimit } from '@/hooks/useAnonymousTimeLimit';
 import { useDemoProperties } from '@/hooks/property/useDemoProperties';
 import GhanaHostelService, { GhanaProperty } from '../../services/ghanaHostelService';
 import { getGenderRestrictionLabel, getFacilityTypeLabel, getProximityBadge } from '../../data/ghanaHostels';
+import { AppleGradeHostelDisplay } from '@/components/apple-grade-hostel-display.component';
+import type { HostelProperty } from '@/types/hostel-management';
 
 const PropertyListing: React.FC = () => {
   const navigate = useNavigate();
@@ -29,6 +31,7 @@ const PropertyListing: React.FC = () => {
   const [selectedProperty, setSelectedProperty] = useState<any>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
+  const [useAppleGradeDisplay, setUseAppleGradeDisplay] = useState(true); // Apple-grade display toggle
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Use real database properties instead of mock data
@@ -59,6 +62,21 @@ const PropertyListing: React.FC = () => {
       handleCloseModal();
       navigate(`/student/book/${selectedProperty.id}`);
     }
+  };
+
+  // Apple-grade hostel selection handler
+  const handleAppleGradeHostelSelect = (hostel: HostelProperty) => {
+    checkTimeLimitAndProceed('property_view', () => {
+      setSelectedProperty(hostel);
+      setShowPropertyModal(true);
+    });
+  };
+
+  // Apple-grade error handler
+  const handleAppleGradeError = (error: any) => {
+    console.error('Apple-grade hostel display error:', error);
+    // Fallback to traditional display on error
+    setUseAppleGradeDisplay(false);
   };
 
   const handleModalViewStory = () => {
@@ -407,34 +425,68 @@ const PropertyListing: React.FC = () => {
         {occupants > 1 && ` • ${occupants} occupants`}
       </div>
 
-      {/* Property Grid - Mobile-First Responsive */}
-      <div className="px-2 py-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-        {filteredProperties.length > 0 ? (
-          filteredProperties.map((property) => (
-            // Temporarily bypass LazyPropertyCard to test if it's causing the issue
-            <div key={property.id} style={{ pointerEvents: 'auto' }}>
-              <PropertyCard
-                id={property.id.toString()}
-                title={property.title || (property as any).name}
-                rent={property.rent || (property as any).price}
-                location={property.location || (property as any).address}
-                bedrooms={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : (property as any).bedrooms || 4}
-                bathrooms={(property as any).bathrooms || 1}
-                maxOccupants={property.maxOccupants || (property as any).max_occupants}
-                images={property.images || []}
-                amenities={property.amenities ? property.amenities.map(getAmenityLabel) : []}
-                propertyType="Hostel"
-                genderRestriction={property.genderRestriction || (property as any).gender_restriction}
-                isAvailable={(property as any).is_available !== false}
-                distanceToCampus={property.distanceToCampus || '5 mins'}
-                totalBedsAvailable={(property as any).beds_available || Math.floor(Math.random() * 8) + 1}
-                totalBeds={property.maxOccupants || (property as any).max_occupants || 4}
-                priceUnit="semester"
-                onViewDetails={() => handleViewDetails(property.id)}
-                onViewStory={() => handleViewStory(property.id)}
-              />
-            </div>
-          ))
+      {/* Apple-Grade vs Traditional Property Display Toggle */}
+      <div className="px-4 mb-4 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <span className="text-sm text-gray-600">Display Mode:</span>
+          <button
+            onClick={() => setUseAppleGradeDisplay(!useAppleGradeDisplay)}
+            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
+              useAppleGradeDisplay
+                ? 'bg-blue-100 text-blue-700'
+                : 'bg-gray-100 text-gray-700'
+            }`}
+          >
+            {useAppleGradeDisplay ? '🍎 Apple-Grade' : '📱 Traditional'}
+          </button>
+        </div>
+      </div>
+
+      {/* Conditional Property Display */}
+      {useAppleGradeDisplay ? (
+        /* Apple-Grade Hostel Display Component */
+        <div className="px-4">
+          <AppleGradeHostelDisplay
+            searchCriteria={{
+              query: searchQuery,
+              genderRestriction: selectedFilter !== 'All' ? selectedFilter : undefined,
+              sortBy: 'newest'
+            }}
+            onHostelSelect={handleAppleGradeHostelSelect}
+            onError={handleAppleGradeError}
+            enableVirtualization={filteredProperties.length > 10}
+            className="apple-grade-property-listing"
+          />
+        </div>
+      ) : (
+        /* Traditional Property Grid - Mobile-First Responsive */
+        <div className="px-2 py-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+          {filteredProperties.length > 0 ? (
+            filteredProperties.map((property) => (
+              // Temporarily bypass LazyPropertyCard to test if it's causing the issue
+              <div key={property.id} style={{ pointerEvents: 'auto' }}>
+                <PropertyCard
+                  id={property.id.toString()}
+                  title={property.title || (property as any).name}
+                  rent={property.rent || (property as any).price}
+                  location={property.location || (property as any).address}
+                  bedrooms={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : (property as any).bedrooms || 4}
+                  bathrooms={(property as any).bathrooms || 1}
+                  maxOccupants={property.maxOccupants || (property as any).max_occupants}
+                  images={property.images || []}
+                  amenities={property.amenities ? property.amenities.map(getAmenityLabel) : []}
+                  propertyType="Hostel"
+                  genderRestriction={property.genderRestriction || (property as any).gender_restriction}
+                  isAvailable={(property as any).is_available !== false}
+                  distanceToCampus={property.distanceToCampus || '5 mins'}
+                  totalBedsAvailable={(property as any).beds_available || Math.floor(Math.random() * 8) + 1}
+                  totalBeds={property.maxOccupants || (property as any).max_occupants || 4}
+                  priceUnit="semester"
+                  onViewDetails={() => handleViewDetails(property.id)}
+                  onViewStory={() => handleViewStory(property.id)}
+                />
+              </div>
+            ))
         ) : (
           <div style={{
             gridColumn: '1 / -1',
@@ -470,7 +522,8 @@ const PropertyListing: React.FC = () => {
             </button>
           </div>
         )}
-      </div>
+        </div>
+      )}
 
       {/* Simple Registration Modal */}
       <SimpleRegistrationModal

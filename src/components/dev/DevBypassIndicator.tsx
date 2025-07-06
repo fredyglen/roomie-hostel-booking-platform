@@ -11,7 +11,7 @@ export const DevBypassIndicator: React.FC<DevBypassIndicatorProps> = ({ classNam
   }
 
   // Check if bypass is active
-  const bypassUser = (window as any).__DEV_BYPASS_USER__;
+  const bypassUser = window.__DEV_BYPASS_USER__;
   
   if (!bypassUser) {
     return null;

@@ -64,7 +64,8 @@ const Login: React.FC = () => {
   // Redirect if user is already logged in
   useEffect(() => {
     if (user) {
-      const userRole = (user as any).role || 'student';
+      // Type-safe access to user role with fallback
+      const userRole = user.role || 'student';
 
       logger.debug('Login redirect - user role detected', {
         userId: user.id,
@@ -373,7 +374,7 @@ const Login: React.FC = () => {
                   };
 
                   // Temporarily override the auth context for development
-                  (window as any).__DEV_BYPASS_USER__ = mockUser;
+                  window.__DEV_BYPASS_USER__ = mockUser;
 
                   console.log('🚨 EMERGENCY BYPASS - Mock user created, navigating to properties');
 
@@ -412,11 +413,11 @@ const Login: React.FC = () => {
             </Button>
 
             {/* Clear bypass button */}
-            {(window as any).__DEV_BYPASS_USER__ && (
+            {window.__DEV_BYPASS_USER__ && (
               <Button
                 type="button"
                 onClick={() => {
-                  delete (window as any).__DEV_BYPASS_USER__;
+                  delete window.__DEV_BYPASS_USER__;
                   console.log('🚨 EMERGENCY BYPASS - Cleared');
                   window.location.reload();
                 }}

@@ -413,11 +413,11 @@ export function useAuth() {
 
   // In development, check for bypass user
   if (process.env.NODE_ENV === 'development') {
-    const devBypassUser = (window as any).__DEV_BYPASS_USER__;
+    const devBypassUser = window.__DEV_BYPASS_USER__;
     if (devBypassUser && !context.user) {
       return {
         ...context,
-        user: devBypassUser,
+        user: devBypassUser as AuthUser,
         loading: false
       };
     }
