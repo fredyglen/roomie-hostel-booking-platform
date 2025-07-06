@@ -5,7 +5,7 @@ interface LogEntry {
   timestamp: string;
   level: LogLevel;
   message: string;
-  data?: Record<string, unknown> | string | number | boolean | null;
+  data?: unknown;
 }
 
 class Logger {
@@ -17,7 +17,7 @@ class Logger {
     this.isDevelopment = import.meta.env.MODE === 'development';
   }
 
-  private createLogEntry(level: LogLevel, message: string, data?: Record<string, unknown> | string | number | boolean | null): LogEntry {
+  private createLogEntry(level: LogLevel, message: string, data?: unknown): LogEntry {
     const entry = {
       timestamp: new Date().toISOString(),
       level,
@@ -34,7 +34,7 @@ class Logger {
     return entry;
   }
 
-  private log(level: LogLevel, message: string, data?: Record<string, unknown> | string | number | boolean | null) {
+  private log(level: LogLevel, message: string, data?: unknown) {
     const entry = this.createLogEntry(level, message, data);
     
     if (this.isDevelopment) {
@@ -53,19 +53,19 @@ class Logger {
     }
   }
 
-  debug(message: string, data?: Record<string, unknown> | string | number | boolean | null) {
+  debug(message: string, data?: unknown) {
     this.log('debug', message, data);
   }
 
-  info(message: string, data?: Record<string, unknown> | string | number | boolean | null) {
+  info(message: string, data?: unknown) {
     this.log('info', message, data);
   }
 
-  warn(message: string, data?: Record<string, unknown> | string | number | boolean | null) {
+  warn(message: string, data?: unknown) {
     this.log('warn', message, data);
   }
 
-  error(message: string, data?: Record<string, unknown> | string | number | boolean | null) {
+  error(message: string, data?: unknown) {
     this.log('error', message, data);
   }
 
