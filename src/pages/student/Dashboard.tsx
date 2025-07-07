@@ -11,14 +11,16 @@ import { PropertyQueries, BookingQueries } from '@/services/database/standardize
 import { FavoritesQueries } from '@/services/database/favoritesQueries';
 import { logger } from '@/utils/enhanced-logger';
 import { ErrorHandler } from '@/utils/ErrorHandler';
+import { Property } from '@/types/property';
+import { Booking } from '@/types/booking';
 
 const StudentDashboard: React.FC = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
 
   // State for real data
-  const [featuredProperties, setFeaturedProperties] = useState<any[]>([]);
-  const [userBookings, setUserBookings] = useState<any[]>([]);
+  const [featuredProperties, setFeaturedProperties] = useState<Property[]>([]);
+  const [userBookings, setUserBookings] = useState<Booking[]>([]);
   const [quickStats, setQuickStats] = useState({
     totalViewed: 0,
     totalFavorites: 0,

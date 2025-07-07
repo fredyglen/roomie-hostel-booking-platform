@@ -108,7 +108,7 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
         {tabs.map((tab) => (
           <button
             key={tab.id}
-            onClick={() => onTabChange(tab.id as any)}
+            onClick={() => onTabChange(tab.id as 'description' | 'amenities' | 'location')}
             className={`flex-1 py-4 px-4 text-base font-semibold border-b-3 transition-all duration-200 ${
               activeTab === tab.id
                 ? 'border-primary text-primary bg-primary/5'

@@ -1,10 +1,12 @@
+import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { FormSection } from "./FormSection";
+import { PropertyFormValues } from "./PropertyFormSchema";
 
-export function VerificationFields({ form }: { form: any }) {
+export function VerificationFields({ form }: { form: UseFormReturn<PropertyFormValues> }) {
   return (
     <FormSection title="Verification & Emergency Contact">
       <div className="space-y-6">

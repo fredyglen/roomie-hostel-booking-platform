@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { UseFormReturn } from "react-hook-form";
 import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/ui/combobox";
 import { FormSection } from "./FormSection";
+import { PropertyFormValues } from "./PropertyFormSchema";
 
 // Mock data for universities - replace with actual API data
 const UNIVERSITIES = [
@@ -40,7 +42,7 @@ const REGIONS = [
   { label: "North East", value: "north_east" }
 ];
 
-export function BasicInfoFields({ form }: { form: any }) {
+export function BasicInfoFields({ form }: { form: UseFormReturn<PropertyFormValues> }) {
   const [addressSuggestions, setAddressSuggestions] = useState<string[]>([]);
   const [areaSuggestions, setAreaSuggestions] = useState<string[]>([]);
   const [landmarkSuggestions, setLandmarkSuggestions] = useState<string[]>([]);

@@ -428,7 +428,7 @@ export class HostelManagementService {
     return { success: true, data: undefined };
   }
 
-  private transformFromDatabase(data: any): HostelProperty {
+  private transformFromDatabase(data: DatabaseHostelRecord): HostelProperty {
     // Implementation for database to domain transformation
     return {} as HostelProperty;
   }

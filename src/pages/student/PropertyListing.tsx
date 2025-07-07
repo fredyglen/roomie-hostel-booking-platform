@@ -16,6 +16,7 @@ import GhanaHostelService, { GhanaProperty } from '../../services/ghanaHostelSer
 import { getGenderRestrictionLabel, getFacilityTypeLabel, getProximityBadge } from '../../data/ghanaHostels';
 import { AppleGradeHostelDisplay } from '@/components/apple-grade-hostel-display.component';
 import type { HostelProperty } from '@/types/hostel-management';
+import { Property } from '@/types/property';
 
 const PropertyListing: React.FC = () => {
   const navigate = useNavigate();
@@ -28,7 +29,7 @@ const PropertyListing: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showPropertyModal, setShowPropertyModal] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<any>(null);
+  const [selectedProperty, setSelectedProperty] = useState<GhanaProperty | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [useAppleGradeDisplay, setUseAppleGradeDisplay] = useState(true); // Apple-grade display toggle
@@ -73,7 +74,7 @@ const PropertyListing: React.FC = () => {
   };
 
   // Apple-grade error handler
-  const handleAppleGradeError = (error: any) => {
+  const handleAppleGradeError = (error: unknown) => {
     console.error('Apple-grade hostel display error:', error);
     // Fallback to traditional display on error
     setUseAppleGradeDisplay(false);
@@ -467,20 +468,20 @@ const PropertyListing: React.FC = () => {
               <div key={property.id} style={{ pointerEvents: 'auto' }}>
                 <PropertyCard
                   id={property.id.toString()}
-                  title={property.title || (property as any).name}
-                  rent={property.rent || (property as any).price}
-                  location={property.location || (property as any).address}
-                  bedrooms={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : (property as any).bedrooms || 4}
-                  bathrooms={(property as any).bathrooms || 1}
-                  maxOccupants={property.maxOccupants || (property as any).max_occupants}
+                  title={property.title}
+                  rent={property.rent}
+                  location={property.location}
+                  bedrooms={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : 4}
+                  bathrooms={1}
+                  maxOccupants={property.maxOccupants}
                   images={property.images || []}
                   amenities={property.amenities ? property.amenities.map(getAmenityLabel) : []}
                   propertyType="Hostel"
-                  genderRestriction={property.genderRestriction || (property as any).gender_restriction}
-                  isAvailable={(property as any).is_available !== false}
+                  genderRestriction={property.genderRestriction}
+                  isAvailable={true}
                   distanceToCampus={property.distanceToCampus || '5 mins'}
-                  totalBedsAvailable={(property as any).beds_available || Math.floor(Math.random() * 8) + 1}
-                  totalBeds={property.maxOccupants || (property as any).max_occupants || 4}
+                  totalBedsAvailable={Math.floor(Math.random() * 8) + 1}
+                  totalBeds={property.maxOccupants}
                   priceUnit="semester"
                   onViewDetails={() => handleViewDetails(property.id)}
                   onViewStory={() => handleViewStory(property.id)}

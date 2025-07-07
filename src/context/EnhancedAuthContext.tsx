@@ -109,10 +109,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setTimeout(() => reject(new Error('Profile fetch timeout after 8 seconds')), 8000);
       });
 
-      const { data: profile, error } = await Promise.race([
+      const result = await Promise.race([
         profileFetchPromise,
         timeoutPromise
-      ]) as any;
+      ]);
+
+      const { data: profile, error } = result;
 
       logger.info('Profile fetch result', { profile, error: error?.message });
 

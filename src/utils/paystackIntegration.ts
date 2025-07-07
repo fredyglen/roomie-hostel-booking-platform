@@ -84,7 +84,7 @@ export interface PaymentInitResult {
   success: boolean;
   message: string;
   error?: unknown;
-  paymentData?: any;
+  paymentData?: PaymentData;
 }
 
 // Initialize Paystack payment

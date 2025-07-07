@@ -7,8 +7,38 @@ import { ModernPaymentSuccessResult, PaystackVerificationData } from '@/types/bo
 
 declare global {
   interface Window {
-    PaystackPop?: any;
+    PaystackPop?: {
+      new(): {
+        newTransaction(config: PaystackConfig): void;
+      };
+    };
   }
+}
+
+interface PaystackConfig {
+  key: string;
+  email: string;
+  amount: number;
+  currency: string;
+  ref: string;
+  metadata?: Record<string, unknown>;
+  onSuccess: (transaction: PaystackTransaction) => void;
+  onCancel: () => void;
+  onError: (error: unknown) => void;
+  split_code?: string;
+  split?: SplitPaymentConfig;
+  subaccount?: string;
+  bearer?: string;
+  transaction_charge?: number;
+}
+
+interface PaystackTransaction {
+  reference: string;
+  transaction?: string;
+  trans?: string;
+  channel?: string;
+  customer?: Record<string, unknown>;
+  status: string;
 }
 
 interface SplitPaymentConfig {
@@ -112,7 +142,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
       const popup = new window.PaystackPop();
 
       // Build transaction configuration
-      const transactionConfig: any = {
+      const transactionConfig: PaystackConfig = {
         key: publicKey,
         email: email,
         amount: amount * 100, // Paystack expects amount in pesewas (GHS subunit)
@@ -129,7 +159,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
           platform: 'ROOMi',
           payment_type: 'accommodation_booking'
         },
-        onSuccess: (transaction: any) => {
+        onSuccess: (transaction: PaystackTransaction) => {
           setIsProcessing(false);
 
           const verification: PaystackVerificationData = {
@@ -161,7 +191,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
             variant: "destructive"
           });
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
           setIsProcessing(false);
           const errorMessage = handlePaystackError(error);
           onError(errorMessage);

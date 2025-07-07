@@ -1,7 +1,7 @@
 // Enhanced Booking Hook for ROOMi Ghana Hostel Bookings
 // Integrates with BookingService and provides comprehensive state management
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { BookingService, CreateBookingData, RoommateData } from '@/services/bookingService';
@@ -101,7 +101,7 @@ export const useEnhancedBooking = (property: Property) => {
   });
 
   // Update form data
-  const updateFormData = useCallback((field: string, value: any) => {
+  const updateFormData = useCallback((field: string, value: string | Date | RoommateData[]) => {
     setState(prev => ({
       ...prev,
       formData: {
@@ -173,7 +173,7 @@ export const useEnhancedBooking = (property: Property) => {
     }));
   }, []);
 
-  const updateRoommate = useCallback((index: number, field: string, value: any) => {
+  const updateRoommate = useCallback((index: number, field: keyof RoommateData, value: string | number | boolean) => {
     setState(prev => {
       const updatedRoommates = [...prev.formData.roommates];
       updatedRoommates[index] = {

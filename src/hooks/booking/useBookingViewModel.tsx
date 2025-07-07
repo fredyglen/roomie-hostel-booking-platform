@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Property } from '@/types/property';
+import { Property, Room } from '@/types/property';
 import { useLocalStorage } from './useLocalStorage';
 import { useRoommatesManager } from './useRoommatesManager';
 import { useFormValidation } from './useFormValidation';
@@ -71,7 +71,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
   );
   
   // Selected room type and price calculations
-  const selectedRoomType = property?.buildings?.[0]?.floors?.[0]?.rooms?.find((r: any) => r.name === formData.roomType);
+  const selectedRoomType = property?.buildings?.[0]?.floors?.[0]?.rooms?.find((r: Room) => r.name === formData.roomType);
   const selectedPrice = selectedRoomType?.price || property?.price?.amount || 0;
   const selectedUnit = property?.price?.period || 'semester';
   
@@ -165,7 +165,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
     };
   };
 
-  const handlePaymentSuccess = async (paymentResult: any) => {
+  const handlePaymentSuccess = async (paymentResult: { reference: string; status: string }) => {
     try {
       if (!bookingId) {
         throw new Error('No booking ID found');
@@ -206,7 +206,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
         }
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       toast({
         title: "Payment Processing Error",
         description: "Payment successful but booking update failed. Please contact support.",
@@ -274,11 +274,12 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
       // Show payment modal
       setShowPaymentModal(true);
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       setIsCreatingBooking(false);
+      const errorMessage = error instanceof Error ? error.message : "Failed to create booking. Please try again.";
       toast({
         title: "Booking Creation Failed",
-        description: error.message || "Failed to create booking. Please try again.",
+        description: errorMessage,
         variant: "destructive"
       });
     }

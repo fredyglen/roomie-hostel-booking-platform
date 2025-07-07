@@ -4,6 +4,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '@/types/property';
+import { RoommateInfo } from '@/types/BookingTypes';
 import { useEnhancedBooking } from '@/hooks/booking/useEnhancedBooking';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,7 +79,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
     updateFormData(field, value);
   };
 
-  const handleRoommateChange = (roommates: any[]) => {
+  const handleRoommateChange = (roommates: RoommateInfo[]) => {
     updateFormData('roommates', roommates);
   };
 

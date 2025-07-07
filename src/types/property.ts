@@ -75,6 +75,7 @@ export interface Property {
   // Ownership
   readonly ownerId: string;
   readonly owner_id?: string; // Database compatibility
+  readonly agent_id?: string; // Database compatibility
   readonly owner?: User;
 
   // Metadata

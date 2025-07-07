@@ -1,5 +1,41 @@
 import { config } from '@/config';
 
+// Paystack types for window object
+interface PaystackPop {
+  setup: (options: PaystackOptions) => PaystackHandler;
+}
+
+interface PaystackOptions {
+  key: string;
+  email: string;
+  amount: number;
+  currency?: string;
+  ref?: string;
+  callback?: (response: PaystackResponse) => void;
+  onClose?: () => void;
+  channels?: string[];
+  metadata?: Record<string, unknown>;
+}
+
+interface PaystackHandler {
+  openIframe: () => void;
+}
+
+interface PaystackResponse {
+  reference: string;
+  status: string;
+  trans: string;
+  transaction: string;
+  trxref: string;
+  redirecturl: string;
+}
+
+declare global {
+  interface Window {
+    PaystackPop?: PaystackPop;
+  }
+}
+
 // Paystack configuration and utilities
 export const paystackConfig = {
   scriptUrl: 'https://js.paystack.co/v2/inline.js',
@@ -12,7 +48,7 @@ export const paystackConfig = {
 // Load Paystack script
 export const loadPaystackScript = (): Promise<boolean> => {
   return new Promise((resolve) => {
-    if (typeof window !== 'undefined' && (window as any).PaystackPop) {
+    if (typeof window !== 'undefined' && window.PaystackPop) {
       resolve(true);
       return;
     }
@@ -29,12 +65,15 @@ export const loadPaystackScript = (): Promise<boolean> => {
 };
 
 // Initialize Paystack
-export const initializePaystack = async () => {
+export const initializePaystack = async (): Promise<PaystackPop> => {
   const loaded = await loadPaystackScript();
   if (!loaded) {
     throw new Error('Failed to load Paystack script');
   }
-  return (window as any).PaystackPop;
+  if (!window.PaystackPop) {
+    throw new Error('Paystack script loaded but PaystackPop not available');
+  }
+  return window.PaystackPop;
 };
 
 // Paystack supported countries and currencies

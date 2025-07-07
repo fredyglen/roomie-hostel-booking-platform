@@ -21,6 +21,19 @@ import { generatePaymentReference } from '@/utils/paystackIntegration';
 import type { Property } from '@/types/property';
 import type { User } from '@supabase/supabase-js';
 
+// Interface for booking_roommates table (not in generated types yet)
+interface BookingRoommateInsert {
+  booking_id: string;
+  roommate_name: string;
+  roommate_email: string;
+  roommate_phone: string;
+  roommate_student_id?: string;
+  payment_share: number;
+  payment_status: 'pending' | 'paid' | 'failed';
+  payment_reference?: string;
+  is_verified_student?: boolean;
+}
+
 /**
  * Complete booking data required for payment-first booking creation
  * All fields are validated before payment processing begins
@@ -344,17 +357,17 @@ export class PaymentFirstBookingService {
 
       // Insert roommates if any
       if (data.roommates.length > 0) {
-        const roommateInserts = data.roommates.map(roommate => ({
+        const roommateInserts: BookingRoommateInsert[] = data.roommates.map(roommate => ({
           booking_id: booking.id,
           roommate_name: roommate.name,
           roommate_email: roommate.email,
           roommate_phone: roommate.phone,
           payment_share: data.pricing.totalAmount / (data.roommates.length + 1), // Equal split
-          payment_status: 'pending'
+          payment_status: 'pending' as const
         }));
 
-        // Use type assertion for table not in generated types
-        const { error: roommatesError } = await (supabase as any)
+        // Insert roommates using proper typing
+        const { error: roommatesError } = await supabase
           .from('booking_roommates')
           .insert(roommateInserts);
 

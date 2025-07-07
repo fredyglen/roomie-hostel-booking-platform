@@ -14,11 +14,13 @@ type BookingUpdate = Database['public']['Tables']['bookings_enhanced']['Update']
  */
 export interface BookingMetadata {
   readonly source?: 'web' | 'mobile' | 'admin';
+  readonly booking_source?: 'web' | 'mobile' | 'admin';
   readonly referral_code?: string;
   readonly special_instructions?: string;
   readonly payment_plan?: 'full' | 'installment';
   readonly emergency_contact_verified?: boolean;
   readonly university_verification_status?: 'pending' | 'verified' | 'failed';
+  readonly student_verification_status?: 'pending' | 'verified' | 'failed';
   readonly booking_channel?: 'direct' | 'agent' | 'partner';
   readonly discount_applied?: {
     readonly code: string;
@@ -26,6 +28,9 @@ export interface BookingMetadata {
     readonly type: 'percentage' | 'fixed';
   };
   readonly additional_services?: readonly string[];
+  readonly property_title?: string;
+  readonly furnishing?: string;
+  readonly floor?: string;
 }
 
 export interface CreateBookingData {

@@ -14,7 +14,7 @@ const BookingStepsContainer: React.FC = () => {
   const { toast } = useToast();
 
   // Property data
-  const [property, setProperty] = React.useState<any>(null);
+  const [property, setProperty] = React.useState<Property | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState<string | null>(null);
 

@@ -132,8 +132,7 @@ export const useBusinessPaymentFlow = () => {
       
       if (verification.success && verification.data) {
         // Update booking status - safely handle metadata access
-        const bookingId = verification.data.metadata?.booking_id || 
-                          (verification.data as any).metadata?.booking_id;
+        const bookingId = verification.data.metadata?.booking_id as string;
         
         if (bookingId) {
           const { error: updateError } = await supabase

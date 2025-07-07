@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { ModernPaystackPayment } from '@/components/payment/ModernPaystackPayment';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import type { PaystackTransaction } from '@paystack/inline-js';
 
 interface PaymentStepProps {
   totalAmount: number;
@@ -35,7 +36,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     onPaymentMethodSelect(method);
   };
 
-  const handlePaymentSuccess = (result: any) => {
+  const handlePaymentSuccess = (result: PaystackTransaction) => {
     toast({
       title: "Payment Successful!",
       description: "Your payment has been processed successfully.",

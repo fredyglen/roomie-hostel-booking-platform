@@ -6,6 +6,10 @@
 import { supabase } from '@/integrations/supabase/client';
 import { Property, PropertyFormValues } from '@/types/property';
 import { logger } from '@/utils/enhanced-logger';
+import { Database } from '@/integrations/supabase/types';
+
+// Database property insert type
+type PropertyInsert = Database['public']['Tables']['properties']['Insert'];
 
 export interface PropertyPipelineResult {
   success: boolean;
@@ -153,7 +157,7 @@ export class PropertyPipelineService {
   /**
    * Insert property into database
    */
-  private static async insertProperty(propertyData: any): Promise<{ success: boolean; propertyId?: string; error?: string }> {
+  private static async insertProperty(propertyData: PropertyInsert): Promise<{ success: boolean; propertyId?: string; error?: string }> {
     try {
       const { data, error } = await supabase
         .from('properties')
