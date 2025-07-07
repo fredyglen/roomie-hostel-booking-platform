@@ -129,7 +129,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
           city: item.city || '',
           state: item.state || '',
           zip: item.zip || '',
-          propertyCategory: PropertyCategory.HOSTEL,
+          propertyCategory: 'Hostel' as PropertyCategory,
           verified: true,
           is_available: true,
           bedrooms: item.bedrooms || 1,

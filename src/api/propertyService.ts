@@ -1,11 +1,21 @@
 import { supabase } from '@/integrations/supabase/client';
-import { 
-  Property, 
-  PropertyInsert, 
-  PropertyUpdate, 
-  PropertySearchParams 
-} from '@/types/PropertyTypes';
+import {
+  Property,
+  PropertyInsert,
+  PropertyUpdate,
+  PropertyType,
+  PropertyStatus
+} from '@/types/property';
 import { ApiResponse, PaginatedResponse, PaginationParams } from '@/types/CommonTypes';
+
+// Property search parameters interface
+interface PropertySearchParams {
+  type?: PropertyType;
+  status?: PropertyStatus;
+  city?: string;
+  minPrice?: number;
+  maxPrice?: number;
+}
 
 // Get all properties with pagination
 export async function getProperties(

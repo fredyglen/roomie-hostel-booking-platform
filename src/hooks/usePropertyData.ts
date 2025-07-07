@@ -82,25 +82,6 @@ const getSampleProperties = (): Property[] => {
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       verificationStatus: 'verified',
-      is_available: true,
-      bedrooms: 2,
-      bathrooms: 1,
-      available_from: '2024-01-01',
-      amenities: ['WiFi', 'AC', 'Parking'],
-      images: ['/placeholder.svg'],
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
-      owner: {
-        id: 'owner1',
-        name: 'John Owner',
-        email: 'owner@example.com',
-        phone: '+233123456789',
-        verified: true,
-        responseRate: '95%'
-      },
-      house_rules: 'No smoking, no pets',
-      stories: [],
-      features: ['balcony', 'ensuite']
     }
     // ... other sample properties
   ];

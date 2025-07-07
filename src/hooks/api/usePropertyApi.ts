@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { propertyService } from '@/services/propertyService';
-import { Property } from '@/types/property';
+import { Property, PropertyId, PropertyInsert, PropertyUpdate } from '@/types/property';
 
 export function usePropertyApi() {
   const queryClient = useQueryClient();

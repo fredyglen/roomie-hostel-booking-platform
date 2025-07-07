@@ -6,18 +6,19 @@ import { Eye, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { formatCurrency } from '@/utils/currency';
 import { IMAGE_URLS } from '@/constants/images';
+import { PropertyId, PropertyPrice } from '@/types/property';
 
 interface PropertyCardProps {
   property: {
-    id: string;
-    title: string;
-    type: string;
-    address: string;
-    price: number;
-    price_unit: string;
-    status: string;
-    occupancy: string;
-    image_url: string;
+    readonly id: PropertyId | string;
+    readonly title: string;
+    readonly type: string;
+    readonly address: string;
+    readonly price: PropertyPrice | number;
+    readonly price_unit: string;
+    readonly status: string;
+    readonly occupancy: string;
+    readonly image_url: string;
   };
   onDelete: (id: string) => void;
 }
