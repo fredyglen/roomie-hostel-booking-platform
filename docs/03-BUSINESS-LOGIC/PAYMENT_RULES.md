@@ -4,30 +4,30 @@
 ## Core Payment Principles
 
 ### Base Commission Structure
-- **Platform Commission**: 4.2% of total booking value
-- **Agent Commission**: 3.7% flat rate (minimum GHS 100)
-- **Property Owner**: 98% of original amount (after 2% booking fee deduction)
+- **Platform Commission**: 5% + GHS 100 platform fee
+- **Agent Commission**: 4% of total booking value
+- **Property Owner**: 88% of booking value
 - **Moving Fee**: Eliminated (GHS 0)
-- **Paystack Fees**: Absorbed by platform
+- **Paystack Fees**: 1.95% for local transactions (absorbed by platform)
 
 ### Commission Calculation Formula
 
 ```
 Total Booking Amount = Property Price
-Agent Fee = max(Total * 3.7%, GHS 100)
-Platform Fee = Total * 4.2%
-Property Owner Gets = Total * 98%
+Agent Fee = Total * 4%
+Platform Fee = (Total * 5%) + 100
+Property Owner Gets = Total * 88%
 Paystack Fee = Total * 1.95% (absorbed by platform)
 ```
 
 ## Property Type Commission Examples
 
-| Property Type | Semester Price | Agent Fee (3.7%) | Platform Fee | Property Owner Gets |
-|---------------|----------------|------------------|--------------|-------------------|
-| 4-in-room | GHS 2,700 | GHS 100 | GHS 113 | GHS 2,646 |
-| 3-in-room | GHS 3,600 | GHS 133 | GHS 150 | GHS 3,528 |
-| 2-in-room | GHS 4,000 | GHS 148 | GHS 161 | GHS 3,920 |
-| 1-in-room Executive | GHS 10,000 | GHS 370 | GHS 403 | GHS 9,800 |
+| Property Type | Semester Price | Agent Fee (4%) | Platform Fee (5% + 100) | Property Owner Gets (88%) |
+|---------------|----------------|----------------|-------------------------|---------------------------|
+| 4-in-room | GHS 2,700 | GHS 108 | GHS 235 | GHS 2,376 |
+| 3-in-room | GHS 3,600 | GHS 144 | GHS 280 | GHS 3,168 |
+| 2-in-room | GHS 4,000 | GHS 160 | GHS 300 | GHS 3,520 |
+| 1-in-room Executive | GHS 10,000 | GHS 400 | GHS 600 | GHS 8,800 |
 
 ## Payment Distribution Rules
 
@@ -38,21 +38,21 @@ Paystack Fee = Total * 1.95% (absorbed by platform)
 - Transparent fee breakdown displayed
 
 ### 2. Property Owner Payment
-- Receives 98% of booking amount
+- Receives 88% of booking amount
 - Payment processed within 24 hours
 - Bank transfer or mobile money
 - Automatic payment confirmation
 
 ### 3. Agent Commission
-- 3.7% of booking amount (minimum GHS 100)
+- 4% of booking amount
 - Paid after successful booking confirmation
 - Monthly consolidated payments
 - Performance bonuses for volume
 
 ### 4. Platform Revenue
-- 4.2% commission from each booking
+- 5% commission + GHS 100 platform fee from each booking
 - Covers Paystack fees (1.95%)
-- Net platform revenue: ~2.25%
+- Net platform revenue: ~3.05% + GHS 100
 - Additional revenue from premium features
 
 ## Premium Features & Additional Revenue
@@ -134,12 +134,11 @@ Paystack Fee = Total * 1.95% (absorbed by platform)
 ### Commission Rates (Easily Adjustable)
 ```json
 {
-  "platform_commission_rate": 0.042,
-  "agent_commission_rate": 0.037,
-  "agent_minimum_fee": 100,
-  "property_owner_retention": 0.98,
-  "paystack_fee_rate": 0.0195,
-  "booking_fee_rate": 0.02
+  "platform_commission_rate": 0.05,
+  "platform_fixed_fee": 100,
+  "agent_commission_rate": 0.04,
+  "property_owner_retention": 0.88,
+  "paystack_fee_rate": 0.0195
 }
 ```
 

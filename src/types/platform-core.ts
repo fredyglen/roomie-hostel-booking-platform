@@ -229,9 +229,10 @@ export enum StudentLevel {
  * Platform business rules and constraints
  */
 export const PLATFORM_RULES = {
-  // Commission rates
+  // Commission rates - Updated to match BE CONSCIOUS authoritative structure
   PLATFORM_COMMISSION_RATE: 0.05, // 5%
-  AGENT_COMMISSION_RATE: 0.037,   // 3.7%
+  PLATFORM_FIXED_FEE: 100,        // GHS 100 platform fee
+  AGENT_COMMISSION_RATE: 0.04,    // 4% (updated from 3.7% to match BE CONSCIOUS)
   AGENT_MINIMUM_FEE: 100,         // GHS 100 minimum
   PAYSTACK_FEE_RATE: 0.0195,      // 1.95%
   

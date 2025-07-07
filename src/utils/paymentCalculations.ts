@@ -1,11 +1,12 @@
 
 import { Property } from '@/types/property';
 
-// Payment configuration constants
+// Payment configuration constants - Updated to match BE CONSCIOUS authoritative structure
 const PAYMENT_CONFIG = {
   platformFeePercentage: 0.05, // 5% platform fee
-  paymentProcessorFeePercentage: 0.015, // 1.5% Paystack fee
-  agentCommissionPercentage: 0.10, // 10% agent commission
+  platformFixedFee: 100, // GHS 100 platform fee
+  paymentProcessorFeePercentage: 0.0195, // 1.95% Paystack fee (updated from 1.5%)
+  agentCommissionPercentage: 0.04, // 4% agent commission (updated from 10% to match BE CONSCIOUS)
   vatRate: 0.125, // 12.5% VAT in Ghana
   currency: 'GHS'
 };
@@ -35,17 +36,17 @@ export const calculatePaymentBreakdown = (
   propertyRent: number,
   packageType: 'standard' | 'premium' | 'luxury' = 'standard'
 ): PaymentBreakdown => {
-  // Base calculations
-  const platformFee = propertyRent * PAYMENT_CONFIG.platformFeePercentage;
+  // Base calculations - Updated to match BE CONSCIOUS structure (5% + GHS 100)
+  const platformFee = (propertyRent * PAYMENT_CONFIG.platformFeePercentage) + PAYMENT_CONFIG.platformFixedFee;
   const paymentProcessorFee = propertyRent * PAYMENT_CONFIG.paymentProcessorFeePercentage;
   const agentFee = propertyRent * PAYMENT_CONFIG.agentCommissionPercentage;
-  
+
   const subtotal = propertyRent + platformFee + paymentProcessorFee + agentFee;
   const vat = subtotal * PAYMENT_CONFIG.vatRate;
   const totalAmount = subtotal + vat;
-  
-  // What the property owner receives (rent minus platform and agent fees)
-  const ownerReceives = propertyRent - platformFee - agentFee;
+
+  // What the property owner receives (88% of booking value as per BE CONSCIOUS)
+  const ownerReceives = propertyRent * 0.88;
 
   return {
     propertyRent,
@@ -65,11 +66,12 @@ export const calculateBookingCosts = (
 ): BookingCosts => {
   const baseRent = property.rent || property.price;
   const subtotal = baseRent * durationMonths;
-  
-  const platformFee = subtotal * PAYMENT_CONFIG.platformFeePercentage;
+
+  // Updated to match BE CONSCIOUS structure (5% + GHS 100)
+  const platformFee = (subtotal * PAYMENT_CONFIG.platformFeePercentage) + PAYMENT_CONFIG.platformFixedFee;
   const processingFee = subtotal * PAYMENT_CONFIG.paymentProcessorFeePercentage;
   const agentFee = subtotal * PAYMENT_CONFIG.agentCommissionPercentage;
-  
+
   const beforeVat = subtotal + platformFee + processingFee + agentFee;
   const vat = beforeVat * PAYMENT_CONFIG.vatRate;
   const total = beforeVat + vat;
@@ -182,10 +184,12 @@ export const calculatePaymentDistribution = (
   processorFee: number;
 } => {
   const processorFee = totalAmount * PAYMENT_CONFIG.paymentProcessorFeePercentage;
-  const platformFee = totalAmount * PAYMENT_CONFIG.platformFeePercentage;
+  // Updated to match BE CONSCIOUS structure (5% + GHS 100)
+  const platformFee = (totalAmount * PAYMENT_CONFIG.platformFeePercentage) + PAYMENT_CONFIG.platformFixedFee;
   const agentFee = agentId ? totalAmount * PAYMENT_CONFIG.agentCommissionPercentage : 0;
-  
-  const ownerAmount = totalAmount - processorFee - platformFee - agentFee;
+
+  // Property owner gets 88% as per BE CONSCIOUS
+  const ownerAmount = totalAmount * 0.88;
   
   return {
     ownerAmount: Math.max(0, ownerAmount),

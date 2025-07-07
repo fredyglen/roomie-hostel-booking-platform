@@ -10,21 +10,29 @@
 
 ### **💰 Payment & Business Logic**
 
-#### **Commission Rates (Multiple Conflicting Values)**
+#### **Commission Rates (RESOLVED)**
 ```typescript
 // src/config/index.ts
-platformCommissionRate: 0.05, // 5%
+platformCommissionRate: 0.05, // 5% ✅
 
-// src/constants/payment.ts  
-PLATFORM_COMMISSION_RATE: 0.042, // 4.2% ❌ CONFLICT
+// src/constants/payment.ts
+PLATFORM_COMMISSION_RATE: 0.05, // 5% ✅ RESOLVED
 
 // src/BE CONSCIOUS/platform-definitions.ts
-platform_commission_rate: 0.05; // 5%
+platform_commission_rate: 0.05; // 5% ✅
 
 // PAYMENT-LOGIC.md
-platformCommissionRate: 0.05, // 5%
+platformCommissionRate: 0.05, // 5% ✅
+
+// src/types/platform-core.ts
+PLATFORM_COMMISSION_RATE: 0.05, // 5% ✅
+PLATFORM_FIXED_FEE: 100, // GHS 100 ✅
+
+// src/utils/paymentCalculations.ts
+platformFeePercentage: 0.05, // 5% ✅
+platformFixedFee: 100, // GHS 100 ✅
 ```
-**Issue**: Multiple conflicting commission rates across codebase
+**Status**: ✅ RESOLVED - All files now use 5% + GHS 100 platform fee structure
 
 #### **Platform Fees**
 ```typescript
@@ -174,13 +182,16 @@ images: ['/images/hostels/kitatsu-exterior.jpg'], // ❌ Hardcoded image paths
 
 ## 📊 **CONFIGURATION CONFLICTS**
 
-### **Commission Rate Conflicts**
+### **Commission Rate Conflicts (RESOLVED)**
 | File | Commission Rate | Status |
 |------|----------------|---------|
-| `src/config/index.ts` | 5% | ✅ Primary |
-| `src/constants/payment.ts` | 4.2% | ❌ Conflict |
-| `platform-definitions.ts` | 5% | ✅ Matches |
-| `PAYMENT-LOGIC.md` | 5% | ✅ Matches |
+| `src/config/index.ts` | 5% + GHS 100 | ✅ Resolved |
+| `src/constants/payment.ts` | 5% + GHS 100 | ✅ Resolved |
+| `src/types/platform-core.ts` | 5% + GHS 100 | ✅ Resolved |
+| `src/utils/paymentCalculations.ts` | 5% + GHS 100 | ✅ Resolved |
+| `platform-definitions.ts` | 5% + GHS 100 | ✅ Matches |
+| `PAYMENT-LOGIC.md` | 5% + GHS 100 | ✅ Matches |
+| `PAYMENT_RULES.md` | 5% + GHS 100 | ✅ Resolved |
 
 ### **Page Size Conflicts**
 | File | Default Size | Max Size | Status |

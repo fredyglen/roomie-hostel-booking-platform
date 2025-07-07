@@ -1,276 +1,264 @@
-# 🔧 ROOMi Platform Hardcoded Values Inventory
+# ROOMi Payment System Architecture & Implementation Guide
 
-**Date**: 2025-01-05  
-**Branch**: `fix/typescript-errors`  
-**Purpose**: Complete inventory of hardcoded values requiring centralization  
+**Version**: 1.0  
+**Last Updated**: December 17, 2024  
+**Status**: Production Implementation Ready  
 
 ---
 
-## 🚨 **CRITICAL HARDCODED VALUES**
+## 🎯 **EXECUTIVE SUMMARY**
 
-### **💰 Payment & Business Logic**
+This document serves as the living documentation for ROOMi's comprehensive payment system, designed for flexibility as business terms evolve. The system handles automatic payment distribution between property owners, agents, and ROOMi's commission structure while supporting Ghana's mobile-first payment preferences.
 
-#### **Commission Rates (RESOLVED)**
-```typescript
-// src/config/index.ts
-platformCommissionRate: 0.05, // 5% ✅
+### **Current Business Model**
+- **ROOMi Commission**: 5% of booking value
+- **Platform Fee**: 100 GHS fixed fee per booking
+- **Agent Commission**: TBD (framework ready for implementation)
+- **Payment Methods**: Card, Mobile Money (MTN, Vodafone, AirtelTigo), Bank Transfer
 
-// src/constants/payment.ts
-PLATFORM_COMMISSION_RATE: 0.05, // 5% ✅ RESOLVED
+---
 
-// src/BE CONSCIOUS/platform-definitions.ts
-platform_commission_rate: 0.05; // 5% ✅
+## 🏗️ **TECHNICAL ARCHITECTURE OVERVIEW**
 
-// PAYMENT-LOGIC.md
-platformCommissionRate: 0.05, // 5% ✅
-
-// src/types/platform-core.ts
-PLATFORM_COMMISSION_RATE: 0.05, // 5% ✅
-PLATFORM_FIXED_FEE: 100, // GHS 100 ✅
-
-// src/utils/paymentCalculations.ts
-platformFeePercentage: 0.05, // 5% ✅
-platformFixedFee: 100, // GHS 100 ✅
+### **Payment Flow Architecture**
 ```
-**Status**: ✅ RESOLVED - All files now use 5% + GHS 100 platform fee structure
-
-#### **Platform Fees**
-```typescript
-// Database schema
-platform_fee DECIMAL(10, 2) NOT NULL DEFAULT 100.00, // Fixed 100 GHS
-
-// src/config/environment.ts
-platformFee: Number(import.meta.env.VITE_PLATFORM_FEE) || 100,
-
-// src/constants/payment.ts
-AGENT_MINIMUM_FEE: 100, // GHS 100 minimum
+Student Booking → Payment Processing → Multi-Account Distribution → Booking Confirmation
+     ↓                    ↓                      ↓                        ↓
+Booking State      Paystack Gateway      Subaccount Splits      Database Updates
 ```
 
-#### **Paystack Configuration**
+### **Core Components**
+1. **Payment Initiation**: `ModernPaystackPayment.tsx` (✅ Implemented)
+2. **Booking Integration**: `useBookingViewModel.tsx` (❌ Needs Connection)
+3. **Payment Processing**: Paystack API + Supabase Edge Functions
+4. **Database Persistence**: Booking + Transaction Records
+5. **Multi-Account Distribution**: Paystack Subaccounts + Split Payments
+
+---
+
+## 💰 **BUSINESS MODEL CONFIGURATION**
+
+### **Current Payment Structure**
 ```typescript
-// src/config/index.ts
-currency: 'GHS', // ❌ Hardcoded currency
-channels: ['card', 'mobile_money', 'bank', 'ussd', 'qr'], // ❌ Hardcoded channels
-paystackFeeRate: 0.0195, // 1.95% ❌ Should be configurable
-```
-
-### **🏫 University & Location Data**
-
-#### **University List (Hardcoded)**
-```typescript
-// src/components/owner/property-form/BasicInfoFields.tsx
-const UNIVERSITIES = [
-  { label: "University of Ghana", value: "university_of_ghana" },
-  { label: "Kwame Nkrumah University of Science and Technology", value: "knust" },
-  { label: "University of Cape Coast", value: "ucc" },
-  // ... 7 more hardcoded universities
-];
-```
-
-#### **Default Location Values**
-```typescript
-// src/utils/data-seeder.ts
-currency: 'GHS', // ❌ Hardcoded currency
-university_name: 'UPSA', // ❌ Hardcoded university
-default_state: 'Greater Accra', // ❌ Hardcoded state
-```
-
-### **⏱️ Time & Duration Values**
-
-#### **Anonymous User Time Limits**
-```typescript
-// src/hooks/useAnonymousTimeLimit.ts
-const TIME_LIMIT = 30000; // 30 seconds ❌ Hardcoded
-const messages = {
-  navigation: 'Your 30-second preview has expired...', // ❌ Hardcoded message
-  property_view: 'Time limit reached...', // ❌ Hardcoded message
+// EDITABLE BUSINESS TERMS - Update as negotiations conclude
+const BUSINESS_MODEL = {
+  // ROOMi Revenue
+  platformCommissionRate: 0.05,        // 5% of booking value
+  platformFixedFee: 100,               // 100 GHS per booking
+  
+  // Agent Compensation (Future Implementation)
+  agentCommissionRate: 0.00,           // TBD - Currently 0%
+  agentFixedFee: 0,                    // TBD - Currently 0 GHS
+  
+  // Payment Processing
+  paystackFeeRate: 0.0195,             // 1.95% Paystack fee
+  
+  // Calculation Logic
+  calculateTotal: (basePrice: number) => {
+    const platformCommission = basePrice * BUSINESS_MODEL.platformCommissionRate;
+    const platformFee = BUSINESS_MODEL.platformFixedFee;
+    const subtotal = basePrice + platformCommission + platformFee;
+    const paystackFee = subtotal * BUSINESS_MODEL.paystackFeeRate;
+    return subtotal + paystackFee;
+  }
 };
 ```
 
-#### **Semester Duration**
+### **Payment Distribution Logic**
 ```typescript
-// Multiple files reference 4-month semesters
-semester_duration: 4, // ❌ Should be configurable
-academic_year_start: 'September', // ❌ Hardcoded academic calendar
-```
-
-### **📁 File & Upload Limits**
-
-#### **File Size Limits**
-```typescript
-// src/config/environment.ts
-maxFileSize: Number(import.meta.env.VITE_UPLOAD_MAX_SIZE) || 5242880, // 5MB
-maxImagesPerProperty: Number(import.meta.env.VITE_MAX_IMAGES_PER_PROPERTY) || 10,
-compressionQuality: Number(import.meta.env.VITE_IMAGE_COMPRESSION_QUALITY) || 0.8,
-
-// src/config/index.ts
-maxImageSize: 5242880, // 5MB ❌ Duplicated hardcoded value
-allowedImageTypes: ['image/jpeg', 'image/png', 'image/webp'], // ❌ Hardcoded types
-```
-
-### **🏠 Property Rules & Defaults**
-
-#### **Default Property Rules**
-```typescript
-// src/config/property-constants.ts
-export const DEFAULT_PROPERTY_RULES = [
-  'No smoking inside the premises', // ❌ Hardcoded rules
-  'No loud music after 10:00 PM',
-  'No overnight guests without prior approval',
-  // ... 5 more hardcoded rules
-] as const;
-```
-
-#### **Property Pricing**
-```typescript
-// Demo data files
-pricePerSemester: 3200, // ❌ Hardcoded pricing
-roomOptions: [
-  { type: '2-in-a-room', price: 3200 }, // ❌ Hardcoded room pricing
-  { type: '4-in-a-room', price: 2800 }
-],
-```
-
----
-
-## 🔧 **MEDIUM PRIORITY HARDCODED VALUES**
-
-### **🎨 UI Text & Messages**
-
-#### **Error Messages**
-```typescript
-// src/errors/user-errors.ts
-readonly userMessage = 'User account not found'; // ❌ Hardcoded error message
-readonly userMessage = 'Invalid email or password'; // ❌ Hardcoded error message
-
-// src/schemas/validation-schemas.ts
-const messages = {
-  required: 'This field is required', // ❌ Hardcoded validation messages
-  email: 'Please enter a valid email address',
-  phone: 'Please enter a valid Ghana phone number',
+// AUTOMATIC DISTRIBUTION CALCULATION
+const calculatePaymentDistribution = (bookingAmount: number) => {
+  const platformCommission = bookingAmount * BUSINESS_MODEL.platformCommissionRate;
+  const platformFee = BUSINESS_MODEL.platformFixedFee;
+  const agentCommission = bookingAmount * BUSINESS_MODEL.agentCommissionRate;
+  
+  return {
+    propertyOwnerAmount: bookingAmount - platformCommission - agentCommission,
+    roomiAmount: platformCommission + platformFee,
+    agentAmount: agentCommission,
+    totalAmount: bookingAmount + platformFee
+  };
 };
 ```
 
-#### **Pagination & Limits**
-```typescript
-// src/config/environment.ts
-defaultPageSize: parseInt(import.meta.env.VITE_DEFAULT_PAGE_SIZE || '10'), // ❌ Hardcoded default
-maxPageSize: parseInt(import.meta.env.VITE_MAX_PAGE_SIZE || '100'), // ❌ Hardcoded max
+---
 
-// src/config/index.ts
-defaultPageSize: 20, // ❌ Conflicting hardcoded value
-maxPageSize: 100,
+## 🔧 **IMPLEMENTATION REQUIREMENTS**
+
+### **1. Environment Configuration**
+```bash
+# Required Environment Variables
+VITE_PAYSTACK_PUBLIC_KEY=pk_test_xxx  # Production: pk_live_xxx
+PAYSTACK_SECRET_KEY=sk_test_xxx       # Production: sk_live_xxx
+SUPABASE_URL=your_supabase_url
+SUPABASE_ANON_KEY=your_supabase_key
+
+# Paystack Subaccount Configuration
+ROOMI_MAIN_SUBACCOUNT=ACCT_xxx        # ROOMi's main account
+DEFAULT_AGENT_SUBACCOUNT=ACCT_xxx     # Default agent account (future)
 ```
 
-### **🌐 API & URL Configuration**
+### **2. Database Schema Requirements**
+```sql
+-- Payment tracking fields in bookings table (✅ Already implemented)
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_reference TEXT;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS paystack_reference TEXT;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS payment_method TEXT;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS paid_at TIMESTAMP WITH TIME ZONE;
 
-#### **API Endpoints**
-```typescript
-// src/config/environment.ts
-baseUrl: import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5173', // ❌ Hardcoded localhost
-paystackBaseUrl: import.meta.env.VITE_PAYSTACK_BASE_URL || 'https://api.paystack.co', // ❌ Hardcoded API URL
+-- Payment distribution tracking
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS platform_commission DECIMAL(10, 2);
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS platform_fee DECIMAL(10, 2) DEFAULT 100.00;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS agent_commission DECIMAL(10, 2) DEFAULT 0;
 ```
 
-#### **Image Paths**
+### **3. Critical Code Modifications**
+
+#### **A. Connect Payment to Booking Flow**
+**File**: `src/hooks/booking/useBookingViewModel.tsx`
+**Current Issue**: Lines 136-154 simulate payment
+**Required Change**:
 ```typescript
-// Demo data files
-images: ['/placeholder.svg'], // ❌ Hardcoded placeholder paths
-images: ['/images/hostels/kitatsu-exterior.jpg'], // ❌ Hardcoded image paths
+// REPLACE SIMULATION WITH REAL PAYMENT INTEGRATION
+const processPayment = async () => {
+  try {
+    setLoading(true);
+    
+    // Calculate payment amounts
+    const distribution = calculatePaymentDistribution(totalPrice);
+    
+    // Create booking record first
+    const bookingData = {
+      student_id: user.id,
+      property_id: id,
+      total_amount: distribution.totalAmount,
+      platform_commission: distribution.roomiAmount - BUSINESS_MODEL.platformFixedFee,
+      platform_fee: BUSINESS_MODEL.platformFixedFee,
+      agent_commission: distribution.agentAmount,
+      // ... other booking fields
+    };
+    
+    const booking = await BookingQueries.createBooking(bookingData);
+    
+    // Initialize payment with booking reference
+    const paymentResult = await initializePaystackPayment({
+      amount: distribution.totalAmount,
+      email: formData.email,
+      metadata: { booking_id: booking.id },
+      onSuccess: handlePaymentSuccess,
+      onError: handlePaymentError
+    });
+    
+  } catch (error) {
+    handlePaymentError(error.message);
+  }
+};
+```
+
+#### **B. Payment Success Handler**
+```typescript
+const handlePaymentSuccess = async (paymentResult) => {
+  try {
+    // Update booking status
+    await supabase
+      .from('bookings')
+      .update({
+        payment_status: 'completed',
+        status: 'confirmed',
+        payment_reference: paymentResult.reference,
+        paystack_reference: paymentResult.trans,
+        paid_at: new Date().toISOString()
+      })
+      .eq('id', bookingResult.id);
+    
+    // Clear form data
+    localStorage.removeItem(`booking_form_${id}`);
+    
+    // Navigate to confirmation
+    navigate('/student/booking-confirmation', { 
+      state: { bookingId: bookingResult.id } 
+    });
+    
+  } catch (error) {
+    ErrorHandler.handle(error, 'Payment success processing failed');
+  }
+};
 ```
 
 ---
 
-## 📊 **CONFIGURATION CONFLICTS**
+## 🇬🇭 **GHANA-SPECIFIC PAYMENT FEATURES**
 
-### **Commission Rate Conflicts (RESOLVED)**
-| File | Commission Rate | Status |
-|------|----------------|---------|
-| `src/config/index.ts` | 5% + GHS 100 | ✅ Resolved |
-| `src/constants/payment.ts` | 5% + GHS 100 | ✅ Resolved |
-| `src/types/platform-core.ts` | 5% + GHS 100 | ✅ Resolved |
-| `src/utils/paymentCalculations.ts` | 5% + GHS 100 | ✅ Resolved |
-| `platform-definitions.ts` | 5% + GHS 100 | ✅ Matches |
-| `PAYMENT-LOGIC.md` | 5% + GHS 100 | ✅ Matches |
-| `PAYMENT_RULES.md` | 5% + GHS 100 | ✅ Resolved |
+### **Mobile Money Integration**
+```typescript
+// Ghana Mobile Money Networks (✅ Already implemented)
+const GHANA_MOBILE_MONEY = {
+  mtn: { name: 'MTN Mobile Money', code: 'mtn', color: '#FFCC00' },
+  vodafone: { name: 'Vodafone Cash', code: 'vodafone', color: '#E60000' },
+  airtel: { name: 'AirtelTigo Money', code: 'airtel', color: '#FF6600' }
+};
 
-### **Page Size Conflicts**
-| File | Default Size | Max Size | Status |
-|------|-------------|----------|---------|
-| `src/config/index.ts` | 20 | 100 | ❌ Conflict |
-| `src/config/environment.ts` | 10 | 100 | ❌ Conflict |
+// Payment Method Preferences for Ghana
+const PAYMENT_PREFERENCES = {
+  primary: 'mobile_money',     // Most popular in Ghana
+  secondary: 'card',           // Growing adoption
+  tertiary: 'bank_transfer'    // Traditional method
+};
+```
 
----
-
-## 🎯 **CENTRALIZATION STRATEGY**
-
-### **Phase 1: Business Logic Centralization**
-1. **Create `src/config/business-rules.ts`**
-   - Centralize all commission rates
-   - Unify payment configuration
-   - Standardize pricing rules
-
-2. **Create `src/config/ghana-market.ts`**
-   - University configurations
-   - Academic calendar settings
-   - Regional pricing standards
-
-### **Phase 2: UI Configuration Centralization**
-1. **Create `src/config/ui-constants.ts`**
-   - Error messages
-   - Validation messages
-   - Pagination settings
-
-2. **Create `src/config/media-settings.ts`**
-   - File upload limits
-   - Image compression settings
-   - Allowed file types
-
-### **Phase 3: Environment-Specific Configuration**
-1. **Enhance `.env` files**
-   - Add missing environment variables
-   - Document all configuration options
-   - Create environment validation
-
-2. **Create configuration validation**
-   - Runtime configuration checks
-   - Environment-specific overrides
-   - Configuration documentation
+### **Currency and Pricing Display**
+```typescript
+// Ghana Cedis formatting (✅ Already implemented)
+const formatGhanaCurrency = (amount: number) => {
+  return `GH₵${amount.toLocaleString('en-GH', { 
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2 
+  })}`;
+};
+```
 
 ---
 
-## ✅ **IMMEDIATE ACTIONS REQUIRED**
+## 🔄 **MULTI-ACCOUNT PAYMENT DISTRIBUTION**
 
-### **Critical Fixes**
-1. **Resolve Commission Rate Conflicts** - Choose single source of truth
-2. **Centralize Payment Configuration** - Remove duplicate payment settings
-3. **Unify University Data** - Create dynamic university configuration
-4. **Standardize Error Messages** - Centralize all user-facing text
+### **Paystack Subaccount Setup**
+```typescript
+// Subaccount creation for property owners
+const createPropertyOwnerSubaccount = async (ownerData) => {
+  const subaccountData = {
+    business_name: ownerData.businessName,
+    settlement_bank: ownerData.bankCode,
+    account_number: ownerData.accountNumber,
+    percentage_charge: 0, // ROOMi handles all fees
+    description: `Property Owner: ${ownerData.name}`,
+    primary_contact_email: ownerData.email,
+    primary_contact_name: ownerData.name,
+    primary_contact_phone: ownerData.phone,
+    metadata: {
+      owner_id: ownerData.id,
+      property_ids: ownerData.propertyIds
+    }
+  };
+  
+  return await PaystackService.createSubaccount(subaccountData);
+};
+```
 
-### **Configuration Files to Create**
-- `src/config/business-rules.ts` - Business logic configuration
-- `src/config/ghana-market.ts` - Ghana-specific settings
-- `src/config/ui-constants.ts` - UI text and messages
-- `src/config/media-settings.ts` - File upload configuration
-
-### **Files to Update**
-- Remove hardcoded values from all demo data files
-- Update payment services to use centralized configuration
-- Modify property forms to use dynamic university data
-- Update error handling to use centralized messages
-
----
-
-## 📈 **SUCCESS METRICS**
-
-### **Post-Centralization Targets**
-- **Zero Hardcoded Business Values** in application code
-- **Single Source of Truth** for all configuration
-- **Environment-Specific Overrides** for all settings
-- **Runtime Configuration Validation** for all critical values
-- **Documentation** for all configuration options
-ritical values
-- **Documentation** for all configuration options
-
+### **Split Payment Configuration**
+```typescript
+// Payment split for each booking
+const createPaymentSplit = (booking) => {
+  const distribution = calculatePaymentDistribution(booking.total_amount);
+  
+  return {
+    type: "percentage",
+    currency: "GHS",
+    subaccounts: [
+      {
+        subaccount: booking.property_owner_subaccount,
+        share: (distribution.propertyOwnerAmount / distribution.totalAmount) * 100
+      },
+      {
         subaccount: ROOMI_MAIN_SUBACCOUNT,
         share: (distribution.roomiAmount / distribution.totalAmount) * 100
       }
