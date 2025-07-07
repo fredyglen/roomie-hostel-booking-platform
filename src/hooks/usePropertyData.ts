@@ -1,33 +1,87 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Property } from '@/types/property';
+import {
+  Property,
+  PropertyId,
+  PropertyPrice,
+  createPropertyId,
+  createPropertyPrice
+} from '@/types/property';
+import { User } from '@/types/core';
 import { logger } from '@/utils/logger';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
-// Sample properties data as fallback (keeping existing implementation)
+// Sample properties data as fallback (using unified Property interface)
 const getSampleProperties = (): Property[] => {
   return [
     {
-      id: '1',
+      // Core identification with branded types
+      id: createPropertyId('sample-1'),
       name: 'Modern Apartment',
-      title: 'Modern Apartment',
-      description: 'A modern apartment in Accra.',
+      description: 'A modern apartment in Accra with excellent amenities.',
       type: 'apartment',
       status: 'available',
-      price: 1200,
-      rent: 1200,
-      location: {
-        address: '123 Main St',
+
+      // Location information
+      address: {
+        street: '123 Main St',
         city: 'Accra',
         state: 'Greater Accra',
+        zipCode: '00233',
+        country: 'Ghana',
+        coordinates: {
+          latitude: 5.6037,
+          longitude: -0.1870
+        }
       },
-      address: '123 Main St',
-      city: 'Accra',
-      state: 'Greater Accra',
-      zip: '00233',
-      owner_id: 'owner1',
-      propertyCategory: 'Apartment',
-      verified: true,
+
+      // Pricing with branded types
+      price: createPropertyPrice(1200),
+
+      // Physical features
+      features: {
+        bedrooms: 2,
+        bathrooms: 2,
+        kitchens: 1,
+        parkingSpaces: 1,
+        furnished: true,
+        petsAllowed: false,
+        utilities: {
+          water: true,
+          electricity: true,
+          internet: true,
+          gas: true,
+          cleaning: false,
+          security: true,
+        },
+        amenities: ['WiFi', 'Air Conditioning', 'Parking', 'Security'],
+        rules: ['No smoking', 'No pets'],
+      },
+
+      // Media
+      media: [
+        {
+          id: 'sample-1-img-1',
+          url: '/images/sample-apartment-1.jpg',
+          type: 'image',
+          isCover: true,
+        }
+      ],
+
+      // Ownership and metadata
+      ownerId: 'owner1',
+      owner: {
+        id: 'owner1',
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john.doe@example.com',
+        phone: '+233123456789',
+        role: 'owner',
+      },
+      buildings: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      verificationStatus: 'verified',
       is_available: true,
       bedrooms: 2,
       bathrooms: 1,

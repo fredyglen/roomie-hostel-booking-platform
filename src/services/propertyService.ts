@@ -1,6 +1,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Property, PropertyType, PropertyCategory } from '@/types/property';
+import {
+  Property,
+  PropertyType,
+  PropertyCategory,
+  PropertyId,
+  PropertyPrice,
+  createPropertyId,
+  createPropertyPrice
+} from '@/types/property';
+import { User } from '@/types/core';
 import { PropertyQueries } from '@/services/database/standardizedQueries';
 import { Database } from '@/integrations/supabase/types';
 
@@ -41,34 +50,67 @@ export const propertyService = {
         const profileData = Array.isArray(property.profiles) ? property.profiles[0] : property.profiles;
       
       return {
-        id: property.id,
-        owner_id: property.owner_id,
-        name: property.title,
+        // Core identification with branded types
+        id: createPropertyId(property.id),
+        name: property.title || 'Unnamed Property',
         title: property.title,
-        description: property.description,
-        address: property.address,
-        city: property.city,
-        state: property.state,
-        zip: property.zip || '00000',
-        rent: property.base_price_per_semester,
-        price: property.base_price_per_semester,
-        type: property.property_type as PropertyType,
-        propertyCategory: property.property_category as PropertyCategory,
-        verified: property.verification_status === 'verified',
-        is_available: property.is_available,
-        genderType: property.gender_type,
-        maxOccupancy: property.max_occupancy,
-        currentOccupancy: property.current_occupancy,
-        images: property.images || [],
-        amenities: property.amenities || [],
-        location: `${property.city}, ${property.state}`,
-        verificationStatus: property.verification_status,
-        created_at: property.created_at,
-        updated_at: property.updated_at,
+        description: property.description || '',
+        type: (property.property_type as PropertyType) || 'hostel',
+        status: property.is_available ? 'available' : 'inactive',
+
+        // Location information
+        address: {
+          street: property.address || '',
+          city: property.city || '',
+          state: property.state || '',
+          zipCode: property.zip || '',
+          country: 'Ghana',
+          coordinates: {
+            latitude: 0,
+            longitude: 0
+          }
+        },
+
+        // Pricing with branded types
+        price: createPropertyPrice(property.base_price_per_semester || 0),
+
+        // Physical features
+        features: {
+          bedrooms: property.bedrooms || 1,
+          bathrooms: property.bathrooms || 1,
+          kitchens: 0,
+          parkingSpaces: 0,
+          furnished: false,
+          petsAllowed: false,
+          utilities: {
+            water: true,
+            electricity: true,
+            internet: true,
+            gas: false,
+            cleaning: false,
+            security: false,
+          },
+          amenities: property.amenities || [],
+          rules: [],
+        },
+
+        // Media
+        media: (property.images || []).map((url, index) => ({
+          id: `${property.id}-${index}`,
+          url,
+          type: 'image' as const,
+          isCover: index === 0,
+        })),
+
+        // Ownership and metadata
+        ownerId: property.owner_id || '',
         owner: profileData ? {
-          id: 'unknown',
-          name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
+          id: property.owner_id || 'unknown',
+          first_name: profileData.first_name || 'Property',
+          last_name: profileData.last_name || 'Owner',
           email: profileData.email || 'owner@example.com',
+          phone: profileData.phone || '',
+          role: 'owner' as const,
           phone: profileData.phone || '+233 50 123 4567',
           responseRate: '95%',
           verified: true

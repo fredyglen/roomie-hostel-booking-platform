@@ -110,34 +110,56 @@ export const profileUpdateSchema = z.object({
   }).optional(),
 });
 
-// Property schemas
+// Property schemas - aligned with unified Property interface
 export const propertySchema = z.object({
-  title: z.string().min(5, messages.minLength(5)).max(100, messages.maxLength(100)),
+  // Core identification
+  name: z.string().min(5, messages.minLength(5)).max(100, messages.maxLength(100)),
+  title: z.string().min(5, messages.minLength(5)).max(100, messages.maxLength(100)).optional(),
   description: z.string().min(20, messages.minLength(20)).max(2000, messages.maxLength(2000)),
+
+  // Location
   address: z.string().min(10, messages.minLength(10)).max(200, messages.maxLength(200)),
   city: z.string().min(2, messages.minLength(2)),
+  state: z.string().min(2, messages.minLength(2)),
   region: z.string().min(2, messages.minLength(2)),
   country: z.string().default('Ghana'),
   latitude: z.number().min(-90).max(90).optional(),
   longitude: z.number().min(-180).max(180).optional(),
-  propertyType: z.enum(['apartment', 'house', 'hostel', 'shared_room'], {
+
+  // Property classification
+  type: z.enum(['hostel', 'homestel', 'apartment', 'shared_room'], {
     required_error: 'Please select a property type',
   }),
+  propertyCategory: z.enum(['Hostel', 'Homestel', 'Apartment']).optional(),
+  status: z.enum(['available', 'occupied', 'maintenance', 'inactive']).default('available'),
+
+  // Physical features
   bedrooms: z.number().int().min(1).max(20),
   bathrooms: z.number().int().min(1).max(20),
   maxOccupants: z.number().int().min(1).max(50),
-  pricePerMonth: z.number().positive(messages.positive),
+
+  // Pricing
+  price: z.number().positive(messages.positive),
+  rent: z.number().positive(messages.positive).optional(),
+  pricePerMonth: z.number().positive(messages.positive).optional(),
   pricePerSemester: z.number().positive(messages.positive).optional(),
   pricePerYear: z.number().positive(messages.positive).optional(),
   currency: z.string().default('GHS'),
+
+  // Location features
   distanceToCampus: z.number().positive().optional(),
   nearestUniversity: z.string().optional(),
+
+  // Features and amenities
   amenities: z.array(z.string()).default([]),
   rules: z.array(z.string()).default([]),
   images: z.array(z.string().url()).min(1, 'At least one image is required'),
+
+  // Availability
   availableFrom: z.string().datetime().optional(),
   availableTo: z.string().datetime().optional(),
   isActive: z.boolean().default(true),
+  is_available: z.boolean().default(true),
   allowPets: z.boolean().default(false),
   allowSmoking: z.boolean().default(false),
   wifiIncluded: z.boolean().default(false),

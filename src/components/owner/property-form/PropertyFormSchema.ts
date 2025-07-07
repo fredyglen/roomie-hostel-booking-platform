@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { PropertyType, PropertyCategory, PropertyStatus } from '@/types/property';
 
 // Ghana regions enum
 export const ghanaRegions = [
@@ -12,21 +13,37 @@ export type GhanaRegion = typeof ghanaRegions[number];
 // Add string sanitization helper
 const sanitizeString = (val: unknown) => typeof val === 'string' ? val.trim().replace(/<[^>]*>?/gm, '') : val;
 
+// Property type validation aligned with unified Property interface
+const propertyTypeSchema = z.enum(['hostel', 'homestel', 'apartment', 'shared_room'] as const);
+const propertyCategorySchema = z.enum(['Hostel', 'Homestel', 'Apartment'] as const);
+const propertyStatusSchema = z.enum(['available', 'occupied', 'maintenance', 'inactive'] as const);
+const verificationStatusSchema = z.enum(['pending', 'verified', 'rejected'] as const);
+
 export const propertyFormSchema = z.object({
+  // Core property identification - aligned with unified Property interface
+  name: z.preprocess(sanitizeString, z.string().min(1, 'Property name is required')),
   title: z.preprocess(sanitizeString, z.string().min(1, 'Title is required')),
-  type: z.preprocess(sanitizeString, z.string().min(1, 'Property type is required')),
-  propertyCategory: z.enum(['Hostel', 'Homestel', 'Apartment']),
+  type: propertyTypeSchema,
+  propertyCategory: propertyCategorySchema,
+  status: propertyStatusSchema.default('available'),
+
+  // Location information
   address: z.preprocess(sanitizeString, z.string().min(1, 'Address is required')),
   city: z.preprocess(sanitizeString, z.string().min(1, 'City is required')),
+  state: z.preprocess(sanitizeString, z.string().min(1, 'State/Region is required')),
   region: z.enum(ghanaRegions),
   zip: z.preprocess(sanitizeString, z.string().optional()),
+
+  // Pricing information - using branded types
   price: z.number().min(1, 'Price must be greater than 0'),
+  rent: z.number().min(1, 'Rent must be greater than 0').optional(),
   price_unit: z.enum(['week', 'month', 'year', 'semester']),
+
+  // Property description and details
   description: z.preprocess(sanitizeString, z.string().min(10, 'Description must be at least 10 characters')),
   distance_to_campus: z.string().optional(),
-  amenities: z.string().optional(),
+  amenities: z.array(z.string()).optional(),
   house_rules: z.string().optional(),
-  status: z.string().default("Available"),
   
   // Basic property stats
   bedrooms: z.number().min(1, "Must have at least 1 bedroom"),
@@ -70,8 +87,8 @@ export const propertyFormSchema = z.object({
   image_url: z.preprocess(sanitizeString, z.string().optional()),
   images: z.array(z.preprocess(sanitizeString, z.string())).optional(),
   
-  // New enhanced fields for verification and features
-  verification_status: z.enum(['pending', 'verified', 'rejected']).optional(),
+  // Enhanced fields for verification and features
+  verification_status: verificationStatusSchema.optional(),
   emergency_contact_name: z.string().optional(),
   emergency_contact_phone: z.string().optional(),
   has_accessibility_features: z.boolean().optional(),

@@ -1,7 +1,15 @@
 
 import { supabase } from '@/integrations/supabase/client';
-import { Property, PropertyType, PropertyStatus } from '@/types/property';
-import { PropertyCategory } from '@/types/platform-core';
+import {
+  Property,
+  PropertyType,
+  PropertyStatus,
+  PropertyCategory,
+  PropertyId,
+  PropertyPrice,
+  createPropertyId,
+  createPropertyPrice
+} from '@/types/property';
 import { transformDbProperty } from '@/utils/propertyTransforms';
 
 export interface PropertyQueryOptions {
