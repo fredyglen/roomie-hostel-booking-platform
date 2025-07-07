@@ -9,6 +9,25 @@ type BookingEnhanced = Database['public']['Tables']['bookings_enhanced']['Row'];
 type BookingInsert = Database['public']['Tables']['bookings_enhanced']['Insert'];
 type BookingUpdate = Database['public']['Tables']['bookings_enhanced']['Update'];
 
+/**
+ * Type-safe booking metadata interface
+ */
+export interface BookingMetadata {
+  readonly source?: 'web' | 'mobile' | 'admin';
+  readonly referral_code?: string;
+  readonly special_instructions?: string;
+  readonly payment_plan?: 'full' | 'installment';
+  readonly emergency_contact_verified?: boolean;
+  readonly university_verification_status?: 'pending' | 'verified' | 'failed';
+  readonly booking_channel?: 'direct' | 'agent' | 'partner';
+  readonly discount_applied?: {
+    readonly code: string;
+    readonly amount: number;
+    readonly type: 'percentage' | 'fixed';
+  };
+  readonly additional_services?: readonly string[];
+}
+
 export interface CreateBookingData {
   // Property and Student Info
   property_id: string;
@@ -45,7 +64,7 @@ export interface CreateBookingData {
 
   // Additional
   special_requests?: string;
-  metadata?: Record<string, any>;
+  metadata?: BookingMetadata;
 }
 
 export interface RoommateData {
@@ -143,7 +162,7 @@ export class BookingService {
       paystack_access_code?: string;
       payment_reference?: string;
       transaction_reference?: string;
-      metadata?: Record<string, any>;
+      metadata?: BookingMetadata;
     }
   ): Promise<BookingEnhanced> {
     try {

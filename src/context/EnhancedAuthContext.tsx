@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/enhanced-logger';
@@ -33,54 +33,103 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const fetchUserProfile = async (userId: string): Promise<AuthUser | null> => {
+  // Debouncing mechanism to prevent multiple concurrent profile fetches
+  const profileFetchCache = useRef<Map<string, Promise<AuthUser | null>>>(new Map());
+
+  const fetchUserProfile = async (userId: string, authUser?: User): Promise<AuthUser | null> => {
+    try {
+      // Check if there's already a pending fetch for this user
+      const existingFetch = profileFetchCache.current.get(userId);
+      if (existingFetch) {
+        logger.info('Using cached profile fetch promise', { userId });
+        return await existingFetch;
+      }
+
+      // Create new fetch promise and cache it
+      const fetchPromise = performProfileFetch(userId, authUser);
+      profileFetchCache.current.set(userId, fetchPromise);
+
+      // Clean up cache after fetch completes
+      try {
+        const result = await fetchPromise;
+        profileFetchCache.current.delete(userId);
+        return result;
+      } catch (error) {
+        // Clean up cache on error
+        profileFetchCache.current.delete(userId);
+        throw error;
+      }
+    } catch (error) {
+      logger.error('Error in fetchUserProfile wrapper', { error });
+      return null;
+    }
+  };
+
+  const performProfileFetch = async (userId: string, providedAuthUser?: User): Promise<AuthUser | null> => {
     try {
       logger.info('Fetching user profile', { userId });
 
-      // Get the base user data from auth first
-      const { data: { user: authUser } } = await supabase.auth.getUser();
+      // Use provided auth user or fetch it (optimize to avoid duplicate calls)
+      let authUser = providedAuthUser;
+      if (!authUser) {
+        const { data: { user } } = await supabase.auth.getUser();
+        authUser = user;
+      }
 
       if (!authUser || authUser.id !== userId) {
         logger.error('Auth user mismatch', { authUserId: authUser?.id, expectedUserId: userId });
         return null;
       }
 
-      // Try to fetch profile (no timeout)
+      // Create fallback user data first (in case profile fetch fails)
+      const fallbackRole = isValidRole(authUser.user_metadata?.role)
+        ? authUser.user_metadata.role as UserRole
+        : UserRole.STUDENT;
+
+      const fallbackUser: AuthUser = {
+        ...authUser,
+        role: fallbackRole,
+        firstName: authUser.user_metadata?.first_name || '',
+        lastName: authUser.user_metadata?.last_name || '',
+        phone: authUser.user_metadata?.phone || '',
+        avatarUrl: authUser.user_metadata?.avatar_url
+      };
+
+      // Try to fetch profile with timeout to prevent hanging
       logger.info('Attempting to fetch profile from database', { userId });
-      const { data: profile, error } = await supabase
+
+      const profileFetchPromise = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .single();
 
+      // Add timeout to profile fetch (8 seconds)
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error('Profile fetch timeout after 8 seconds')), 8000);
+      });
+
+      const { data: profile, error } = await Promise.race([
+        profileFetchPromise,
+        timeoutPromise
+      ]) as any;
+
       logger.info('Profile fetch result', { profile, error: error?.message });
 
       if (error) {
-        logger.warn('Profile fetch error, using auth user data only', {
+        logger.warn('Profile fetch error, using fallback user data', {
           error: error.message,
           code: error.code,
           userId: userId
         });
-        // Return auth user with default role if profile doesn't exist
-        const fallbackRole = isValidRole(authUser.user_metadata?.role)
-          ? authUser.user_metadata.role as UserRole
-          : UserRole.STUDENT;
-
-        return {
-          ...authUser,
-          role: fallbackRole,
-          firstName: authUser.user_metadata?.first_name || '',
-          lastName: authUser.user_metadata?.last_name || '',
-          phone: authUser.user_metadata?.phone || '',
-          avatarUrl: authUser.user_metadata?.avatar_url
-        } as AuthUser;
+        return fallbackUser;
       }
 
       logger.info('Profile fetched successfully', { profile });
 
       // Validate and combine auth user data with profile data
       const profileRole = profile.role || authUser.user_metadata?.role;
-      const validatedRole = isValidRole(profileRole) ? profileRole as UserRole : UserRole.STUDENT;
+      const validatedRole = isValidRole(profileRole) ? profileRole as UserRole : fallbackRole;
 
       if (profile.role && !isValidRole(profile.role)) {
         logger.warn('Invalid role in profile, using fallback', {
@@ -90,39 +139,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         });
       }
 
-      const combinedUser = {
+      const combinedUser: AuthUser = {
         ...authUser,
         role: validatedRole,
         firstName: profile.first_name || authUser.user_metadata?.first_name,
         lastName: profile.last_name || authUser.user_metadata?.last_name,
         phone: profile.phone || authUser.user_metadata?.phone,
         avatarUrl: profile.avatar_url || authUser.user_metadata?.avatar_url
-      } as AuthUser;
+      };
 
-      logger.info('User profile combined', { role: combinedUser.role, email: combinedUser.email });
+      logger.info('User profile combined successfully', { role: combinedUser.role, email: combinedUser.email });
       return combinedUser;
     } catch (error) {
-      logger.error('Error in fetchUserProfile', { error });
-      // Return auth user with fallback data
-      try {
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (authUser && authUser.id === userId) {
-          const fallbackRole = isValidRole(authUser.user_metadata?.role)
-            ? authUser.user_metadata.role as UserRole
-            : UserRole.STUDENT;
+      logger.error('Error in performProfileFetch', { error });
 
-          return {
-            ...authUser,
-            role: fallbackRole,
-            firstName: authUser.user_metadata?.first_name,
-            lastName: authUser.user_metadata?.last_name,
-            phone: authUser.user_metadata?.phone,
-            avatarUrl: authUser.user_metadata?.avatar_url
-          } as AuthUser;
-        }
-      } catch (fallbackError) {
-        logger.error('Fallback auth user fetch failed', { fallbackError });
+      // Return fallback user if we have auth user data
+      if (providedAuthUser) {
+        const fallbackRole = isValidRole(providedAuthUser.user_metadata?.role)
+          ? providedAuthUser.user_metadata.role as UserRole
+          : UserRole.STUDENT;
+
+        return {
+          ...providedAuthUser,
+          role: fallbackRole,
+          firstName: providedAuthUser.user_metadata?.first_name || '',
+          lastName: providedAuthUser.user_metadata?.last_name || '',
+          phone: providedAuthUser.user_metadata?.phone || '',
+          avatarUrl: providedAuthUser.user_metadata?.avatar_url
+        } as AuthUser;
       }
+
       return null;
     }
   };
@@ -142,7 +188,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         if (session?.user) {
           logger.info('Session found, fetching user profile', { userId: session.user.id });
-          const userWithProfile = await fetchUserProfile(session.user.id);
+          const userWithProfile = await fetchUserProfile(session.user.id, session.user);
           if (isMounted) {
             setUser(userWithProfile);
           }
@@ -165,13 +211,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
 
-    // Add timeout to prevent infinite loading
+    // Add timeout to prevent infinite loading - increased from 3s to 15s for better reliability
     const timeoutId = setTimeout(() => {
       if (isMounted) {
-        logger.warn('Auth initialization timeout, setting loading to false');
+        logger.warn('Auth initialization timeout after 15 seconds, setting loading to false');
         setLoading(false);
       }
-    }, config.supabase.timeout / 10); // Use configured timeout divided by 10 for auth initialization
+    }, 15000); // 15 second timeout for auth initialization (was config.supabase.timeout / 10 = 3s)
 
     getSession().finally(() => {
       clearTimeout(timeoutId);
@@ -189,7 +235,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
           if (session?.user) {
             logger.info('User session detected, fetching profile', { userId: session.user.id });
-            const userWithProfile = await fetchUserProfile(session.user.id);
+            const userWithProfile = await fetchUserProfile(session.user.id, session.user);
             if (isMounted) {
               setUser(userWithProfile);
               logger.info('Profile fetch completed, setting loading to false');
@@ -313,7 +359,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setSession(session);
 
       if (session?.user) {
-        const userWithProfile = await fetchUserProfile(session.user.id);
+        const userWithProfile = await fetchUserProfile(session.user.id, session.user);
         setUser(userWithProfile);
       } else {
         setUser(null);

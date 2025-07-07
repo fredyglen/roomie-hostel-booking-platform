@@ -34,6 +34,56 @@ export type TransactionId = Brand<string, 'TransactionId'>;
 export type AgentId = Brand<string, 'AgentId'>;
 export type UniversityId = Brand<string, 'UniversityId'>;
 
+// =====================================================
+// MISSING BRANDED TYPES FOR TECHNICAL DEBT ELIMINATION
+// =====================================================
+
+/**
+ * Financial and measurement types
+ */
+export type Money = Brand<number, 'Money'>;
+export type DistanceMeters = Brand<number, 'DistanceMeters'>;
+
+/**
+ * Time and date types
+ */
+export type Timestamp = Brand<string, 'Timestamp'>;
+
+/**
+ * Media and location types
+ */
+export type ImageUrl = Brand<string, 'ImageUrl'>;
+export type GeoCoordinates = Brand<{ lat: number; lng: number }, 'GeoCoordinates'>;
+
+/**
+ * Business logic types
+ */
+export type AdditionalFee = Brand<{ name: string; amount: Money; description?: string }, 'AdditionalFee'>;
+export type HostelDiscount = Brand<{ type: 'percentage' | 'fixed'; value: number; description: string }, 'HostelDiscount'>;
+export type PaymentTerms = Brand<{ method: string; schedule: string; penalties?: string }, 'PaymentTerms'>;
+export type SecurityFeature = Brand<{ name: string; description: string; active: boolean }, 'SecurityFeature'>;
+export type FloorRoomDistribution = Brand<{ floor: number; rooms: number; capacity: number }, 'FloorRoomDistribution'>;
+export type AmenityCategory = Brand<string, 'AmenityCategory'>;
+export type ImageCategory = Brand<string, 'ImageCategory'>;
+export type VerificationDocument = Brand<{ type: string; url: string; verified: boolean }, 'VerificationDocument'>;
+export type InspectionReport = Brand<{ date: Timestamp; inspector: string; status: string; notes: string }, 'InspectionReport'>;
+
+/**
+ * Configuration types
+ */
+export type WashroomConfiguration = Brand<{
+  type: 'shared' | 'private' | 'ensuite';
+  count: number;
+  features: string[]
+}, 'WashroomConfiguration'>;
+
+export type RoomTypeConfiguration = Brand<{
+  type: string;
+  capacity: number;
+  features: string[];
+  price: Money;
+}, 'RoomTypeConfiguration'>;
+
 /**
  * Helper functions to create branded types
  */

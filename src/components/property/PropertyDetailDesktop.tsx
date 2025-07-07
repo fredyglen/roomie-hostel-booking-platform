@@ -287,6 +287,7 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
             </div>
           </div>
         </div>
+        </div>
       </div>
     </div>
   );

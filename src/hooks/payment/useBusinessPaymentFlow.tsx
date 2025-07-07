@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { verifyPaystackPayment } from '@/utils/paystack-verification';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorHandler } from '@/utils/ErrorHandler';

@@ -1,8 +1,26 @@
 
 import { Property, PropertyType, PropertyStatus, PropertyCategory } from '@/types/property';
+import { Database } from '@/integrations/supabase/types';
+
+// Type-safe database property interface
+type DatabasePropertyRow = Database['public']['Tables']['properties']['Row'] & {
+  profiles?: {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+  } | {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+  }[];
+};
 
 // Simple, reliable transformation function
-export function transformDbProperty(dbItem: any): Property {
+export function transformDbProperty(dbItem: DatabasePropertyRow): Property {
   // Safely extract profile data
   const profileData = Array.isArray(dbItem.profiles) 
     ? dbItem.profiles[0] 

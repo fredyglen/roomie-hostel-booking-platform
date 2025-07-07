@@ -5,6 +5,21 @@ import PaystackPop from '@paystack/inline-js';
 import { logger } from '@/utils/enhanced-logger';
 import type { PaymentData, PaymentTransaction, MobileMoneyNetwork } from '@/types/payment';
 
+/**
+ * Type-safe payment metadata interface
+ */
+export interface PaymentMetadata {
+  readonly booking_id?: string;
+  readonly property_id?: string;
+  readonly student_id?: string;
+  readonly payment_type?: 'booking' | 'deposit' | 'rent' | 'service_fee';
+  readonly semester_period?: string;
+  readonly room_type?: string;
+  readonly custom_fields?: {
+    readonly [key: string]: string | number | boolean;
+  };
+}
+
 // Validate Paystack configuration
 export const validatePaystackConfig = (): string => {
   const publicKey = config.paystack.publicKey;
@@ -33,7 +48,7 @@ export interface PaystackConfig {
   email: string;
   amount: number; // in GHS
   currency?: 'GHS' | 'NGN' | 'USD';
-  metadata?: Record<string, any>;
+  metadata?: PaymentMetadata;
   channels?: string[];
   split_code?: string;
   subaccount?: string;

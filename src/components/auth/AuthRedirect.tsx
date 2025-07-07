@@ -13,7 +13,8 @@ const AuthRedirect = () => {
     if (!loading) {
       if (user) {
         // User is logged in, redirect based on role
-        const userRole = (user as any).role || 'student';
+        // Type-safe access to user role - user is AuthUser with role property
+        const userRole = user.role || 'student';
         let targetPath = '/student/dashboard';
 
         logger.debug('User role detected', {

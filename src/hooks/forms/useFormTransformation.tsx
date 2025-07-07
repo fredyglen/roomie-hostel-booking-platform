@@ -1,4 +1,4 @@
-import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
+import { PropertyFormValues, GhanaRegion, ghanaRegions } from '@/components/owner/property-form/PropertyFormSchema';
 import { useCallback } from 'react';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
@@ -101,7 +101,7 @@ export const useFormTransformation = () => {
       propertyCategory: typeof dbData.property_category === 'string' ? dbData.property_category as 'Hostel' | 'Homestel' | 'Apartment' : 'Hostel',
       address: typeof dbData.address === 'string' ? dbData.address : '',
       city: typeof dbData.city === 'string' ? dbData.city : '',
-      region: typeof dbData.state === 'string' ? dbData.state as any : 'Greater Accra',
+      region: typeof dbData.state === 'string' && isValidGhanaRegion(dbData.state) ? dbData.state : 'Greater Accra',
       zip: typeof dbData.zip === 'string' ? dbData.zip : '',
       price: typeof dbData.rent === 'number' ? dbData.rent : 0,
       price_unit: 'semester',
@@ -173,6 +173,9 @@ export const useFormTransformation = () => {
 };
 
 // Type guards for string literal unions
+const isValidGhanaRegion = (val: unknown): val is GhanaRegion =>
+  typeof val === 'string' && ghanaRegions.includes(val as GhanaRegion);
+
 const isWashroomType = (val: unknown): val is 'inside' | 'outside' | 'shared' =>
   val === 'inside' || val === 'outside' || val === 'shared';
 const isMeterType = (val: unknown): val is 'shared' | 'self' =>

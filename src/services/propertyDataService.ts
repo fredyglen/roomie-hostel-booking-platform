@@ -201,7 +201,7 @@ export async function fetchPropertyById(id: string): Promise<Property | null> {
     }
 
     console.log('Raw data before transform:', data);
-    const transformedProperty = transformDbProperty(data as any);
+    const transformedProperty = transformDbProperty(data);
     console.log('Transformed property:', transformedProperty);
 
     return transformedProperty;

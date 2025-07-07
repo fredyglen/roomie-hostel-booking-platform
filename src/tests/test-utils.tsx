@@ -118,7 +118,7 @@ export function renderWithProviders(
       queries: {
         retry: false,
         staleTime: 0,
-        cacheTime: 0,
+        gcTime: 0, // Updated from deprecated cacheTime
       },
       mutations: {
         retry: false,
@@ -137,7 +137,7 @@ export function renderWithProviders(
   }
 
   return {
-    user: userEvent.setup(),
+    user: userEvent.setup ? userEvent.setup() : userEvent,
     ...render(ui, { wrapper: Wrapper, ...renderOptions }),
     queryClient: testQueryClient,
   };
@@ -164,7 +164,7 @@ export const testHelpers = {
   },
 
   // Fill form fields
-  fillForm: async (user: ReturnType<typeof userEvent.setup>, fields: Record<string, string>) => {
+  fillForm: async (user: any, fields: Record<string, string>) => {
     for (const [fieldName, value] of Object.entries(fields)) {
       const field = screen.getByLabelText(new RegExp(fieldName, 'i'));
       await user.clear(field);
@@ -173,7 +173,7 @@ export const testHelpers = {
   },
 
   // Submit form
-  submitForm: async (user: ReturnType<typeof userEvent.setup>, buttonText = 'submit') => {
+  submitForm: async (user: any, buttonText = 'submit') => {
     const submitButton = screen.getByRole('button', { name: new RegExp(buttonText, 'i') });
     await user.click(submitButton);
   },

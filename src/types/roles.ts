@@ -55,10 +55,33 @@ export const ROLE_PERMISSIONS = {
 } as const;
 
 /**
+ * Valid permission types
+ */
+type Permission =
+  | 'manage_users'
+  | 'manage_properties'
+  | 'manage_bookings'
+  | 'view_analytics'
+  | 'manage_platform'
+  | 'verify_properties'
+  | 'manage_agents'
+  | 'manage_own_properties'
+  | 'view_own_bookings'
+  | 'view_own_analytics'
+  | 'manage_assigned_properties'
+  | 'view_assigned_bookings'
+  | 'view_assigned_analytics'
+  | 'view_properties'
+  | 'create_bookings'
+  | 'view_own_bookings'
+  | 'manage_own_profile';
+
+/**
  * Check if a role has a specific permission
  */
 export function hasPermission(role: UserRole, permission: string): boolean {
-  return ROLE_PERMISSIONS[role]?.includes(permission as any) || false;
+  const rolePermissions = ROLE_PERMISSIONS[role];
+  return rolePermissions ? rolePermissions.includes(permission as Permission) : false;
 }
 
 /**
