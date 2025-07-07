@@ -4,7 +4,21 @@
  * Provides backward compatibility during the transition period
  */
 
-import { Property, Address, PropertyPrice, PropertyFeatures, PropertyMedia } from '@/types/property';
+import {
+  Property,
+  PropertyId,
+  PropertyPrice,
+  Address,
+  PropertyFeatures,
+  PropertyMedia,
+  PropertyType,
+  PropertyStatus,
+  VerificationStatus,
+  createPropertyId,
+  createPropertyPrice,
+  createAddress
+} from '@/types/property';
+import { User } from '@/types/core';
 import { Database } from '@/integrations/supabase/types';
 
 // Database property type from Supabase
@@ -12,76 +26,106 @@ type DatabaseProperty = Database['public']['Tables']['properties']['Row'];
 
 // Legacy Property interface for backward compatibility
 export interface LegacyProperty {
-  id: string;
-  name: string;
-  description: string;
-  type: string;
-  status: string;
-  address: Address;
-  price: PropertyPrice;
-  features: PropertyFeatures;
-  media: PropertyMedia[];
-  buildings: Record<string, unknown>[];
-  ownerId: string;
-  owner?: Record<string, unknown>;
-  createdAt: string;
-  updatedAt: string;
-  verificationStatus: string;
+  readonly id: string;
+  readonly name: string;
+  readonly description: string;
+  readonly type: string;
+  readonly status: string;
+  readonly address: {
+    readonly street: string;
+    readonly city: string;
+    readonly state: string;
+    readonly country: string;
+    readonly postalCode?: string;
+    readonly coordinates?: {
+      readonly lat: number;
+      readonly lng: number;
+    };
+  };
+  readonly price: {
+    readonly amount: number;
+    readonly currency: string;
+    readonly period: string;
+    readonly isNegotiable: boolean;
+  };
+  readonly features: PropertyFeatures;
+  readonly media: PropertyMedia[];
+  readonly buildings: Record<string, unknown>[];
+  readonly ownerId: string;
+  readonly owner?: Record<string, unknown>;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+  readonly verificationStatus: string;
 }
 
 /**
- * Converts legacy Property to new database-aligned Property
+ * Converts legacy Property to new unified Property interface
  */
 export function adaptLegacyToNew(legacy: LegacyProperty): Property {
   return {
-    id: legacy.id,
-    title: legacy.name,
+    // Core identification with branded types
+    id: createPropertyId(legacy.id),
+    name: legacy.name,
+    title: legacy.name, // Legacy compatibility
     description: legacy.description,
-    property_type: legacy.type,
-    property_category: null,
-    address: legacy.address.street,
+    type: legacy.type as PropertyType,
+    property_type: legacy.type as PropertyType, // Database compatibility
+    status: (legacy.status === 'active' ? 'active' : 'inactive') as PropertyStatus,
+    is_available: legacy.status === 'active', // Database compatibility
+
+    // Location with branded types
+    address: createAddress(legacy.address.street),
     city: legacy.address.city,
     state: legacy.address.state,
     zip: legacy.address.postalCode || '',
+    country: legacy.address.country,
+    coordinates: legacy.address.coordinates ? {
+      lat: legacy.address.coordinates.lat,
+      lng: legacy.address.coordinates.lng
+    } : undefined,
+
+    // Pricing with branded types
+    price: createPropertyPrice(legacy.price.amount),
     rent: legacy.price.amount,
     currency: legacy.price.currency,
+    base_price_per_semester: legacy.price.amount,
+
+    // Property features
+    features: legacy.features,
     bedrooms: legacy.features.bedrooms,
     bathrooms: legacy.features.bathrooms,
-    max_occupants: null,
-    is_available: legacy.status === 'active',
-    is_furnished: legacy.features.furnished,
-    amenities: legacy.features.amenities,
+    kitchens: legacy.features.kitchens,
+    parkingSpaces: legacy.features.parkingSpaces,
+    furnished: legacy.features.furnished,
+    is_furnished: legacy.features.furnished, // Database compatibility
+
+    // Media and buildings
+    media: legacy.media,
     images: legacy.media.map(m => m.url),
-    owner_id: legacy.ownerId,
-    owner: legacy.owner,
+    buildings: legacy.buildings,
+
+    // Ownership
+    ownerId: legacy.ownerId,
+    owner_id: legacy.ownerId, // Database compatibility
+    owner: legacy.owner as User,
+
+    // Timestamps
+    createdAt: legacy.createdAt,
+    updatedAt: legacy.updatedAt,
+    created_at: legacy.createdAt, // Database compatibility
+    updated_at: legacy.updatedAt, // Database compatibility
+
+    // Verification
+    verificationStatus: legacy.verificationStatus as VerificationStatus,
+    verification_status: legacy.verificationStatus, // Database compatibility
+
+    // Additional fields with defaults
+    amenities: legacy.features.amenities || [],
+    rules: legacy.features.rules || [],
+    house_rules: legacy.features.rules || [],
+    max_occupants: null,
     available_from: legacy.createdAt,
     available_to: null,
-    created_at: legacy.createdAt,
-    updated_at: legacy.updatedAt,
-    verification_status: legacy.verificationStatus,
-    // Additional required database fields
-    advance_payment_months: null,
-    allow_bill_sharing: null,
-    base_price_per_semester: legacy.price.amount,
-    beds_available: null,
-    beds_per_room: null,
-    cancellation_policy: null,
-    emergency_contact_name: null,
-    emergency_contact_phone: null,
-    gender_restriction: null,
-    has_accessibility_features: null,
-    has_bedframes: null,
-    has_fan: null,
-    has_individual_meters: null,
-    has_mattresses: null,
-    has_tiled_room: null,
-    has_wardrobes: null,
-    internet_speed: null,
-    meter_type: null,
-    parking_available: null,
-    parking_cost: null,
-    pet_policy: null,
-    rooms_available: null,
     security_features: null,
     semester_availability: null,
     shared_meter_count: null,
