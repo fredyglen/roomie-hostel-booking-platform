@@ -103,8 +103,12 @@ export type PropertyVerificationStatus = 'pending' | 'verified' | 'rejected' | '
 /**
  * Core property entity representing all accommodations
  * Matches exact database schema for type safety
+ *
+ * NOTE: This interface has been unified into src/types/property.ts
+ * Import Property from '@/types/property' instead of using this interface
+ * This is kept for reference and BE CONSCIOUS documentation purposes only
  */
-export interface Property {
+export interface BEConsciousProperty {
   // Core identification
   readonly id: string;
   readonly title: string;

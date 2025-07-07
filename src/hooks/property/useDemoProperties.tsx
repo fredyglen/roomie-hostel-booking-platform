@@ -133,8 +133,9 @@ export const useDemoProperties = () => {
               name: 'Property Owner',
               email: 'owner@example.com',
               phone: '+233 50 123 4567',
-              responseRate: '95%',
-              verified: true
+              role: 'owner',
+              first_name: 'Property',
+              last_name: 'Owner',
             },
             rating: 4.5,
             house_rules: '',

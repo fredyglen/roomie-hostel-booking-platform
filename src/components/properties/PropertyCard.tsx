@@ -21,32 +21,34 @@ import {
   KitchenIcon
 } from '@/components/ui/SolarIcons';
 
+import { PropertyId, PropertyPrice } from '@/types/property';
+
 export interface PropertyCardProps {
-  id: string;
-  title: string;
-  rent: number;
-  location: string;
-  bedrooms: number;
-  bathrooms: number;
-  maxOccupants: number;
-  images: string[];
-  amenities: string[];
-  propertyType: string;
-  genderRestriction?: string;
-  isAvailable: boolean;
+  readonly id: PropertyId | string;
+  readonly title: string;
+  readonly rent: PropertyPrice | number;
+  readonly location: string;
+  readonly bedrooms: number;
+  readonly bathrooms: number;
+  readonly maxOccupants: number;
+  readonly images: string[];
+  readonly amenities: string[];
+  readonly propertyType: string;
+  readonly genderRestriction?: string;
+  readonly isAvailable: boolean;
   // ROOMi-specific properties
-  roomTypes?: Array<{
-    type: string; // "1 in a room", "2 in a room", etc.
-    price: number;
-    bedsAvailable: number;
-    totalBeds: number;
+  readonly roomTypes?: Array<{
+    readonly type: string; // "1 in a room", "2 in a room", etc.
+    readonly price: number;
+    readonly bedsAvailable: number;
+    readonly totalBeds: number;
   }>;
-  distanceToCampus?: string;
-  totalBedsAvailable?: number;
-  totalBeds?: number;
-  priceUnit?: 'semester' | 'month' | 'year';
-  onViewDetails: () => void;
-  onViewStory?: () => void;
+  readonly distanceToCampus?: string;
+  readonly totalBedsAvailable?: number;
+  readonly totalBeds?: number;
+  readonly priceUnit?: 'semester' | 'month' | 'year';
+  readonly onViewDetails: () => void;
+  readonly onViewStory?: () => void;
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({
@@ -70,6 +72,11 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   onViewDetails,
   onViewStory
 }) => {
+  // Type-safe property ID handling
+  const propertyId = typeof id === 'string' ? id : String(id);
+
+  // Type-safe rent handling
+  const rentAmount = typeof rent === 'number' ? rent : Number(rent);
   const navigate = useNavigate();
   const {
     trackImageView,

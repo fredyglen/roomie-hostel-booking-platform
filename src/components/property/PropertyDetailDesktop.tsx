@@ -7,23 +7,34 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PropertyDetailTabs from './PropertyDetailTabs';
 
-// Property interface for detail components
+import { Property, PropertyId, PropertyPrice } from '@/types/property';
+
+// Property interface for detail components - compatible with unified Property interface
 interface PropertyDetailData {
-  id: string | number;
-  title: string;
-  rent?: number;
-  location?: string | { address?: string; city?: string };
-  images?: string[];
-  amenities?: string[] | Array<{ name: string }>;
-  propertyType?: string;
-  genderRestriction?: string;
-  distanceToCampus?: string;
-  distance_to_campus?: string;
-  rating?: number;
-  bedrooms?: number;
-  bathrooms?: number;
-  maxOccupants?: number;
-  description?: string;
+  readonly id: PropertyId | string | number;
+  readonly title?: string;
+  readonly name?: string; // Alternative name field
+  readonly rent?: PropertyPrice | number;
+  readonly price?: PropertyPrice | number; // Alternative price field
+  readonly location?: string | { address?: string; city?: string };
+  readonly address?: string; // Direct address field
+  readonly city?: string;
+  readonly state?: string;
+  readonly images?: string[];
+  readonly amenities?: string[] | Array<{ name: string }>;
+  readonly propertyType?: string;
+  readonly property_type?: string; // Database field
+  readonly type?: string; // Alternative type field
+  readonly genderRestriction?: string;
+  readonly gender_restriction?: string; // Database field
+  readonly distanceToCampus?: string;
+  readonly distance_to_campus?: string;
+  readonly rating?: number;
+  readonly bedrooms?: number;
+  readonly bathrooms?: number;
+  readonly maxOccupants?: number;
+  readonly max_occupants?: number; // Database field
+  readonly description?: string;
 }
 
 interface PropertyDetailDesktopProps {

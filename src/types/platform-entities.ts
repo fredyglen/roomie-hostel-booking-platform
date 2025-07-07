@@ -18,7 +18,7 @@ import {
   PaymentId,
   TransactionId,
   AgentId,
-  UniversityId,
+  // UniversityId, // Commented out as not used in current implementation
   UserRole,
   VerificationStatus,
   PropertyType,
@@ -212,8 +212,12 @@ export interface Bed extends BaseEntity {
 
 /**
  * Complete property entity
+ *
+ * NOTE: This interface has been unified into src/types/property.ts
+ * Import Property from '@/types/property' instead of using this interface
+ * This is kept for reference and platform-entities documentation purposes only
  */
-export interface Property extends BaseEntity {
+export interface PlatformProperty extends BaseEntity {
   readonly id: PropertyId;
   readonly owner_id: UserId;
   readonly agent_id?: AgentId;
@@ -364,8 +368,8 @@ export interface PaymentTransaction extends BaseEntity {
 export type UserInsert = Omit<User, keyof BaseEntity>;
 export type UserUpdate = Partial<Omit<User, 'id' | 'email' | keyof BaseEntity>>;
 
-export type PropertyInsert = Omit<Property, keyof BaseEntity>;
-export type PropertyUpdate = Partial<Omit<Property, 'id' | 'owner_id' | keyof BaseEntity>>;
+export type PlatformPropertyInsert = Omit<PlatformProperty, keyof BaseEntity>;
+export type PlatformPropertyUpdate = Partial<Omit<PlatformProperty, 'id' | 'owner_id' | keyof BaseEntity>>;
 
 export type BookingInsert = Omit<Booking, keyof BaseEntity>;
 export type BookingUpdate = Partial<Omit<Booking, 'id' | 'booking_reference' | keyof BaseEntity>>;
