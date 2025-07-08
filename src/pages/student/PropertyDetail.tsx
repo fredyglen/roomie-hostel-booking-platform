@@ -5,7 +5,7 @@ import { Helmet } from 'react-helmet-async';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
-import PropertyDetailsView from '@/components/properties/PropertyDetailsView';
+import PropertyDetailView from '@/components/property/PropertyDetailView';
 import { usePropertyData } from '@/hooks/property/usePropertyData';
 import { navigateToBooking, navigateBack } from '@/utils/navigation';
 import { Property } from '@/types/property';
@@ -101,14 +101,14 @@ const PropertyDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{property.title} - ROOMi</title>
-        <meta name="description" content={property.description} />
+        <title>{property?.title || 'Property Details'} - ROOMi</title>
+        <meta name="description" content={property?.description || 'View property details on ROOMi'} />
       </Helmet>
       
       <div className="min-h-screen flex flex-col pb-16">
         <Header />
         <main className="flex-grow">
-          <PropertyDetailsView
+          <PropertyDetailView
             property={property}
             onBookNow={handleBookNow}
             onGoBack={handleGoBack}

@@ -5,13 +5,16 @@ import PropertyImageGallery from './PropertyImageGallery';
 import PropertyTabs from './PropertyTabs';
 import PropertyBookingCard from './PropertyBookingCard';
 import PropertyOwnerCard from './PropertyOwnerCard';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 interface PropertyDetailViewProps {
   property: Property;
-  onBook?: () => void;
+  onBookNow?: () => void;
+  onGoBack?: () => void;
 }
 
-const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBook }) => {
+const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBookNow, onGoBack }) => {
   // Helper functions to safely extract data
   const getLocationText = (location: string | { city: string; state: string; address: string }): string => {
     if (typeof location === 'string') {
@@ -69,6 +72,16 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-4">
+      {/* Back Button */}
+      {onGoBack && (
+        <div className="mb-4">
+          <Button variant="outline" onClick={onGoBack} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Properties
+          </Button>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-4">
@@ -93,7 +106,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
           {/* Booking Card */}
           <PropertyBookingCard
             property={property}
-            onBook={onBook}
+            onBook={onBookNow}
           />
           
           {/* Owner Card */}
