@@ -24,6 +24,7 @@ import {
 import { formatCurrency } from '@/utils/currency';
 import DatabaseSeeder from '@/components/admin/DatabaseSeeder';
 import PropertyVisibilityMonitor from '@/components/admin/PropertyVisibilityMonitor';
+import AdminAccessTest from '@/components/admin/AdminAccessTest';
 
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
@@ -366,6 +367,9 @@ const AdminDashboard: React.FC = () => {
 
         {/* Property Visibility Monitor */}
         <PropertyVisibilityMonitor />
+
+        {/* Admin Access Test */}
+        <AdminAccessTest />
 
         {/* System Health */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

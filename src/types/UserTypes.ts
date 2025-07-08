@@ -1,6 +1,8 @@
 // User related type definitions
+// DEPRECATED: Use UserRole from '@/types/roles' instead
+// This file is kept for backward compatibility only
 
-export type UserRole = 'owner' | 'student' | 'admin';
+export type UserRole = 'owner' | 'student' | 'admin' | 'agent';
 export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'SUSPENDED';
 
 export interface UserProfile {

@@ -117,6 +117,95 @@ export class DataSeeder {
   }
 
   /**
+   * Ensure demo admin user exists with correct role
+   * Following BE CONSCIOUS zero tolerance for missing admin access
+   */
+  async ensureDemoAdminExists(): Promise<void> {
+    logger.info('Ensuring demo admin user exists...');
+
+    const adminEmail = 'admin@roomi.com';
+    const adminPassword = 'password123';
+
+    try {
+      // Check if admin profile exists
+      const { data: existingProfile, error: profileCheckError } = await supabase
+        .from('profiles')
+        .select('id, email, role')
+        .eq('email', adminEmail)
+        .single();
+
+      if (profileCheckError && profileCheckError.code !== 'PGRST116') {
+        throw profileCheckError;
+      }
+
+      if (existingProfile) {
+        // Verify role is correct
+        if (existingProfile.role !== 'admin') {
+          logger.warn('Admin user exists but has wrong role, updating...', {
+            currentRole: existingProfile.role
+          });
+
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({ role: 'admin' })
+            .eq('id', existingProfile.id);
+
+          if (updateError) {
+            throw updateError;
+          }
+
+          logger.info('Admin user role updated successfully');
+        } else {
+          logger.info('Demo admin user already exists with correct role');
+        }
+        return;
+      }
+
+      // Create admin auth user
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: adminEmail,
+        password: adminPassword,
+        options: {
+          data: {
+            first_name: 'Demo',
+            last_name: 'Admin',
+            role: 'admin',
+          }
+        }
+      });
+
+      if (authError) {
+        if (authError.message.includes('already registered')) {
+          logger.warn('Admin auth user exists, will create profile if missing');
+          return;
+        }
+        throw authError;
+      }
+
+      // Create admin profile
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert({
+          id: authData.user?.id,
+          email: adminEmail,
+          first_name: 'Demo',
+          last_name: 'Admin',
+          role: 'admin',
+          phone: '+233 50 000 0000',
+        });
+
+      if (profileError) {
+        throw profileError;
+      }
+
+      logger.info('Successfully created demo admin user');
+    } catch (error) {
+      logger.error('Failed to ensure demo admin exists', error);
+      throw error;
+    }
+  }
+
+  /**
    * Seed property data
    */
   private async seedProperties(): Promise<void> {
@@ -253,6 +342,22 @@ export class DataSeeder {
       logger.info('All seeded data cleared successfully');
     } catch (error) {
       logger.error('Failed to clear seeded data', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Initialize essential demo accounts for testing
+   * Following BE CONSCIOUS mandatory admin access requirements
+   */
+  async initializeDemoAccounts(): Promise<void> {
+    logger.info('Initializing demo accounts...');
+
+    try {
+      await this.ensureDemoAdminExists();
+      logger.info('Demo accounts initialization completed');
+    } catch (error) {
+      logger.error('Failed to initialize demo accounts', error);
       throw error;
     }
   }

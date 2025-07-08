@@ -7,12 +7,14 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { seedGhanaHostels, clearProperties, checkSeedingStatus } from '@/utils/seed-ghana-hostels';
+import { ensureDemoAdminExists } from '@/utils/admin-setup';
 import { logger } from '@/utils/enhanced-logger';
 
 export const DatabaseSeeder: React.FC = () => {
   const [isSeeding, setIsSeeding] = useState(false);
   const [isClearing, setIsClearing] = useState(false);
   const [isChecking, setIsChecking] = useState(false);
+  const [isFixingAdmin, setIsFixingAdmin] = useState(false);
   const [status, setStatus] = useState<string>('');
   const [propertyCount, setPropertyCount] = useState<number>(0);
 
@@ -50,7 +52,7 @@ export const DatabaseSeeder: React.FC = () => {
 
   const checkStatus = async () => {
     setIsChecking(true);
-    
+
     try {
       const result = await checkSeedingStatus();
       setPropertyCount(result.count);
@@ -63,6 +65,25 @@ export const DatabaseSeeder: React.FC = () => {
     }
   };
 
+  const handleFixAdmin = async () => {
+    setIsFixingAdmin(true);
+    setStatus('Fixing admin access...');
+
+    try {
+      const result = await ensureDemoAdminExists();
+      if (result.success) {
+        setStatus(`✅ ${result.message} - Admin: admin@roomi.com / password123`);
+      } else {
+        setStatus(`❌ Admin fix failed: ${result.message}`);
+      }
+    } catch (error) {
+      setStatus(`❌ Failed to fix admin: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      logger.error('Admin fix failed', error);
+    } finally {
+      setIsFixingAdmin(false);
+    }
+  };
+
   React.useEffect(() => {
     checkStatus();
   }, []);
@@ -70,9 +91,9 @@ export const DatabaseSeeder: React.FC = () => {
   return (
     <Card className="w-full max-w-md mx-auto">
       <CardHeader>
-        <CardTitle>Database Seeder</CardTitle>
+        <CardTitle>Admin Tools</CardTitle>
         <p className="text-sm text-gray-600">
-          Quick tool to seed Ghana hostels for testing
+          Database seeding and admin access management
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -101,13 +122,22 @@ export const DatabaseSeeder: React.FC = () => {
             {isClearing ? 'Clearing...' : 'Clear All Properties'}
           </Button>
 
-          <Button 
+          <Button
             onClick={checkStatus}
             disabled={isChecking}
             className="w-full"
             variant="outline"
           >
             {isChecking ? 'Checking...' : 'Check Status'}
+          </Button>
+
+          <Button
+            onClick={handleFixAdmin}
+            disabled={isFixingAdmin}
+            className="w-full"
+            variant="secondary"
+          >
+            {isFixingAdmin ? 'Fixing Admin...' : 'Fix Admin Access'}
           </Button>
         </div>
 

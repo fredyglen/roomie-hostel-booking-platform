@@ -50,7 +50,8 @@ export interface User {
   readonly profile?: UserProfile; // For complex profile data
 }
 
-export type UserRole = 'owner' | 'student' | 'admin';
+// DEPRECATED: Use UserRole from '@/types/roles' instead
+export type UserRole = 'owner' | 'student' | 'admin' | 'agent';
 
 export type UserStatus = 'ACTIVE' | 'INACTIVE' | 'PENDING' | 'SUSPENDED';
 
