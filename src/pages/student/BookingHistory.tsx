@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Calendar } from 'lucide-react';
+import Header from '@/components/layout/Header';
+import StudentNavBar from '@/components/navigation/StudentNavBar';
 import BookingFilters from '@/components/student/BookingFilters';
 import BookingCard from '@/components/student/BookingCard';
 import BookingConfirmation from '@/components/booking/BookingConfirmation';
@@ -99,25 +101,44 @@ const BookingHistory: React.FC = () => {
   }
 
   if (loading) {
-    return <BaseLoading message="Loading your bookings..." />;
+    return (
+      <div className="min-h-screen flex flex-col pb-16">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-4">
+          <BaseLoading message="Loading your bookings..." />
+        </main>
+        <StudentNavBar />
+      </div>
+    );
   }
 
   if (!loading && filteredBookings.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 transition-all duration-500">
-        <img src="/empty-state.svg" alt="No bookings" className="w-32 h-32 mb-4 opacity-80" />
-        <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings found</h3>
-        <p className="text-gray-600">
-          {searchTerm || statusFilter !== 'all' 
-            ? 'Try adjusting your search or filter criteria.'
-            : 'You haven\'t made any bookings yet. Start exploring properties!'}
-        </p>
+      <div className="min-h-screen flex flex-col pb-16">
+        <Header />
+        <main className="flex-grow container mx-auto px-4 py-4">
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">Booking History</h1>
+          <div className="flex flex-col items-center justify-center py-12 transition-all duration-500">
+            <img src="/empty-state.svg" alt="No bookings" className="w-32 h-32 mb-4 opacity-80" />
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings found</h3>
+            <p className="text-gray-600">
+              {searchTerm || statusFilter !== 'all'
+                ? 'Try adjusting your search or filter criteria.'
+                : 'You haven\'t made any bookings yet. Start exploring properties!'}
+            </p>
+          </div>
+        </main>
+        <StudentNavBar />
       </div>
     );
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen flex flex-col pb-16">
+      <Header />
+      <main className="flex-grow container mx-auto px-4 py-4">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Booking History</h1>
+        <div className="space-y-6">
       <BookingFilters
         searchTerm={searchTerm}
         onSearchChange={setSearchTerm}
@@ -191,6 +212,9 @@ const BookingHistory: React.FC = () => {
           </div>
         </div>
       )}
+        </div>
+      </main>
+      <StudentNavBar />
     </div>
   );
 };

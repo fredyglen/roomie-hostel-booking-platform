@@ -9,6 +9,7 @@ import LazyPropertyCard from '@/components/common/LazyPropertyCard';
 import ViewingProgressIndicator from '@/components/properties/ViewingProgressIndicator';
 import SimpleRegistrationModal from '@/components/auth/SimpleRegistrationModal';
 import PropertyDetailWrapper from '@/components/property/PropertyDetailWrapper';
+import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
 import { useAnonymousTimeLimit } from '@/hooks/useAnonymousTimeLimit';
 import { useDemoProperties } from '@/hooks/property/useDemoProperties';
@@ -542,6 +543,7 @@ const PropertyListing: React.FC = () => {
           onViewStory={handleModalViewStory}
         />
       )}
+      <StudentNavBar />
     </div>
   );
 };

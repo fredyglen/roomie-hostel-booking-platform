@@ -4,6 +4,7 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import StudentNavBar from '@/components/navigation/StudentNavBar';
 import PropertyDetailsView from '@/components/properties/PropertyDetailsView';
 import { usePropertyData } from '@/hooks/property/usePropertyData';
 import { navigateToBooking, navigateBack } from '@/utils/navigation';
@@ -104,16 +105,17 @@ const PropertyDetail: React.FC = () => {
         <meta name="description" content={property.description} />
       </Helmet>
       
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col pb-16">
         <Header />
         <main className="flex-grow">
-          <PropertyDetailsView 
+          <PropertyDetailsView
             property={property}
             onBookNow={handleBookNow}
             onGoBack={handleGoBack}
           />
         </main>
         <Footer />
+        <StudentNavBar />
       </div>
     </>
   );

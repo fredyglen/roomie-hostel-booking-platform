@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
+import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MapPin, Bed, Bath, Users, Search, Heart, Calendar } from 'lucide-react';
@@ -102,7 +103,7 @@ const StudentDashboard: React.FC = () => {
   }, [user?.id]);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col pb-16">
       <Header />
       <main className="flex-grow container mx-auto px-4 py-4">
         {/* Welcome Section */}
@@ -333,6 +334,7 @@ const StudentDashboard: React.FC = () => {
         </div>
       </main>
       <Footer />
+      <StudentNavBar />
     </div>
   );
 };
