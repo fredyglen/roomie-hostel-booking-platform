@@ -14,8 +14,8 @@ const Landing: React.FC = () => {
     <div className="min-h-screen flex flex-col">
       <Header transparent={false} />
       <div className="flex-grow">
-        <div className="container mx-auto px-4 py-8">
-          <div className="text-center mb-12">
+        <div className="container mx-auto px-4 py-4">
+          <div className="text-center mb-6">
             <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
               Find Your Perfect Student Accommodation
             </h1>
@@ -23,7 +23,7 @@ const Landing: React.FC = () => {
               ROOMi connects students with quality housing near campus. 
               Browse available properties, compare options, and book your ideal accommodation.
             </p>
-            <div className="mt-8 flex justify-center gap-4">
+            <div className="mt-4 flex justify-center gap-4">
               <Link to="/register">
                 <Button size="lg">Sign Up</Button>
               </Link>
@@ -33,9 +33,9 @@ const Landing: React.FC = () => {
             </div>
           </div>
           <UniversitySelector />
-          <div className="mt-16 text-center">
-            <h2 className="text-3xl font-bold text-gray-900 mb-6">How It Works</h2>
-            <div className="grid md:grid-cols-3 gap-8">
+          <div className="mt-8 text-center">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">How It Works</h2>
+            <div className="grid md:grid-cols-3 gap-4">
               <div className="p-6 bg-white rounded-lg shadow-md">
                 <div className="w-12 h-12 bg-blue-100 text-blue-700 rounded-full flex items-center justify-center text-xl font-bold mx-auto mb-4">1</div>
                 <h3 className="text-xl font-semibold mb-2">Create Your Account</h3>

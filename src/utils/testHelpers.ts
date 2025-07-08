@@ -1,5 +1,12 @@
 
-import { Property } from '@/types/property';
+import {
+  Property,
+  PropertyFeatures,
+  createPropertyId,
+  createPropertyPrice,
+  createAddress
+} from '@/types/property';
+import { User } from '@/types/core';
 
 /**
  * Validates a property object to ensure it has all required fields
@@ -27,28 +34,53 @@ export function normalizePropertyId(id: string | number): string {
  * Generates a test property for testing UI components
  */
 export function generateTestProperty(overrides: Partial<Property> = {}): Property {
+  const features: PropertyFeatures = {
+    bedrooms: 2,
+    bathrooms: 1,
+    kitchens: 1,
+    parkingSpaces: 1,
+    furnished: true,
+    petsAllowed: false,
+    utilities: {
+      water: true,
+      electricity: true,
+      internet: true,
+      gas: false,
+      cleaning: false,
+      security: true,
+    },
+    amenities: ['WiFi', 'Parking'],
+    rules: ['No smoking', 'No pets'],
+  };
+
+  const owner: User = {
+    id: 'test-owner-1',
+    email: 'owner@test.com',
+    role: 'owner',
+    first_name: 'Test',
+    last_name: 'Owner',
+    phone: '+1234567890',
+  };
+
   return {
-    id: 'test-id-1',
+    id: createPropertyId('test-id-1'),
     owner_id: 'test-owner-1',
     name: 'Test Property',
     title: 'Test Property',
     description: 'A test property description',
     type: 'apartment',
+    property_type: 'apartment',
     status: 'available',
-    price: 1000,
+    is_available: true,
+    price: createPropertyPrice(1000),
     rent: 1000,
-    location: {
-      address: '123 Test St',
-      city: 'Test City',
-      state: 'Test State',
-    },
-    address: '123 Test St',
+    currency: 'GHS',
+    address: createAddress('123 Test St'),
     city: 'Test City',
     state: 'Test State',
+    country: 'Ghana',
     zip: '12345',
-    propertyCategory: 'Apartment',
-    verified: true,
-    is_available: true,
+    property_category: 'Apartment',
     bedrooms: 2,
     bathrooms: 1,
     amenities: ['WiFi', 'Parking'],
@@ -56,17 +88,19 @@ export function generateTestProperty(overrides: Partial<Property> = {}): Propert
     available_from: '2024-01-01',
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
-    owner: {
-      id: 'test-owner-1',
-      name: 'Test Owner',
-      email: 'owner@test.com',
-      phone: '+1234567890',
-      verified: true,
-      responseRate: '95%'
-    },
-    house_rules: 'No smoking, no pets',
-    stories: [],
-    features: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    owner,
+    house_rules: ['No smoking', 'No pets'],
+    features,
+    media: [{
+      id: 'test-media-1',
+      url: '/placeholder.svg',
+      type: 'image',
+      isCover: true,
+    }],
+    buildings: [],
+    ownerId: 'test-owner-1',
     ...overrides,
   };
 }

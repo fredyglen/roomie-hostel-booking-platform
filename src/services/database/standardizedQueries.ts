@@ -10,7 +10,7 @@ import { logger } from '@/utils/enhanced-logger';
 // Standardized table names - use these throughout the application
 export const TABLE_NAMES = {
   PROPERTIES: 'properties',
-  BOOKINGS: 'bookings', // Use the main bookings table, not bookings_enhanced
+  BOOKINGS: 'bookings_enhanced', // Use the enhanced bookings table with all required fields
   PROFILES: 'profiles',
   ROOMS: 'rooms',
   BEDS: 'beds',
@@ -64,8 +64,8 @@ export const COLUMN_SELECTIONS = {
     price_currency,
     is_available,
     gender_type,
-    max_occupancy,
-    current_occupancy,
+    max_occupants,
+    beds_available,
     amenities,
     images,
     cover_image_url,
@@ -93,15 +93,11 @@ export const COLUMN_SELECTIONS = {
     check_in_date,
     check_out_date,
     total_amount,
-    platform_commission,
     platform_fee,
     status,
     payment_status,
     payment_reference,
     paystack_reference,
-    student_name,
-    student_email,
-    student_phone,
     created_at,
     updated_at
   `,
@@ -118,18 +114,14 @@ export const COLUMN_SELECTIONS = {
     check_in_date,
     check_out_date,
     total_amount,
-    platform_commission,
     platform_fee,
     status,
     payment_status,
     payment_reference,
     paystack_reference,
-    student_name,
-    student_email,
-    student_phone,
     created_at,
     updated_at,
-    properties!bookings_property_id_fkey (
+    properties (
       title,
       address,
       city,

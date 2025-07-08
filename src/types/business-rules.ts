@@ -21,10 +21,11 @@ import {
 
 import {
   Booking,
-  Property,
   User,
   PaymentTransaction
 } from './platform-entities';
+
+import { Property } from './property';
 
 // =====================================================
 // BUSINESS RULE INTERFACES

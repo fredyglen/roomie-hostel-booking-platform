@@ -4,19 +4,21 @@ import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 export interface ErrorDisplayProps {
-  error: string | Error;
+  error?: string | Error | null;
   title?: string;
   onRetry?: () => void;
   showRetry?: boolean;
 }
 
-const ErrorDisplay: React.FC<ErrorDisplayProps> = ({ 
-  error, 
+const ErrorDisplay: React.FC<ErrorDisplayProps> = ({
+  error,
   title = 'Something went wrong',
-  onRetry, 
-  showRetry = true 
+  onRetry,
+  showRetry = true
 }) => {
-  const errorMessage = typeof error === 'string' ? error : error.message;
+  const errorMessage = error
+    ? (typeof error === 'string' ? error : error.message || 'An unknown error occurred')
+    : 'An unknown error occurred';
 
   return (
     <div

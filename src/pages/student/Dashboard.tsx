@@ -104,9 +104,9 @@ const StudentDashboard: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+      <main className="flex-grow container mx-auto px-4 py-4">
         {/* Welcome Section */}
-        <div className="mb-8">
+        <div className="mb-4">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back, {user?.firstName || 'Student'}!
           </h1>

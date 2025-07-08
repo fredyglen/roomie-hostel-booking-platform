@@ -44,18 +44,14 @@ export function transformDbProperty(dbItem: DatabasePropertyRow): Property {
     type: (dbItem.property_type as PropertyType) || 'hostel',
     status: (dbItem.is_available ? 'available' : 'inactive') as PropertyStatus,
 
-    // Location information
-    address: {
-      street: String(dbItem.address || ''),
-      city: String(dbItem.city || ''),
-      state: String(dbItem.state || ''),
-      zipCode: String(dbItem.zip || ''),
-      country: 'Ghana',
-      coordinates: {
-        latitude: Number(dbItem.latitude || 0),
-        longitude: Number(dbItem.longitude || 0)
-      }
-    },
+    // Location information with branded types
+    address: createAddress(String(dbItem.address || '')),
+    city: String(dbItem.city || ''),
+    state: String(dbItem.state || ''),
+    zip: String(dbItem.zip || ''),
+    country: 'Ghana',
+    latitude: Number(dbItem.latitude || 0),
+    longitude: Number(dbItem.longitude || 0),
 
     // Pricing with branded types
     price: createPropertyPrice(Number(dbItem.rent || dbItem.base_price_per_semester || 0)),

@@ -102,12 +102,19 @@ export function adaptLegacyToNew(legacy: LegacyProperty): Property {
     // Media and buildings
     media: legacy.media,
     images: legacy.media.map(m => m.url),
-    buildings: legacy.buildings,
+    buildings: [], // Convert legacy buildings to proper Building[] format
 
     // Ownership
     ownerId: legacy.ownerId,
     owner_id: legacy.ownerId, // Database compatibility
-    owner: legacy.owner as User,
+    owner: legacy.owner ? {
+      id: (legacy.owner as any).id || '',
+      email: (legacy.owner as any).email || '',
+      role: 'owner' as const,
+      first_name: (legacy.owner as any).name || '',
+      last_name: '',
+      phone: (legacy.owner as any).phone || '',
+    } as User : undefined,
 
     // Timestamps
     createdAt: legacy.createdAt,
@@ -117,15 +124,15 @@ export function adaptLegacyToNew(legacy: LegacyProperty): Property {
 
     // Verification
     verificationStatus: legacy.verificationStatus as VerificationStatus,
-    verification_status: legacy.verificationStatus, // Database compatibility
+    verification_status: legacy.verificationStatus as VerificationStatus, // Database compatibility
 
     // Additional fields with defaults
     amenities: legacy.features.amenities || [],
     rules: legacy.features.rules || [],
     house_rules: legacy.features.rules || [],
-    max_occupants: null,
+    max_occupants: undefined,
     available_from: legacy.createdAt,
-    available_to: null,
+    available_to: undefined,
     security_features: null,
     semester_availability: null,
     shared_meter_count: null,
@@ -145,31 +152,31 @@ export function adaptLegacyToNew(legacy: LegacyProperty): Property {
 export function adaptNewToLegacy(newProp: Property): LegacyProperty {
   return {
     id: newProp.id,
-    name: newProp.title,
+    name: newProp.title || newProp.name || 'Unnamed Property',
     description: newProp.description,
-    type: newProp.property_type,
+    type: newProp.property_type || newProp.type || 'hostel',
     status: newProp.is_available ? 'active' : 'inactive',
     address: {
       street: newProp.address,
-      city: newProp.city,
-      state: newProp.state,
+      city: newProp.city || '',
+      state: newProp.state || '',
       country: 'Ghana',
       postalCode: '',
       latitude: 0,
       longitude: 0,
     },
     price: {
-      amount: newProp.rent,
+      amount: newProp.rent || 0,
       currency: newProp.currency || 'GHS',
       period: 'semester',
       isNegotiable: false,
     },
     features: {
-      bedrooms: newProp.bedrooms,
-      bathrooms: newProp.bathrooms,
+      bedrooms: newProp.bedrooms || 1,
+      bathrooms: newProp.bathrooms || 1,
       kitchens: 0,
       parkingSpaces: 0,
-      furnished: newProp.is_furnished || false,
+      furnished: (newProp as any).is_furnished || false,
       petsAllowed: false,
       utilities: {
         water: true,
@@ -189,10 +196,10 @@ export function adaptNewToLegacy(newProp: Property): LegacyProperty {
       isCover: index === 0,
     })),
     buildings: [],
-    ownerId: newProp.owner_id,
-    owner: newProp.owner,
-    createdAt: newProp.created_at,
-    updatedAt: newProp.updated_at,
+    ownerId: newProp.owner_id || newProp.ownerId || '',
+    owner: newProp.owner as any,
+    createdAt: newProp.created_at || new Date().toISOString(),
+    updatedAt: newProp.updated_at || new Date().toISOString(),
     verificationStatus: newProp.verification_status || 'pending',
   };
 }
@@ -202,12 +209,12 @@ export function adaptNewToLegacy(newProp: Property): LegacyProperty {
  */
 export function adaptDatabaseToProperty(dbProp: DatabaseProperty): Property {
   return {
-    id: dbProp.id,
+    id: createPropertyId(String(dbProp.id)),
     title: dbProp.title || '',
     description: dbProp.description,
     property_type: dbProp.property_type,
-    property_category: dbProp.property_category,
-    address: dbProp.address,
+    property_category: dbProp.property_category || undefined,
+    address: createAddress(dbProp.address || ''),
     city: dbProp.city,
     state: dbProp.state,
     zip: dbProp.zip,
@@ -215,11 +222,11 @@ export function adaptDatabaseToProperty(dbProp: DatabaseProperty): Property {
     currency: dbProp.currency,
     bedrooms: dbProp.bedrooms,
     bathrooms: dbProp.bathrooms,
-    max_occupants: dbProp.max_occupants,
-    is_available: dbProp.is_available,
+    max_occupants: dbProp.max_occupants || undefined,
+    is_available: dbProp.is_available || undefined,
     is_furnished: dbProp.is_furnished,
-    amenities: dbProp.amenities,
-    images: dbProp.images,
+    amenities: dbProp.amenities || undefined,
+    images: dbProp.images || undefined,
     owner_id: dbProp.owner_id,
     available_from: dbProp.available_from,
     available_to: dbProp.available_to,

@@ -4,7 +4,8 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
-import { Property, PropertyFormValues } from '@/types/property';
+import { Property } from '@/types/property';
+import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
 import { logger } from '@/utils/enhanced-logger';
 import { Database } from '@/integrations/supabase/types';
 
@@ -93,7 +94,7 @@ export class PropertyPipelineService {
   }
 
   /**
-   * Validate property data before insertion
+   * Apple-grade validation for PropertyFormValues structure
    */
   private static validatePropertyData(formData: PropertyFormValues): { isValid: boolean; error?: string } {
     if (!formData.title?.trim()) {
@@ -119,7 +120,7 @@ export class PropertyPipelineService {
   }
 
   /**
-   * Transform form data to database format
+   * Apple-grade transformation from PropertyFormValues to database format
    */
   private static transformFormToDbFormat(formData: PropertyFormValues, ownerId: string) {
     return {

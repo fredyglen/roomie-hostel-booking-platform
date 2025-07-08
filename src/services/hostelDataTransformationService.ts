@@ -103,10 +103,17 @@ export class HostelDataTransformationService {
     // Determine washroom type
     const washroom_type = hostel.bathrooms > 0 ? 'self_contained' : 'shared';
     
-    // Calculate room configurations
+    // Apple-grade type-safe room configuration calculation
     const roomOptions = hostel.roomOptions || [];
-    const maxOccupants = Math.max(...roomOptions.map(r => r.maxOccupants), hostel.maxOccupants || 1);
-    const minPrice = Math.min(...roomOptions.map(r => r.price), hostel.pricePerSemester);
+    const roomMaxOccupants = roomOptions.map(r => r.maxOccupants || 1).filter(n => typeof n === 'number');
+    const maxOccupants = roomMaxOccupants.length > 0
+      ? Math.max(...roomMaxOccupants, hostel.maxOccupants || 1)
+      : hostel.maxOccupants || 1;
+
+    const roomPrices = roomOptions.map(r => r.price).filter(p => typeof p === 'number' && p > 0);
+    const minPrice = roomPrices.length > 0
+      ? Math.min(...roomPrices, hostel.pricePerSemester)
+      : hostel.pricePerSemester;
 
     return {
       id: hostel.id,
@@ -124,7 +131,7 @@ export class HostelDataTransformationService {
       bedrooms: hostel.bedrooms || 1,
       bathrooms: hostel.bathrooms || 0,
       max_occupants: maxOccupants,
-      size: null,
+      size: undefined,
       available_from: hostel.availableFrom || '2024-08-01',
       available_to: hostel.availableTo || '2025-07-31',
       is_furnished: true,
@@ -136,11 +143,11 @@ export class HostelDataTransformationService {
       total_rooms: roomOptions.length || 1,
       rooms_available: roomOptions.filter(r => r.available).length || 1,
       beds_per_room: maxOccupants,
-      beds_available: roomOptions.reduce((sum, r) => sum + (r.available ? r.maxOccupants : 0), 0) || maxOccupants,
+      beds_available: roomOptions.reduce((sum, r) => sum + (r.available ? (r.maxOccupants || 0) : 0), 0) || maxOccupants,
       has_bedframes: true,
       has_mattresses: true,
       has_wardrobes: true,
-      has_fan: hostel.amenities.includes('Fan') || hostel.amenities.includes('Air Conditioning'),
+      has_fan: (hostel.amenities || []).includes('Fan') || (hostel.amenities || []).includes('Air Conditioning'),
       has_tiled_room: true,
       washroom_type,
       shared_washroom_count: washroom_type === 'shared' ? 2 : null,
@@ -154,8 +161,10 @@ export class HostelDataTransformationService {
    * Transform standard property to database format
    */
   private transformPropertyToDatabase(property: Property | Record<string, unknown>): DatabaseProperty {
-    const genderRestriction = property.amenities?.includes('Female Only') 
-      ? 'female' 
+    // Apple-grade type-safe amenities check
+    const amenities = Array.isArray(property.amenities) ? property.amenities : [];
+    const genderRestriction = amenities.includes('Female Only')
+      ? 'female'
       : property.amenities?.includes('Male Only') 
         ? 'male' 
         : 'mixed';

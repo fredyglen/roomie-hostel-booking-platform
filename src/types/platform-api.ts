@@ -11,18 +11,21 @@
 
 import {
   User,
-  Property,
   Booking,
   PaymentTransaction,
   PropertySearchFilters,
   BookingSearchFilters,
   UserInsert,
   UserUpdate,
-  PropertyInsert,
-  PropertyUpdate,
   BookingInsert,
   BookingUpdate
 } from './platform-entities';
+
+import {
+  Property,
+  PropertyInsert,
+  PropertyUpdate
+} from './property';
 
 import {
   UserId,

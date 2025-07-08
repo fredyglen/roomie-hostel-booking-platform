@@ -62,7 +62,7 @@ export const mockProperty: Property = {
 
 export const mockProperty2: Property = {
   ...mockProperty,
-  id: '2',
+  id: createPropertyId('2'),
   type: 'homestel',
   propertyCategory: 'Homestel',
   name: 'Test Homestel',

@@ -68,15 +68,15 @@ export const PaymentService = {
     metadata
   }: CreatePaymentRecord): Promise<{ id: string } | null> {
     try {
+      // Apple-grade type-safe payment record creation
       const { data, error } = await supabase
         .from('payments')
         .insert({
           user_id: userId,
           amount,
           reference,
-          description,
           status: 'pending',
-          metadata
+          metadata: metadata || {}
         })
         .select('id')
         .single();
@@ -103,12 +103,13 @@ export const PaymentService = {
     paymentDate
   }: UpdatePaymentStatus): Promise<boolean> {
     try {
+      // Apple-grade type-safe payment status update
       const { error } = await supabase
         .from('payments')
         .update({
           status,
-          transaction_id: transactionId,
-          payment_date: paymentDate || new Date().toISOString(),
+          paystack_reference: transactionId,
+          transaction_date: paymentDate || new Date().toISOString(),
           updated_at: new Date().toISOString()
         })
         .eq('reference', reference);
@@ -136,12 +137,28 @@ export const PaymentService = {
         return false;
       }
 
-      // Process based on event type
+      // Apple-grade type-safe webhook processing
       switch (payload.event) {
         case 'charge.success':
-          return await this.processSuccessfulPayment(payload.data);
+          // Convert webhook data to PaymentTransaction format
+          const successTransaction: PaymentTransaction = {
+            reference: payload.data.reference,
+            status: 'success',
+            amount: payload.data.amount,
+            currency: payload.data.currency,
+            transaction_date: payload.data.transaction_date
+          };
+          return await this.processSuccessfulPayment(successTransaction);
         case 'charge.failed':
-          return await this.processFailedPayment(payload.data);
+          // Convert webhook data to PaymentTransaction format
+          const failedTransaction: PaymentTransaction = {
+            reference: payload.data.reference,
+            status: 'failed',
+            amount: payload.data.amount,
+            currency: payload.data.currency,
+            transaction_date: payload.data.transaction_date
+          };
+          return await this.processFailedPayment(failedTransaction);
         default:
           logger.info('Unhandled webhook event', { event: payload.event });
           return true; // Return true for events we don't need to process

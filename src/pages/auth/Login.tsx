@@ -360,6 +360,28 @@ const Login: React.FC = () => {
           </Link>
         </div>
 
+        {/* Admin Access Link */}
+        <div style={{
+          textAlign: 'center',
+          fontSize: '11px',
+          color: '#9aa0a6',
+          marginTop: '16px',
+          borderTop: '1px solid #f1f3f4',
+          paddingTop: '16px'
+        }}>
+          <Link to="/admin/dashboard" style={{
+            color: '#9aa0a6',
+            textDecoration: 'none',
+            cursor: 'pointer',
+            opacity: 0.7,
+            transition: 'opacity 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.opacity = '1'}
+          onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+          >
+            Admin Portal
+          </Link>
+        </div>
 
       </div>
     </div>

@@ -13,7 +13,7 @@ const config: Config = {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
         "2xl": "1400px",
       },
@@ -25,17 +25,12 @@ const config: Config = {
         'space-grotesk': ['Space Grotesk', 'sans-serif'], // Keep for backward compatibility
       },
       spacing: {
-        '1': '0.5rem',   // 8px
-        '2': '1rem',     // 16px
-        '3': '1.5rem',   // 24px
-        '4': '2rem',     // 32px
-        '5': '2.5rem',   // 40px
-        '6': '3rem',     // 48px
-        '8': '4rem',     // 64px
-        '10': '5rem',    // 80px
-        '12': '6rem',    // 96px
-        '16': '8rem',    // 128px
-        '20': '10rem',   // 160px
+        // Use standard Tailwind spacing scale for proper responsive design
+        // Custom spacing for specific ROOMi design requirements only
+        '18': '4.5rem',   // 72px - Custom spacing for specific layouts
+        '22': '5.5rem',   // 88px - Custom spacing for specific layouts
+        '26': '6.5rem',   // 104px - Custom spacing for specific layouts
+        '30': '7.5rem',   // 120px - Custom spacing for specific layouts
       },
       colors: {
         roomi: {

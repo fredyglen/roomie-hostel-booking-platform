@@ -98,7 +98,8 @@ const OwnerDashboard: React.FC = () => {
     return (
       <OwnerLayout pageTitle="Dashboard">
         <ErrorDisplay
-          message="Failed to load dashboard data"
+          error={statsError}
+          title="Failed to load dashboard data"
           onRetry={() => window.location.reload()}
         />
       </OwnerLayout>
@@ -107,95 +108,97 @@ const OwnerDashboard: React.FC = () => {
 
   return (
     <OwnerLayout pageTitle="Dashboard">
-      <div className="space-y-6">
-        {/* Welcome Section */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+      <div className="space-y-4 lg:space-y-6 max-w-7xl mx-auto">
+        {/* Welcome Section - 2024 Responsive Standards */}
+        <div className="px-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
             Welcome back, {user?.firstName || 'Property Owner'}!
           </h1>
-          <p className="text-gray-600">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Here's an overview of your property portfolio performance.
           </p>
         </div>
 
-        {/* Key Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Key Metrics - Mobile-First Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="flex items-center">
-                <Building className="h-8 w-8 text-blue-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Properties</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.totalProperties || 0}</p>
+                <Building className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600 flex-shrink-0" />
+                <div className="ml-3 sm:ml-4 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Properties</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{dashboardStats?.totalProperties || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="flex items-center">
-                <Calendar className="h-8 w-8 text-green-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.totalBookings || 0}</p>
+                <Calendar className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-green-600 flex-shrink-0" />
+                <div className="ml-3 sm:ml-4 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Bookings</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{dashboardStats?.totalBookings || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="flex items-center">
-                <DollarSign className="h-8 w-8 text-purple-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Monthly Earnings</p>
-                  <p className="text-2xl font-bold">{formatCurrency(dashboardStats?.monthlyEarnings || 0)}</p>
+                <DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600 flex-shrink-0" />
+                <div className="ml-3 sm:ml-4 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Monthly Earnings</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{formatCurrency(dashboardStats?.monthlyEarnings || 0)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-6">
+            <CardContent className="p-4 sm:p-5 lg:p-6">
               <div className="flex items-center">
-                <TrendingUp className="h-8 w-8 text-orange-600" />
-                <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Occupancy Rate</p>
-                  <p className="text-2xl font-bold">{dashboardStats?.occupancyRate || 0}%</p>
+                <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-600 flex-shrink-0" />
+                <div className="ml-3 sm:ml-4 min-w-0">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Occupancy Rate</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{dashboardStats?.occupancyRate || 0}%</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Bookings */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 lg:gap-6">
+          {/* Recent Bookings - Responsive */}
           <Card>
-            <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Recent Bookings</CardTitle>
-                <Button 
-                  variant="outline" 
+            <CardHeader className="pb-3 lg:pb-4">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
+                <CardTitle className="text-lg lg:text-xl">Recent Bookings</CardTitle>
+                <Button
+                  variant="outline"
                   size="sm"
                   onClick={() => navigate('/owner/bookings')}
+                  className="text-xs sm:text-sm"
                 >
+                  <Eye className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
                   View All
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
+            <CardContent className="pt-0">
+              <div className="space-y-3 lg:space-y-4">
                 {recentBookings && recentBookings.length > 0 ? (
                   recentBookings.map((booking) => (
-                    <div key={booking.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <h4 className="font-medium">{booking.student_name}</h4>
-                        <p className="text-sm text-gray-600">{booking.property_title}</p>
+                    <div key={booking.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between p-3 lg:p-4 border rounded-lg gap-2 sm:gap-4">
+                      <div className="min-w-0 flex-1">
+                        <h4 className="font-medium text-sm lg:text-base truncate">{booking.student_name}</h4>
+                        <p className="text-xs lg:text-sm text-gray-600 truncate">{booking.property_title}</p>
                         <p className="text-xs text-gray-500">Check-in: {new Date(booking.check_in_date).toLocaleDateString()}</p>
                       </div>
-                      <div className="text-right">
-                        <p className="font-bold">{formatCurrency(booking.total_amount)}</p>
+                      <div className="text-left sm:text-right flex-shrink-0">
+                        <p className="font-bold text-sm lg:text-base">{formatCurrency(booking.total_amount)}</p>
                         <Badge className={getStatusColor(booking.status)}>
                           {booking.status}
                         </Badge>

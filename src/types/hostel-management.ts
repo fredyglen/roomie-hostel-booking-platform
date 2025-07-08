@@ -4,15 +4,103 @@
  */
 
 import { z } from 'zod';
-import type { 
-  PropertyId, 
-  UserId, 
-  Money, 
-  Timestamp, 
+import type {
+  PropertyId,
+  UserId,
+  Money,
+  Timestamp,
   GeoCoordinates,
   ImageUrl,
-  Currency 
+  Currency,
+  DistanceMeters
 } from './platform-core';
+
+// ============================================================================
+// MISSING TYPE DEFINITIONS FOR TECHNICAL DEBT ELIMINATION
+// ============================================================================
+
+export interface AdditionalFee {
+  readonly id: string;
+  readonly name: string;
+  readonly amount: Money;
+  readonly currency: Currency;
+  readonly isOptional: boolean;
+  readonly description: string;
+}
+
+export interface HostelDiscount {
+  readonly id: string;
+  readonly name: string;
+  readonly type: 'percentage' | 'fixed_amount';
+  readonly value: number;
+  readonly conditions: ReadonlyArray<string>;
+  readonly validFrom: string;
+  readonly validTo: string;
+}
+
+export interface PaymentTerms {
+  readonly advancePaymentMonths: number;
+  readonly allowInstallments: boolean;
+  readonly installmentOptions: ReadonlyArray<number>;
+  readonly lateFeePercentage: number;
+  readonly refundPolicy: string;
+}
+
+export interface WashroomConfiguration {
+  readonly type: 'shared' | 'private' | 'mixed';
+  readonly totalCount: number;
+  readonly maleCount?: number;
+  readonly femaleCount?: number;
+  readonly sharedCount?: number;
+}
+
+export interface SecurityFeature {
+  readonly id: string;
+  readonly name: string;
+  readonly type: 'physical' | 'electronic' | 'personnel';
+  readonly description: string;
+  readonly isActive: boolean;
+}
+
+export interface FloorRoomDistribution {
+  readonly floor: number;
+  readonly roomCount: number;
+  readonly roomNumbers: ReadonlyArray<string>;
+}
+
+export interface AmenityCategory {
+  readonly id: string;
+  readonly name: string;
+  readonly type: 'essential' | 'comfort' | 'luxury';
+}
+
+export interface ImageCategory {
+  readonly id: string;
+  readonly name: string;
+  readonly displayOrder: number;
+  readonly isRequired: boolean;
+}
+
+export interface VerificationDocument {
+  readonly id: string;
+  readonly type: string;
+  readonly name: string;
+  readonly url: string;
+  readonly uploadedAt: string;
+  readonly verifiedAt?: string;
+  readonly status: 'pending' | 'approved' | 'rejected';
+}
+
+export interface InspectionReport {
+  readonly id: string;
+  readonly inspectorId: string;
+  readonly inspectionDate: string;
+  readonly score: number;
+  readonly maxScore: number;
+  readonly findings: ReadonlyArray<string>;
+  readonly recommendations: ReadonlyArray<string>;
+  readonly status: 'passed' | 'failed' | 'conditional';
+}
 
 // ============================================================================
 // BRANDED TYPES FOR COMPILE-TIME SAFETY
