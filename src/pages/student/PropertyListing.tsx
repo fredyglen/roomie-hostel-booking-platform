@@ -424,22 +424,26 @@ const PropertyListing: React.FC = () => {
         {occupants > 1 && ` • ${occupants} occupants`}
       </div>
 
-      {/* Apple-Grade vs Traditional Property Display Toggle */}
-      <div className="px-4 mb-4 flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <span className="text-sm text-gray-600">Display Mode:</span>
-          <button
-            onClick={() => setUseAppleGradeDisplay(!useAppleGradeDisplay)}
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${
-              useAppleGradeDisplay
-                ? 'bg-blue-100 text-blue-700'
-                : 'bg-gray-100 text-gray-700'
-            }`}
-          >
-            {useAppleGradeDisplay ? '🍎 Apple-Grade' : '📱 Traditional'}
-          </button>
+      {/* ✅ REMOVED: Display mode toggle - should not be visible to end users */}
+      {/* Apple-Grade is now the default with automatic fallback to Traditional on errors */}
+      {import.meta.env.DEV && (
+        /* Developer-only toggle in development mode */
+        <div className="px-4 mb-4 flex items-center justify-between bg-yellow-50 border border-yellow-200 rounded-lg p-2">
+          <div className="flex items-center space-x-2">
+            <span className="text-xs text-yellow-700">🧪 DEV MODE - Display:</span>
+            <button
+              onClick={() => setUseAppleGradeDisplay(!useAppleGradeDisplay)}
+              className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
+                useAppleGradeDisplay
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-gray-100 text-gray-700'
+              }`}
+            >
+              {useAppleGradeDisplay ? '🍎 Apple-Grade' : '📱 Traditional'}
+            </button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Conditional Property Display */}
       {useAppleGradeDisplay ? (

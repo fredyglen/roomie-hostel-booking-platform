@@ -65,6 +65,12 @@ const PropertyDetail: React.FC = () => {
     navigateBack(navigate, '/student/properties', location.state);
   };
 
+  const handleViewStory = () => {
+    if (property?.id) {
+      navigate(`/student/property/${property.id}/story`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -113,6 +119,7 @@ const PropertyDetail: React.FC = () => {
               property={property}
               onBookNow={handleBookNow}
               onGoBack={handleGoBack}
+              onViewStory={handleViewStory}
             />
           ) : (
             <div className="max-w-6xl mx-auto p-3 sm:p-4">
@@ -125,7 +132,7 @@ const PropertyDetail: React.FC = () => {
             </div>
           )}
         </main>
-        <Footer />
+        {/* ✅ REMOVED: Footer removed from property detail page as requested */}
         <StudentNavBar />
       </div>
     </>

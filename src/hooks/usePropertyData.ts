@@ -254,7 +254,13 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
     fetchProperties();
   }, []);
 
-  return [properties, loading, error];
+  return {
+    properties,
+    loading,
+    error,
+    getPropertyById,
+    fetchProperties
+  };
 };
 
 // Export the getSampleProperties for use in other components

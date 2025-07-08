@@ -12,9 +12,10 @@ interface PropertyDetailViewProps {
   property: Property;
   onBookNow?: () => void;
   onGoBack?: () => void;
+  onViewStory?: () => void;
 }
 
-const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBookNow, onGoBack }) => {
+const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBookNow, onGoBack, onViewStory }) => {
   // Apple-grade error handling: Guard against undefined property
   if (!property) {
     return (
@@ -137,6 +138,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
           <PropertyBookingCard
             property={property}
             onBook={onBookNow}
+            onViewStory={onViewStory}
           />
           
           {/* Owner Card */}

@@ -8,10 +8,11 @@ import { Property } from '@/types/property';
 interface PropertyBookingCardProps {
   property: Property;
   onBook?: () => void;
+  onViewStory?: () => void;
 }
 
 const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
-  property, onBook
+  property, onBook, onViewStory
 }) => {
   const price = property.price || property.rent;
   const priceUnit = property.priceUnit || property.price_unit || 'month';
@@ -42,9 +43,20 @@ const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
       >
         Book Now
       </Button>
-      
-      <Button 
-        variant="outline" 
+
+      {onViewStory && (
+        <Button
+          variant="outline"
+          className="w-full mb-3 border-blue-500 text-blue-500 hover:bg-blue-50"
+          onClick={onViewStory}
+        >
+          <Icon icon="solar:play-circle-bold" className="mr-2" width={16} height={16} />
+          View Story
+        </Button>
+      )}
+
+      <Button
+        variant="outline"
         className="w-full text-gray-400 border-gray-300 cursor-not-allowed"
         disabled
       >

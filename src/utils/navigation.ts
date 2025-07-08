@@ -87,8 +87,9 @@ export const navigateToBooking = (navigate: NavigateFunction, propertyId: string
     console.error('navigateToBooking: Invalid property ID provided');
     return;
   }
-  navigate(`/student/property/${propertyId}/book`, { 
-    state: options?.from ? { from: options.from } : undefined 
+  // ✅ FIXED: Use correct booking route that exists in App.tsx
+  navigate(`/student/book/${propertyId}`, {
+    state: options?.from ? { from: options.from } : undefined
   });
 };
 
