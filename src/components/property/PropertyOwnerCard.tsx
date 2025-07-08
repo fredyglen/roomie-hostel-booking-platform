@@ -15,8 +15,24 @@ const PropertyOwnerCard: React.FC<PropertyOwnerCardProps> = ({ owner }) => {
     return null;
   }
 
-  const getInitials = (name: string) => {
-    return name.split(' ').map(word => word[0]).join('').toUpperCase();
+  const getInitials = (name?: string | null): string => {
+    if (!name || typeof name !== 'string' || name.trim().length === 0) {
+      return 'NA'; // Default initials for undefined/null/empty names
+    }
+
+    try {
+      return name
+        .trim()
+        .split(' ')
+        .filter(word => word.length > 0) // Filter out empty strings
+        .map(word => word[0])
+        .join('')
+        .toUpperCase()
+        .slice(0, 2); // Limit to 2 characters for better display
+    } catch (error) {
+      console.warn('Error generating initials for name:', name, error);
+      return 'NA';
+    }
   };
 
   return (
@@ -27,19 +43,21 @@ const PropertyOwnerCard: React.FC<PropertyOwnerCardProps> = ({ owner }) => {
       <CardContent className="space-y-4">
         <div className="flex items-center space-x-3">
           <Avatar>
-            <AvatarImage src="" alt={owner.name} />
+            <AvatarImage src={owner.avatar || ""} alt={owner.name || "Property Owner"} />
             <AvatarFallback>{getInitials(owner.name)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
             <div className="flex items-center space-x-2">
-              <h3 className="font-semibold">{owner.name}</h3>
+              <h3 className="font-semibold">{owner.name || 'Property Owner'}</h3>
               {owner.verified && (
                 <Badge variant="secondary" className="text-xs">
                   Verified
                 </Badge>
               )}
             </div>
-            <p className="text-sm text-gray-600">Response rate: {owner.responseRate || 'N/A'}</p>
+            <p className="text-sm text-gray-600">
+              Response rate: {owner.responseRate || 'N/A'}
+            </p>
           </div>
         </div>
         

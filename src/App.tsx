@@ -2,6 +2,7 @@
 import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { QueryClient, QueryClientProvider, DefaultOptions } from '@tanstack/react-query';
+import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/context/EnhancedAuthContext';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
@@ -129,16 +130,17 @@ function App() {
   logger.info('Application started');
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <Router>
-        <ErrorBoundary
-          onError={(error, errorInfo) => {
-            logger.error('App: Top-level ErrorBoundary caught an error', { error, errorInfo });
-            console.error('🚨 Critical App Error:', error, errorInfo);
-          }}
-        >
-          <AuthProvider>
-            <div className="min-h-screen bg-gray-50">
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <Router>
+          <ErrorBoundary
+            onError={(error, errorInfo) => {
+              logger.error('App: Top-level ErrorBoundary caught an error', { error, errorInfo });
+              console.error('🚨 Critical App Error:', error, errorInfo);
+            }}
+          >
+            <AuthProvider>
+              <div className="min-h-screen bg-gray-50">
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<SafeRoute element={<AuthRedirect />} />} />
@@ -375,6 +377,7 @@ function App() {
         </ErrorBoundary>
       </Router>
     </QueryClientProvider>
+    </HelmetProvider>
   );
 }
 

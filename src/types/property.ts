@@ -202,6 +202,24 @@ export interface Room {
 export type RoomType = 'single' | 'double' | 'triple' | 'quad' | 'suite';
 
 // =====================================================
+// OWNER INTERFACE
+// =====================================================
+
+/**
+ * Property owner interface for PropertyOwnerCard component
+ * Extends User with owner-specific properties
+ */
+export interface Owner {
+  readonly id: string;
+  readonly name?: string;
+  readonly email?: string;
+  readonly phone?: string;
+  readonly avatar?: string;
+  readonly responseRate?: string;
+  readonly verified?: boolean;
+}
+
+// =====================================================
 // PROPERTY FORM AND API TYPES
 // =====================================================
 
