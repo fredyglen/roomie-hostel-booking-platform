@@ -90,12 +90,9 @@ const PropertyListing: React.FC = () => {
 
   const handleViewDetails = (propertyId: string | number) => {
     checkTimeLimitAndProceed('property_view', () => {
-      console.log('View details clicked for property:', propertyId);
-      const property = properties.find(p => p.id === propertyId || p.id === String(propertyId));
-      if (property) {
-        setSelectedProperty(property);
-        setShowPropertyModal(true);
-      }
+      console.log('Navigating to property details page for property:', propertyId);
+      // Navigate to dedicated property details page instead of modal
+      navigate(`/student/property/${propertyId}`);
     });
   };
 

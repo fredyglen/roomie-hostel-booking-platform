@@ -38,7 +38,7 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
 
   return (
     <Tabs defaultValue="about" value={activeTab} onValueChange={handleTabChange}>
-      <TabsList className="grid grid-cols-4 mb-6">
+      <TabsList className="grid grid-cols-4 mb-4">
         <TabsTrigger value="about">About</TabsTrigger>
         <TabsTrigger value="location">Location</TabsTrigger>
         <TabsTrigger value="amenities">Amenities</TabsTrigger>

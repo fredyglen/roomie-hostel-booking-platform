@@ -218,13 +218,13 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
         {/* Right Side - Property Details (40% for better proportions) */}
         <div className="w-[40%] h-full bg-white flex flex-col border-l border-gray-100">
           {/* Property Info Header */}
-          <div className="p-6 lg:p-8 border-b border-gray-100">
-            <div className="flex justify-between items-start mb-6">
+          <div className="p-4 lg:p-6 border-b border-gray-100">
+            <div className="flex justify-between items-start mb-4">
               <div>
-                <div className="text-3xl lg:text-4xl font-bold text-primary mb-2">
+                <div className="text-2xl lg:text-3xl font-bold text-primary mb-2">
                   ¢{property.rent?.toLocaleString() || '0'}
                 </div>
-                <div className="text-base lg:text-lg text-gray-600 font-medium">per semester</div>
+                <div className="text-sm lg:text-base text-gray-600 font-medium">per semester</div>
               </div>
 
               <div className="text-right">

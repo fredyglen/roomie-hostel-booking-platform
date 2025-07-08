@@ -104,12 +104,12 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
   return (
     <div className="flex flex-col h-full">
       {/* Tab Navigation */}
-      <div className="flex border-b border-gray-200 mb-6">
+      <div className="flex border-b border-gray-200 mb-4">
         {tabs.map((tab) => (
           <button
             key={tab.id}
             onClick={() => onTabChange(tab.id as 'description' | 'amenities' | 'location')}
-            className={`flex-1 py-4 px-4 text-base font-semibold border-b-3 transition-all duration-200 ${
+            className={`flex-1 py-3 px-3 text-sm font-semibold border-b-2 transition-all duration-200 ${
               activeTab === tab.id
                 ? 'border-primary text-primary bg-primary/5'
                 : 'border-transparent text-gray-600 hover:text-gray-800 hover:bg-gray-50'
@@ -155,8 +155,8 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
 
             {property.genderRestriction && (
               <div>
-                <h4 className="text-lg font-semibold mb-3 text-gray-900">Restrictions</h4>
-                <Badge variant="outline" className="text-base px-4 py-2 font-medium">
+                <h4 className="text-base font-semibold mb-2 text-gray-900">Restrictions</h4>
+                <Badge variant="outline" className="text-sm px-3 py-1 font-medium">
                   {property.genderRestriction} only
                 </Badge>
               </div>

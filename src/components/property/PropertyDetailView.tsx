@@ -68,10 +68,10 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="max-w-6xl mx-auto p-3 sm:p-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           {/* Image Gallery */}
           <PropertyImageGallery images={property.images} title={property.title} />
           

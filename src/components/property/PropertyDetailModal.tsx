@@ -250,14 +250,14 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
         </div>
 
         {/* Content */}
-        <div className="px-6 pb-6 h-full overflow-hidden flex flex-col">
+        <div className="px-4 pb-4 h-full overflow-hidden flex flex-col">
           {/* Price and rating header */}
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex justify-between items-center mb-4">
             <div>
-              <div className="text-3xl font-bold text-primary">
+              <div className="text-2xl font-bold text-primary">
                 ¢{property.rent?.toLocaleString() || '0'}
               </div>
-              <div className="text-base text-gray-600 font-medium">per semester</div>
+              <div className="text-sm text-gray-600 font-medium">per semester</div>
             </div>
 
             <div className="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded-full">

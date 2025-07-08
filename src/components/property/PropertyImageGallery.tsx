@@ -19,10 +19,10 @@ const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({ images, tit
   };
 
   return (
-    <div className="mb-8">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div className="mb-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {validImages.slice(0, 4).map((image, index) => (
-          <div key={index} className="rounded-lg overflow-hidden h-64 bg-gray-100">
+          <div key={index} className="rounded-lg overflow-hidden h-48 bg-gray-100">
             <ImageWithFallback 
               src={image} 
               alt={`${title} - Image ${index + 1}`} 
