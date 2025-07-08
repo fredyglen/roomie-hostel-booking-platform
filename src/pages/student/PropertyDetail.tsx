@@ -108,11 +108,22 @@ const PropertyDetail: React.FC = () => {
       <div className="min-h-screen flex flex-col pb-16">
         <Header />
         <main className="flex-grow">
-          <PropertyDetailView
-            property={property}
-            onBookNow={handleBookNow}
-            onGoBack={handleGoBack}
-          />
+          {property ? (
+            <PropertyDetailView
+              property={property}
+              onBookNow={handleBookNow}
+              onGoBack={handleGoBack}
+            />
+          ) : (
+            <div className="max-w-6xl mx-auto p-3 sm:p-4">
+              <div className="text-center py-8">
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
         <Footer />
         <StudentNavBar />

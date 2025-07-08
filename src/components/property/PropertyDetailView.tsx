@@ -15,20 +15,50 @@ interface PropertyDetailViewProps {
 }
 
 const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBookNow, onGoBack }) => {
-  // Helper functions to safely extract data
-  const getLocationText = (location: string | { city: string; state: string; address: string }): string => {
+  // Apple-grade error handling: Guard against undefined property
+  if (!property) {
+    return (
+      <div className="max-w-6xl mx-auto p-3 sm:p-4">
+        <div className="text-center py-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Property not found</h2>
+          <p className="text-gray-600 mb-4">The property you're looking for could not be loaded.</p>
+          {onGoBack && (
+            <Button variant="outline" onClick={onGoBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Properties
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Helper functions to safely extract data with Apple-grade error handling
+  const getLocationText = (location?: string | { city?: string; state?: string; address?: string } | null): string => {
+    if (!location) {
+      return 'Location not specified';
+    }
     if (typeof location === 'string') {
       return location;
     }
-    return `${location.address}, ${location.city}, ${location.state}`;
+    // Safely construct location string with fallbacks
+    const address = location.address || '';
+    const city = location.city || '';
+    const state = location.state || '';
+
+    const parts = [address, city, state].filter(part => part.trim().length > 0);
+    return parts.length > 0 ? parts.join(', ') : 'Location not specified';
   };
 
-  const getAmenityText = (amenity: string | { id: string; name: string }): string => {
-    return typeof amenity === 'string' ? amenity : amenity.name;
+  const getAmenityText = (amenity: string | { id?: string; name?: string } | null | undefined): string => {
+    if (!amenity) return '';
+    if (typeof amenity === 'string') return amenity;
+    return amenity.name || amenity.id || '';
   };
 
-  const getAmenitiesArray = (amenities: (string | { id: string; name: string })[]): string[] => {
-    return amenities.map(getAmenityText);
+  const getAmenitiesArray = (amenities?: (string | { id?: string; name?: string } | null)[] | null): string[] => {
+    if (!amenities || !Array.isArray(amenities)) return [];
+    return amenities.map(getAmenityText).filter(text => text.length > 0);
   };
 
   const getPriceNumber = (): number => {
