@@ -74,20 +74,9 @@ const StudentDashboard: React.FC = () => {
         logger.error('Error loading dashboard data', { error: err });
         setError('Failed to load dashboard data. Please try again.');
 
-        // Fallback to mock data on error
-        setFeaturedProperties([
-          {
-            id: '1',
-            title: 'Heaven\'s Gate Hostel',
-            base_price_per_semester: 2600,
-            address: 'East Legon',
-            city: 'Accra',
-            max_occupancy: 4,
-            current_occupancy: 2,
-            images: ['/api/placeholder/400/300'],
-            is_available: true
-          }
-        ]);
+        // CRITICAL FIX: Show empty state instead of mock data
+        // This ensures students only see real owner-provided properties
+        setFeaturedProperties([]);
         setQuickStats({
           totalViewed: 12,
           totalFavorites: 5,

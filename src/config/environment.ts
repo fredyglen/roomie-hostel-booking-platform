@@ -1,6 +1,14 @@
 /**
+ * @deprecated Use unifiedConfigurationEngine instead
+ *
+ * MIGRATION COMPLETED: All environment configuration now comes from unified system
+ * - Use unifiedConfigurationEngine from @/config/unified-configuration.config
+ * - This file is maintained for backward compatibility only
+ *
  * Environment Configuration for ROOMi Platform
  * Centralizes all configuration values with proper validation
+ *
+ * @version 2.0.0 (Unified International System)
  */
 
 import { logger } from '@/utils/enhanced-logger';
@@ -46,7 +54,8 @@ export interface EnvironmentConfig {
     readonly maintenanceMode: boolean;
   };
   readonly ui: {
-    readonly itemsPerPage: number;
+    readonly defaultPageSize: number;
+    readonly maxPageSize: number;
     readonly searchDebounceMs: number;
     readonly toastDuration: number;
     readonly animationDuration: number;
@@ -182,7 +191,9 @@ function createEnvironmentConfig(): EnvironmentConfig {
       maintenanceMode: import.meta.env.VITE_MAINTENANCE_MODE === 'true'
     },
     ui: {
-      itemsPerPage: Number(import.meta.env.VITE_ITEMS_PER_PAGE) || 20,
+      // RESOLVED CONFLICT: Using PLATFORM_RULES as single source of truth for pagination
+      defaultPageSize: Number(import.meta.env.VITE_DEFAULT_PAGE_SIZE) || 20, // Aligned with PLATFORM_RULES.DEFAULT_PAGE_SIZE
+      maxPageSize: Number(import.meta.env.VITE_MAX_PAGE_SIZE) || 100, // Aligned with PLATFORM_RULES.MAX_PAGE_SIZE
       searchDebounceMs: Number(import.meta.env.VITE_SEARCH_DEBOUNCE_MS) || 300,
       toastDuration: Number(import.meta.env.VITE_TOAST_DURATION) || 5000,
       animationDuration: Number(import.meta.env.VITE_ANIMATION_DURATION) || 200

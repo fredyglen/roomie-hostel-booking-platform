@@ -1,7 +1,16 @@
+/**
+ * @deprecated Use unifiedConfigurationEngine.getAllConfig().api instead
+ *
+ * MIGRATION COMPLETED: All API endpoints now come from unified configuration system
+ * This object is maintained for backward compatibility only.
+ */
+import { unifiedConfigurationEngine } from '@/config/unified-configuration.config';
+
 export const API_ENDPOINTS = {
-  SUPABASE_FUNCTIONS_BASE: import.meta.env.VITE_SUPABASE_URL
-    ? `${import.meta.env.VITE_SUPABASE_URL}/functions/v1`
+  // ✅ UNIFIED CONFIGURATION SYSTEM - Values from single source of truth
+  SUPABASE_FUNCTIONS_BASE: unifiedConfigurationEngine.getAllConfig().database.url
+    ? `${unifiedConfigurationEngine.getAllConfig().database.url}/functions/v1`
     : '',
-  PAYSTACK_WEBHOOK: import.meta.env.VITE_PAYSTACK_WEBHOOK_URL || 'https://your-project.supabase.co/functions/v1/paystack-webhook',
-  // Add more endpoints as needed
-}; 
+  PAYSTACK_WEBHOOK: unifiedConfigurationEngine.getAllConfig().api.endpoints.webhooks || 'https://your-project.supabase.co/functions/v1/paystack-webhook',
+  // All endpoints now managed through unified configuration
+};

@@ -1,15 +1,17 @@
 
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/context/EnhancedAuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  Calendar, 
-  DollarSign, 
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Calendar,
+  DollarSign,
   XCircle,
   MessageCircle,
   Eye,
@@ -19,120 +21,89 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import OwnerLayout from '@/components/layout/OwnerLayout';
+import { OwnerQueries } from '@/services/database/ownerQueries';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+import { unifiedConfigurationEngine } from '@/config/unified-configuration.config';
 
 const AnalyticsDashboard: React.FC = () => {
-  // Sample data for charts
+  const { user } = useAuth();
+
+  // Real data queries
+  const { data: dashboardStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['owner-dashboard-stats', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getDashboardStats(user.id);
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: recentBookings, isLoading: bookingsLoading } = useQuery({
+    queryKey: ['owner-recent-bookings', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getRecentBookings(user.id, 10);
+    },
+    enabled: !!user?.id,
+  });
+
+  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['owner-transactions', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getTransactionHistory(user.id, 10);
+    },
+    enabled: !!user?.id,
+  });
+
+  // Ghana Cedi currency formatting (BE CONSCIOUS: No hardcoded currency)
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: 'GHS',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  // Generate monthly data based on real stats (placeholder for now)
   const monthlyData = [
-    { month: 'Jan', revenue: 6800, occupancy: 72 },
-    { month: 'Feb', revenue: 7200, occupancy: 75 },
-    { month: 'Mar', revenue: 6900, occupancy: 71 },
-    { month: 'Apr', revenue: 7800, occupancy: 82 },
-    { month: 'May', revenue: 8200, occupancy: 85 },
-    { month: 'Jun', revenue: 7900, occupancy: 79 },
-    { month: 'Jul', revenue: 8500, occupancy: 88 },
-    { month: 'Aug', revenue: 7020, occupancy: 82 },
-    { month: 'Sep', revenue: 7600, occupancy: 78 },
-    { month: 'Oct', revenue: 7100, occupancy: 74 },
-    { month: 'Nov', revenue: 6800, occupancy: 71 },
-    { month: 'Dec', revenue: 7300, occupancy: 76 }
+    { month: 'Jan', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Feb', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Mar', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Apr', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'May', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Jun', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Jul', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Aug', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Sep', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Oct', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Nov', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
+    { month: 'Dec', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 }
   ];
 
+  // Real booking sources (placeholder - will show actual data when available)
   const bookingSourcesData = [
-    { name: 'Direct Website', value: 52, count: 5213, color: '#3b82f6' },
-    { name: 'Airbnb', value: 28, count: 2804, color: '#f97316' },
-    { name: 'Booking.com', value: 14, count: 1402, color: '#10b981' },
-    { name: 'Others', value: 6, count: 601, color: '#6b7280' }
+    { name: 'Direct Website', value: 100, count: dashboardStats?.totalBookings || 0, color: '#3b82f6' },
+    { name: 'ROOMi Platform', value: 0, count: 0, color: '#f97316' },
+    { name: 'Referrals', value: 0, count: 0, color: '#10b981' },
+    { name: 'Others', value: 0, count: 0, color: '#6b7280' }
   ];
 
+  // Real guest type data (placeholder)
   const guestTypeData = [
-    { month: 'Jan', new: 180, repeat: 65 },
-    { month: 'Feb', new: 195, repeat: 72 },
-    { month: 'Mar', new: 210, repeat: 85 },
-    { month: 'Apr', new: 225, repeat: 95 },
-    { month: 'May', new: 240, repeat: 88 },
-    { month: 'Jun', new: 220, repeat: 92 }
+    { month: 'Jan', new: dashboardStats?.totalBookings || 0, repeat: 0 },
+    { month: 'Feb', new: dashboardStats?.totalBookings || 0, repeat: 0 },
+    { month: 'Mar', new: dashboardStats?.totalBookings || 0, repeat: 0 },
+    { month: 'Apr', new: dashboardStats?.totalBookings || 0, repeat: 0 },
+    { month: 'May', new: dashboardStats?.totalBookings || 0, repeat: 0 },
+    { month: 'Jun', new: dashboardStats?.totalBookings || 0, repeat: 0 }
   ];
 
-  const latestBookings = [
-    {
-      id: 1,
-      guestName: 'Kwame Asante',
-      property: 'Legon Heights A',
-      room: 'Room 24',
-      checkIn: '2024-06-15',
-      checkOut: '2024-08-15',
-      status: 'Confirmed',
-      avatar: 'KA'
-    },
-    {
-      id: 2,
-      guestName: 'Ama Serwaa',
-      property: 'Campus View B',
-      room: 'Room 12',
-      checkIn: '2024-06-20',
-      checkOut: '2024-12-20',
-      status: 'Pending',
-      avatar: 'AS'
-    },
-    {
-      id: 3,
-      guestName: 'Kofi Mensah',
-      property: 'Tech Hostel',
-      room: 'Room 8',
-      checkIn: '2024-06-25',
-      checkOut: '2024-06-30',
-      status: 'Checked-In',
-      avatar: 'KM'
-    },
-    {
-      id: 4,
-      guestName: 'Akosua Boateng',
-      property: 'Legon Heights B',
-      room: 'Room 15',
-      checkIn: '2024-07-01',
-      checkOut: '2024-12-15',
-      status: 'Confirmed',
-      avatar: 'AB'
-    }
-  ];
+  // Use real bookings data or empty array if loading
+  const latestBookings = recentBookings || [];
 
-  const transactions = [
-    {
-      id: 'PAY001321',
-      date: 'Jun 21, 2024, 3:30pm',
-      amount: 1200,
-      method: 'Mobile Money',
-      status: 'Completed'
-    },
-    {
-      id: 'PAY001320',
-      date: 'Jun 21, 2024, 2:45pm',
-      amount: 800,
-      method: 'Bank Transfer',
-      status: 'Completed'
-    },
-    {
-      id: 'PAY001319',
-      date: 'Jun 21, 2024, 1:15pm',
-      amount: 950,
-      method: 'Mobile Money',
-      status: 'Failed'
-    },
-    {
-      id: 'PAY001318',
-      date: 'Jun 21, 2024, 11:30am',
-      amount: 1500,
-      method: 'Card',
-      status: 'Completed'
-    },
-    {
-      id: 'PAY001317',
-      date: 'Jun 21, 2024, 9:20am',
-      amount: 750,
-      method: 'Mobile Money',
-      status: 'Pending'
-    }
-  ];
+  // Use real transactions data or empty array if loading
+  const transactionHistory = transactions || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -150,13 +121,7 @@ const AnalyticsDashboard: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-GH', {
-      style: 'currency',
-      currency: 'GHS',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
+
 
   return (
     <OwnerLayout pageTitle="">
@@ -204,10 +169,16 @@ const AnalyticsDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-gray-900">$84,240</p>
-                    <p className="text-sm text-green-600 flex items-center mt-1">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {statsLoading ? (
+                        <div className="h-8 w-24 bg-gray-200 animate-pulse rounded"></div>
+                      ) : (
+                        `GH₵${(dashboardStats?.monthlyEarnings || 0).toLocaleString()}`
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-500 flex items-center mt-1">
                       <TrendingUp className="h-4 w-4 mr-1" />
-                      +18.2% vs. last year
+                      Real-time data
                     </p>
                   </div>
                   <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -222,10 +193,16 @@ const AnalyticsDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Occupancy Rate</p>
-                    <p className="text-2xl font-bold text-gray-900">78%</p>
-                    <p className="text-sm text-green-600 flex items-center mt-1">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {statsLoading ? (
+                        <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
+                      ) : (
+                        `${dashboardStats?.occupancyRate || 0}%`
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-500 flex items-center mt-1">
                       <TrendingUp className="h-4 w-4 mr-1" />
-                      +4.5% vs. last year
+                      Current period
                     </p>
                   </div>
                   <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -239,11 +216,17 @@ const AnalyticsDashboard: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">New Bookings</p>
-                    <p className="text-2xl font-bold text-gray-900">1,240</p>
-                    <p className="text-sm text-green-600 flex items-center mt-1">
+                    <p className="text-sm font-medium text-gray-600">Total Bookings</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {statsLoading ? (
+                        <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
+                      ) : (
+                        (dashboardStats?.totalBookings || 0).toLocaleString()
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-500 flex items-center mt-1">
                       <TrendingUp className="h-4 w-4 mr-1" />
-                      +12.6% vs. last year
+                      All time
                     </p>
                   </div>
                   <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -257,15 +240,21 @@ const AnalyticsDashboard: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Cancellations</p>
-                    <p className="text-2xl font-bold text-gray-900">42</p>
-                    <p className="text-sm text-red-600 flex items-center mt-1">
-                      <TrendingDown className="h-4 w-4 mr-1" />
-                      -3.7% vs. last year
+                    <p className="text-sm font-medium text-gray-600">Pending Bookings</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {statsLoading ? (
+                        <div className="h-8 w-12 bg-gray-200 animate-pulse rounded"></div>
+                      ) : (
+                        dashboardStats?.pendingBookings || 0
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-500 flex items-center mt-1">
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Awaiting action
                     </p>
                   </div>
-                  <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <XCircle className="h-6 w-6 text-red-600" />
+                  <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
+                    <XCircle className="h-6 w-6 text-orange-600" />
                   </div>
                 </div>
               </CardContent>
@@ -409,7 +398,13 @@ const AnalyticsDashboard: React.FC = () => {
                     </PieChart>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <div className="text-xl font-bold">10,020</div>
+                        <div className="text-xl font-bold">
+                          {statsLoading ? (
+                            <div className="h-6 w-16 bg-gray-200 animate-pulse rounded mx-auto"></div>
+                          ) : (
+                            (dashboardStats?.totalBookings || 0).toLocaleString()
+                          )}
+                        </div>
                         <div className="text-xs text-gray-500">Total Bookings</div>
                       </div>
                     </div>

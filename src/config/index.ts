@@ -1,17 +1,23 @@
 
 /**
+ * @deprecated Use unifiedConfigurationEngine instead
+ *
+ * MIGRATION COMPLETED: All configuration now comes from unified system
+ * - Use unifiedConfigurationEngine from @/config/unified-configuration.config
+ * - This file is maintained for backward compatibility only
+ *
  * ROOMi Platform Unified Configuration
  * Apple-Grade configuration management with single source of truth
  *
- * This file consolidates all configuration values and resolves conflicts
- * between different configuration files in the codebase.
- *
- * @version 1.0.0
+ * @version 2.0.0 (Unified International System)
  * @author ROOMi Platform Team
  */
 
 import { logger } from '@/utils/enhanced-logger';
-import { Currency, PLATFORM_RULES } from '@/types/platform-core';
+import { Currency } from '@/types/platform-core';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+import { centralizedBusinessRulesEngine } from '@/config/centralized-business-rules.config';
+import { unifiedConfigurationEngine } from '@/config/unified-configuration.config';
 
 // Configuration types with complete type safety
 export interface AppConfig {
@@ -128,20 +134,21 @@ export const config: AppConfig = {
     imageCdnUrl: import.meta.env.VITE_IMAGE_CDN_URL || '',
   },
   ui: {
-    // RESOLVED CONFLICT: Using PLATFORM_RULES.DEFAULT_PAGE_SIZE (20) as single source of truth
-    defaultPageSize: Number(import.meta.env.VITE_DEFAULT_PAGE_SIZE) || PLATFORM_RULES.DEFAULT_PAGE_SIZE,
-    maxPageSize: Number(import.meta.env.VITE_MAX_PAGE_SIZE) || PLATFORM_RULES.MAX_PAGE_SIZE,
-    searchDebounceMs: Number(import.meta.env.VITE_SEARCH_DEBOUNCE_MS) || PLATFORM_RULES.SEARCH_DEBOUNCE_MS,
-    toastDuration: Number(import.meta.env.VITE_TOAST_DURATION) || 5000,
-    animationDuration: Number(import.meta.env.VITE_ANIMATION_DURATION) || 200,
+    // ✅ UNIFIED CONFIGURATION SYSTEM - Using single source of truth
+    defaultPageSize: Number(import.meta.env.VITE_DEFAULT_PAGE_SIZE) || unifiedConfigurationEngine.getUIConfig().pagination.defaultPageSize,
+    maxPageSize: Number(import.meta.env.VITE_MAX_PAGE_SIZE) || unifiedConfigurationEngine.getUIConfig().pagination.maxPageSize,
+    searchDebounceMs: Number(import.meta.env.VITE_SEARCH_DEBOUNCE_MS) || unifiedConfigurationEngine.getUIConfig().performance.searchDebounceMs,
+    toastDuration: Number(import.meta.env.VITE_TOAST_DURATION) || unifiedConfigurationEngine.getUIConfig().performance.toastDuration,
+    animationDuration: Number(import.meta.env.VITE_ANIMATION_DURATION) || unifiedConfigurationEngine.getUIConfig().performance.animationDuration,
   },
   upload: {
-    maxImageSize: Number(import.meta.env.VITE_MAX_IMAGE_SIZE) || PLATFORM_RULES.MAX_IMAGE_SIZE_MB * 1024 * 1024,
-    maxVideoSize: Number(import.meta.env.VITE_MAX_VIDEO_SIZE) || PLATFORM_RULES.MAX_VIDEO_SIZE_MB * 1024 * 1024,
-    maxImagesPerProperty: Number(import.meta.env.VITE_MAX_IMAGES_PER_PROPERTY) || PLATFORM_RULES.MAX_IMAGES_PER_PROPERTY,
-    maxVideosPerProperty: Number(import.meta.env.VITE_MAX_VIDEOS_PER_PROPERTY) || PLATFORM_RULES.MAX_VIDEOS_PER_PROPERTY,
-    allowedImageTypes: ['image/jpeg', 'image/png', 'image/webp'] as const,
-    allowedVideoTypes: ['video/mp4', 'video/webm'] as const,
+    // ✅ CENTRALIZED BUSINESS RULES - Using single source of truth
+    maxImageSize: Number(import.meta.env.VITE_MAX_IMAGE_SIZE) || centralizedBusinessRulesEngine.getFileUploadRules().maxImageSizeMB * 1024 * 1024,
+    maxVideoSize: Number(import.meta.env.VITE_MAX_VIDEO_SIZE) || centralizedBusinessRulesEngine.getFileUploadRules().maxVideoSizeMB * 1024 * 1024,
+    maxImagesPerProperty: Number(import.meta.env.VITE_MAX_IMAGES_PER_PROPERTY) || centralizedBusinessRulesEngine.getPropertyRules().maxImagesPerProperty,
+    maxVideosPerProperty: Number(import.meta.env.VITE_MAX_VIDEOS_PER_PROPERTY) || centralizedBusinessRulesEngine.getPropertyRules().maxVideosPerProperty,
+    allowedImageTypes: centralizedBusinessRulesEngine.getFileUploadRules().allowedImageTypes,
+    allowedVideoTypes: centralizedBusinessRulesEngine.getFileUploadRules().allowedVideoTypes,
     compressionQuality: Number(import.meta.env.VITE_IMAGE_COMPRESSION_QUALITY) || 0.8,
   },
   features: {
@@ -153,14 +160,15 @@ export const config: AppConfig = {
     maintenanceMode: import.meta.env.VITE_MAINTENANCE_MODE === 'true',
   },
   payment: {
-    // RESOLVED CONFLICT: Using PLATFORM_RULES.PLATFORM_COMMISSION_RATE (5%) as single source of truth
-    platformCommissionRate: Number(import.meta.env.VITE_PLATFORM_COMMISSION_RATE) || PLATFORM_RULES.PLATFORM_COMMISSION_RATE,
-    agentCommissionRate: Number(import.meta.env.VITE_AGENT_COMMISSION_RATE) || PLATFORM_RULES.AGENT_COMMISSION_RATE,
-    agentMinimumFee: Number(import.meta.env.VITE_AGENT_MINIMUM_FEE) || PLATFORM_RULES.AGENT_MINIMUM_FEE,
-    paystackFeeRate: Number(import.meta.env.VITE_PAYSTACK_FEE_RATE) || PLATFORM_RULES.PAYSTACK_FEE_RATE,
-    bookingFeeRate: Number(import.meta.env.VITE_BOOKING_FEE_RATE) || 0.02,
-    vatRate: Number(import.meta.env.VITE_VAT_RATE) || 0.125, // 12.5% VAT in Ghana
-    currencyLimits: PLATFORM_RULES.CURRENCY_LIMITS,
+    // ✅ CENTRALIZED COMMISSION SYSTEM - Single Source of Truth
+    // All commission rates now come from centralized-commission.config.ts
+    platformCommissionRate: Number(import.meta.env.VITE_PLATFORM_COMMISSION_RATE) || centralizedCommissionEngine.getCommissionRates().platform,
+    agentCommissionRate: Number(import.meta.env.VITE_AGENT_COMMISSION_RATE) || centralizedCommissionEngine.getCommissionRates().agent,
+    agentMinimumFee: Number(import.meta.env.VITE_AGENT_MINIMUM_FEE) || centralizedCommissionEngine.getPlatformFees().agentMinimum,
+    paystackFeeRate: Number(import.meta.env.VITE_PAYSTACK_FEE_RATE) || centralizedCommissionEngine.getCommissionRates().paystack,
+    platformFixedFee: Number(import.meta.env.VITE_PLATFORM_FIXED_FEE) || centralizedCommissionEngine.getPlatformFees().fixed,
+    vatRate: Number(import.meta.env.VITE_VAT_RATE) || centralizedCommissionEngine.getCommissionRates().vat,
+    currencyLimits: centralizedCommissionEngine.getCurrencyConfig().limits,
   },
   security: {
     sessionTimeout: Number(import.meta.env.VITE_SESSION_TIMEOUT) || 3600000, // 1 hour
@@ -169,10 +177,11 @@ export const config: AppConfig = {
     passwordMinLength: Number(import.meta.env.VITE_PASSWORD_MIN_LENGTH) || 8,
   },
   business: {
-    semesterDurationMonths: PLATFORM_RULES.SEMESTER_DURATION_MONTHS,
-    maxBookingAdvanceDays: PLATFORM_RULES.MAX_BOOKING_ADVANCE_DAYS,
-    minBookingAdvanceDays: PLATFORM_RULES.MIN_BOOKING_ADVANCE_DAYS,
-    cancellationDeadlineDays: 7,
+    // ✅ CENTRALIZED BUSINESS RULES - Single Source of Truth
+    semesterDurationMonths: centralizedBusinessRulesEngine.getBookingRules().semesterDurationMonths,
+    maxBookingAdvanceDays: centralizedBusinessRulesEngine.getBookingRules().maxBookingAdvanceDays,
+    minBookingAdvanceDays: centralizedBusinessRulesEngine.getBookingRules().minBookingAdvanceDays,
+    cancellationDeadlineDays: centralizedBusinessRulesEngine.getBookingRules().cancellationDeadlineDays,
   },
 };
 
@@ -262,7 +271,7 @@ export const CONFIGURATION_RESOLUTION_LOG = {
       'src/constants/payment.ts: 4.2%',
       'src/types/platform-core.ts: 5%'
     ],
-    resolution: 'Using PLATFORM_RULES.PLATFORM_COMMISSION_RATE (5%) as single source of truth',
+    resolution: 'Using centralizedCommissionEngine (5%) as single source of truth',
     rationale: 'Business decision: 5% aligns with platform strategy and market standards'
   },
   'Default Page Size': {
@@ -270,8 +279,18 @@ export const CONFIGURATION_RESOLUTION_LOG = {
       'src/config/index.ts: 10',
       'src/config/environment.ts: 20'
     ],
-    resolution: 'Using PLATFORM_RULES.DEFAULT_PAGE_SIZE (20) as single source of truth',
+    resolution: 'Using unifiedConfigurationEngine (20) as single source of truth',
     rationale: 'UX decision: 20 items provides better mobile experience for Ghana market'
+  },
+  'Configuration System Unification': {
+    conflictingSources: [
+      'src/config/index.ts: Legacy configuration',
+      'src/config/environment.ts: Environment variables',
+      'src/types/platform-core.ts: Platform rules',
+      'src/types/hostel-management.ts: Hostel rules'
+    ],
+    resolution: 'Using unifiedConfigurationEngine as single source of truth',
+    rationale: 'Technical decision: Unified system provides better maintainability and consistency'
   }
 } as const;
 

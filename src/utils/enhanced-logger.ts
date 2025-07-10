@@ -14,7 +14,12 @@ class Logger {
   private maxHistorySize = 100;
 
   constructor() {
-    this.isDevelopment = import.meta.env.MODE === 'development';
+    // Handle both Vite and Node.js environments
+    this.isDevelopment = (
+      (typeof import.meta !== 'undefined' && import.meta.env?.MODE === 'development') ||
+      process.env.NODE_ENV === 'development' ||
+      process.env.NODE_ENV !== 'production'
+    );
   }
 
   private createLogEntry(level: LogLevel, message: string, data?: unknown): LogEntry {

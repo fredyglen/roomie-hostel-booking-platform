@@ -369,7 +369,7 @@ const Login: React.FC = () => {
           borderTop: '1px solid #f1f3f4',
           paddingTop: '16px'
         }}>
-          <Link to="/admin/dashboard" style={{
+          <Link to="/admin/login" style={{
             color: '#9aa0a6',
             textDecoration: 'none',
             cursor: 'pointer',

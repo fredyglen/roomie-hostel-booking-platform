@@ -20,14 +20,19 @@ import type {
   WashroomType,
   HostelVerificationStatus
 } from '../types/hostel-management';
-import { 
-  createHostelId, 
-  validateHostelProperty, 
-  HOSTEL_BUSINESS_RULES 
+import {
+  createHostelId,
+  validateHostelProperty
 } from '../types/hostel-management';
-import type { GhanaHostelProperty } from '../data/ghana-hostels-semester-pricing';
-import { ghanaHostelsSemesterPricing } from '../data/ghana-hostels-semester-pricing';
-import { ghanaHostelsExtended } from '../data/ghana-hostels-extended';
+import { centralizedBusinessRulesEngine } from '@/config/centralized-business-rules.config';
+import type { GhanaHostelProperty } from '../types/property';
+
+/**
+ * ✅ MOCK DATA IMPORTS REMOVED - BE CONSCIOUS COMPLIANCE
+ *
+ * Hardcoded data imports eliminated following BE CONSCIOUS Apple-Grade standards.
+ * Service now uses real database queries for all hostel operations.
+ */
 
 // ============================================================================
 // APPLE-GRADE TYPE DEFINITIONS
@@ -144,13 +149,28 @@ export class AppleGradeHostelTransformationService {
         return ownerValidation;
       }
 
-      // Collect all hostel data sources
-      const allHostelSources = [
-        ...ghanaHostelsSemesterPricing.map(h => ({ source: 'semester_pricing' as const, data: h })),
-        ...ghanaHostelsExtended.map(h => ({ source: 'extended' as const, data: h }))
-      ];
+      // ✅ REAL DATABASE QUERY - No more hardcoded data sources
+      const { data: existingProperties, error: fetchError } = await this.supabase
+        .from('properties')
+        .select('*')
+        .eq('is_available', true)
+        .order('created_at', { ascending: false });
 
-      console.log(`📊 Processing ${allHostelSources.length} hostels from multiple sources`);
+      if (fetchError) {
+        console.error('❌ Failed to fetch properties from database:', fetchError);
+        return {
+          success: false,
+          message: `Database query failed: ${fetchError.message}`,
+          data: null
+        };
+      }
+
+      const allHostelSources = (existingProperties || []).map(property => ({
+        source: 'database' as const,
+        data: property
+      }));
+
+      console.log(`📊 Processing ${allHostelSources.length} hostels from database`);
 
       // Transform all hostels with comprehensive validation
       const transformationResults = await Promise.all(

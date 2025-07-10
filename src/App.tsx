@@ -5,15 +5,18 @@ import { QueryClient, QueryClientProvider, DefaultOptions } from '@tanstack/reac
 import { HelmetProvider } from 'react-helmet-async';
 import { Toaster } from '@/components/ui/toaster';
 import { AuthProvider } from '@/context/EnhancedAuthContext';
+import { AdminAuthProvider } from '@/context/AdminAuthContext';
 import { ErrorBoundary } from '@/components/common/ErrorBoundary';
 import { EnhancedErrorBoundary } from '@/components/common/EnhancedErrorBoundary';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { logger } from '@/utils/enhanced-logger';
-import { config } from '@/config';
+import { unifiedConfigurationEngine } from '@/config/unified-configuration.config';
 import AuthRedirect from '@/components/auth/AuthRedirect';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import AdminAuthGuard, { SupremeAdminGuard, CampusAdminGuard } from '@/components/auth/AdminAuthGuard';
 import AnalyticsDashboard from '@/pages/owner/AnalyticsDashboard';
 import { UserRole } from '@/types/roles';
+import { createAdminPermission } from '@/types/auth';
 import { initializePerformanceOptimizations } from '@/utils/bundleOptimization';
 
 
@@ -29,6 +32,7 @@ const TestAuth = React.lazy(() => import('@/pages/TestAuth'));
 // Auth Pages
 const Login = React.lazy(() => import('@/pages/auth/Login'));
 const Register = React.lazy(() => import('@/pages/auth/Register'));
+const AdminLogin = React.lazy(() => import('@/pages/auth/AdminLogin'));
 
 // Student Pages
 const StudentDashboard = React.lazy(() => import('@/pages/student/Dashboard'));
@@ -43,7 +47,6 @@ const Favorites = React.lazy(() => import('@/pages/student/Favorites'));
 const StoryView = React.lazy(() => import('@/pages/student/StoryView'));
 const StoryViewEnhanced = React.lazy(() => import('@/pages/student/StoryViewEnhanced'));
 const EnhancedStoryPage = React.lazy(() => import('@/pages/student/EnhancedStoryPage'));
-const PropertyListing = React.lazy(() => import('@/pages/student/PropertyListing'));
 const PropertyStory = React.lazy(() => import('@/pages/student/PropertyStory'));
 const BookingConfirmation = React.lazy(() => import('@/pages/student/BookingConfirmation'));
 
@@ -57,31 +60,38 @@ const OwnerProfile = React.lazy(() => import('@/pages/owner/Profile'));
 const OwnerSettings = React.lazy(() => import('@/pages/owner/Settings'));
 const OwnerSubscription = React.lazy(() => import('@/pages/owner/Subscription'));
 
-// Admin Pages
+// Enhanced Admin Pages with Role-Based Access
 const AdminDashboard = React.lazy(() => import('@/pages/admin/Dashboard'));
+const TestDashboard = React.lazy(() => import('@/pages/admin/TestDashboard'));
 const AdminProperties = React.lazy(() => import('@/pages/admin/Properties'));
 const AdminBookings = React.lazy(() => import('@/pages/admin/Bookings'));
 const AdminUsers = React.lazy(() => import('@/pages/admin/Users'));
+const AdminUserManagement = React.lazy(() => import('@/pages/admin/AdminUserManagement'));
 const AdminSettings = React.lazy(() => import('@/pages/admin/Settings'));
 const FeatureManagement = React.lazy(() => import('@/pages/admin/FeatureManagement'));
 const SubscriptionManagement = React.lazy(() => import('@/pages/admin/SubscriptionManagement'));
 const VerificationManagement = React.lazy(() => import('@/pages/admin/VerificationManagement'));
 const OwnerSettingsAdmin = React.lazy(() => import('@/pages/admin/OwnerSettings'));
 
+// Supreme Admin Only Pages
+const AdminGlobalManagement = React.lazy(() => import('@/pages/admin/GlobalManagement'));
+const AdminSystemConfig = React.lazy(() => import('@/pages/admin/SystemConfig'));
+
 // Booking Components
 const BookingStepsContainer = React.lazy(() => import('@/components/booking/BookingStepsContainer'));
 
 // Configure QueryClient with enhanced error handling
+const unifiedConfig = unifiedConfigurationEngine.getAllConfig();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: config.supabase.timeout / 6, // Based on configured timeout
+      staleTime: unifiedConfig.database.timeout / 6, // Based on configured timeout
       retry: (failureCount, error) => {
         logger.warn('Query retry attempt', {
           failureCount,
           error: error instanceof Error ? error.message : String(error)
         });
-        return failureCount < config.supabase.retryAttempts;
+        return failureCount < unifiedConfig.database.retryAttempts;
       },
     },
     mutations: {
@@ -140,7 +150,8 @@ function App() {
             }}
           >
             <AuthProvider>
-              <div className="min-h-screen bg-gray-50">
+              <AdminAuthProvider>
+                <div className="min-h-screen bg-gray-50">
               <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<SafeRoute element={<AuthRedirect />} />} />
@@ -148,6 +159,7 @@ function App() {
                 <Route path="/welcome" element={<SafeRoute element={<Welcome />} />} />
                 <Route path="/login" element={<SafeRoute element={<Login />} />} />
                 <Route path="/register" element={<SafeRoute element={<Register />} />} />
+                <Route path="/admin/login" element={<SafeRoute element={<AdminLogin />} />} />
                 <Route path="/payment-success" element={<SafeRoute element={<PaymentSuccess />} />} />
                 <Route path="/test-payment" element={<SafeRoute element={<TestPayment />} />} />
                 <Route path="/test-auth" element={<SafeRoute element={<TestAuth />} />} />
@@ -184,7 +196,7 @@ function App() {
                 } />
                 <Route path="/student/properties" element={
                   <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
-                    <SafeRoute element={<PropertyListing />} />
+                    <SafeRoute element={<Properties />} />
                   </ProtectedRoute>
                 } />
                 <Route path="/student/property/:propertyId/story" element={
@@ -254,7 +266,7 @@ function App() {
                 } />
                 <Route path="/student/property-listing" element={
                   <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
-                    <SafeRoute element={<PropertyListing />} />
+                    <SafeRoute element={<Properties />} />
                   </ProtectedRoute>
                 } />
                 <Route path="/unauthorized" element={
@@ -321,31 +333,48 @@ function App() {
                   </ProtectedRoute>
                 } />
 
-                {/* Admin Routes */}
+                {/* Enhanced Admin Routes with Role-Based Access Control */}
                 <Route path="/admin/dashboard" element={
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
-                    <SafeRoute element={<AdminDashboard />} />
-                  </ProtectedRoute>
+                  <AdminAuthGuard>
+                    <SafeRoute element={<TestDashboard />} />
+                  </AdminAuthGuard>
                 } />
                 <Route path="/admin/properties" element={
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                  <AdminAuthGuard requiredPermission={createAdminPermission('properties.approve')}>
                     <SafeRoute element={<AdminProperties />} />
-                  </ProtectedRoute>
+                  </AdminAuthGuard>
                 } />
                 <Route path="/admin/bookings" element={
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                  <AdminAuthGuard requiredPermission={createAdminPermission('bookings.manage')}>
                     <SafeRoute element={<AdminBookings />} />
-                  </ProtectedRoute>
+                  </AdminAuthGuard>
                 } />
                 <Route path="/admin/users" element={
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                  <AdminAuthGuard requiredPermission={createAdminPermission('users.manage')}>
                     <SafeRoute element={<AdminUsers />} />
-                  </ProtectedRoute>
+                  </AdminAuthGuard>
+                } />
+                <Route path="/admin/user-management" element={
+                  <AdminAuthGuard requiredPermission={createAdminPermission('users.manage')}>
+                    <SafeRoute element={<AdminUserManagement />} />
+                  </AdminAuthGuard>
                 } />
                 <Route path="/admin/settings" element={
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                  <AdminAuthGuard>
                     <SafeRoute element={<AdminSettings />} />
-                  </ProtectedRoute>
+                  </AdminAuthGuard>
+                } />
+
+                {/* Supreme Admin Only Routes */}
+                <Route path="/admin/global" element={
+                  <SupremeAdminGuard>
+                    <SafeRoute element={<AdminGlobalManagement />} />
+                  </SupremeAdminGuard>
+                } />
+                <Route path="/admin/system" element={
+                  <SupremeAdminGuard>
+                    <SafeRoute element={<AdminSystemConfig />} />
+                  </SupremeAdminGuard>
                 } />
                 <Route path="/admin/features" element={
                   <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
@@ -371,8 +400,9 @@ function App() {
                 {/* Catch all route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </div>
-            <Toaster />
+              </div>
+              <Toaster />
+            </AdminAuthProvider>
           </AuthProvider>
         </ErrorBoundary>
       </Router>

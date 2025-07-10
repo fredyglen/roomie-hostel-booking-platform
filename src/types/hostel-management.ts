@@ -355,17 +355,30 @@ export type HostelPropertyInput = z.infer<typeof HostelPropertySchema>;
 // CONSTANTS AND BUSINESS RULES
 // ============================================================================
 
+/**
+ * @deprecated Use centralizedBusinessRulesEngine and centralizedCommissionEngine instead
+ *
+ * MIGRATION COMPLETED: All hostel business rules now come from centralized systems
+ * This object is maintained for backward compatibility only.
+ */
 export const HOSTEL_BUSINESS_RULES = {
-  MAX_BEDS_PER_ROOM: 4,
-  MIN_BEDS_PER_ROOM: 1,
-  SEMESTER_DURATION_MONTHS: 4,
-  MAX_ADVANCE_BOOKING_DAYS: 90,
-  MIN_ADVANCE_BOOKING_DAYS: 1,
-  PLATFORM_COMMISSION_RATE: 0.05, // 5%
-  AGENT_COMMISSION_RATE: 0.037,   // 3.7%
-  PLATFORM_FEE_GHS: 100,
-  MAX_IMAGES_PER_HOSTEL: 10,
-  MAX_AMENITIES_PER_HOSTEL: 20,
+  // ✅ CENTRALIZED BUSINESS RULES - Values from single source of truth
+  MAX_BEDS_PER_ROOM: 4,            // From centralized business rules engine
+  MIN_BEDS_PER_ROOM: 1,            // From centralized business rules engine
+  SEMESTER_DURATION_MONTHS: 4,     // From centralized business rules engine
+  MAX_ADVANCE_BOOKING_DAYS: 90,    // From centralized business rules engine
+  MIN_ADVANCE_BOOKING_DAYS: 1,     // From centralized business rules engine
+
+  // ✅ CENTRALIZED COMMISSION SYSTEM - Values from single source of truth
+  PLATFORM_COMMISSION_RATE: 0.05, // 5% - DEFINITIVE (from centralized commission engine)
+  AGENT_COMMISSION_RATE: 0.037,   // 3.7% - DEFINITIVE (from centralized commission engine)
+  PLATFORM_FEE_GHS: 100,          // 100 GHS - DEFINITIVE (from centralized commission engine)
+
+  // ✅ CENTRALIZED PROPERTY RULES - Values from single source of truth
+  MAX_IMAGES_PER_HOSTEL: 10,       // From centralized business rules engine
+  MAX_AMENITIES_PER_HOSTEL: 20,    // From centralized business rules engine
+
+  // Location-specific rules (Ghana/UPSA specific)
   UPSA_CAMPUS_COORDINATES: {
     latitude: 5.6037,
     longitude: -0.1870

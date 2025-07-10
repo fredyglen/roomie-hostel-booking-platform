@@ -46,11 +46,13 @@
 
 #### **AGENT TIER SYSTEM**
 ```
-🥉 BRONZE AGENT (1-5 properties): 2% commission per booking
-🥈 SILVER AGENT (6-15 properties): 3% commission per booking  
-🥇 GOLD AGENT (16+ properties): 4% commission per booking
-💎 PLATINUM AGENT (50+ properties): 5% commission + bonuses
+🥉 BRONZE AGENT (1-5 properties): 3.7% commission per booking (CURRENT STANDARD)
+🥈 SILVER AGENT (6-15 properties): 3.7% commission + 5% bonus per booking
+🥇 GOLD AGENT (16+ properties): 3.7% commission + 10% bonus per booking
+💎 PLATINUM AGENT (50+ properties): 3.7% commission + 15% bonus + monthly incentives
 ```
+
+**Note**: All agent commissions follow the centralized 3.7% base rate with performance bonuses added on top.
 
 #### **ADDITIONAL AGENT INCENTIVES**
 - **Property Verification Fees**: 50 GHS per property verified

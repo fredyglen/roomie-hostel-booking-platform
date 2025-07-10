@@ -5,29 +5,36 @@
 
 ### Base Commission Structure
 - **Platform Commission**: 5% + GHS 100 platform fee
-- **Agent Commission**: 4% of total booking value
-- **Property Owner**: 88% of booking value
+- **Agent Commission**: 3.7% of total booking value (DEFINITIVE)
+- **Property Owner**: Receives base property price (fees are additional)
 - **Moving Fee**: Eliminated (GHS 0)
-- **Paystack Fees**: 1.95% for local transactions (absorbed by platform)
+- **Paystack Fees**: 1.95% for local transactions
+- **VAT**: 12.5% (Ghana standard rate)
 
 ### Commission Calculation Formula
 
 ```
-Total Booking Amount = Property Price
-Agent Fee = Total * 4%
-Platform Fee = (Total * 5%) + 100
-Property Owner Gets = Total * 88%
-Paystack Fee = Total * 1.95% (absorbed by platform)
+Base Property Price = Property Price
+Platform Commission = Base * 5%
+Platform Fixed Fee = 100 GHS
+Agent Commission = Base * 3.7% (minimum 100 GHS)
+Paystack Fee = Subtotal * 1.95%
+VAT = (Subtotal + Paystack) * 12.5%
+Total Amount = Base + Platform Commission + Platform Fee + Agent Commission + Paystack Fee + VAT
+Property Owner Gets = Base Property Price
 ```
 
 ## Property Type Commission Examples
 
-| Property Type | Semester Price | Agent Fee (4%) | Platform Fee (5% + 100) | Property Owner Gets (88%) |
-|---------------|----------------|----------------|-------------------------|---------------------------|
-| 4-in-room | GHS 2,700 | GHS 108 | GHS 235 | GHS 2,376 |
-| 3-in-room | GHS 3,600 | GHS 144 | GHS 280 | GHS 3,168 |
-| 2-in-room | GHS 4,000 | GHS 160 | GHS 300 | GHS 3,520 |
-| 1-in-room Executive | GHS 10,000 | GHS 400 | GHS 600 | GHS 8,800 |
+| Property Type | Base Price | Agent Fee (3.7%) | Platform Fee (5% + 100) | Total Amount | Owner Gets |
+|---------------|------------|------------------|-------------------------|--------------|------------|
+| 4-in-room | GHS 2,700 | GHS 100* | GHS 235 | GHS 3,400** | GHS 2,700 |
+| 3-in-room | GHS 3,600 | GHS 133 | GHS 280 | GHS 4,500** | GHS 3,600 |
+| 2-in-room | GHS 4,000 | GHS 148 | GHS 300 | GHS 5,000** | GHS 4,000 |
+| 1-in-room Executive | GHS 10,000 | GHS 370 | GHS 600 | GHS 12,500** | GHS 10,000 |
+
+*Agent commission has 100 GHS minimum fee
+**Total includes Paystack fees (1.95%) and VAT (12.5%)
 
 ## Payment Distribution Rules
 
@@ -38,13 +45,13 @@ Paystack Fee = Total * 1.95% (absorbed by platform)
 - Transparent fee breakdown displayed
 
 ### 2. Property Owner Payment
-- Receives 88% of booking amount
+- Receives base property price (100% of listed price)
 - Payment processed within 24 hours
 - Bank transfer or mobile money
 - Automatic payment confirmation
 
 ### 3. Agent Commission
-- 4% of booking amount
+- 3.7% of booking amount (minimum 100 GHS)
 - Paid after successful booking confirmation
 - Monthly consolidated payments
 - Performance bonuses for volume

@@ -1,33 +1,85 @@
 
+/**
+ * Enhanced Admin Dashboard with Role-Based Access Control
+ * Apple-Grade implementation following BE CONSCIOUS standards
+ *
+ * Business Purpose: Provides comprehensive admin dashboard for ROOMi platform
+ * with Supreme and Campus admin role differentiation, Ghana-specific metrics,
+ * and real-time platform monitoring
+ *
+ * Technical Implementation: Integrates with AdminAuthContext for secure access,
+ * role-based feature display, and comprehensive error handling
+ *
+ * @author ROOMi Platform Team
+ * @version 2.0.0
+ * @compliance BE CONSCIOUS Apple-Grade Standards
+ */
+
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { useAdminAuth } from '@/context/AdminAuthContext';
 import AdminLayout from '@/components/layout/AdminLayout';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorDisplay from '@/components/common/ErrorDisplay';
+import CampusAdminDashboard from '@/components/admin/CampusAdminDashboard';
+import StudentVerificationSystem from '@/components/admin/StudentVerificationSystem';
+import CampusPropertyManagement from '@/components/admin/CampusPropertyManagement';
+import CampusAnalytics from '@/components/admin/CampusAnalytics';
+import CampusComplianceSupport from '@/components/admin/CampusComplianceSupport';
+import UniversityIntegration from '@/components/admin/UniversityIntegration';
+import LocalDisputeResolution from '@/components/admin/LocalDisputeResolution';
+import GhanaAdminFeatures from '@/components/admin/GhanaAdminFeatures';
 import { AdminQueries } from '@/services/database/standardizedQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Users, 
-  Building, 
-  Calendar, 
-  DollarSign, 
-  TrendingUp, 
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import {
+  Users,
+  Building,
+  Calendar,
+  DollarSign,
+  TrendingUp,
   AlertTriangle,
   CheckCircle,
   Clock,
-  Eye
+  Eye,
+  Crown,
+  School,
+  Globe,
+  Shield,
+  FileCheck,
+  Activity
 } from 'lucide-react';
+import {
+  AdminRoleType,
+  createAdminPermission,
+  createCampusJurisdiction,
+  createCountryJurisdiction
+} from '@/types/auth';
 import { formatCurrency } from '@/utils/currency';
 import DatabaseSeeder from '@/components/admin/DatabaseSeeder';
 import PropertyVisibilityMonitor from '@/components/admin/PropertyVisibilityMonitor';
 import AdminAccessTest from '@/components/admin/AdminAccessTest';
 
+/**
+ * Enhanced Admin Dashboard Component
+ * Provides role-based dashboard with Supreme and Campus admin features
+ */
 const AdminDashboard: React.FC = () => {
   const navigate = useNavigate();
+  const [selectedTimeRange, setSelectedTimeRange] = useState('30d');
+
+  // Admin authentication context
+  const {
+    adminUser,
+    getAdminRole,
+    hasPermission,
+    hasJurisdiction,
+    validateAccess
+  } = useAdminAuth();
 
   // Real platform statistics
   const { data: platformStats, isLoading: statsLoading } = useQuery({
@@ -188,15 +240,35 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
+  // ============================================================================
+  // ROLE-BASED DASHBOARD RENDERING
+  // ============================================================================
+
+  // Campus Admin Dashboard
+  if (getAdminRole() === 'campus_admin') {
+    return (
+      <AdminLayout pageTitle="Campus Dashboard">
+        <CampusAdminDashboard />
+      </AdminLayout>
+    );
+  }
+
+  // Supreme Admin Dashboard (existing functionality enhanced)
   return (
-    <AdminLayout pageTitle="Dashboard">
+    <AdminLayout pageTitle="Supreme Admin Dashboard">
       <div className="space-y-6">
         {/* Welcome Section */}
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="text-gray-600">
-            Platform overview and administrative controls for ROOMi.
-          </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Supreme Admin Dashboard</h1>
+            <p className="text-gray-600">
+              Global platform oversight and administrative controls for ROOMi Ghana.
+            </p>
+          </div>
+          <Badge className="bg-purple-100 text-purple-800 flex items-center gap-2">
+            <Crown className="h-4 w-4" />
+            Supreme Admin
+          </Badge>
         </div>
 
         {/* Key Platform Metrics */}
@@ -438,6 +510,11 @@ const AdminDashboard: React.FC = () => {
               </div>
             </CardContent>
           </Card>
+        </div>
+
+        {/* Ghana-Specific Features for Supreme Admin */}
+        <div className="mt-8">
+          <GhanaAdminFeatures />
         </div>
       </div>
     </AdminLayout>

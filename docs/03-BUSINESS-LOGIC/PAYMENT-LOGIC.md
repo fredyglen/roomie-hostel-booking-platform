@@ -46,9 +46,9 @@ const BUSINESS_MODEL = {
   platformCommissionRate: 0.05,        // 5% of booking value
   platformFixedFee: 100,               // 100 GHS per booking
   
-  // Agent Compensation (Future Implementation)
-  agentCommissionRate: 0.00,           // TBD - Currently 0%
-  agentFixedFee: 0,                    // TBD - Currently 0 GHS
+  // Agent Compensation (IMPLEMENTED)
+  agentCommissionRate: 0.037,          // 3.7% - DEFINITIVE RATE
+  agentMinimumFee: 100,                // 100 GHS - DEFINITIVE MINIMUM
   
   // Payment Processing
   paystackFeeRate: 0.0195,             // 1.95% Paystack fee

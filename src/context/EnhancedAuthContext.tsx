@@ -5,28 +5,56 @@ import { supabase } from '@/integrations/supabase/client';
 import { logger } from '@/utils/enhanced-logger';
 import { UserRole, isValidRole } from '@/types/roles';
 import { config } from '@/config';
+import {
+  AuthUser,
+  AuthError,
+  AdminPermission,
+  CampusJurisdiction,
+  CountryJurisdiction,
+  AdminRoleType,
+  isAdminRole,
+  isAdminUser,
+  createAdminPermission
+} from '@/types/auth';
+import { adminAuthService, AdminAuthSession } from '@/services/auth/adminAuthService';
+import { adminRoleService } from '@/services/auth/adminRoleService';
 
-interface AuthUser extends User {
-  role: UserRole;
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  avatarUrl?: string;
-}
-
-interface AuthContextType {
+/**
+ * Enhanced Authentication Context with Admin Role Support
+ * Apple-Grade implementation following BE CONSCIOUS standards
+ */
+interface EnhancedAuthContextType {
+  // Basic Authentication
   user: AuthUser | null;
   session: Session | null;
   loading: boolean;
+  error: AuthError | null;
+
+  // Standard Auth Methods
   signIn: (email: string, password: string) => Promise<void>;
   signUp: (email: string, password: string, role: string) => Promise<void>;
   signOut: () => Promise<void>;
   refreshAuth: () => Promise<void>;
+
+  // Session Management
   isSessionValid: () => boolean;
   getSessionTimeRemaining: () => number;
+
+  // Admin-Specific Methods
+  signInAdmin: (email: string, password: string) => Promise<void>;
+  signOutAdmin: () => Promise<void>;
+  isAdmin: () => boolean;
+  getAdminRole: () => AdminRoleType | null;
+  hasPermission: (permission: AdminPermission) => boolean;
+  hasJurisdiction: (campus?: CampusJurisdiction, country?: CountryJurisdiction) => boolean;
+  getAdminSession: () => AdminAuthSession | null;
+
+  // Enhanced Security
+  refreshAdminSession: () => Promise<void>;
+  validateAdminAccess: () => boolean;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+const AuthContext = createContext<EnhancedAuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);

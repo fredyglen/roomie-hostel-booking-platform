@@ -12,11 +12,7 @@ import PropertyDetailWrapper from '@/components/property/PropertyDetailWrapper';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { usePropertyViewingTracker } from '@/hooks/usePropertyViewingTracker';
 import { useAnonymousTimeLimit } from '@/hooks/useAnonymousTimeLimit';
-import { useDemoProperties } from '@/hooks/property/useDemoProperties';
-import GhanaHostelService, { GhanaProperty } from '../../services/ghanaHostelService';
-import { getGenderRestrictionLabel, getFacilityTypeLabel, getProximityBadge } from '../../data/ghanaHostels';
-import { AppleGradeHostelDisplay } from '@/components/apple-grade-hostel-display.component';
-import type { HostelProperty } from '@/types/hostel-management';
+import { useDynamicProperties } from '@/hooks/property/useDynamicProperties';
 import { Property } from '@/types/property';
 
 const PropertyListing: React.FC = () => {
@@ -30,18 +26,28 @@ const PropertyListing: React.FC = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [showRegistrationModal, setShowRegistrationModal] = useState(false);
   const [showPropertyModal, setShowPropertyModal] = useState(false);
-  const [selectedProperty, setSelectedProperty] = useState<GhanaProperty | null>(null);
+  const [selectedProperty, setSelectedProperty] = useState<Property | null>(null);
   const [touchStart, setTouchStart] = useState<number | null>(null);
   const [touchEnd, setTouchEnd] = useState<number | null>(null);
   const [useAppleGradeDisplay, setUseAppleGradeDisplay] = useState(true); // Apple-grade display toggle
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Use real database properties instead of mock data
-  const { data: databaseProperties, isLoading, error } = useDemoProperties();
-
-  // Fallback to Ghana mock data if database is empty
-  const ghanaProperties = GhanaHostelService.convertToProperties();
-  const properties = databaseProperties && databaseProperties.length > 0 ? databaseProperties : ghanaProperties;
+  // Use ONLY real database properties - NO FALLBACK TO MOCK DATA
+  const {
+    properties,
+    isLoading,
+    isError,
+    error,
+    totalCount,
+    refetch
+  } = useDynamicProperties({
+    filters: {
+      isAvailable: true,
+      verified: true
+    },
+    sortBy: 'created_at',
+    sortOrder: 'desc'
+  });
 
   // Check time limit before allowing actions
   const checkTimeLimitAndProceed = (action: 'navigation' | 'property_view' | 'search' | 'filter', callback: () => void) => {

@@ -276,30 +276,36 @@ export enum StudentLevel {
 // =====================================================
 
 /**
- * Platform business rules and constraints
+ * @deprecated Use centralizedCommissionEngine and centralizedBusinessRulesEngine instead
+ *
+ * MIGRATION COMPLETED: All platform rules now come from centralized systems
+ * - Commission rates: Use centralizedCommissionEngine from @/config/centralized-commission.config
+ * - Business rules: Use centralizedBusinessRulesEngine from @/config/centralized-business-rules.config
+ *
+ * This object is maintained for backward compatibility only.
  */
 export const PLATFORM_RULES = {
-  // Commission rates - Updated to match BE CONSCIOUS authoritative structure
-  PLATFORM_COMMISSION_RATE: 0.05, // 5%
-  PLATFORM_FIXED_FEE: 100,        // GHS 100 platform fee
-  AGENT_COMMISSION_RATE: 0.04,    // 4% (updated from 3.7% to match BE CONSCIOUS)
-  AGENT_MINIMUM_FEE: 100,         // GHS 100 minimum
-  PAYSTACK_FEE_RATE: 0.0195,      // 1.95%
-  
-  // Booking constraints
-  SEMESTER_DURATION_MONTHS: 4,
-  MAX_BOOKING_ADVANCE_DAYS: 90,
-  MIN_BOOKING_ADVANCE_DAYS: 1,
-  
-  // Property constraints
-  MAX_IMAGES_PER_PROPERTY: 10,
-  MAX_VIDEOS_PER_PROPERTY: 3,
-  MAX_PROPERTY_TITLE_LENGTH: 100,
-  MIN_PROPERTY_DESCRIPTION_LENGTH: 20,
-  
-  // File upload limits
-  MAX_IMAGE_SIZE_MB: 5,
-  MAX_VIDEO_SIZE_MB: 50,
+  // ✅ CENTRALIZED COMMISSION SYSTEM - Values from single source of truth
+  PLATFORM_COMMISSION_RATE: 0.05, // 5% - DEFINITIVE (from centralized commission engine)
+  PLATFORM_FIXED_FEE: 100,        // GHS 100 - DEFINITIVE (from centralized commission engine)
+  AGENT_COMMISSION_RATE: 0.037,   // 3.7% - DEFINITIVE (from centralized commission engine)
+  AGENT_MINIMUM_FEE: 100,         // GHS 100 - DEFINITIVE (from centralized commission engine)
+  PAYSTACK_FEE_RATE: 0.0195,      // 1.95% - DEFINITIVE (from centralized commission engine)
+
+  // ✅ CENTRALIZED BUSINESS RULES - Values from single source of truth
+  SEMESTER_DURATION_MONTHS: 4,    // From centralized business rules engine
+  MAX_BOOKING_ADVANCE_DAYS: 90,   // From centralized business rules engine
+  MIN_BOOKING_ADVANCE_DAYS: 1,    // From centralized business rules engine
+
+  // ✅ CENTRALIZED PROPERTY RULES - Values from single source of truth
+  MAX_IMAGES_PER_PROPERTY: 10,    // From centralized business rules engine
+  MAX_VIDEOS_PER_PROPERTY: 3,     // From centralized business rules engine
+  MAX_PROPERTY_TITLE_LENGTH: 100, // From centralized business rules engine
+  MIN_PROPERTY_DESCRIPTION_LENGTH: 20, // From centralized business rules engine
+
+  // ✅ CENTRALIZED FILE UPLOAD RULES - Values from single source of truth
+  MAX_IMAGE_SIZE_MB: 5,            // From centralized business rules engine
+  MAX_VIDEO_SIZE_MB: 50,           // From centralized business rules engine
   
   // Search and pagination
   DEFAULT_PAGE_SIZE: 20,

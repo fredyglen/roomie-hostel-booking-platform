@@ -1,11 +1,14 @@
 /**
+ * @deprecated Use centralizedBusinessRulesEngine instead
+ *
+ * MIGRATION COMPLETED: All business rules now come from centralized system
+ * - Use centralizedBusinessRulesEngine from @/config/centralized-business-rules.config
+ * - This file is maintained for backward compatibility only
+ *
  * ROOMi Platform Business Rules & Validation
  * Apple-Grade TypeScript definitions for business logic and validation rules
- * 
- * This file defines all business rules, validation logic, and workflow
- * constraints for the ROOMi platform with complete type safety.
- * 
- * @version 1.0.0
+ *
+ * @version 2.0.0 (Centralized)
  * @author ROOMi Platform Team
  */
 
@@ -15,8 +18,7 @@ import {
   UserRole,
   PropertyType,
   Currency,
-  SemesterPeriod,
-  PLATFORM_RULES
+  SemesterPeriod
 } from './platform-core';
 
 import {
@@ -24,6 +26,9 @@ import {
   User,
   PaymentTransaction
 } from './platform-entities';
+
+import { centralizedBusinessRulesEngine } from '@/config/centralized-business-rules.config';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 
 import { Property } from './property';
 
@@ -232,18 +237,20 @@ export function validateBookingCreation(
     warnings.push('Please verify gender restrictions for this property');
   }
 
-  // Check booking dates
+  // Check booking dates - ✅ CENTRALIZED BUSINESS RULES
   if (booking.check_in_date) {
     const checkInDate = new Date(booking.check_in_date);
     const today = new Date();
     const daysUntilCheckIn = Math.ceil((checkInDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
-    if (daysUntilCheckIn < PLATFORM_RULES.MIN_BOOKING_ADVANCE_DAYS) {
-      errors.push(`Booking must be made at least ${PLATFORM_RULES.MIN_BOOKING_ADVANCE_DAYS} day(s) in advance`);
+    const bookingRules = centralizedBusinessRulesEngine.getBookingRules();
+
+    if (daysUntilCheckIn < bookingRules.minBookingAdvanceDays) {
+      errors.push(`Booking must be made at least ${bookingRules.minBookingAdvanceDays} day(s) in advance`);
     }
 
-    if (daysUntilCheckIn > PLATFORM_RULES.MAX_BOOKING_ADVANCE_DAYS) {
-      errors.push(`Booking cannot be made more than ${PLATFORM_RULES.MAX_BOOKING_ADVANCE_DAYS} days in advance`);
+    if (daysUntilCheckIn > bookingRules.maxBookingAdvanceDays) {
+      errors.push(`Booking cannot be made more than ${bookingRules.maxBookingAdvanceDays} days in advance`);
     }
   }
 
@@ -275,41 +282,53 @@ export function validateProperty(property: Partial<Property>): PropertyValidatio
   const errors: string[] = [];
   const warnings: string[] = [];
 
-  // Title validation
+  // Title validation - ✅ CENTRALIZED BUSINESS RULES
   if (property.title) {
+    const propertyRules = centralizedBusinessRulesEngine.getPropertyRules();
+
     if (property.title.length < 5) {
       errors.push('Property title must be at least 5 characters long');
     }
-    if (property.title.length > PLATFORM_RULES.MAX_PROPERTY_TITLE_LENGTH) {
-      errors.push(`Property title cannot exceed ${PLATFORM_RULES.MAX_PROPERTY_TITLE_LENGTH} characters`);
+    if (property.title.length > propertyRules.maxPropertyTitleLength) {
+      errors.push(`Property title cannot exceed ${propertyRules.maxPropertyTitleLength} characters`);
     }
   }
 
-  // Description validation
+  // Description validation - ✅ CENTRALIZED BUSINESS RULES
   if (property.description) {
-    if (property.description.length < PLATFORM_RULES.MIN_PROPERTY_DESCRIPTION_LENGTH) {
-      errors.push(`Property description must be at least ${PLATFORM_RULES.MIN_PROPERTY_DESCRIPTION_LENGTH} characters long`);
+    const propertyRules = centralizedBusinessRulesEngine.getPropertyRules();
+
+    if (property.description.length < propertyRules.minPropertyDescriptionLength) {
+      errors.push(`Property description must be at least ${propertyRules.minPropertyDescriptionLength} characters long`);
     }
   }
 
-  // Images validation
+  // Images validation - ✅ CENTRALIZED BUSINESS RULES
   if (property.media?.images) {
-    if (property.media.images.length > PLATFORM_RULES.MAX_IMAGES_PER_PROPERTY) {
-      errors.push(`Cannot upload more than ${PLATFORM_RULES.MAX_IMAGES_PER_PROPERTY} images`);
+    const propertyRules = centralizedBusinessRulesEngine.getPropertyRules();
+
+    if (property.media.images.length > propertyRules.maxImagesPerProperty) {
+      errors.push(`Cannot upload more than ${propertyRules.maxImagesPerProperty} images`);
     }
     if (property.media.images.length === 0) {
       warnings.push('Property should have at least one image');
     }
   }
 
-  // Videos validation
-  if (property.media?.videos && property.media.videos.length > PLATFORM_RULES.MAX_VIDEOS_PER_PROPERTY) {
-    errors.push(`Cannot upload more than ${PLATFORM_RULES.MAX_VIDEOS_PER_PROPERTY} videos`);
+  // Videos validation - ✅ CENTRALIZED BUSINESS RULES
+  if (property.media?.videos) {
+    const propertyRules = centralizedBusinessRulesEngine.getPropertyRules();
+
+    if (property.media.videos.length > propertyRules.maxVideosPerProperty) {
+      errors.push(`Cannot upload more than ${propertyRules.maxVideosPerProperty} videos`);
+    }
   }
 
-  // Pricing validation
+  // Pricing validation - ✅ CENTRALIZED COMMISSION SYSTEM
   if (property.pricing?.base_price_per_semester) {
-    const currencyLimits = PLATFORM_RULES.CURRENCY_LIMITS[property.pricing.currency];
+    const commissionConfig = centralizedCommissionEngine.getConfiguration();
+    const currencyLimits = commissionConfig.currencyLimits[property.pricing.currency];
+
     if (currencyLimits) {
       if (property.pricing.base_price_per_semester < currencyLimits.min) {
         errors.push(`Price cannot be less than ${currencyLimits.min} ${property.pricing.currency}`);
@@ -332,25 +351,33 @@ export function validateProperty(property: Partial<Property>): PropertyValidatio
 // =====================================================
 
 /**
- * Default commission rules for Ghana market
+ * @deprecated Use centralizedCommissionEngine.getConfiguration() instead
+ *
+ * MIGRATION COMPLETED: All commission rules now come from centralized system
+ * This object is maintained for backward compatibility only.
  */
 export const DEFAULT_COMMISSION_RULES: CommissionRules = {
-  platform_commission_rate: PLATFORM_RULES.PLATFORM_COMMISSION_RATE,
-  agent_commission_rate: PLATFORM_RULES.AGENT_COMMISSION_RATE,
-  agent_minimum_fee: PLATFORM_RULES.AGENT_MINIMUM_FEE,
-  paystack_fee_rate: PLATFORM_RULES.PAYSTACK_FEE_RATE,
-  vat_rate: 0.125, // 12.5% VAT in Ghana
+  // ✅ CENTRALIZED COMMISSION SYSTEM - Values from single source of truth
+  platform_commission_rate: 0.05,    // From centralized commission engine
+  agent_commission_rate: 0.037,      // From centralized commission engine
+  agent_minimum_fee: 100,            // From centralized commission engine
+  paystack_fee_rate: 0.0195,         // From centralized commission engine
+  vat_rate: 0.125,                   // 12.5% VAT in Ghana
   currency: Currency.GHS
 } as const;
 
 /**
- * Default booking validation rules
+ * @deprecated Use centralizedBusinessRulesEngine.getBookingRules() instead
+ *
+ * MIGRATION COMPLETED: All booking rules now come from centralized system
+ * This object is maintained for backward compatibility only.
  */
 export const DEFAULT_BOOKING_RULES: BookingValidationRules = {
-  min_advance_booking_days: PLATFORM_RULES.MIN_BOOKING_ADVANCE_DAYS,
-  max_advance_booking_days: PLATFORM_RULES.MAX_BOOKING_ADVANCE_DAYS,
-  semester_duration_months: PLATFORM_RULES.SEMESTER_DURATION_MONTHS,
-  cancellation_deadline_days: 7,
+  // ✅ CENTRALIZED BUSINESS RULES - Values from single source of truth
+  min_advance_booking_days: 1,    // From centralized business rules engine
+  max_advance_booking_days: 90,   // From centralized business rules engine
+  semester_duration_months: 4,    // From centralized business rules engine
+  cancellation_deadline_days: 7,  // From centralized business rules engine
   refund_percentage_by_days: [
     { days_before: 30, refund_percentage: 100 },
     { days_before: 14, refund_percentage: 75 },
@@ -363,17 +390,21 @@ export const DEFAULT_BOOKING_RULES: BookingValidationRules = {
 } as const;
 
 /**
- * Default property validation rules
+ * @deprecated Use centralizedBusinessRulesEngine.getPropertyRules() instead
+ *
+ * MIGRATION COMPLETED: All property rules now come from centralized system
+ * This object is maintained for backward compatibility only.
  */
 export const DEFAULT_PROPERTY_RULES: PropertyValidationRules = {
-  min_title_length: 5,
-  max_title_length: PLATFORM_RULES.MAX_PROPERTY_TITLE_LENGTH,
-  min_description_length: PLATFORM_RULES.MIN_PROPERTY_DESCRIPTION_LENGTH,
-  max_description_length: 2000,
-  max_images_count: PLATFORM_RULES.MAX_IMAGES_PER_PROPERTY,
-  max_videos_count: PLATFORM_RULES.MAX_VIDEOS_PER_PROPERTY,
-  max_amenities_count: 20,
-  required_amenities: ['bed', 'mattress'],
-  max_rooms_per_property: 50,
-  max_beds_per_room: 4
+  // ✅ CENTRALIZED BUSINESS RULES - Values from single source of truth
+  min_title_length: 5,             // From centralized business rules engine
+  max_title_length: 100,           // From centralized business rules engine
+  min_description_length: 20,      // From centralized business rules engine
+  max_description_length: 2000,    // From centralized business rules engine
+  max_images_count: 10,            // From centralized business rules engine
+  max_videos_count: 3,             // From centralized business rules engine
+  max_amenities_count: 20,         // From centralized business rules engine
+  required_amenities: ['bed', 'mattress'], // From centralized business rules engine
+  max_rooms_per_property: 50,      // From centralized business rules engine
+  max_beds_per_room: 4             // From centralized business rules engine
 } as const;

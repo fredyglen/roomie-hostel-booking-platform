@@ -1,15 +1,10 @@
 
 import { Property } from '@/types/property';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 
-// Payment configuration constants - Updated to match BE CONSCIOUS authoritative structure
-const PAYMENT_CONFIG = {
-  platformFeePercentage: 0.05, // 5% platform fee
-  platformFixedFee: 100, // GHS 100 platform fee
-  paymentProcessorFeePercentage: 0.0195, // 1.95% Paystack fee (updated from 1.5%)
-  agentCommissionPercentage: 0.04, // 4% agent commission (updated from 10% to match BE CONSCIOUS)
-  vatRate: 0.125, // 12.5% VAT in Ghana
-  currency: 'GHS'
-};
+// ✅ CENTRALIZED COMMISSION SYSTEM - Single Source of Truth
+// All payment calculations now use the centralized commission engine
+// This eliminates hardcoded values and ensures consistency across the platform
 
 export interface PaymentBreakdown {
   propertyRent: number;
@@ -36,26 +31,17 @@ export const calculatePaymentBreakdown = (
   propertyRent: number,
   packageType: 'standard' | 'premium' | 'luxury' = 'standard'
 ): PaymentBreakdown => {
-  // Base calculations - Updated to match BE CONSCIOUS structure (5% + GHS 100)
-  const platformFee = (propertyRent * PAYMENT_CONFIG.platformFeePercentage) + PAYMENT_CONFIG.platformFixedFee;
-  const paymentProcessorFee = propertyRent * PAYMENT_CONFIG.paymentProcessorFeePercentage;
-  const agentFee = propertyRent * PAYMENT_CONFIG.agentCommissionPercentage;
-
-  const subtotal = propertyRent + platformFee + paymentProcessorFee + agentFee;
-  const vat = subtotal * PAYMENT_CONFIG.vatRate;
-  const totalAmount = subtotal + vat;
-
-  // What the property owner receives (88% of booking value as per BE CONSCIOUS)
-  const ownerReceives = propertyRent * 0.88;
+  // ✅ CENTRALIZED COMMISSION CALCULATION - Using single source of truth
+  const commissionResult = centralizedCommissionEngine.calculateCommissions(propertyRent, true);
 
   return {
-    propertyRent,
-    platformFee,
-    paymentProcessorFee,
-    agentFee,
-    vat,
-    totalAmount,
-    ownerReceives
+    propertyRent: commissionResult.baseAmount,
+    platformFee: commissionResult.platformCommission + commissionResult.platformFixedFee,
+    paymentProcessorFee: commissionResult.paystackFee,
+    agentFee: commissionResult.agentCommission,
+    vat: commissionResult.vatAmount,
+    totalAmount: commissionResult.totalAmount,
+    ownerReceives: commissionResult.ownerReceives
   };
 };
 
@@ -67,24 +53,18 @@ export const calculateBookingCosts = (
   const baseRent = property.rent || property.price;
   const subtotal = baseRent * durationMonths;
 
-  // Updated to match BE CONSCIOUS structure (5% + GHS 100)
-  const platformFee = (subtotal * PAYMENT_CONFIG.platformFeePercentage) + PAYMENT_CONFIG.platformFixedFee;
-  const processingFee = subtotal * PAYMENT_CONFIG.paymentProcessorFeePercentage;
-  const agentFee = subtotal * PAYMENT_CONFIG.agentCommissionPercentage;
-
-  const beforeVat = subtotal + platformFee + processingFee + agentFee;
-  const vat = beforeVat * PAYMENT_CONFIG.vatRate;
-  const total = beforeVat + vat;
+  // ✅ CENTRALIZED COMMISSION CALCULATION - Using single source of truth
+  const commissionResult = centralizedCommissionEngine.calculateCommissions(subtotal, true);
 
   return {
     baseRent,
     duration: durationMonths,
     subtotal,
-    platformFee,
-    processingFee,
-    agentFee,
-    vat,
-    total
+    platformFee: commissionResult.platformCommission + commissionResult.platformFixedFee,
+    processingFee: commissionResult.paystackFee,
+    agentFee: commissionResult.agentCommission,
+    vat: commissionResult.vatAmount,
+    total: commissionResult.totalAmount
   };
 };
 

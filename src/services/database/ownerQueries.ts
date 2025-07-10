@@ -43,6 +43,18 @@ export interface PropertyPerformance {
   is_available: boolean;
 }
 
+export interface OwnerTransaction {
+  id: string;
+  reference: string;
+  amount: number;
+  currency: string;
+  status: string;
+  payment_method: string;
+  date: string;
+  booking_id?: string;
+  property_title?: string;
+}
+
 export class OwnerQueries {
   /**
    * Get comprehensive dashboard statistics for an owner
@@ -264,7 +276,7 @@ export class OwnerQueries {
           total_bookings: totalBookings || 0,
           current_occupancy: currentOccupancy,
           max_occupancy: maxOccupants,
-          is_available: property.is_available,
+          is_available: property.is_available ?? true,
         });
       }
 
@@ -273,6 +285,22 @@ export class OwnerQueries {
     } catch (error) {
       logger.error('Failed to fetch property performance', { error, ownerId });
       throw error;
+    }
+  }
+
+  /**
+   * Get transaction history for an owner (BE CONSCIOUS: Real data only)
+   * Note: Returns empty array until payments table is implemented
+   */
+  static async getTransactionHistory(ownerId: string, limit: number = 10): Promise<OwnerTransaction[]> {
+    try {
+      // TODO: Implement when payments table is available in Supabase
+      // For now, return empty array to prevent hardcoded mock data
+      logger.info('Transaction history requested but payments table not yet implemented', { ownerId, limit });
+      return [];
+    } catch (error) {
+      logger.error('Failed to fetch transaction history', { error, ownerId });
+      return [];
     }
   }
 }

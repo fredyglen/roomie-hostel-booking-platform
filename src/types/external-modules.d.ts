@@ -145,20 +145,17 @@ declare module '@/config/supabase' {
 }
 
 /**
- * Mock properties data module declaration
- * Used for development and testing
+ * ✅ MOCK DATA DECLARATIONS REMOVED - BE CONSCIOUS COMPLIANCE
+ *
+ * Mock data module declarations have been eliminated following BE CONSCIOUS
+ * Apple-Grade standards. All data now comes from centralized database systems.
+ *
+ * Replacement systems:
+ * - Properties: useDynamicProperties hook + enhancedPropertyService
+ * - Users: Supabase auth + user management system
+ * - Bookings: Database-driven booking system
+ * - Reviews: Database-driven review system
  */
-declare module '@/data/mock-properties' {
-  import { Property } from '@/types/property';
-  import { User } from '@/types/user';
-  import { Booking } from '@/types/booking';
-  import { Review } from '@/types/review';
-
-  export const allGhanaHostels: Property[];
-  export const mockUsers: User[];
-  export const mockBookings: Booking[];
-  export const mockReviews: Review[];
-}
 
 /**
  * Global test utilities

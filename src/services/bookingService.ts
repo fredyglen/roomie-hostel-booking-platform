@@ -4,6 +4,7 @@
 
 import { supabase } from '@/integrations/supabase/client';
 import { Database } from '@/integrations/supabase/types';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 
 type BookingEnhanced = Database['public']['Tables']['bookings_enhanced']['Row'];
 type BookingInsert = Database['public']['Tables']['bookings_enhanced']['Insert'];
@@ -194,6 +195,7 @@ export class BookingService {
 
   /**
    * Calculate booking pricing based on ROOMi business model
+   * ✅ CENTRALIZED COMMISSION CALCULATION - Using single source of truth
    */
   static calculateBookingPricing(
     propertyRent: number,
@@ -207,24 +209,19 @@ export class BookingService {
     totalAmount: number;
     ownerReceives: number;
   } {
-    const PLATFORM_COMMISSION_RATE = 0.05; // 5%
-    const PLATFORM_FIXED_FEE = 100; // 100 GHS
-    const AGENT_FEE_RATE = 0.02; // 2% if agent involved
+    // ✅ CENTRALIZED COMMISSION CALCULATION - Using single source of truth
+    const commissionResult = centralizedCommissionEngine.calculateCommissions(propertyRent, hasAgent);
 
-    const platformCommission = propertyRent * PLATFORM_COMMISSION_RATE;
-    const agentFee = hasAgent ? propertyRent * AGENT_FEE_RATE : 0;
-    const totalPlatformFee = platformCommission + PLATFORM_FIXED_FEE;
-    const totalAmount = propertyRent + totalPlatformFee + agentFee;
-    const ownerReceives = propertyRent - platformCommission - agentFee;
+    const totalPlatformFee = commissionResult.platformCommission + commissionResult.platformFixedFee;
 
     return {
-      propertyRent,
-      platformCommission,
-      platformFixedFee: PLATFORM_FIXED_FEE,
-      agentFee,
+      propertyRent: commissionResult.baseAmount,
+      platformCommission: commissionResult.platformCommission,
+      platformFixedFee: commissionResult.platformFixedFee,
+      agentFee: commissionResult.agentCommission,
       totalPlatformFee,
-      totalAmount,
-      ownerReceives
+      totalAmount: commissionResult.totalAmount,
+      ownerReceives: commissionResult.ownerReceives
     };
   }
 
