@@ -11,12 +11,23 @@ import { User } from './core';
 // Branded type for property ID
 export type PropertyId = string & { readonly __brand: 'PropertyId' };
 
-// Property status enum
-export type PropertyStatus = 
+// Branded type for property price
+export type PropertyPrice = number & { readonly __brand: 'PropertyPrice' };
+
+// Address type
+export type Address = string & { readonly __brand: 'Address' };
+
+// Property status enum - unified definition
+export type PropertyStatus =
+  | 'available'
+  | 'unavailable'
+  | 'active'
+  | 'inactive'
+  | 'pending'
+  | 'rejected'
   | 'draft'
   | 'pending_review'
   | 'approved'
-  | 'rejected'
   | 'archived';
 
 // Property type enum - ONLY these three types
@@ -149,9 +160,7 @@ export interface Property {
 // PROPERTY ENUMS AND TYPES
 // =====================================================
 
-export type PropertyType = 'hostel' | 'homestel' | 'apartment' | 'house' | 'dormitory';
-
-export type PropertyStatus = 'active' | 'inactive' | 'pending' | 'rejected' | 'available' | 'unavailable';
+// Duplicate definitions removed - using the ones defined above
 
 export type VerificationStatus = 'pending' | 'verified' | 'rejected';
 
@@ -370,7 +379,7 @@ export interface PropertyFilters {
 // PROPERTY CATEGORY TYPES
 // =====================================================
 
-export type PropertyCategory = 'Hostel' | 'Homestel' | 'Apartment' | 'House' | 'Dormitory';
+// Duplicate PropertyCategory removed - using the one defined above
 
 // =====================================================
 // HELPER FUNCTIONS FOR TYPE SAFETY

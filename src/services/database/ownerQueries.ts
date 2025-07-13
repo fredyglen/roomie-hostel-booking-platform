@@ -12,10 +12,14 @@ export interface OwnerDashboardStats {
   totalBookings: number;
   monthlyEarnings: number;
   occupancyRate: number;
-  averageRating: number;
+  averageRating: number | null; // ✅ BE CONSCIOUS: null when no reviews exist
   totalReviews: number;
   pendingBookings: number;
   confirmedBookings: number;
+  // ✅ BE CONSCIOUS: Real maintenance analytics
+  maintenanceRequests: number;
+  pendingMaintenance: number;
+  completedMaintenance: number;
 }
 
 export interface RecentBooking {
@@ -139,9 +143,47 @@ export class OwnerQueries {
 
       const occupancyRate = totalCapacity > 0 ? Math.round((totalOccupied / totalCapacity) * 100) : 0;
 
-      // TODO: Implement reviews system
-      const averageRating = 4.5; // Placeholder
-      const totalReviews = 0; // Placeholder
+      // ✅ BE CONSCIOUS: Real review analytics - using services for proper type safety
+      let averageRating: number | null = null;
+      let totalReviews = 0;
+
+      try {
+        // Import review service dynamically to avoid circular dependencies
+        const { default: PropertyReviewService } = await import('@/services/reviewService');
+        const reviewSummary = await PropertyReviewService.getOwnerReviewSummary(ownerId);
+
+        if (reviewSummary.length > 0) {
+          totalReviews = reviewSummary.reduce((sum, summary) => sum + summary.total_reviews, 0);
+          if (totalReviews > 0) {
+            const totalRating = reviewSummary.reduce((sum, summary) =>
+              sum + (summary.average_rating * summary.total_reviews), 0);
+            averageRating = totalRating / totalReviews;
+          }
+        }
+      } catch (error) {
+        logger.warn('Failed to fetch review analytics', { error, ownerId });
+        // Continue with null values
+      }
+
+      // ✅ BE CONSCIOUS: Real maintenance analytics - using services for proper type safety
+      let maintenanceRequests = 0;
+      let pendingMaintenance = 0;
+      let completedMaintenance = 0;
+
+      try {
+        // Import maintenance service dynamically to avoid circular dependencies
+        const { default: MaintenanceRequestService } = await import('@/services/maintenanceService');
+        const maintenanceAnalytics = await MaintenanceRequestService.getMaintenanceAnalytics(ownerId);
+
+        if (maintenanceAnalytics) {
+          maintenanceRequests = maintenanceAnalytics.total_requests;
+          pendingMaintenance = maintenanceAnalytics.pending_requests;
+          completedMaintenance = maintenanceAnalytics.completed_requests;
+        }
+      } catch (error) {
+        logger.warn('Failed to fetch maintenance analytics', { error, ownerId });
+        // Continue with zero values
+      }
 
       const stats: OwnerDashboardStats = {
         totalProperties: totalProperties || 0,
@@ -152,6 +194,9 @@ export class OwnerQueries {
         totalReviews,
         pendingBookings: pendingBookings || 0,
         confirmedBookings: confirmedBookings || 0,
+        maintenanceRequests,
+        pendingMaintenance,
+        completedMaintenance,
       };
 
       logger.info('Owner dashboard stats fetched successfully', { ownerId, stats });

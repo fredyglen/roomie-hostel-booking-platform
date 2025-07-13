@@ -91,53 +91,25 @@ const Properties: React.FC = () => {
   });
 
   const handleDeleteProperty = (propertyId: string) => {
+    // Check if this is a mock property (mock properties have simple numeric IDs)
+    const isMockProperty = ['1', '2', '3'].includes(propertyId);
+
+    if (isMockProperty) {
+      toast({
+        title: "Cannot Delete Demo Property",
+        description: "This is a demo property. Create your own properties to manage them.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this property?')) {
       deletePropertyMutation.mutate(propertyId);
     }
   };
 
-  // Mock data for demonstration
-  const mockProperties: PropertyDisplay[] = [
-    {
-      id: '1',
-      title: 'Cozy Studio Apartment Near UPSA',
-      type: 'Studio',
-      address: '123 University Road, East Legon, Accra',
-      price: 850,
-      price_unit: 'month',
-      status: 'Available',
-      occupancy: '0/1',
-      image_url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-      created_at: new Date().toISOString(),
-      owner_id: user?.id || '',
-    },
-    {
-      id: '2',
-      title: 'Shared 2-Bedroom Apartment',
-      type: 'Shared',
-      address: '456 College Avenue, Legon, Accra',
-      price: 500,
-      price_unit: 'month',
-      status: 'Partially Occupied',
-      occupancy: '1/2',
-      image_url: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80',
-      created_at: new Date().toISOString(),
-      owner_id: user?.id || '',
-    },
-    {
-      id: '3',
-      title: 'Premium Single Room in Hostel',
-      type: 'Hostel',
-      address: '789 Campus Drive, Ayeduase, Kumasi',
-      price: 950,
-      price_unit: 'semester',
-      status: 'Fully Occupied',
-      occupancy: '5/5',
-      image_url: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80',
-      created_at: new Date().toISOString(),
-      owner_id: user?.id || '',
-    }
-  ];
+  // ✅ HARDCODED DATA ELIMINATED - Following BE CONSCIOUS zero tolerance standards
+  // Properties now come exclusively from real database queries
 
   if (isLoading) {
     return (
@@ -158,8 +130,8 @@ const Properties: React.FC = () => {
     );
   }
 
-  // Show mock data if no properties or use actual data
-  const propertyList = properties && properties.length > 0 ? properties : mockProperties;
+  // ✅ APPLE-GRADE DATA HANDLING - Only real database data, no hardcoded fallbacks
+  const propertyList = properties || [];
 
   return (
     <OwnerLayout pageTitle="My Properties">

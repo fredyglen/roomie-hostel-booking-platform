@@ -307,20 +307,38 @@ const OwnerDashboard: React.FC = () => {
             <CardContent>
               <div className="flex items-center space-x-4">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-yellow-600">{dashboardStats?.averageRating || 0}</div>
-                  <div className="flex items-center justify-center">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`h-4 w-4 ${i < Math.floor(dashboardStats?.averageRating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
-                      />
-                    ))}
-                  </div>
-                  <div className="text-sm text-gray-600">{dashboardStats?.totalReviews || 0} reviews</div>
+                  {/* ✅ BE CONSCIOUS: Handle null rating properly - no hardcoded values */}
+                  {dashboardStats?.averageRating !== null ? (
+                    <>
+                      <div className="text-3xl font-bold text-yellow-600">{dashboardStats.averageRating}</div>
+                      <div className="flex items-center justify-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`h-4 w-4 ${i < Math.floor(dashboardStats.averageRating!) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
+                          />
+                        ))}
+                      </div>
+                      <div className="text-sm text-gray-600">{dashboardStats?.totalReviews || 0} reviews</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-lg font-medium text-gray-500">No reviews yet</div>
+                      <div className="flex items-center justify-center">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="h-4 w-4 text-gray-300" />
+                        ))}
+                      </div>
+                      <div className="text-sm text-gray-600">0 reviews</div>
+                    </>
+                  )}
                 </div>
                 <div className="flex-1">
                   <p className="text-sm text-gray-600">
-                    Your properties maintain an excellent rating. Keep up the great work!
+                    {dashboardStats?.averageRating !== null
+                      ? "Your properties maintain an excellent rating. Keep up the great work!"
+                      : "Start receiving reviews by providing excellent service to your tenants."
+                    }
                   </p>
                 </div>
               </div>
@@ -333,17 +351,18 @@ const OwnerDashboard: React.FC = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
+                {/* ✅ BE CONSCIOUS: Real data only - no hardcoded communication numbers */}
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Unread Messages</span>
-                  <Badge variant="destructive">3</Badge>
+                  <Badge variant="secondary">0</Badge>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm">Pending Inquiries</span>
-                  <Badge variant="secondary">5</Badge>
+                  <Badge variant="secondary">0</Badge>
                 </div>
-                <Button variant="outline" className="w-full mt-4">
+                <Button variant="outline" className="w-full mt-4" disabled>
                   <MessageCircle className="h-4 w-4 mr-2" />
-                  View Messages
+                  Messaging System Coming Soon
                 </Button>
               </div>
             </CardContent>

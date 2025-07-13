@@ -49,6 +49,7 @@ const StoryViewEnhanced = React.lazy(() => import('@/pages/student/StoryViewEnha
 const EnhancedStoryPage = React.lazy(() => import('@/pages/student/EnhancedStoryPage'));
 const PropertyStory = React.lazy(() => import('@/pages/student/PropertyStory'));
 const BookingConfirmation = React.lazy(() => import('@/pages/student/BookingConfirmation'));
+const StudentMaintenance = React.lazy(() => import('@/pages/student/Maintenance'));
 
 // Owner Pages
 const OwnerDashboard = React.lazy(() => import('@/pages/owner/Dashboard'));
@@ -227,6 +228,11 @@ function App() {
                 <Route path="/student/booking-history" element={
                   <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
                     <SafeRoute element={<BookingHistory />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/student/maintenance" element={
+                  <ProtectedRoute allowedRoles={[UserRole.STUDENT]}>
+                    <SafeRoute element={<StudentMaintenance />} />
                   </ProtectedRoute>
                 } />
                 <Route path="/student/profile" element={

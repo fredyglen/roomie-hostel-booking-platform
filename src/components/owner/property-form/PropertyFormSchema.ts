@@ -27,6 +27,12 @@ const genderTypeSchema = z.enum(['male', 'female', 'mixed'] as const);
 // Semester periods - Ghana academic calendar
 const semesterPeriodSchema = z.enum(['first_semester', 'second_semester'] as const);
 
+// Property status validation - aligned with PropertyStatus type
+const propertyStatusSchema = z.enum(['available', 'unavailable', 'active', 'inactive', 'pending', 'rejected'] as const);
+
+// Verification status validation
+const verificationStatusSchema = z.enum(['pending', 'verified', 'rejected'] as const);
+
 export const propertyFormSchema = z.object({
   // Core property identification - aligned with unified Property interface
   name: z.preprocess(sanitizeString, z.string().min(1, 'Property name is required')),

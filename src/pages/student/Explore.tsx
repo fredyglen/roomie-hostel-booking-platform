@@ -26,92 +26,14 @@ const universities = [
 
 const recentSearches = ['East Legon hostels', 'UPSA 2 in a room', 'Legon apartments', 'Affordable hostels in Madina'];
 
-// Top rated hostels
-const topRatedHostels = [
-  { 
-    id: '1', 
-    name: 'Prestige Hostel',
-    description: 'Located just opposite the UPSA, the Prestige hostel is a popular hostel in East Legon. The proximity to the campus makes it one of the most preferred hostels for UPSA students.',
-    image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80',
-    rating: 4.8,
-    location: 'East Legon',
-    price: 1200
-  },
-  { 
-    id: '2', 
-    name: 'MB3 Hostel',
-    description: 'A very neat and well organized hostel, MB3 hostel is a favourite for students due to its proximity to campus and the great facilities.',
-    image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80',
-    rating: 4.7,
-    location: 'Madina',
-    price: 850
-  },
-  { 
-    id: '3', 
-    name: 'Heavens Gate Hostel',
-    description: 'Heavens Gate hostel is located in East Legon and is now a twin hostel. The hostel has an old and a new block as well as spacious self contained rooms for students.',
-    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-    rating: 4.6,
-    location: 'East Legon',
-    price: 950
-  },
-  { 
-    id: '4', 
-    name: 'Chika Hostel (All girls)',
-    description: 'Chika house is an all girls hostel located in East Legon. The hostel has a spacious compound as well as well ventilated rooms.',
-    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-    rating: 4.6,
-    location: 'East Legon',
-    price: 1100,
-    tags: ['Girls Only']
-  }
-];
+// ✅ BE CONSCIOUS: HARDCODED HOSTELS ELIMINATED - Students see only real owner properties
+const topRatedHostels: any[] = []; // Real data will come from owner properties
 
-// All-girl hostels
-const allGirlsHostels = [
-  { 
-    id: '5', 
-    name: 'Kitatsu Hostel',
-    description: 'This is an all girls hostel located very close to the UPSA. It\'s one of the few hostels located in Madina which take in only female students.',
-    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-    rating: 4.5,
-    location: 'Madina',
-    price: 950,
-    tags: ['Girls Only']
-  },
-  { 
-    id: '6', 
-    name: 'Student Hostel',
-    description: 'This Student hostel is located in East Legon and it is an all female hostel. Students here have a large compound as well as lots of privacy within their rooms.',
-    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-    rating: 4.4,
-    location: 'East Legon',
-    price: 1050,
-    tags: ['Girls Only']
-  }
-];
+// ✅ BE CONSCIOUS: HARDCODED HOSTELS ELIMINATED - Students see only real owner properties
+const allGirlsHostels: any[] = []; // Real data will come from owner properties
 
-// Near UPSA
-const nearUPSAHostels = [
-  { 
-    id: '7', 
-    name: 'Green Hostel',
-    description: 'Located just behind the UPSA is Green hostel, a 3 storey building hostel for students. You can easily walk to campus from here.',
-    image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-    rating: 4.3,
-    location: 'East Legon',
-    price: 900
-  },
-  { 
-    id: '8', 
-    name: 'Henrich Hostel',
-    description: 'Henrich is a popular hostel located behind the UPSA. The proximity to campus makes this a preferred destination for many students.',
-    image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80',
-    rating: 4.2,
-    location: 'East Legon',
-    price: 920
-  }
-];
+// ✅ BE CONSCIOUS: HARDCODED HOSTELS ELIMINATED - Students see only real owner properties
+const nearUPSAHostels: any[] = []; // Real data will come from owner properties
 
 const Explore: React.FC = () => {
   const navigate = useNavigate();

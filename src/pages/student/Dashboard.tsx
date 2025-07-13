@@ -7,7 +7,7 @@ import Footer from '@/components/layout/Footer';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { MapPin, Bed, Bath, Users, Search, Heart, Calendar } from 'lucide-react';
+import { MapPin, Bed, Bath, Users, Search, Heart, Calendar, Wrench } from 'lucide-react';
 import { PropertyQueries, BookingQueries } from '@/services/database/standardizedQueries';
 import { FavoritesQueries } from '@/services/database/favoritesQueries';
 import { logger } from '@/utils/enhanced-logger';
@@ -74,14 +74,14 @@ const StudentDashboard: React.FC = () => {
         logger.error('Error loading dashboard data', { error: err });
         setError('Failed to load dashboard data. Please try again.');
 
-        // CRITICAL FIX: Show empty state instead of mock data
-        // This ensures students only see real owner-provided properties
+        // ✅ BE CONSCIOUS: Show real empty state instead of hardcoded data
+        // This ensures students only see real data, never fake numbers
         setFeaturedProperties([]);
         setQuickStats({
-          totalViewed: 12,
-          totalFavorites: 5,
-          activeInquiries: 3,
-          upcomingBookings: 1
+          totalViewed: 0, // Real count: no view tracking system yet
+          totalFavorites: 0, // Real count: error loading favorites
+          activeInquiries: 0, // Real count: error loading inquiries
+          upcomingBookings: userBookings.length // Real count: use existing bookings data
         });
       } finally {
         setLoading(false);
@@ -309,13 +309,21 @@ const StudentDashboard: React.FC = () => {
                   <Heart className="h-4 w-4 mr-2" />
                   View Favorites
                 </Button>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="w-full"
                   onClick={() => navigate('/student/booking-history')}
                 >
                   <Calendar className="h-4 w-4 mr-2" />
                   Booking History
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={() => navigate('/student/maintenance')}
+                >
+                  <Wrench className="h-4 w-4 mr-2" />
+                  Maintenance Requests
                 </Button>
               </CardContent>
             </Card>

@@ -18,7 +18,7 @@ import { toast } from '@/hooks/use-toast';
 import { BaseLoading } from '@/components/ui/BaseLoading';
 import { BaseError } from '@/components/ui/BaseError';
 import { useQuery } from '@tanstack/react-query';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/EnhancedAuthContext';
 import { OwnerQueries } from '@/services/database/ownerQueries';
 
 // BE CONSCIOUS: NO HARDCODED DATA - Use real database queries only

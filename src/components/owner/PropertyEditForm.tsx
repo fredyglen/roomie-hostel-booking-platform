@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { startTransition } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
@@ -107,7 +107,9 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ propertyId, initial
   });
 
   const handleSubmit = (data: PropertyFormValues) => {
-    updatePropertyMutation.mutate(data);
+    startTransition(() => {
+      updatePropertyMutation.mutate(data);
+    });
   };
 
   const handleCancel = () => {

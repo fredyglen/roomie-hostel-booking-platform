@@ -65,39 +65,49 @@ const AnalyticsDashboard: React.FC = () => {
     }).format(amount);
   };
 
-  // Generate monthly data based on real stats (placeholder for now)
-  const monthlyData = [
-    { month: 'Jan', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Feb', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Mar', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Apr', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'May', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Jun', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Jul', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Aug', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Sep', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Oct', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Nov', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 },
-    { month: 'Dec', revenue: dashboardStats?.monthlyEarnings || 0, occupancy: dashboardStats?.occupancyRate || 0 }
-  ];
+  // ✅ BE CONSCIOUS: Real monthly data or honest empty state (no fake repeated values)
+  const monthlyData = React.useMemo(() => {
+    // TODO: Implement real monthly breakdown query
+    // For now, show current month only to avoid misleading repeated data
+    const currentMonth = new Date().toLocaleDateString('en-US', { month: 'short' });
+    return [
+      {
+        month: currentMonth,
+        revenue: dashboardStats?.monthlyEarnings || 0,
+        occupancy: dashboardStats?.occupancyRate || 0
+      }
+    ];
+  }, [dashboardStats?.monthlyEarnings, dashboardStats?.occupancyRate]);
 
-  // Real booking sources (placeholder - will show actual data when available)
-  const bookingSourcesData = [
-    { name: 'Direct Website', value: 100, count: dashboardStats?.totalBookings || 0, color: '#3b82f6' },
-    { name: 'ROOMi Platform', value: 0, count: 0, color: '#f97316' },
-    { name: 'Referrals', value: 0, count: 0, color: '#10b981' },
-    { name: 'Others', value: 0, count: 0, color: '#6b7280' }
-  ];
+  // ✅ BE CONSCIOUS: Real booking sources or honest empty state (no hardcoded percentages)
+  const bookingSourcesData = React.useMemo(() => {
+    const totalBookings = dashboardStats?.totalBookings || 0;
+    return [
+      {
+        name: 'Direct Website',
+        value: totalBookings > 0 ? 100 : 0, // All current bookings are direct until tracking implemented
+        count: totalBookings,
+        color: '#3b82f6'
+      },
+      { name: 'ROOMi Platform', value: 0, count: 0, color: '#f97316' },
+      { name: 'Referrals', value: 0, count: 0, color: '#10b981' },
+      { name: 'Others', value: 0, count: 0, color: '#6b7280' }
+    ];
+  }, [dashboardStats?.totalBookings]);
 
-  // Real guest type data (placeholder)
-  const guestTypeData = [
-    { month: 'Jan', new: dashboardStats?.totalBookings || 0, repeat: 0 },
-    { month: 'Feb', new: dashboardStats?.totalBookings || 0, repeat: 0 },
-    { month: 'Mar', new: dashboardStats?.totalBookings || 0, repeat: 0 },
-    { month: 'Apr', new: dashboardStats?.totalBookings || 0, repeat: 0 },
-    { month: 'May', new: dashboardStats?.totalBookings || 0, repeat: 0 },
-    { month: 'Jun', new: dashboardStats?.totalBookings || 0, repeat: 0 }
-  ];
+  // ✅ BE CONSCIOUS: Real guest type data or honest empty state (no repeated fake data)
+  const guestTypeData = React.useMemo(() => {
+    // TODO: Implement real new vs repeat guest tracking
+    // For now, show current month only to avoid misleading repeated data
+    const currentMonth = new Date().toLocaleDateString('en-US', { month: 'short' });
+    return [
+      {
+        month: currentMonth,
+        new: dashboardStats?.totalBookings || 0, // All current bookings are "new" until tracking implemented
+        repeat: 0 // No repeat tracking yet
+      }
+    ];
+  }, [dashboardStats?.totalBookings]);
 
   // Use real bookings data or empty array if loading
   const latestBookings = recentBookings || [];
@@ -149,11 +159,17 @@ const AnalyticsDashboard: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>AR</AvatarFallback>
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarFallback>
+                    {user?.user_metadata?.full_name?.charAt(0)?.toUpperCase() ||
+                     user?.email?.charAt(0)?.toUpperCase() || 'O'}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="text-sm">
-                  <div className="font-medium">Austin Robertson</div>
+                  {/* ✅ BE CONSCIOUS: Real user data, no hardcoded names */}
+                  <div className="font-medium">
+                    {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Property Owner'}
+                  </div>
                   <div className="text-gray-500">Property Owner</div>
                 </div>
               </div>
@@ -318,51 +334,100 @@ const AnalyticsDashboard: React.FC = () => {
             <div className="space-y-6">
               <Card className="bg-white shadow-sm">
                 <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-gray-900">4.2</div>
-                  <div className="text-sm text-gray-600">nights</div>
-                  <div className="text-xs text-gray-500 mt-1">Avg. Length of Stay</div>
+                  {/* ✅ BE CONSCIOUS: Real average length of stay or honest empty state */}
+                  {dashboardStats?.totalBookings && dashboardStats.totalBookings > 0 ? (
+                    <>
+                      <div className="text-3xl font-bold text-gray-900">
+                        {/* TODO: Calculate real average from booking durations */}
+                        --
+                      </div>
+                      <div className="text-sm text-gray-600">nights</div>
+                      <div className="text-xs text-gray-500 mt-1">Avg. Length of Stay</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-lg font-medium text-gray-500">No data yet</div>
+                      <div className="text-xs text-gray-500 mt-1">Average length calculated from bookings</div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
               <Card className="bg-white shadow-sm">
                 <CardContent className="p-6 text-center">
-                  <div className="relative inline-flex items-center justify-center w-20 h-20 mb-2">
-                    <svg className="w-20 h-20 transform -rotate-90">
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r="36"
-                        stroke="#e5e7eb"
-                        strokeWidth="8"
-                        fill="transparent"
-                      />
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r="36"
-                        stroke="#10b981"
-                        strokeWidth="8"
-                        fill="transparent"
-                        strokeDasharray={`${93 * 2.26} ${100 * 2.26}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-gray-900">93%</span>
+                  {/* ✅ BE CONSCIOUS: Guest satisfaction should come from student reviews (not implemented yet) */}
+                  {dashboardStats?.averageRating !== null ? (
+                    <div className="relative inline-flex items-center justify-center w-20 h-20 mb-2">
+                      <svg className="w-20 h-20 transform -rotate-90">
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="36"
+                          stroke="#e5e7eb"
+                          strokeWidth="8"
+                          fill="transparent"
+                        />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="36"
+                          stroke="#10b981"
+                          strokeWidth="8"
+                          fill="transparent"
+                          strokeDasharray={`${(dashboardStats.averageRating / 5) * 100 * 2.26} ${100 * 2.26}`}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-gray-900">
+                          {Math.round((dashboardStats.averageRating / 5) * 100)}%
+                        </span>
+                      </div>
                     </div>
+                  ) : (
+                    <div className="relative inline-flex items-center justify-center w-20 h-20 mb-2">
+                      <svg className="w-20 h-20 transform -rotate-90">
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="36"
+                          stroke="#e5e7eb"
+                          strokeWidth="8"
+                          fill="transparent"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-lg font-medium text-gray-500">--</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-500">
+                    {dashboardStats?.averageRating !== null ? 'Guest Satisfaction' : 'No reviews yet'}
                   </div>
-                  <div className="text-xs text-gray-500">Guest Satisfaction</div>
                 </CardContent>
               </Card>
 
               <Card className="bg-white shadow-sm">
                 <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-gray-900">18</div>
-                  <div className="text-sm text-gray-600">tickets</div>
-                  <div className="text-xs text-gray-500 mt-1">Pending Maintenance</div>
+                  {/* ✅ BE CONSCIOUS: Real maintenance requests from student portal */}
+                  <div className="text-3xl font-bold text-gray-900">
+                    {dashboardStats?.maintenanceRequests || 0}
+                  </div>
+                  <div className="text-sm text-gray-600">requests</div>
+                  <div className="text-xs text-gray-500 mt-1">Total Maintenance</div>
                   <div className="flex items-center justify-center mt-2">
-                    <TrendingUp className="h-4 w-4 text-red-500" />
-                    <span className="text-xs text-red-500 ml-1">+2 today</span>
+                    {dashboardStats?.pendingMaintenance ? (
+                      <div className="flex items-center">
+                        <TrendingUp className="h-4 w-4 text-orange-500" />
+                        <span className="text-xs text-orange-500 ml-1">
+                          {dashboardStats.pendingMaintenance} pending
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-green-600">
+                        All requests completed
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -390,7 +455,8 @@ const AnalyticsDashboard: React.FC = () => {
                         paddingAngle={5}
                         dataKey="value"
                       >
-                        {bookingSourcesData.map((entry, index) => (
+                        {/* ✅ BE CONSCIOUS: Safe .map() with null check to prevent crashes */}
+                        {(bookingSourcesData || []).map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -411,7 +477,8 @@ const AnalyticsDashboard: React.FC = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  {bookingSourcesData.map((item, index) => (
+                  {/* ✅ BE CONSCIOUS: Safe .map() with null check to prevent crashes */}
+                  {(bookingSourcesData || []).map((item, index) => (
                     <div key={index} className="flex items-center space-x-2">
                       <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
                       <span className="text-sm text-gray-600">{item.name}</span>
@@ -462,15 +529,30 @@ const AnalyticsDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {latestBookings.map((booking) => (
+                  {bookingsLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center space-x-3 p-3">
+                          <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                            <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : latestBookings && latestBookings.length > 0 ? (
+                    latestBookings.map((booking) => (
                     <div key={booking.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
-                          <AvatarFallback className="text-sm">{booking.avatar}</AvatarFallback>
+                          <AvatarFallback className="text-sm">
+                            {booking.student_name ? booking.student_name.charAt(0).toUpperCase() : 'S'}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-gray-900">{booking.guestName}</p>
-                          <p className="text-sm text-gray-500">{booking.property} • {booking.room}</p>
+                          <p className="font-medium text-gray-900">{booking.student_name || 'Student'}</p>
+                          <p className="text-sm text-gray-500">{booking.property_title || 'Property'} • Room</p>
                           <p className="text-xs text-gray-400">{booking.checkIn} - {booking.checkOut}</p>
                         </div>
                       </div>
@@ -480,9 +562,18 @@ const AnalyticsDashboard: React.FC = () => {
                         <Eye className="h-4 w-4 text-gray-400 cursor-pointer hover:text-gray-600" />
                       </div>
                     </div>
-                  ))}
+                  ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No bookings yet</p>
+                      <p className="text-sm">Bookings will appear here once students start booking your properties.</p>
+                    </div>
+                  )}
                 </div>
-                <Button variant="link" className="mt-4 p-0 text-blue-600">View More Bookings</Button>
+                {latestBookings && latestBookings.length > 0 && (
+                  <Button variant="link" className="mt-4 p-0 text-blue-600">View More Bookings</Button>
+                )}
               </CardContent>
             </Card>
 
@@ -492,25 +583,49 @@ const AnalyticsDashboard: React.FC = () => {
                 <CardTitle className="text-lg font-semibold">Transaction History</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1">
-                  <div className="grid grid-cols-5 gap-2 text-xs font-medium text-gray-500 pb-2 border-b">
-                    <span>PAYMENT ID</span>
-                    <span>DATE & TIME</span>
-                    <span>AMOUNT</span>
-                    <span>METHOD</span>
-                    <span>STATUS</span>
+                {/* ✅ BE CONSCIOUS: Proper loading and empty states */}
+                {transactionsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="grid grid-cols-5 gap-2 py-3">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    ))}
                   </div>
-                  {transactions.map((transaction) => (
-                    <div key={transaction.id} className="grid grid-cols-5 gap-2 py-3 text-sm hover:bg-gray-50 rounded">
-                      <span className="font-medium text-blue-600">{transaction.id}</span>
-                      <span className="text-gray-600">{transaction.date}</span>
-                      <span className="font-medium">{formatCurrency(transaction.amount)}</span>
-                      <span className="text-gray-600">{transaction.method}</span>
-                      <Badge className={getStatusColor(transaction.status)}>{transaction.status}</Badge>
+                ) : transactionHistory && transactionHistory.length > 0 ? (
+                  <div className="space-y-1">
+                    <div className="grid grid-cols-5 gap-2 text-xs font-medium text-gray-500 pb-2 border-b">
+                      <span>PAYMENT ID</span>
+                      <span>DATE & TIME</span>
+                      <span>AMOUNT</span>
+                      <span>METHOD</span>
+                      <span>STATUS</span>
                     </div>
-                  ))}
-                </div>
-                <Button variant="link" className="mt-4 p-0 text-blue-600">View All Transactions</Button>
+                    {/* ✅ BE CONSCIOUS: Fixed .map() crash - use correct variable name */}
+                    {(transactionHistory || []).map((transaction) => (
+                      <div key={transaction.id} className="grid grid-cols-5 gap-2 py-3 text-sm hover:bg-gray-50 rounded">
+                        <span className="font-medium text-blue-600">{transaction.id}</span>
+                        <span className="text-gray-600">{transaction.date}</span>
+                        <span className="font-medium">{formatCurrency(transaction.amount)}</span>
+                        <span className="text-gray-600">{transaction.method}</span>
+                        <Badge className={getStatusColor(transaction.status)}>{transaction.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <DollarSign className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>No transactions yet</p>
+                    <p className="text-sm">Transaction history will appear here once payments are processed.</p>
+                  </div>
+                )}
+                {transactionHistory && transactionHistory.length > 0 && (
+                  <Button variant="link" className="mt-4 p-0 text-blue-600">View All Transactions</Button>
+                )}
               </CardContent>
             </Card>
           </div>
