@@ -181,27 +181,16 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <RoomConfigurationFields form={form} propertyCategory={propertyCategory} />
-                  
+
                   {/* Category-specific fields */}
                   {propertyCategory === 'Hostel' && <HostelFields form={form} updateOccupancyDetails={updateOccupancyDetails} />}
                   {propertyCategory === 'Homestel' && <HomestelFields form={form} updateOccupancyDetails={updateOccupancyDetails} />}
                   {propertyCategory === 'Apartment' && <ApartmentFields form={form} />}
-                  
-                  <DescriptionFields form={form} />
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="features" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Room Features</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <RoomFeaturesFields form={form} />
-                </CardContent>
-              </Card>
-            </TabsContent>
+
 
             <TabsContent value="amenities" className="space-y-6">
               <Card>
@@ -214,9 +203,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               </Card>
             </TabsContent>
 
-            <TabsContent value="enhanced" className="space-y-6">
-              <EnhancedPropertyFields form={form} propertyCategory={propertyCategory} />
-            </TabsContent>
+
 
             <TabsContent value="structure" className="space-y-6">
               <Card>
@@ -254,12 +241,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'].indexOf(activeTab);
+                  const currentIndex = ['info', 'rooms', 'amenities', 'structure', 'media'].indexOf(activeTab);
                   if (currentIndex > 0) {
-                    setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'][currentIndex - 1]);
+                    setActiveTab(['info', 'rooms', 'amenities', 'structure', 'media'][currentIndex - 1]);
                   }
                 }}
-                disabled={activeTab === 'basic'}
+                disabled={activeTab === 'info'}
               >
                 Previous
               </Button>
@@ -268,9 +255,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 <Button
                   type="button"
                   onClick={() => {
-                    const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'].indexOf(activeTab);
-                    if (currentIndex < 7) {
-                      setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'][currentIndex + 1]);
+                    const currentIndex = ['info', 'rooms', 'amenities', 'structure', 'media'].indexOf(activeTab);
+                    if (currentIndex < 4) {
+                      setActiveTab(['info', 'rooms', 'amenities', 'structure', 'media'][currentIndex + 1]);
                     }
                   }}
                 >

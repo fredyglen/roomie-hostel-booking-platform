@@ -47,6 +47,7 @@ export const propertyFormSchema = z.object({
   state: z.preprocess(sanitizeString, z.string().min(1, 'State/Region is required')),
   region: z.enum(ghanaRegions),
   zip: z.preprocess(sanitizeString, z.string().optional()),
+  nearest_university: z.preprocess(sanitizeString, z.string().min(1, 'Nearest university is required')),
 
   // Pricing information - using branded types
   price: z.number().min(1, 'Price must be greater than 0'),
@@ -62,6 +63,9 @@ export const propertyFormSchema = z.object({
   // Basic property stats
   bedrooms: z.number().min(1, "Must have at least 1 bedroom"),
   bathrooms: z.number().min(1, "Must have at least 1 bathroom"),
+
+  // Room types - Ghana hostel terminology
+  room_types: z.array(roomOccupancyTypeSchema).min(1, 'Select at least one room type'),
   
   // Enhanced occupancy fields
   occupancy_type: z.enum(['beds', 'rooms', 'units']).optional(),
@@ -86,7 +90,7 @@ export const propertyFormSchema = z.object({
   // Washroom and meter configurations
   washroom_type: z.enum(['inside', 'outside', 'shared']).optional(),
   shared_washroom_count: z.number().optional(),
-  meter_type: z.enum(['self', 'shared']).optional(),
+  meter_type: z.enum(['shared', 'individual', 'all_inclusive']).optional(),
   shared_meter_count: z.number().optional(),
   
   // Payment and occupancy details

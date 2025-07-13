@@ -479,7 +479,7 @@ const PropertyListing: React.FC = () => {
                   title={property.title}
                   rent={property.rent}
                   location={property.location}
-                  bedrooms={property.roomType === 'Single Room' ? 1 : property.roomType === '2 in a Room' ? 2 : 4}
+                  bedrooms={property.roomType === '1 in a room' ? 1 : property.roomType === '2 in a room' ? 2 : property.roomType === '3 in a room' ? 3 : 4}
                   bathrooms={1}
                   maxOccupants={property.maxOccupants}
                   images={property.images || []}

@@ -10,10 +10,12 @@ interface PropertyAboutTabProps {
   availableUnits?: number;
   distanceToCampus?: string;
   goodToKnow?: string;
+  roomTypes?: string[];
+  nearestUniversity?: string;
 }
 
 const PropertyAboutTab: React.FC<PropertyAboutTabProps> = ({
-  description, type, location, availableUnits, distanceToCampus, goodToKnow
+  description, type, location, availableUnits, distanceToCampus, goodToKnow, roomTypes, nearestUniversity
 }) => {
   return (
     <div className="space-y-3">
@@ -28,10 +30,10 @@ const PropertyAboutTab: React.FC<PropertyAboutTabProps> = ({
           </div>
         )}
 
-        {location && (
+        {nearestUniversity && (
           <div className="bg-gray-50 p-2 rounded-md">
-            <div className="text-xs text-gray-500">Location</div>
-            <div className="font-medium text-sm">{location}</div>
+            <div className="text-xs text-gray-500">Nearest University</div>
+            <div className="font-medium text-sm">{nearestUniversity}</div>
           </div>
         )}
 
@@ -49,6 +51,23 @@ const PropertyAboutTab: React.FC<PropertyAboutTabProps> = ({
           </div>
         )}
       </div>
+
+      {/* Room Types Section */}
+      {roomTypes && roomTypes.length > 0 && (
+        <div className="mt-4">
+          <h3 className="text-sm font-medium text-gray-700 mb-2">Available Room Types</h3>
+          <div className="flex flex-wrap gap-2">
+            {roomTypes.map((roomType, index) => (
+              <span
+                key={index}
+                className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+              >
+                {roomType.replace('_', ' ')}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Good to Know Section */}
       {goodToKnow && (

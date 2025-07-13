@@ -130,6 +130,8 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             location={safeProperty.location}
             availableUnits={property.availableUnits}
             goodToKnow={property.good_to_know}
+            roomTypes={property.room_types}
+            nearestUniversity={property.nearest_university}
           />
         </div>
         

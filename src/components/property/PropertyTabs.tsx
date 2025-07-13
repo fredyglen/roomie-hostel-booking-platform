@@ -16,6 +16,8 @@ interface PropertyTabsProps {
   location?: string;
   availableUnits?: number;
   goodToKnow?: string;
+  roomTypes?: string[];
+  nearestUniversity?: string;
   onTabChange?: (tab: string) => void;
 }
 
@@ -29,6 +31,8 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
   location,
   availableUnits,
   goodToKnow,
+  roomTypes,
+  nearestUniversity,
   onTabChange
 }) => {
   const [activeTab, setActiveTab] = useState('about');
@@ -51,6 +55,8 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
         <PropertyAboutTab
           description={description}
           goodToKnow={goodToKnow}
+          roomTypes={roomTypes}
+          nearestUniversity={nearestUniversity}
           type={type}
           location={location} 
           availableUnits={availableUnits}
