@@ -1,26 +1,67 @@
 
 /**
- * ROOMi Platform Property Type Definitions
- * Apple-Grade TypeScript interfaces with zero tolerance for 'any' types
- *
- * UNIFIED PROPERTY INTERFACE - Single source of truth for all property types
- * Eliminates conflicts between legacy interfaces and ensures type safety
- *
- * @version 2.0.0 - Technical Debt Elimination
- * @author ROOMi Platform Team
+ * ✅ APPLE-GRADE PROPERTY TYPES - BE CONSCIOUS COMPLIANCE
+ * 
+ * Type-safe property definitions with branded types
+ * Zero any types with complete type safety
  */
 
 import { User } from './core';
 
-// =====================================================
-// BRANDED TYPES FOR TYPE SAFETY
-// =====================================================
+// Branded type for property ID
+export type PropertyId = string & { readonly __brand: 'PropertyId' };
 
-type Brand<T, B> = T & { readonly __brand: B };
+// Property status enum
+export type PropertyStatus = 
+  | 'draft'
+  | 'pending_review'
+  | 'approved'
+  | 'rejected'
+  | 'archived';
 
-export type PropertyId = Brand<string, 'PropertyId'>;
-export type PropertyPrice = Brand<number, 'PropertyPrice'>;
-export type Address = Brand<string, 'Address'>;
+// Property type enum - ONLY these three types
+export type PropertyType = 
+  | 'hostel'
+  | 'homestel'
+  | 'apartment';
+
+// Property category enum - ONLY these three categories
+export type PropertyCategory = 
+  | 'Hostel'
+  | 'Homestel'
+  | 'Apartment';
+
+// Room occupancy type - Ghana standard "X in a room" system
+export type RoomOccupancyType = 
+  | '1_in_a_room'
+  | '2_in_a_room'
+  | '3_in_a_room'
+  | '4_in_a_room';
+
+// Property amenity type - No categorization, just owner-provided amenities
+export type PropertyAmenity = {
+  readonly id: string;
+  readonly name: string;
+  readonly icon?: string;
+};
+
+// Property location type
+export type PropertyLocation = {
+  readonly address: string;
+  readonly city: string;
+  readonly state?: string;
+  readonly country: string;
+  readonly latitude?: number;
+  readonly longitude?: number;
+  readonly nearbyPlaces?: string[];
+};
+
+// Property rule type
+export type PropertyRule = {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+};
 
 // =====================================================
 // CORE PROPERTY INTERFACE - UNIFIED
@@ -431,4 +472,19 @@ export interface RoomOption {
   available: boolean;
   description?: string;
   maxOccupants?: number;
+}
+
+// Compound management interface (Premium Feature)
+export interface PropertyCompound {
+  readonly id: string & { readonly __brand: 'CompoundId' };
+  readonly name: string;
+  readonly description: string;
+  readonly ownerId: string;
+  readonly location: PropertyLocation;
+  readonly properties: ReadonlyArray<PropertyId>;
+  readonly amenities: ReadonlyArray<PropertyAmenity>;
+  readonly rules: ReadonlyArray<PropertyRule>;
+  readonly images: ReadonlyArray<string>;
+  readonly createdAt: string;
+  readonly updatedAt: string;
 }

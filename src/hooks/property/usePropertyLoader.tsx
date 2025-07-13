@@ -27,7 +27,7 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
           .from('properties')
           .select(`
             *,
-            profiles!owner_id (
+            profiles:owner_id (
               id,
               first_name,
               last_name,

@@ -33,7 +33,7 @@ export interface PropertyCardProps {
   readonly maxOccupants: number;
   readonly images: string[];
   readonly amenities: string[];
-  readonly propertyType: string;
+  readonly propertyType: string; // 'hostel', 'homestel', 'apartment'
   readonly genderRestriction?: string;
   readonly isAvailable: boolean;
   // ROOMi-specific properties
@@ -47,6 +47,10 @@ export interface PropertyCardProps {
   readonly totalBedsAvailable?: number;
   readonly totalBeds?: number;
   readonly priceUnit?: 'semester' | 'month' | 'year';
+  // Compound information (if part of a compound)
+  readonly isPartOfCompound?: boolean;
+  readonly compoundName?: string;
+  readonly blockIdentifier?: string;
   readonly onViewDetails: () => void;
   readonly onViewStory?: () => void;
 }

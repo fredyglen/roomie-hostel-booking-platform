@@ -163,7 +163,7 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
         .from('properties')
         .select(`
           *,
-          profiles!owner_id (
+          profiles:owner_id (
             first_name,
             last_name,
             email,
@@ -213,7 +213,7 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
         .from('properties')
         .select(`
           *,
-          profiles!owner_id (
+          profiles:owner_id (
             first_name,
             last_name,
             email,

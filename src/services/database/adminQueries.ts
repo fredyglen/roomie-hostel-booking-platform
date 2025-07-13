@@ -240,7 +240,7 @@ export class AdminQueries {
           address,
           city,
           property_type,
-          profiles!properties_owner_id_fkey (
+          profiles:owner_id (
             first_name,
             last_name,
             email

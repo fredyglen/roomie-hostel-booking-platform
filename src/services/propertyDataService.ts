@@ -87,7 +87,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
         available_to,
         created_at,
         updated_at,
-        profiles!properties_owner_id_fkey (
+        profiles:owner_id (
           id,
           first_name,
           last_name,

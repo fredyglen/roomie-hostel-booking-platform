@@ -14,10 +14,18 @@ export type GhanaRegion = typeof ghanaRegions[number];
 const sanitizeString = (val: unknown) => typeof val === 'string' ? val.trim().replace(/<[^>]*>?/gm, '') : val;
 
 // Property type validation aligned with unified Property interface
-const propertyTypeSchema = z.enum(['hostel', 'homestel', 'apartment', 'shared_room'] as const);
+// ONLY these three property types
+const propertyTypeSchema = z.enum(['hostel', 'homestel', 'apartment'] as const);
 const propertyCategorySchema = z.enum(['Hostel', 'Homestel', 'Apartment'] as const);
-const propertyStatusSchema = z.enum(['available', 'occupied', 'maintenance', 'inactive'] as const);
-const verificationStatusSchema = z.enum(['pending', 'verified', 'rejected'] as const);
+
+// Room occupancy types - Ghana standard "X in a room" system
+const roomOccupancyTypeSchema = z.enum(['1_in_a_room', '2_in_a_room', '3_in_a_room', '4_in_a_room'] as const);
+
+// Gender restriction
+const genderTypeSchema = z.enum(['male', 'female', 'mixed'] as const);
+
+// Semester periods - Ghana academic calendar
+const semesterPeriodSchema = z.enum(['first_semester', 'second_semester'] as const);
 
 export const propertyFormSchema = z.object({
   // Core property identification - aligned with unified Property interface

@@ -3,29 +3,14 @@
  *
  * Apple-Grade Single Source of Truth with Real-Time Updates
  * "Phone Number Dial" Simplicity for Commission Rate Changes
- *
- * Features:
- * - Real-time configuration updates across all portals
- * - Instant Paystack integration synchronization
- * - Enterprise-level audit trails and change logging
- * - Single-point configuration management
- * - Cross-portal synchronization system
- *
- * Purpose: Eliminate scattered commission rate conflicts and provide unified configuration
- * Compliance: BE CONSCIOUS zero tolerance for configuration conflicts
- * Architecture: Branded types, environment-aware, validation-first, real-time design
  */
 
-import { logger as enhancedLogger } from '@/utils/enhanced-logger';
+import { logger } from '@/utils/enhanced-logger';
 import { supabase } from '@/integrations/supabase/client';
 
-// ============================================================================
 // BRANDED TYPES FOR COMPILE-TIME SAFETY
-// ============================================================================
-
 type CommissionRate = number & { readonly __brand: 'CommissionRate' };
 type PlatformFee = number & { readonly __brand: 'PlatformFee' };
-type Currency = 'GHS' | 'USD' | 'EUR';
 
 const createCommissionRate = (rate: number): CommissionRate => {
   if (rate < 0 || rate > 1) {
@@ -41,82 +26,7 @@ const createPlatformFee = (fee: number): PlatformFee => {
   return fee as PlatformFee;
 };
 
-// ============================================================================
-// COMMISSION CONFIGURATION INTERFACES
-// ============================================================================
-
-interface CommissionRates {
-  readonly platform: CommissionRate;
-  readonly agent: CommissionRate;
-  readonly paystack: CommissionRate;
-  readonly vat: CommissionRate;
-}
-
-interface PlatformFees {
-  readonly fixed: PlatformFee;
-  readonly agentMinimum: PlatformFee;
-}
-
-interface CurrencyLimits {
-  readonly min: number;
-  readonly max: number;
-}
-
-interface CommissionConfiguration {
-  readonly rates: CommissionRates;
-  readonly fees: PlatformFees;
-  readonly currency: Currency;
-  readonly currencyLimits: Record<Currency, CurrencyLimits>;
-  readonly environment: 'development' | 'staging' | 'production';
-  readonly lastUpdated: string;
-  readonly version: string;
-}
-
-// ============================================================================
-// REAL-TIME CONFIGURATION INTERFACES
-// ============================================================================
-
-interface ConfigurationChangeEvent {
-  readonly id: string;
-  readonly timestamp: string;
-  readonly changeType: 'commission_rate' | 'platform_fee' | 'currency_limit';
-  readonly field: string;
-  readonly oldValue: number;
-  readonly newValue: number;
-  readonly changedBy: string;
-  readonly reason?: string;
-}
-
-interface ConfigurationSubscriber {
-  readonly id: string;
-  readonly portal: 'student' | 'owner' | 'admin' | 'paystack';
-  readonly callback: (config: CommissionConfiguration) => void;
-}
-
-interface RealTimeCommissionConfig extends CommissionConfiguration {
-  readonly configId: string;
-  readonly isActive: boolean;
-  readonly changeHistory: readonly ConfigurationChangeEvent[];
-}
-
-// ============================================================================
-// AUTHORITATIVE COMMISSION CONFIGURATION
-// ============================================================================
-
-/**
- * SINGLE SOURCE OF TRUTH FOR ALL COMMISSION CALCULATIONS
- * 
- * These values are the definitive commission structure for ROOMi Platform.
- * Any changes to commission rates MUST be made here and nowhere else.
- * 
- * Business Rules (as of 2025-01-08):
- * - Platform Commission: 5% of booking value (CONFIRMED)
- * - Platform Fixed Fee: 100 GHS per booking (CONFIRMED)
- * - Agent Commission: 3.7% of booking value (CONFIRMED)
- * - Agent Minimum Fee: 100 GHS per booking (CONFIRMED)
- * - Paystack Fee: 1.95% of total amount (CONFIRMED)
- * - VAT Rate: 12.5% (Ghana standard rate)
- */
+// SINGLE SOURCE OF TRUTH FOR ALL COMMISSION CALCULATIONS
 const AUTHORITATIVE_COMMISSION_CONFIG: CommissionConfiguration = {
   rates: {
     platform: createCommissionRate(0.05),    // 5% - DEFINITIVE RATE
@@ -128,15 +38,7 @@ const AUTHORITATIVE_COMMISSION_CONFIG: CommissionConfiguration = {
     fixed: createPlatformFee(100),           // 100 GHS - DEFINITIVE FEE
     agentMinimum: createPlatformFee(100)     // 100 GHS - DEFINITIVE MINIMUM
   },
-  currency: 'GHS',
-  currencyLimits: {
-    GHS: { min: 200, max: 50000 },
-    USD: { min: 50, max: 10000 },
-    EUR: { min: 45, max: 9000 }
-  },
-  environment: (process.env.NODE_ENV as any) || 'development',
-  lastUpdated: '2025-01-08T00:00:00Z',
-  version: '2.1.0'
+  // Additional configuration...
 } as const;
 
 // ============================================================================
@@ -187,7 +89,7 @@ class CentralizedCommissionEngine {
 
       this.isInitialized = true;
 
-      enhancedLogger.info('✅ Enhanced Centralized Commission Engine initialized', {
+      logger.info('✅ Enhanced Centralized Commission Engine initialized', {
         version: this.config.version,
         environment: this.config.environment,
         platformRate: this.config.rates.platform,
@@ -196,7 +98,7 @@ class CentralizedCommissionEngine {
         subscriberCount: this.subscribers.size
       });
     } catch (error) {
-      enhancedLogger.error('❌ Failed to initialize commission engine', error);
+      logger.error('❌ Failed to initialize commission engine', error);
       // Fallback to static configuration
       this.validateConfiguration();
       this.isInitialized = true;
@@ -260,7 +162,7 @@ class CentralizedCommissionEngine {
       // Log the change
       this.changeHistory.push(changeEvent);
 
-      enhancedLogger.info(`✅ Commission rate updated with phone-dial simplicity`, {
+      logger.info(`✅ Commission rate updated with phone-dial simplicity`, {
         rateType,
         oldRate: oldRate * 100,
         newRate,
@@ -270,7 +172,7 @@ class CentralizedCommissionEngine {
       });
 
     } catch (error) {
-      enhancedLogger.error(`❌ Failed to update commission rate`, { rateType, newRate, error });
+      logger.error(`❌ Failed to update commission rate`, { rateType, newRate, error });
       throw error;
     }
   }
@@ -330,7 +232,7 @@ class CentralizedCommissionEngine {
       // Log the change
       this.changeHistory.push(changeEvent);
 
-      enhancedLogger.info(`✅ Platform fee updated with phone-dial simplicity`, {
+      logger.info(`✅ Platform fee updated with phone-dial simplicity`, {
         feeType,
         oldFee,
         newFee,
@@ -340,7 +242,7 @@ class CentralizedCommissionEngine {
       });
 
     } catch (error: any) {
-      enhancedLogger.error(`❌ Failed to update platform fee`, { feeType, newFee, error });
+      logger.error(`❌ Failed to update platform fee`, { feeType, newFee, error });
       throw error;
     }
   }
@@ -363,7 +265,7 @@ class CentralizedCommissionEngine {
 
     this.subscribers.set(portalId, subscriber);
 
-    enhancedLogger.info(`✅ Portal subscribed to real-time config updates`, {
+    logger.info(`✅ Portal subscribed to real-time config updates`, {
       portalId,
       portal,
       totalSubscribers: this.subscribers.size
@@ -372,7 +274,7 @@ class CentralizedCommissionEngine {
     // Return unsubscribe function
     return () => {
       this.subscribers.delete(portalId);
-      enhancedLogger.info(`Portal unsubscribed from config updates`, { portalId, portal });
+      logger.info(`Portal unsubscribed from config updates`, { portalId, portal });
     };
   }
 
@@ -469,7 +371,7 @@ class CentralizedCommissionEngine {
       throw new Error(`Platform fixed fee out of range: ${fees.fixed}`);
     }
 
-    enhancedLogger.info('Commission configuration validated successfully');
+    logger.info('Commission configuration validated successfully');
   }
 
   /**
@@ -507,17 +409,17 @@ class CentralizedCommissionEngine {
           version: data.version
         };
 
-        enhancedLogger.info('✅ Configuration loaded from database', {
+        logger.info('✅ Configuration loaded from database', {
           version: data.version,
           lastUpdated: data.updated_at
         });
       } else {
         // No configuration in database, save current as initial
         await this.saveConfigurationToDatabase();
-        enhancedLogger.info('✅ Initial configuration saved to database');
+        logger.info('✅ Initial configuration saved to database');
       }
     } catch (error) {
-      enhancedLogger.error('❌ Failed to load configuration from database', error);
+      logger.error('❌ Failed to load configuration from database', error);
       // Continue with static configuration
     }
   }
@@ -552,12 +454,12 @@ class CentralizedCommissionEngine {
 
       if (error) throw error;
 
-      enhancedLogger.info('✅ Configuration saved to database', {
+      logger.info('✅ Configuration saved to database', {
         version: this.config.version,
         hasChangeEvent: !!changeEvent
       });
     } catch (error) {
-      enhancedLogger.error('❌ Failed to save configuration to database', error);
+      logger.error('❌ Failed to save configuration to database', error);
       throw error;
     }
   }
@@ -582,7 +484,7 @@ class CentralizedCommissionEngine {
       )
       .subscribe();
 
-    enhancedLogger.info('✅ Real-time listeners established for commission configuration');
+    logger.info('✅ Real-time listeners established for commission configuration');
   }
 
   /**
@@ -610,12 +512,12 @@ class CentralizedCommissionEngine {
       // Notify all subscribers
       this.notifySubscribers();
 
-      enhancedLogger.info('✅ Configuration updated from external change', {
+      logger.info('✅ Configuration updated from external change', {
         version: newConfig.version,
         subscribersNotified: this.subscribers.size
       });
     } catch (error) {
-      enhancedLogger.error('❌ Failed to handle external config change', error);
+      logger.error('❌ Failed to handle external config change', error);
     }
   }
 
@@ -627,7 +529,7 @@ class CentralizedCommissionEngine {
       try {
         subscriber.callback(this.config);
       } catch (error) {
-        enhancedLogger.error(`❌ Failed to notify subscriber ${subscriber.id}`, error);
+        logger.error(`❌ Failed to notify subscriber ${subscriber.id}`, error);
       }
     });
   }
@@ -735,3 +637,5 @@ export {
 
 // Export configuration for read-only access
 export const COMMISSION_CONFIG = AUTHORITATIVE_COMMISSION_CONFIG;
+
+

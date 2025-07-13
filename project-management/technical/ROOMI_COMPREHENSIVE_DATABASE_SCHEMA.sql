@@ -15,8 +15,7 @@ CREATE TABLE IF NOT EXISTS properties (
   -- Basic Property Information
   title TEXT NOT NULL,
   description TEXT NOT NULL,
-  property_type TEXT NOT NULL CHECK (property_type IN ('storey_building', 'compound', 'homestel', 'apartment')),
-  property_category TEXT NOT NULL CHECK (property_category IN ('Hostel', 'Homestel', 'Apartment', 'Shared_Room')),
+  property_type TEXT NOT NULL CHECK (property_type IN ('hostel', 'homestel', 'apartment')),
   
   -- Location Details
   address TEXT NOT NULL,
@@ -32,11 +31,10 @@ CREATE TABLE IF NOT EXISTS properties (
   total_floors INTEGER DEFAULT 1,
   rooms_per_floor JSONB, -- {"ground": 8, "first": 10, "second": 12}
   
-  -- Compound Management (for compound properties)
-  compound_name TEXT,
+  -- Compound Management (Premium Feature)
+  is_part_of_compound BOOLEAN DEFAULT FALSE,
+  compound_id UUID,
   block_identifier TEXT, -- "Block A", "Block B", etc.
-  is_compound_parent BOOLEAN DEFAULT FALSE,
-  parent_compound_id UUID REFERENCES properties(id),
   
   -- Pricing and Availability
   base_price_per_semester DECIMAL(10, 2) NOT NULL,
@@ -77,6 +75,51 @@ CREATE TABLE IF NOT EXISTS properties (
 );
 
 -- =====================================================
+-- COMPOUND MANAGEMENT (PREMIUM FEATURE)
+-- =====================================================
+
+-- Compounds Table (Premium Feature)
+CREATE TABLE IF NOT EXISTS compounds (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  owner_id UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  
+  -- Basic Compound Information
+  name TEXT NOT NULL,
+  description TEXT NOT NULL,
+  
+  -- Location Details
+  address TEXT NOT NULL,
+  city TEXT NOT NULL DEFAULT 'Accra',
+  state TEXT NOT NULL DEFAULT 'Greater Accra',
+  zip TEXT,
+  latitude DECIMAL(10, 8),
+  longitude DECIMAL(11, 8),
+  
+  -- Compound Features
+  amenities TEXT[] DEFAULT ARRAY[]::TEXT[],
+  house_rules TEXT[] DEFAULT ARRAY[]::TEXT[],
+  
+  -- Media
+  cover_image_url TEXT,
+  images TEXT[] DEFAULT ARRAY[]::TEXT[],
+  
+  -- Timestamps
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Compound Properties Relationship Table
+CREATE TABLE IF NOT EXISTS compound_properties (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  compound_id UUID NOT NULL REFERENCES compounds(id) ON DELETE CASCADE,
+  property_id UUID NOT NULL REFERENCES properties(id) ON DELETE CASCADE,
+  block_identifier TEXT NOT NULL, -- "Block A", "Block B", etc.
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  
+  UNIQUE(compound_id, property_id)
+);
+
+-- =====================================================
 -- ROOM AND BED TRACKING SCHEMA
 -- =====================================================
 
@@ -91,7 +134,7 @@ CREATE TABLE IF NOT EXISTS rooms (
   room_name TEXT, -- "Ground Floor Room 1", "Block A Room 203"
   
   -- Room Configuration
-  beds_count INTEGER NOT NULL CHECK (beds_count >= 1 AND beds_count <= 8),
+  beds_count INTEGER NOT NULL CHECK (beds_count >= 1 AND beds_count <= 4),
   room_type TEXT GENERATED ALWAYS AS (
     CASE 
       WHEN beds_count = 1 THEN '1 in a room'
@@ -442,3 +485,5 @@ CREATE TRIGGER update_rooms_updated_at BEFORE UPDATE ON rooms
 
 CREATE TRIGGER update_bookings_updated_at BEFORE UPDATE ON bookings
   FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+

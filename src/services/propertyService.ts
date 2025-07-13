@@ -145,7 +145,7 @@ export const propertyService = {
   async getPropertyById(id: string): Promise<Property> {
     const { data, error } = await supabase
       .from('properties')
-      .select(`*, profiles!owner_id (first_name, last_name, email, phone)`) 
+      .select(`*, profiles:owner_id (first_name, last_name, email, phone)`)
       .eq('id', id)
       .single();
     if (error) throw error;

@@ -204,7 +204,7 @@ export class HostelManagementService {
         .from('properties')
         .select(`
           *,
-          owner:profiles!properties_owner_id_fkey(id, name, avatar_url),
+          profiles:owner_id(id, first_name, last_name, avatar_url),
           images:property_images(id, url, thumbnail_url, alt, category, order),
           amenities:property_amenities(amenity_id, amenities(id, name, category, icon)),
           availability:property_availability(

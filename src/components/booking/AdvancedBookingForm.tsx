@@ -13,6 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Calendar, User, Phone, CreditCard } from 'lucide-react';
+import { TABLE_NAMES } from '@/services/database/standardizedQueries';
+import { logger } from '@/utils/enhanced-logger';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 
 const bookingSchema = z.object({
   check_in_date: z.string().min(1, 'Check-in date is required'),
@@ -54,21 +57,59 @@ const AdvancedBookingForm: React.FC<AdvancedBookingFormProps> = ({
     },
   });
 
+  /**
+   * Apple-Grade Booking Creation Mutation
+   *
+   * Business Purpose: Creates semester accommodation booking with payment verification
+   * Technical Implementation: Uses standardized table, commission calculation, comprehensive validation
+   *
+   * @param data - Complete booking form data with validation
+   * @returns Promise<BookingResult> - Success with booking ID or detailed error
+   *
+   * @throws ValidationError - When booking data is invalid or incomplete
+   * @throws AuthorizationError - When user lacks booking permissions
+   * @throws DatabaseError - When booking creation fails
+   *
+   * Business Impact: Critical for revenue generation and owner portal synchronization
+   * Monitoring: Track success rate, booking creation time, error categories
+   */
   const createBookingMutation = useMutation({
     mutationFn: async (data: BookingFormValues) => {
-      if (!user?.id) throw new Error('User not authenticated');
+      if (!user?.id) {
+        logger.error('Booking creation attempted without authenticated user', {
+          component: 'AdvancedBookingForm',
+          propertyId
+        });
+        throw new Error('User authentication required for booking creation');
+      }
 
+      logger.info('Initiating booking creation', {
+        userId: user.id,
+        propertyId,
+        component: 'AdvancedBookingForm'
+      });
+
+      // Apple-Grade: Comprehensive date validation
       const checkInDate = new Date(data.check_in_date);
       const checkOutDate = new Date(data.check_out_date);
+
+      if (checkInDate >= checkOutDate) {
+        throw new Error('Check-out date must be after check-in date');
+      }
+
+      // Apple-Grade: Use centralized commission calculation
       const months = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24 * 30));
-      const totalAmount = rentAmount * months;
+      const baseAmount = rentAmount * months;
+      const commissionData = centralizedCommissionEngine.calculateCommission(baseAmount);
 
       const bookingData = {
         property_id: propertyId,
         student_id: user.id,
         check_in_date: data.check_in_date,
         check_out_date: data.check_out_date,
-        total_amount: totalAmount,
+        total_amount: commissionData.totalAmount,
+        platform_commission: commissionData.platformCommission,
+        platform_fee: commissionData.platformFee,
         special_requests: data.special_requests || null,
         emergency_contact_name: data.emergency_contact_name,
         emergency_contact_phone: data.emergency_contact_phone,
@@ -77,13 +118,37 @@ const AdvancedBookingForm: React.FC<AdvancedBookingFormProps> = ({
         payment_status: 'pending',
       };
 
+      logger.info('Creating booking with standardized table reference', {
+        userId: user.id,
+        propertyId,
+        totalAmount: commissionData.totalAmount,
+        table: TABLE_NAMES.BOOKINGS
+      });
+
+      // Apple-Grade: Use standardized table reference for owner portal synchronization
       const { data: result, error } = await supabase
-        .from('bookings')
+        .from(TABLE_NAMES.BOOKINGS) // Resolves to 'bookings_enhanced'
         .insert(bookingData)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        logger.error('Database error creating booking', {
+          error: error.message,
+          userId: user.id,
+          propertyId,
+          table: TABLE_NAMES.BOOKINGS
+        });
+        throw error;
+      }
+
+      logger.info('Booking created successfully', {
+        bookingId: result.id,
+        bookingReference: result.booking_reference,
+        userId: user.id,
+        propertyId
+      });
+
       return result;
     },
     onSuccess: (data) => {

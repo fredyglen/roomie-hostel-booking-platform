@@ -126,7 +126,7 @@ class EnhancedPropertyService {
         .from('properties')
         .select(`
           *,
-          owner:profiles!properties_owner_id_fkey(
+          profiles:owner_id(
             id,
             first_name,
             last_name,
@@ -181,7 +181,7 @@ class EnhancedPropertyService {
         .from('properties')
         .select(`
           *,
-          owner:profiles!properties_owner_id_fkey(
+          profiles:owner_id(
             id,
             first_name,
             last_name,
@@ -221,7 +221,7 @@ class EnhancedPropertyService {
       }
 
       if (filters.verified !== undefined) {
-        queryBuilder = queryBuilder.eq('verified', filters.verified);
+        queryBuilder = queryBuilder.eq('verification_status', filters.verified ? 'verified' : 'pending');
       }
 
       // Apply text search
@@ -293,7 +293,7 @@ class EnhancedPropertyService {
         .from('properties')
         .select(`
           *,
-          owner:profiles!properties_owner_id_fkey(
+          profiles:owner_id(
             id,
             first_name,
             last_name,
@@ -303,7 +303,7 @@ class EnhancedPropertyService {
           )
         `)
         .eq('is_available', true)
-        .eq('verified', true)
+        .eq('verification_status', 'verified')
         .order('created_at', { ascending: false })
         .limit(limit);
 

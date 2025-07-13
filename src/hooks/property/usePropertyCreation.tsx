@@ -8,6 +8,7 @@ import { PropertyFormValues } from '@/types/property';
 import { PropertyPipelineService, PropertyPipelineResult } from '@/services/propertyPipeline';
 import { logger } from '@/utils/enhanced-logger';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 
 export interface PropertyCreationOptions {
   onSuccess?: (result: PropertyPipelineResult) => void;
