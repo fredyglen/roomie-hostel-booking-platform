@@ -301,7 +301,7 @@ const AnalyticsDashboard: React.FC = () => {
                             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
                           }}
                           formatter={(value, name) => [
-                            name === 'revenue' ? `$${value}` : `${value}%`,
+                            name === 'revenue' ? `GH₵${value}` : `${value}%`,
                             name === 'revenue' ? 'Revenue' : 'Occupancy'
                           ]}
                         />

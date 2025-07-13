@@ -9,17 +9,13 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
 import { propertyFormSchema, PropertyFormValues } from './PropertyFormSchema';
-import PropertyTypeFields from './PropertyTypeFields';
-import LocationFields from './LocationFields';
-import PropertyDetailsFields from './PropertyDetailsFields';
-import PricingFields from './PricingFields';
-import RoomFeaturesFields from './RoomFeaturesFields';
+// New restructured components
+import PropertyInfoFields from './PropertyInfoFields';
+import RoomConfigurationFields from './RoomConfigurationFields';
 import AmenitiesSelector from './AmenitiesSelector';
-import DescriptionFields from './DescriptionFields';
+import BuildingStructureFields from './BuildingStructureFields';
 import MediaUploadTabs from './MediaUploadTabs';
 import FormSubmissionModal from './FormSubmissionModal';
-import BuildingStructureFields from './BuildingStructureFields';
-import EnhancedPropertyFields from './EnhancedPropertyFields';
 import BuildingStructureManager from '../BuildingStructureManager';
 import StructureTabModal from '../StructureTabModal';
 
@@ -44,7 +40,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   isEdit = false 
 }) => {
   const [showPreview, setShowPreview] = useState(false);
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState('info');
   const [showStructureModal, setShowStructureModal] = useState(false);
 
   const form = useForm<PropertyFormValues>({
@@ -132,7 +128,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     // Description
     if (formData.description && formData.description.length >= 10) completedSteps++;
     
-    return { completed: completedSteps, total: 8 };
+    return { completed: completedSteps, total: 5 };
   };
 
   const stepProgress = getCurrentStepCount();
@@ -157,47 +153,34 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-8">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="location">Location</TabsTrigger>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="features">Features</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="info">Property Info</TabsTrigger>
+              <TabsTrigger value="rooms">Room Config</TabsTrigger>
               <TabsTrigger value="amenities">Amenities</TabsTrigger>
-              <TabsTrigger value="enhanced">Enhanced</TabsTrigger>
               <TabsTrigger value="structure">Structure</TabsTrigger>
               <TabsTrigger value="media">Media</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="basic" className="space-y-6">
+            <TabsContent value="info" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Basic Property Information</CardTitle>
+                  <CardTitle>Property Information</CardTitle>
+                  <p className="text-sm text-gray-600">Basic details, location, and description</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <PropertyTypeFields form={form} propertyCategory={propertyCategory} />
-                  <PricingFields form={form} propertyCategory={propertyCategory} />
+                  <PropertyInfoFields form={form} />
                 </CardContent>
               </Card>
             </TabsContent>
 
-            <TabsContent value="location" className="space-y-6">
+            <TabsContent value="rooms" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Location Details</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <LocationFields form={form} />
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="details" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Property Details</CardTitle>
+                  <CardTitle>Room Configuration</CardTitle>
+                  <p className="text-sm text-gray-600">Room types, pricing, and utilities</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <PropertyDetailsFields form={form} propertyCategory={propertyCategory} />
+                  <RoomConfigurationFields form={form} propertyCategory={propertyCategory} />
                   
                   {/* Category-specific fields */}
                   {propertyCategory === 'Hostel' && <HostelFields form={form} updateOccupancyDetails={updateOccupancyDetails} />}
