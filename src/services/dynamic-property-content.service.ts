@@ -446,7 +446,8 @@ export class DynamicPropertyContentService {
       createdAt: data.houseRule.created_at,
       updatedAt: data.houseRule.updated_at
     } : undefined
-  });
+    };
+  };
 
   private transformPropertyConsideration = (data: any): PropertyConsideration => ({
     id: createConsiderationId(data.id),

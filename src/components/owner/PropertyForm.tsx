@@ -47,7 +47,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       distance_to_campus: initialData?.distance_to_campus || "",
       amenities: initialData?.amenities || "",
       house_rules: initialData?.house_rules || "",
-      status: initialData?.status || "Available",
+      status: initialData?.status || "available", // BE CONSCIOUS: lowercase to match schema
       occupancy: initialData?.occupancy || "0/1",
       image_url: initialData?.image_url || "",
       all_inclusive: initialData?.all_inclusive || false,
@@ -812,9 +812,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="Available">Available</SelectItem>
-                      <SelectItem value="Partially Occupied">Partially Occupied</SelectItem>
-                      <SelectItem value="Fully Occupied">Fully Occupied</SelectItem>
+                      <SelectItem value="available">Available</SelectItem>
+                      <SelectItem value="unavailable">Unavailable</SelectItem>
+                      <SelectItem value="active">Active</SelectItem>
+                      <SelectItem value="inactive">Inactive</SelectItem>
+                      <SelectItem value="pending">Pending</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

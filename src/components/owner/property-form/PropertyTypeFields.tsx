@@ -23,23 +23,21 @@ const PropertyTypeFields: React.FC<PropertyTypeFieldsProps> = ({ form, propertyC
             <Select 
               onValueChange={(value) => {
                 field.onChange(value);
-                // Reset type when category changes
-                form.setValue("type", "");
-                // Set default price unit based on category
+                // Set appropriate type when category changes
                 if (value === "Hostel") {
+                  form.setValue("type", "hostel");
                   form.setValue("price_unit", "semester");
-                } else {
-                  form.setValue("price_unit", "week");
-                }
-                // Set default occupancy type
-                if (value === "Hostel") {
                   form.setValue("occupancy_type", "beds");
                 } else if (value === "Homestel") {
+                  form.setValue("type", "homestel");
+                  form.setValue("price_unit", "week");
                   form.setValue("occupancy_type", "rooms");
                 } else {
+                  form.setValue("type", "apartment");
+                  form.setValue("price_unit", "week");
                   form.setValue("occupancy_type", "units");
                 }
-              }} 
+              }}
               defaultValue={field.value}
             >
               <FormControl>
@@ -132,9 +130,11 @@ const PropertyTypeFields: React.FC<PropertyTypeFieldsProps> = ({ form, propertyC
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="Available">Available</SelectItem>
-                <SelectItem value="Partially Occupied">Partially Occupied</SelectItem>
-                <SelectItem value="Fully Occupied">Fully Occupied</SelectItem>
+                <SelectItem value="available">Available</SelectItem>
+                <SelectItem value="unavailable">Unavailable</SelectItem>
+                <SelectItem value="active">Active</SelectItem>
+                <SelectItem value="inactive">Inactive</SelectItem>
+                <SelectItem value="pending">Pending</SelectItem>
               </SelectContent>
             </Select>
             <FormMessage />

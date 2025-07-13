@@ -41,6 +41,20 @@ const genderTypeSchema = z.enum(['male', 'female', 'mixed'] as const);
 // Semester periods - Ghana academic calendar
 const semesterPeriodSchema = z.enum(['first_semester', 'second_semester'] as const);
 
+// BE CONSCIOUS: Booking duration system - Ghana university standards compliance
+const bookingDurationSchema = z.enum([
+  'week',           // 1 week
+  'month',          // 1 month
+  'semester',       // 4 months (1 semester)
+  'academic_year',  // 8 months (Ghana academic year - 2 semesters)
+  'year',           // 12 months
+  'custom'          // Custom duration for flexibility
+] as const);
+
+// BE CONSCIOUS: Redesigned washroom configuration types
+const washroomLocationSchema = z.enum(['inside', 'outside'] as const);
+const washroomSharingSchema = z.enum(['private', 'shared'] as const);
+
 // Property status validation - aligned with PropertyStatus type
 const propertyStatusSchema = z.enum(['available', 'unavailable', 'active', 'inactive', 'pending', 'rejected'] as const);
 
@@ -63,10 +77,15 @@ export const propertyFormSchema = z.object({
   zip: z.preprocess(sanitizeString, z.string().optional()),
   nearest_university: z.preprocess(sanitizeString, z.string().min(1, 'Nearest university is required')),
 
-  // Pricing information - using branded types
+  // BE CONSCIOUS: Enhanced pricing system with booking duration compliance
+  booking_duration: bookingDurationSchema.default('semester'),
+  custom_duration_weeks: z.number().min(1).max(52).optional(), // For custom duration
+
+  // Dynamic pricing matrix based on room types and duration
   price: z.number().min(1, 'Price must be greater than 0').transform(createPropertyPrice),
+  room_type_pricing: z.record(z.string(), z.number()).optional(), // Dynamic pricing per room type
   rent: z.number().min(1, 'Rent must be greater than 0').optional(),
-  price_unit: z.enum(['week', 'month', 'year', 'semester']),
+  price_unit: bookingDurationSchema.default('semester'), // Aligned with booking_duration
 
   // Property description and details - Apple-grade branded types
   description: z.preprocess(sanitizeString, z.string().min(10, 'Description must be at least 10 characters')).transform(createPropertyDescription),
@@ -101,9 +120,10 @@ export const propertyFormSchema = z.object({
   has_tiled_room: z.boolean().optional(),
   has_individual_meters: z.boolean().optional(),
   
-  // Washroom and meter configurations
-  washroom_type: z.enum(['inside', 'outside', 'shared']).optional(),
-  shared_washroom_count: z.number().optional(),
+  // BE CONSCIOUS: Redesigned washroom configuration system
+  washroom_location: washroomLocationSchema.optional(),
+  washroom_sharing: washroomSharingSchema.optional(),
+  people_per_washroom: z.number().optional(),
   meter_type: z.enum(['shared', 'individual', 'all_inclusive']).optional(),
   shared_meter_count: z.number().optional(),
   
@@ -132,8 +152,9 @@ export const propertyFormSchema = z.object({
   parking_cost: z.number().optional(),
   security_features: z.array(z.string()).optional(),
   internet_speed: z.enum(['basic', 'standard', 'high_speed', 'fiber']).optional(),
-  gender_restriction: z.enum(['male', 'female', 'mixed']).optional(),
-  semester_availability: z.array(z.enum(['semester_1', 'semester_2', 'year_round'])).optional(),
+  // BE CONSCIOUS: Critical fields restoration - Ghana university compliance
+  gender_restriction: genderTypeSchema.default('mixed'),
+  semester_availability: z.array(z.enum(['semester_1', 'semester_2', 'year_round'])).default(['semester_1', 'semester_2']),
   cancellation_policy: z.enum(['flexible', 'moderate', 'strict']).optional(),
   virtual_tour_url: z.string().optional(),
   

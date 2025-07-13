@@ -31,7 +31,9 @@ const FormSubmissionModal: React.FC<FormSubmissionModalProps> = ({
   isEdit,
   isLoading
 }) => {
-  if (!formData) return null;
+  if (!formData) {
+    return null;
+  }
 
   const getOccupancyInfo = () => {
     if (formData.propertyCategory === 'Hostel') {

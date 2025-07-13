@@ -42,57 +42,7 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
     }
   };
 
-  // Generate bed options based on selected room types
-  const getBedsPerRoomOptions = () => {
-    if (!watchRoomTypes || watchRoomTypes.length === 0) {
-      return [];
-    }
-
-    const bedOptions = new Set<number>();
-
-    watchRoomTypes.forEach((roomType: string) => {
-      switch (propertyCategory) {
-        case 'Hostel':
-          if (roomType === '1_in_a_room') bedOptions.add(1);
-          if (roomType === '2_in_a_room') bedOptions.add(2);
-          if (roomType === '3_in_a_room') bedOptions.add(3);
-          if (roomType === '4_in_a_room') bedOptions.add(4);
-          break;
-        case 'Homestel':
-          if (roomType === 'single_room') bedOptions.add(1);
-          if (roomType === 'shared_room') {
-            bedOptions.add(2);
-            bedOptions.add(3);
-            bedOptions.add(4);
-          }
-          break;
-        case 'Apartment':
-          // For apartments, beds depend on bedroom count
-          if (roomType === 'studio') bedOptions.add(1);
-          if (roomType === '1_bedroom') {
-            bedOptions.add(1);
-            bedOptions.add(2);
-          }
-          if (roomType === '2_bedroom') {
-            bedOptions.add(2);
-            bedOptions.add(3);
-            bedOptions.add(4);
-          }
-          if (roomType === '3_bedroom') {
-            bedOptions.add(3);
-            bedOptions.add(4);
-            bedOptions.add(5);
-            bedOptions.add(6);
-          }
-          break;
-      }
-    });
-
-    return Array.from(bedOptions).sort((a, b) => a - b).map(beds => ({
-      value: beds.toString(),
-      label: `${beds} bed${beds > 1 ? 's' : ''}`
-    }));
-  };
+  // BE CONSCIOUS: Removed getBedsPerRoomOptions - redundant with room type-based occupancy
 
   return (
     <div className="space-y-6">
@@ -118,13 +68,8 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
                         field.onChange([...currentValue, option.value]);
                       } else {
                         field.onChange(currentValue.filter((val) => val !== option.value));
-                        // Reset beds per room when room type is unchecked
-                        const bedsPerRoomField = form.getValues('beds_per_room');
-                        const newBedOptions = getBedsPerRoomOptions();
-                        if (bedsPerRoomField && !newBedOptions.some(opt => opt.value === bedsPerRoomField.toString())) {
-                          form.setValue('beds_per_room', undefined);
-                        }
                       }
+                      // BE CONSCIOUS: Room type changes will auto-update max occupants in DynamicPricingMatrix
                     }}
                   />
                   <label htmlFor={option.value} className="text-sm font-medium">
@@ -138,66 +83,12 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
         )}
       />
 
-      {/* Beds Per Room - Conditional based on selected room types */}
-      {watchRoomTypes.length > 0 && (
-        <FormField
-          control={form.control}
-          name="beds_per_room"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Beds Per Room *</FormLabel>
-              <Select
-                onValueChange={(value) => field.onChange(Number(value))}
-                value={field.value?.toString()}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select beds per room" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {getBedsPerRoomOptions().map((option) => (
-                    <SelectItem key={option.value} value={option.value}>
-                      {option.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <FormDescription>
-                Based on your selected room types: {watchRoomTypes.map(type =>
-                  getRoomTypeOptions().find(opt => opt.value === type)?.label
-                ).filter(Boolean).join(', ')}
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-      )}
+      {/* BE CONSCIOUS: Removed redundant "Beds Per Room" selector - room types already define occupancy */}
 
-      {/* Pricing Information */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <FormField
-          control={form.control}
-          name="price"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Price per Semester *</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number"
-                  placeholder="2500"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                />
-              </FormControl>
-              <FormDescription>
-                Price in Ghana Cedis (GH₵) for 4-month semester
-              </FormDescription>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+      {/* BE CONSCIOUS: Pricing moved to DynamicPricingMatrix component for room type-based pricing */}
 
+      {/* Room and Washroom Configuration */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <FormField
           control={form.control}
           name="bedrooms"
@@ -240,7 +131,7 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
         />
       </div>
 
-      {/* Utility Configuration - FIXED REDUNDANCY */}
+      {/* BE CONSCIOUS: Utility Configuration */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Utility Configuration</h3>
         
