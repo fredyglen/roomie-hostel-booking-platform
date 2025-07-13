@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Heart } from 'lucide-react';
+import { Heart, Info } from 'lucide-react';
 import OptimizedImage from '@/components/common/OptimizedImage';
 import { formatCurrency } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
@@ -69,6 +69,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
             {isAvailable ? 'Available' : 'Occupied'}
           </span>
         </div>
+
+        {/* Good to Know Preview */}
+        {property.good_to_know && (
+          <div className="flex items-center text-sm text-blue-600 mt-2">
+            <Info className="w-4 h-4 mr-1 flex-shrink-0" />
+            <span className="truncate">
+              {property.good_to_know.substring(0, 60)}
+              {property.good_to_know.length > 60 && '...'}
+            </span>
+          </div>
+        )}
       </div>
     </div>
   );

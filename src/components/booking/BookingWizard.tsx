@@ -3,7 +3,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, CreditCard } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Calendar, Users, CreditCard, Info } from 'lucide-react';
 import { Property } from '@/types/property';
 
 interface BookingWizardProps {
@@ -20,6 +21,17 @@ const BookingWizard: React.FC<BookingWizardProps> = ({ property }) => {
 
   return (
     <div className="space-y-6">
+      {/* Good to Know Alert */}
+      {property.good_to_know && (
+        <Alert className="border-blue-200 bg-blue-50">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Good to Know</AlertTitle>
+          <AlertDescription>
+            {property.good_to_know}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Book {property.title}</CardTitle>

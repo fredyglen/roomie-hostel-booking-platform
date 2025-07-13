@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Info } from 'lucide-react';
 
 interface PropertyAboutTabProps {
   description: string;
@@ -7,10 +9,11 @@ interface PropertyAboutTabProps {
   location?: string;
   availableUnits?: number;
   distanceToCampus?: string;
+  goodToKnow?: string;
 }
 
 const PropertyAboutTab: React.FC<PropertyAboutTabProps> = ({
-  description, type, location, availableUnits, distanceToCampus
+  description, type, location, availableUnits, distanceToCampus, goodToKnow
 }) => {
   return (
     <div className="space-y-3">
@@ -46,6 +49,23 @@ const PropertyAboutTab: React.FC<PropertyAboutTabProps> = ({
           </div>
         )}
       </div>
+
+      {/* Good to Know Section */}
+      {goodToKnow && (
+        <Card className="border-blue-200 bg-blue-50 mt-4">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center text-blue-800 text-base">
+              <Info className="w-5 h-5 mr-2" />
+              Good to Know
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-blue-700 leading-relaxed text-sm">
+              {goodToKnow}
+            </p>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 };
