@@ -46,6 +46,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
+      name: '',
       title: '',
       type: '',
       propertyCategory: 'Hostel',
@@ -53,6 +54,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       city: '',
       region: 'Greater Accra',
       zip: '',
+      nearest_university: '',
       price: 0,
       price_unit: 'semester',
       description: '',
@@ -67,6 +69,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       has_accessibility_features: false,
       cancellation_policy: 'moderate',
       internet_speed: 'standard',
+      room_types: ['1_in_a_room'],
       ...initialData
     },
   });
@@ -252,17 +255,27 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               </Button>
               
               {activeTab !== 'media' ? (
-                <Button
-                  type="button"
-                  onClick={() => {
-                    const currentIndex = ['info', 'rooms', 'amenities', 'structure', 'media'].indexOf(activeTab);
-                    if (currentIndex < 4) {
-                      setActiveTab(['info', 'rooms', 'amenities', 'structure', 'media'][currentIndex + 1]);
-                    }
-                  }}
-                >
-                  Next
-                </Button>
+                <>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const currentIndex = ['info', 'rooms', 'amenities', 'structure', 'media'].indexOf(activeTab);
+                      if (currentIndex < 4) {
+                        setActiveTab(['info', 'rooms', 'amenities', 'structure', 'media'][currentIndex + 1]);
+                      }
+                    }}
+                  >
+                    Next
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    variant="outline"
+                    className="ml-2"
+                  >
+                    {isLoading ? 'Saving...' : isEdit ? 'Update Property' : 'Preview & Submit'}
+                  </Button>
+                </>
               ) : (
                 <Button type="submit" disabled={isLoading}>
                   {isLoading ? 'Saving...' : isEdit ? 'Update Property' : 'Preview & Submit'}

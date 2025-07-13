@@ -235,7 +235,7 @@ class ContentValidationEngine {
    */
   public validateContent(
     contentType: keyof ContentValidationConfiguration,
-    content: any
+    content: unknown
   ): { isValid: boolean; errors: string[] } {
     // Implementation would go here for comprehensive validation
     return { isValid: true, errors: [] };

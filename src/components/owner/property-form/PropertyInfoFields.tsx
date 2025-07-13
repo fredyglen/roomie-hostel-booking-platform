@@ -16,18 +16,39 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
       {/* Property Name */}
       <FormField
         control={form.control}
-        name="title"
+        name="name"
         render={({ field }) => (
           <FormItem>
             <FormLabel>Property Name *</FormLabel>
             <FormControl>
-              <Input 
+              <Input
                 placeholder="e.g., Sunrise Hostel, Campus View Homestel"
-                {...field} 
+                {...field}
               />
             </FormControl>
             <FormDescription>
               Give your property a memorable name that students will recognize
+            </FormDescription>
+            <FormMessage />
+          </FormItem>
+        )}
+      />
+
+      {/* Property Title */}
+      <FormField
+        control={form.control}
+        name="title"
+        render={({ field }) => (
+          <FormItem>
+            <FormLabel>Property Title *</FormLabel>
+            <FormControl>
+              <Input
+                placeholder="e.g., Affordable Student Housing Near Campus"
+                {...field}
+              />
+            </FormControl>
+            <FormDescription>
+              A descriptive title for your property listing
             </FormDescription>
             <FormMessage />
           </FormItem>
@@ -72,9 +93,9 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Mixed">Mixed (Male & Female)</SelectItem>
-                  <SelectItem value="Male Only">Male Only</SelectItem>
-                  <SelectItem value="Female Only">Female Only</SelectItem>
+                  <SelectItem value="hostel">Hostel</SelectItem>
+                  <SelectItem value="homestel">Homestel</SelectItem>
+                  <SelectItem value="apartment">Apartment</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />

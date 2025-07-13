@@ -13,7 +13,8 @@ interface RoomConfigurationFieldsProps {
 
 const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form, propertyCategory }) => {
   const watchMeterType = form.watch('meter_type');
-  
+  const watchRoomTypes = form.watch('room_types') || [];
+
   // Ghana hostel room types based on category
   const getRoomTypeOptions = () => {
     switch (propertyCategory) {
@@ -41,6 +42,58 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
     }
   };
 
+  // Generate bed options based on selected room types
+  const getBedsPerRoomOptions = () => {
+    if (!watchRoomTypes || watchRoomTypes.length === 0) {
+      return [];
+    }
+
+    const bedOptions = new Set<number>();
+
+    watchRoomTypes.forEach((roomType: string) => {
+      switch (propertyCategory) {
+        case 'Hostel':
+          if (roomType === '1_in_a_room') bedOptions.add(1);
+          if (roomType === '2_in_a_room') bedOptions.add(2);
+          if (roomType === '3_in_a_room') bedOptions.add(3);
+          if (roomType === '4_in_a_room') bedOptions.add(4);
+          break;
+        case 'Homestel':
+          if (roomType === 'single_room') bedOptions.add(1);
+          if (roomType === 'shared_room') {
+            bedOptions.add(2);
+            bedOptions.add(3);
+            bedOptions.add(4);
+          }
+          break;
+        case 'Apartment':
+          // For apartments, beds depend on bedroom count
+          if (roomType === 'studio') bedOptions.add(1);
+          if (roomType === '1_bedroom') {
+            bedOptions.add(1);
+            bedOptions.add(2);
+          }
+          if (roomType === '2_bedroom') {
+            bedOptions.add(2);
+            bedOptions.add(3);
+            bedOptions.add(4);
+          }
+          if (roomType === '3_bedroom') {
+            bedOptions.add(3);
+            bedOptions.add(4);
+            bedOptions.add(5);
+            bedOptions.add(6);
+          }
+          break;
+      }
+    });
+
+    return Array.from(bedOptions).sort((a, b) => a - b).map(beds => ({
+      value: beds.toString(),
+      label: `${beds} bed${beds > 1 ? 's' : ''}`
+    }));
+  };
+
   return (
     <div className="space-y-6">
       {/* Room Types Available */}
@@ -65,6 +118,12 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
                         field.onChange([...currentValue, option.value]);
                       } else {
                         field.onChange(currentValue.filter((val) => val !== option.value));
+                        // Reset beds per room when room type is unchecked
+                        const bedsPerRoomField = form.getValues('beds_per_room');
+                        const newBedOptions = getBedsPerRoomOptions();
+                        if (bedsPerRoomField && !newBedOptions.some(opt => opt.value === bedsPerRoomField.toString())) {
+                          form.setValue('beds_per_room', undefined);
+                        }
                       }
                     }}
                   />
@@ -78,6 +137,42 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
           </FormItem>
         )}
       />
+
+      {/* Beds Per Room - Conditional based on selected room types */}
+      {watchRoomTypes.length > 0 && (
+        <FormField
+          control={form.control}
+          name="beds_per_room"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Beds Per Room *</FormLabel>
+              <Select
+                onValueChange={(value) => field.onChange(Number(value))}
+                value={field.value?.toString()}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select beds per room" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {getBedsPerRoomOptions().map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Based on your selected room types: {watchRoomTypes.map(type =>
+                  getRoomTypeOptions().find(opt => opt.value === type)?.label
+                ).filter(Boolean).join(', ')}
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       {/* Pricing Information */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -127,15 +222,18 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
           name="bathrooms"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Total Bathrooms *</FormLabel>
+              <FormLabel>Total Washrooms *</FormLabel>
               <FormControl>
-                <Input 
+                <Input
                   type="number"
                   placeholder="5"
                   {...field}
                   onChange={(e) => field.onChange(Number(e.target.value))}
                 />
               </FormControl>
+              <FormDescription>
+                Number of washrooms/bathrooms available in your property
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -208,44 +306,46 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
         )}
       </div>
 
-      {/* Advance Payment */}
-      <FormField
-        control={form.control}
-        name="advance_payment_months"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Advance Payment Required</FormLabel>
-            <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value?.toString()}>
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select advance payment period" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                <SelectItem value="0">No advance payment required</SelectItem>
-                <SelectItem value="1">1 month advance</SelectItem>
-                <SelectItem value="2">2 months advance</SelectItem>
-                <SelectItem value="3">3 months advance</SelectItem>
-                <SelectItem value="4">Full semester advance</SelectItem>
-              </SelectContent>
-            </Select>
-            <FormDescription>
-              How much advance payment do you require from students?
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* Advance Payment - Only for Homestels and Apartments */}
+      {(propertyCategory === 'Homestel' || propertyCategory === 'Apartment') && (
+        <FormField
+          control={form.control}
+          name="advance_payment_months"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Advance Payment Required</FormLabel>
+              <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={field.value?.toString()}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select advance payment period" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="0">No advance payment required</SelectItem>
+                  <SelectItem value="1">1 month advance</SelectItem>
+                  <SelectItem value="2">2 months advance</SelectItem>
+                  <SelectItem value="3">3 months advance</SelectItem>
+                  <SelectItem value="4">Full semester advance</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                How much advance payment do you require from students?
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
-      {/* Maximum Occupancy */}
+      {/* Maximum Occupancy - Simplified for non-tech users */}
       <FormField
         control={form.control}
         name="max_occupants"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Maximum Occupancy *</FormLabel>
+            <FormLabel>How Many Students Can Stay? *</FormLabel>
             <FormControl>
-              <Input 
+              <Input
                 type="number"
                 placeholder="20"
                 {...field}
@@ -253,7 +353,7 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
               />
             </FormControl>
             <FormDescription>
-              Total number of students your property can accommodate
+              What's the maximum number of students that can live in your property at the same time?
             </FormDescription>
             <FormMessage />
           </FormItem>

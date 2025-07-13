@@ -16,6 +16,7 @@
 
 import { useMemo, useCallback } from 'react';
 import { useAdminAuth } from '@/context/AdminAuthContext';
+import { PropertyData, UserProfile } from '@/types/apple-grade-foundation';
 import { 
   AdminPermission, 
   AdminRoleType, 
@@ -40,6 +41,36 @@ import { logger } from '@/utils/enhanced-logger';
 // ============================================================================
 // PERMISSION HOOK TYPES
 // ============================================================================
+
+// Apple-Grade Filter Types
+interface FilterOptions {
+  readonly limit?: number;
+  readonly offset?: number;
+  readonly sortBy?: string;
+  readonly sortOrder?: 'asc' | 'desc';
+  readonly filters?: Record<string, unknown>;
+}
+
+interface BookingData {
+  readonly id: string;
+  readonly propertyId: string;
+  readonly studentId: string;
+  readonly status: string;
+  readonly createdAt: string;
+}
+
+interface UserData {
+  readonly id: string;
+  readonly email: string;
+  readonly role: string;
+  readonly createdAt: string;
+}
+
+interface AnalyticsData {
+  readonly total: number;
+  readonly data: unknown[];
+  readonly metadata: Record<string, unknown>;
+}
 
 export interface PermissionHookResult {
   readonly hasPermission: (permission: AdminPermission) => boolean;
@@ -68,13 +99,13 @@ export interface PermissionHookResult {
 
 export interface DataFilterHookResult {
   readonly getFilterContext: () => DataFilterContext | null;
-  readonly filterProperties: (options?: any) => any;
-  readonly filterBookings: (options?: any) => any;
-  readonly filterUsers: (options?: any) => any;
+  readonly filterProperties: (options?: FilterOptions) => PropertyData[];
+  readonly filterBookings: (options?: FilterOptions) => BookingData[];
+  readonly filterUsers: (options?: FilterOptions) => UserData[];
   readonly getFilteredAnalytics: (
     type: 'properties' | 'bookings' | 'users' | 'revenue',
-    options?: any
-  ) => Promise<any>;
+    options?: FilterOptions
+  ) => Promise<AnalyticsData>;
 }
 
 // ============================================================================
@@ -214,7 +245,7 @@ export const useDataFilter = (): DataFilterHookResult => {
   }, [adminUser, adminSession]);
 
   // Filter properties based on jurisdiction
-  const filterProperties = useCallback((options: any = {}) => {
+  const filterProperties = useCallback((options: FilterOptions = {}) => {
     const context = getFilterContext();
     if (!context) return null;
 
@@ -223,7 +254,7 @@ export const useDataFilter = (): DataFilterHookResult => {
   }, [getFilterContext]);
 
   // Filter bookings based on jurisdiction
-  const filterBookings = useCallback((options: any = {}) => {
+  const filterBookings = useCallback((options: FilterOptions = {}) => {
     const context = getFilterContext();
     if (!context) return null;
 
@@ -232,7 +263,7 @@ export const useDataFilter = (): DataFilterHookResult => {
   }, [getFilterContext]);
 
   // Filter users based on jurisdiction
-  const filterUsers = useCallback((options: any = {}) => {
+  const filterUsers = useCallback((options: FilterOptions = {}) => {
     const context = getFilterContext();
     if (!context) return null;
 
@@ -243,7 +274,7 @@ export const useDataFilter = (): DataFilterHookResult => {
   // Get filtered analytics data
   const getFilteredAnalytics = useCallback(async (
     type: 'properties' | 'bookings' | 'users' | 'revenue',
-    options: any = {}
+    options: FilterOptions = {}
   ) => {
     const context = getFilterContext();
     if (!context) return null;

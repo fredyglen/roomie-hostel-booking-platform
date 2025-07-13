@@ -1,5 +1,19 @@
 import { z } from 'zod';
 import { PropertyType, PropertyCategory, PropertyStatus } from '@/types/property';
+import {
+  PropertyTitle,
+  PropertyDescription,
+  PropertyPrice,
+  BedroomCount,
+  WashroomCount,
+  MaxOccupants,
+  createPropertyTitle,
+  createPropertyDescription,
+  createPropertyPrice,
+  createBedroomCount,
+  createWashroomCount,
+  createMaxOccupants
+} from '@/types/apple-grade-foundation';
 
 // Ghana regions enum
 export const ghanaRegions = [
@@ -34,9 +48,9 @@ const propertyStatusSchema = z.enum(['available', 'unavailable', 'active', 'inac
 const verificationStatusSchema = z.enum(['pending', 'verified', 'rejected'] as const);
 
 export const propertyFormSchema = z.object({
-  // Core property identification - aligned with unified Property interface
-  name: z.preprocess(sanitizeString, z.string().min(1, 'Property name is required')),
-  title: z.preprocess(sanitizeString, z.string().min(1, 'Title is required')),
+  // Core property identification - Apple-grade branded types
+  name: z.preprocess(sanitizeString, z.string().min(1, 'Property name is required')).transform(createPropertyTitle),
+  title: z.preprocess(sanitizeString, z.string().min(1, 'Title is required')).transform(createPropertyTitle),
   type: propertyTypeSchema,
   propertyCategory: propertyCategorySchema,
   status: propertyStatusSchema.default('available'),
@@ -50,19 +64,19 @@ export const propertyFormSchema = z.object({
   nearest_university: z.preprocess(sanitizeString, z.string().min(1, 'Nearest university is required')),
 
   // Pricing information - using branded types
-  price: z.number().min(1, 'Price must be greater than 0'),
+  price: z.number().min(1, 'Price must be greater than 0').transform(createPropertyPrice),
   rent: z.number().min(1, 'Rent must be greater than 0').optional(),
   price_unit: z.enum(['week', 'month', 'year', 'semester']),
 
-  // Property description and details
-  description: z.preprocess(sanitizeString, z.string().min(10, 'Description must be at least 10 characters')),
+  // Property description and details - Apple-grade branded types
+  description: z.preprocess(sanitizeString, z.string().min(10, 'Description must be at least 10 characters')).transform(createPropertyDescription),
   distance_to_campus: z.string().optional(),
   amenities: z.array(z.string()).optional(),
   house_rules: z.string().optional(),
   
-  // Basic property stats
-  bedrooms: z.number().min(1, "Must have at least 1 bedroom"),
-  bathrooms: z.number().min(1, "Must have at least 1 bathroom"),
+  // Basic property stats - Apple-grade branded types
+  bedrooms: z.number().min(1, "Must have at least 1 room").transform(createBedroomCount),
+  bathrooms: z.number().min(1, "Must have at least 1 washroom").transform(createWashroomCount),
 
   // Room types - Ghana hostel terminology
   room_types: z.array(roomOccupancyTypeSchema).min(1, 'Select at least one room type'),
@@ -75,9 +89,9 @@ export const propertyFormSchema = z.object({
   // Room management fields
   total_rooms: z.number().optional(),
   rooms_available: z.number().optional(),
-  beds_per_room: z.number().optional(),
+  beds_per_room: z.number().min(1, "Please select beds per room based on your room types").optional(),
   beds_available: z.number().optional(),
-  max_occupants: z.number().optional(),
+  max_occupants: z.number().min(1, "Must specify how many students can stay").transform(createMaxOccupants).optional(),
   
   // Enhanced facility features
   has_bedframes: z.boolean().optional(),

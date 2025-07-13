@@ -57,14 +57,33 @@ const PropertyAboutTab: React.FC<PropertyAboutTabProps> = ({
         <div className="mt-4">
           <h3 className="text-sm font-medium text-gray-700 mb-2">Available Room Types</h3>
           <div className="flex flex-wrap gap-2">
-            {roomTypes.map((roomType, index) => (
-              <span
-                key={index}
-                className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-              >
-                {roomType.replace('_', ' ')}
-              </span>
-            ))}
+            {roomTypes.map((roomType, index) => {
+              // Convert room type codes to Ghana hostel terminology
+              const getDisplayName = (type: string) => {
+                switch (type) {
+                  case '1_in_a_room': return '1 in a room';
+                  case '2_in_a_room': return '2 in a room';
+                  case '3_in_a_room': return '3 in a room';
+                  case '4_in_a_room': return '4 in a room';
+                  case 'single_room': return 'Single room';
+                  case 'shared_room': return 'Shared room';
+                  case 'studio': return 'Studio';
+                  case '1_bedroom': return '1 bedroom';
+                  case '2_bedroom': return '2 bedroom';
+                  case '3_bedroom': return '3 bedroom';
+                  default: return type.replace(/_/g, ' ');
+                }
+              };
+
+              return (
+                <span
+                  key={index}
+                  className="px-3 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                >
+                  {getDisplayName(roomType)}
+                </span>
+              );
+            })}
           </div>
         </div>
       )}

@@ -488,38 +488,38 @@ class AppleGradeHostelSeedingOrchestrator {
 // SUPPORTING TYPES AND CLASSES
 // ============================================================================
 
-type SeedingOperationResult = 
-  | { readonly success: true; readonly data: any }
+type SeedingOperationResult =
+  | { readonly success: true; readonly data: unknown }
   | { readonly success: false; readonly error: SeedingOperationError };
 
 interface SeedingOperationError {
   readonly type: string;
   readonly message: string;
-  readonly details?: any;
+  readonly details?: unknown;
 }
 
 class SeedingLogger {
   constructor(private readonly enabled: boolean) {}
 
-  info(message: string, context?: any): void {
+  info(message: string, context?: unknown): void {
     if (this.enabled) {
       console.log(`ℹ️  ${message}`, context ? JSON.stringify(context, null, 2) : '');
     }
   }
 
-  success(message: string, context?: any): void {
+  success(message: string, context?: unknown): void {
     if (this.enabled) {
       console.log(`✅ ${message}`, context ? JSON.stringify(context, null, 2) : '');
     }
   }
 
-  warn(message: string, context?: any): void {
+  warn(message: string, context?: unknown): void {
     if (this.enabled) {
       console.warn(`⚠️  ${message}`, context ? JSON.stringify(context, null, 2) : '');
     }
   }
 
-  error(message: string, context?: any): void {
+  error(message: string, context?: unknown): void {
     if (this.enabled) {
       console.error(`❌ ${message}`, context ? JSON.stringify(context, null, 2) : '');
     }

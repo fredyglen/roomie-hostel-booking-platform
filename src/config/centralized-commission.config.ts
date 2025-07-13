@@ -26,6 +26,41 @@ const createPlatformFee = (fee: number): PlatformFee => {
   return fee as PlatformFee;
 };
 
+// APPLE-GRADE INTERFACE DEFINITIONS
+interface CommissionConfiguration {
+  readonly rates: {
+    readonly platform: CommissionRate;
+    readonly agent: CommissionRate;
+    readonly paystack: CommissionRate;
+    readonly vat: CommissionRate;
+  };
+  readonly fees: {
+    readonly platform: PlatformFee;
+    readonly processing: PlatformFee;
+    readonly fixed: PlatformFee;
+    readonly agentMinimum: PlatformFee;
+  };
+  readonly version: string;
+  readonly environment: 'development' | 'staging' | 'production';
+  readonly lastUpdated: string;
+}
+
+interface ConfigurationSubscriber {
+  readonly id: string;
+  readonly callback: (config: CommissionConfiguration) => void;
+  readonly priority: number;
+}
+
+interface ConfigurationChangeEvent {
+  readonly id: string;
+  readonly timestamp: string;
+  readonly changeType: 'commission_rate' | 'platform_fee' | 'processing_fee';
+  readonly oldValue: number;
+  readonly newValue: number;
+  readonly reason: string;
+  readonly userId?: string;
+}
+
 // SINGLE SOURCE OF TRUTH FOR ALL COMMISSION CALCULATIONS
 const AUTHORITATIVE_COMMISSION_CONFIG: CommissionConfiguration = {
   rates: {
@@ -241,7 +276,7 @@ class CentralizedCommissionEngine {
         subscribersNotified: this.subscribers.size
       });
 
-    } catch (error: any) {
+    } catch (error: unknown) {
       logger.error(`❌ Failed to update platform fee`, { feeType, newFee, error });
       throw error;
     }
@@ -490,8 +525,13 @@ class CentralizedCommissionEngine {
   /**
    * ✅ HANDLE EXTERNAL CONFIGURATION CHANGES
    */
-  private handleExternalConfigChange(newConfig: any): void {
+  private handleExternalConfigChange(newConfig: unknown): void {
     try {
+      // Type guard for external config
+      if (!this.isValidExternalConfig(newConfig)) {
+        throw new Error('Invalid external configuration format');
+      }
+
       // Update local configuration
       this.config = {
         ...this.config,

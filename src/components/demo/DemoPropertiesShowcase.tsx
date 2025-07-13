@@ -120,7 +120,7 @@ export const DemoPropertiesShowcase: React.FC = () => {
                 </div>
                 <div className="flex items-center">
                   <Bath className="h-4 w-4 mr-1" />
-                  {property.bathrooms || 1} bath
+                  {property.bathrooms || 1} washroom
                 </div>
                 <div className="flex items-center">
                   <Users className="h-4 w-4 mr-1" />

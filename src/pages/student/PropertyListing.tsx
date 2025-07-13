@@ -116,8 +116,8 @@ const PropertyListing: React.FC = () => {
       case 'laundry': return 'Laundry';
       case 'study': return 'Study Area';
       case 'water': return 'Water Supply';
-      case 'shared_bathroom': return 'Shared Bath';
-      case 'private_bathroom': return 'Private Bath';
+      case 'shared_bathroom': return 'Shared Washroom';
+      case 'private_bathroom': return 'Private Washroom';
       case 'study_area': return 'Study Area';
       case 'kitchen': return 'Kitchen';
       case 'security': return 'Security';

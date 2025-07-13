@@ -22,15 +22,21 @@ import {
 } from '@/components/ui/SolarIcons';
 
 import { PropertyId, PropertyPrice } from '@/types/property';
+import {
+  PropertyTitle,
+  BedroomCount,
+  WashroomCount,
+  MaxOccupants
+} from '@/types/apple-grade-foundation';
 
 export interface PropertyCardProps {
   readonly id: PropertyId | string;
-  readonly title: string;
+  readonly title: PropertyTitle | string;
   readonly rent: PropertyPrice | number;
   readonly location: string;
-  readonly bedrooms: number;
-  readonly bathrooms: number;
-  readonly maxOccupants: number;
+  readonly bedrooms: BedroomCount | number;
+  readonly bathrooms: WashroomCount | number;
+  readonly maxOccupants: MaxOccupants | number;
   readonly images: string[];
   readonly amenities: string[];
   readonly propertyType: string; // 'hostel', 'homestel', 'apartment'

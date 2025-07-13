@@ -24,7 +24,7 @@ const IntelligentBuildingCreator: React.FC<IntelligentBuildingCreatorProps> = ({
     roomsPerFloor: 4,
     bedsPerRoom: 2,
     baseRent: 1500,
-    roomType: 'shared',
+    roomType: 'standard',
     amenities: [] as string[]
   });
 
@@ -42,11 +42,12 @@ const IntelligentBuildingCreator: React.FC<IntelligentBuildingCreatorProps> = ({
 
   const handleCreateBuilding = async (buildingData: Building) => {
     try {
-      // ... create building logic ...
-      // logger.info('Building data', buildingData);
+      // Pass the building data to the parent component
+      onCreateBuilding(buildingData);
+      console.log('Building created successfully:', buildingData);
     } catch (error) {
-      // ... error handling ...
-      ErrorHandler.handle(error, 'IntelligentBuildingCreator.handleCreateBuilding');
+      console.error('Error creating building:', error);
+      // ErrorHandler.handle(error, 'IntelligentBuildingCreator.handleCreateBuilding');
     }
   };
 
@@ -178,11 +179,10 @@ const IntelligentBuildingCreator: React.FC<IntelligentBuildingCreatorProps> = ({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1 Bed (Single)</SelectItem>
-                    <SelectItem value="2">2 Beds (Double)</SelectItem>
-                    <SelectItem value="3">3 Beds (Triple)</SelectItem>
-                    <SelectItem value="4">4 Beds (Quad)</SelectItem>
-                    <SelectItem value="6">6 Beds (Shared)</SelectItem>
+                    <SelectItem value="1">1 bed (1 in a room)</SelectItem>
+                    <SelectItem value="2">2 beds (2 in a room)</SelectItem>
+                    <SelectItem value="3">3 beds (3 in a room)</SelectItem>
+                    <SelectItem value="4">4 beds (4 in a room)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -200,17 +200,16 @@ const IntelligentBuildingCreator: React.FC<IntelligentBuildingCreatorProps> = ({
                 />
               </div>
               <div>
-                <Label htmlFor="roomType">Room Type</Label>
+                <Label htmlFor="roomType">Room Category</Label>
                 <Select value={buildingConfig.roomType} onValueChange={(value) => handleConfigChange('roomType', value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="single">Single</SelectItem>
-                    <SelectItem value="double">Double</SelectItem>
-                    <SelectItem value="shared">Shared</SelectItem>
-                    <SelectItem value="premium">Premium</SelectItem>
-                    <SelectItem value="deluxe">Deluxe</SelectItem>
+                    <SelectItem value="standard">Standard Room</SelectItem>
+                    <SelectItem value="ensuite">Ensuite Room</SelectItem>
+                    <SelectItem value="shared_washroom">Shared Washroom</SelectItem>
+                    <SelectItem value="ac_room">AC Room</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

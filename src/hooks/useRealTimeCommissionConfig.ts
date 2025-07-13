@@ -80,8 +80,10 @@ export const useRealTimeCommissionConfig = (options: UseRealTimeCommissionConfig
         portalId: portalIdRef.current
       });
 
-    } catch (error: any) {
-      const errorMessage = `Failed to handle config update in ${portal} portal: ${error.message}`;
+    } catch (error: unknown) {
+      const errorMessage = `Failed to handle config update in ${portal} portal: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`;
       setState(prev => ({ ...prev, error: errorMessage, isLoading: false }));
       
       if (onError) {
@@ -126,8 +128,10 @@ export const useRealTimeCommissionConfig = (options: UseRealTimeCommissionConfig
         subscriberCount: configInfo.subscriberCount
       });
 
-    } catch (error: any) {
-      const errorMessage = `Failed to subscribe ${portal} portal to commission updates: ${error.message}`;
+    } catch (error: unknown) {
+      const errorMessage = `Failed to subscribe ${portal} portal to commission updates: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`;
       setState(prev => ({ ...prev, error: errorMessage, isLoading: false, isConnected: false }));
       
       if (onError) {
@@ -158,8 +162,11 @@ export const useRealTimeCommissionConfig = (options: UseRealTimeCommissionConfig
         portalId: portalIdRef.current
       });
 
-    } catch (error: any) {
-      logger.error(`❌ ${portal} portal unsubscribe failed`, { error, portalId: portalIdRef.current });
+    } catch (error: unknown) {
+      logger.error(`❌ ${portal} portal unsubscribe failed`, {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        portalId: portalIdRef.current
+      });
     }
   }, [portal]);
 
@@ -184,8 +191,10 @@ export const useRealTimeCommissionConfig = (options: UseRealTimeCommissionConfig
         version: configInfo.version
       });
 
-    } catch (error: any) {
-      const errorMessage = `Failed to refresh ${portal} portal configuration: ${error.message}`;
+    } catch (error: unknown) {
+      const errorMessage = `Failed to refresh ${portal} portal configuration: ${
+        error instanceof Error ? error.message : 'Unknown error'
+      }`;
       setState(prev => ({ ...prev, error: errorMessage }));
       
       if (onError) {
@@ -202,12 +211,12 @@ export const useRealTimeCommissionConfig = (options: UseRealTimeCommissionConfig
   const calculateCommissions = useCallback((baseAmount: number, includeAgent: boolean = true) => {
     try {
       return centralizedCommissionEngine.calculateCommissions(baseAmount, includeAgent);
-    } catch (error: any) {
-      logger.error(`❌ Commission calculation failed in ${portal} portal`, { 
-        error, 
-        baseAmount, 
+    } catch (error: unknown) {
+      logger.error(`❌ Commission calculation failed in ${portal} portal`, {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        baseAmount,
         includeAgent,
-        portalId: portalIdRef.current 
+        portalId: portalIdRef.current
       });
       throw error;
     }

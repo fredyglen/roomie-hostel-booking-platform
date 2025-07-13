@@ -341,14 +341,19 @@ export class DynamicPropertyContentService {
       houseRules: (data.houseRules || []).map(this.transformPropertyHouseRule),
       considerations: (data.considerations || []).map(this.transformPropertyConsideration),
       media: (data.media || []).map(this.transformPropertyMedia),
-      hasVerifiedMedia: (data.media || []).some((m: any) => m.isVerified),
+      hasVerifiedMedia: (data.media || []).some((m: unknown) =>
+        m && typeof m === 'object' && 'isVerified' in m && (m as { isVerified: boolean }).isVerified
+      ),
       totalConsiderations: (data.considerations || []).length,
-      criticalConsiderations: (data.considerations || []).filter((c: any) => c.severityLevel === 'critical').length,
+      criticalConsiderations: (data.considerations || []).filter((c: unknown) =>
+        c && typeof c === 'object' && 'severityLevel' in c &&
+        (c as { severityLevel: string }).severityLevel === 'critical'
+      ).length,
       isContentComplete: !!(data.content && data.amenities?.length >= 3 && data.media?.length >= 1)
     };
   }
 
-  private transformPropertyContent(data: any): PropertyContent {
+  private transformPropertyContent(data: unknown): PropertyContent {
     return {
       id: createPropertyContentId(data.id),
       propertyId: data.property_id,
@@ -372,12 +377,20 @@ export class DynamicPropertyContentService {
     };
   }
 
-  private transformPropertyAmenity = (data: any): PropertyAmenity => ({
-    id: data.id,
-    propertyId: data.property_id,
-    amenityId: createAmenityId(data.amenity_id),
-    isAvailable: data.is_available,
-    customDescription: data.custom_description,
+  private transformPropertyAmenity = (data: unknown): PropertyAmenity => {
+    // Type guard for property amenity data
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid property amenity data');
+    }
+
+    const amenityData = data as Record<string, unknown>;
+
+    return {
+    id: amenityData.id as string,
+    propertyId: amenityData.property_id as string,
+    amenityId: createAmenityId(amenityData.amenity_id as string),
+    isAvailable: amenityData.is_available as boolean,
+    customDescription: amenityData.custom_description as string,
     additionalCost: data.additional_cost,
     isVerified: data.is_verified,
     verifiedAt: data.verified_at,
@@ -400,9 +413,17 @@ export class DynamicPropertyContentService {
       createdAt: data.amenity.created_at,
       updatedAt: data.amenity.updated_at
     } : undefined
-  });
+    };
+  };
 
-  private transformPropertyHouseRule = (data: any): PropertyHouseRule => ({
+  private transformPropertyHouseRule = (data: unknown): PropertyHouseRule => {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Invalid house rule data');
+    }
+
+    const ruleData = data as Record<string, unknown>;
+
+    return {
     id: data.id,
     propertyId: data.property_id,
     houseRuleId: createHouseRuleId(data.house_rule_id),

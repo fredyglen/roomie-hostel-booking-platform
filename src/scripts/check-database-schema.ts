@@ -108,7 +108,11 @@ class DatabaseSchemaChecker {
         };
       }
 
-      const existingColumns = (columns || []).map((col: any) => col.column_name);
+      const existingColumns = (columns || []).map((col: unknown) =>
+        (col && typeof col === 'object' && 'column_name' in col)
+          ? (col as { column_name: string }).column_name
+          : ''
+      ).filter(Boolean);
       const missingColumns = this.requiredPropertiesColumns.filter(
         col => !existingColumns.includes(col)
       );
