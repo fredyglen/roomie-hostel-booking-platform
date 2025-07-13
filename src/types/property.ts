@@ -154,6 +154,9 @@ export interface Property {
   readonly max_occupancy?: number;
   readonly current_occupancy?: number;
   readonly total_beds?: number;
+
+  // Transparency and considerations
+  readonly good_to_know?: string; // Important property considerations for students
 }
 
 // =====================================================
@@ -285,6 +288,7 @@ export interface PropertyFormValues {
   readonly features: PropertyFeatures;
   readonly media: PropertyMedia[];
   readonly buildings: Building[];
+  readonly good_to_know?: string; // Important property considerations for students
 }
 
 /**

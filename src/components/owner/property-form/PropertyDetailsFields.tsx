@@ -3,6 +3,7 @@ import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
@@ -150,6 +151,32 @@ const PropertyDetailsFields: React.FC<PropertyDetailsFieldsProps> = ({ form, pro
             </FormItem>
           )}
         />
+
+        {/* Good to Know Field - Transparency Feature */}
+        <div className="md:col-span-2">
+          <FormField
+            control={form.control}
+            name="good_to_know"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Good to Know</FormLabel>
+                <FormControl>
+                  <Textarea
+                    placeholder="Share important details students should know (e.g., 'Water supply available 6 days a week', 'Quiet study hours after 10 PM', 'Generator backup during power outages')"
+                    className="min-h-[100px] resize-none"
+                    maxLength={500}
+                    {...field}
+                  />
+                </FormControl>
+                <FormDescription>
+                  Help students make informed decisions by sharing important property details.
+                  {field.value?.length || 0}/500 characters
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+        </div>
       </div>
     </div>
   );

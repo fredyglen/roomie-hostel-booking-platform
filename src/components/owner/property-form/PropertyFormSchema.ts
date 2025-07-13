@@ -96,7 +96,10 @@ export const propertyFormSchema = z.object({
   utilities: z.string().optional(),
   location: z.string().optional(),
   landmark: z.string().optional(),
-  
+
+  // Transparency and considerations
+  good_to_know: z.preprocess(sanitizeString, z.string().max(500, 'Please keep this under 500 characters').optional()),
+
   // Media fields
   image_url: z.preprocess(sanitizeString, z.string().optional()),
   images: z.array(z.preprocess(sanitizeString, z.string())).optional(),
