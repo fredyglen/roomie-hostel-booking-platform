@@ -11,12 +11,12 @@ import { OwnerQueries } from '@/services/database/ownerQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Building, 
-  Calendar, 
-  DollarSign, 
-  Users, 
-  TrendingUp, 
+import {
+  Building,
+  Calendar,
+  DollarSign,
+  Users,
+  TrendingUp,
   Eye,
   Plus,
   MessageCircle,
@@ -119,51 +119,51 @@ const OwnerDashboard: React.FC = () => {
           </p>
         </div>
 
-        {/* Key Metrics - Mobile-First Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+        {/* Key Metrics - Compact Design */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <Card>
-            <CardContent className="p-4 sm:p-5 lg:p-6">
+            <CardContent className="p-3">
               <div className="flex items-center">
-                <Building className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-blue-600 flex-shrink-0" />
-                <div className="ml-3 sm:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Properties</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{dashboardStats?.totalProperties || 0}</p>
+                <Building className="h-5 w-5 text-blue-600 flex-shrink-0" />
+                <div className="ml-3 min-w-0">
+                  <p className="text-xs font-medium text-gray-600 truncate">Total Properties</p>
+                  <p className="text-xl font-bold">{dashboardStats?.totalProperties || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 sm:p-5 lg:p-6">
+            <CardContent className="p-3">
               <div className="flex items-center">
-                <Calendar className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-green-600 flex-shrink-0" />
-                <div className="ml-3 sm:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Total Bookings</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{dashboardStats?.totalBookings || 0}</p>
+                <Calendar className="h-5 w-5 text-green-600 flex-shrink-0" />
+                <div className="ml-3 min-w-0">
+                  <p className="text-xs font-medium text-gray-600 truncate">Total Bookings</p>
+                  <p className="text-xl font-bold">{dashboardStats?.totalBookings || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 sm:p-5 lg:p-6">
+            <CardContent className="p-3">
               <div className="flex items-center">
-                <DollarSign className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-purple-600 flex-shrink-0" />
-                <div className="ml-3 sm:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Monthly Earnings</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{formatCurrency(dashboardStats?.monthlyEarnings || 0)}</p>
+                <DollarSign className="h-5 w-5 text-purple-600 flex-shrink-0" />
+                <div className="ml-3 min-w-0">
+                  <p className="text-xs font-medium text-gray-600 truncate">Monthly Earnings</p>
+                  <p className="text-xl font-bold">{formatCurrency(dashboardStats?.monthlyEarnings || 0)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardContent className="p-4 sm:p-5 lg:p-6">
+            <CardContent className="p-3">
               <div className="flex items-center">
-                <TrendingUp className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 text-orange-600 flex-shrink-0" />
-                <div className="ml-3 sm:ml-4 min-w-0">
-                  <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Occupancy Rate</p>
-                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{dashboardStats?.occupancyRate || 0}%</p>
+                <TrendingUp className="h-5 w-5 text-orange-600 flex-shrink-0" />
+                <div className="ml-3 min-w-0">
+                  <p className="text-xs font-medium text-gray-600 truncate">Occupancy Rate</p>
+                  <p className="text-xl font-bold">{dashboardStats?.occupancyRate || 0}%</p>
                 </div>
               </div>
             </CardContent>
@@ -270,7 +270,7 @@ const OwnerDashboard: React.FC = () => {
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <Link to="/owner/properties/new">
+              <Link to="/owner/property/new">
                 <Button className="w-full h-20 flex flex-col">
                   <Plus className="h-6 w-6 mb-2" />
                   Add New Property

@@ -26,7 +26,7 @@ const TagBasedAmenitiesSelector: React.FC<TagBasedAmenitiesSelectorProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const selectedAmenities = form.watch('amenities') || [];
+  const selectedAmenities = Array.isArray(form.watch('amenities')) ? form.watch('amenities') : [];
 
   // BE CONSCIOUS: Ghana-specific amenities following centralized standards
   const amenityCategories = {
@@ -113,9 +113,9 @@ const TagBasedAmenitiesSelector: React.FC<TagBasedAmenitiesSelectorProps> = ({
 
   // BE CONSCIOUS: Toggle amenity selection
   const toggleAmenity = (amenityName: string) => {
-    const currentAmenities = selectedAmenities;
+    const currentAmenities = Array.isArray(selectedAmenities) ? selectedAmenities : [];
     const isSelected = currentAmenities.includes(amenityName);
-    
+
     if (isSelected) {
       form.setValue('amenities', currentAmenities.filter(a => a !== amenityName));
     } else {

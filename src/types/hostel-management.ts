@@ -184,7 +184,9 @@ export const RoomOccupancyType = {
   ONE_IN_A_ROOM: '1_in_a_room',
   TWO_IN_A_ROOM: '2_in_a_room',
   THREE_IN_A_ROOM: '3_in_a_room',
-  FOUR_IN_A_ROOM: '4_in_a_room'
+  FOUR_IN_A_ROOM: '4_in_a_room',
+  FIVE_IN_A_ROOM: '5_in_a_room',
+  SIX_IN_A_ROOM: '6_in_a_room'
 } as const;
 
 export type RoomOccupancyType = typeof RoomOccupancyType[keyof typeof RoomOccupancyType];

@@ -406,5 +406,5 @@ export const DEFAULT_PROPERTY_RULES: PropertyValidationRules = {
   max_amenities_count: 20,         // From centralized business rules engine
   required_amenities: ['bed', 'mattress'], // From centralized business rules engine
   max_rooms_per_property: 50,      // From centralized business rules engine
-  max_beds_per_room: 4             // From centralized business rules engine
+  max_beds_per_room: 6             // From centralized business rules engine
 } as const;

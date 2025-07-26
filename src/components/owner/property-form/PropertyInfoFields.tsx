@@ -63,16 +63,31 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Property Category *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormDescription>
+                The building type - determines room configuration options
+              </FormDescription>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  // Auto-set property type based on category for most common cases
+                  if (value === "Hostel") {
+                    form.setValue("type", "hostel");
+                  } else if (value === "Apartment") {
+                    form.setValue("type", "apartment");
+                  }
+                  // For Homestel, let user choose between hostel or homestel operation
+                }}
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select category" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Hostel">Hostel (Bed-based accommodation)</SelectItem>
-                  <SelectItem value="Homestel">Homestel (Room-based accommodation)</SelectItem>
-                  <SelectItem value="Apartment">Apartment (Unit-based accommodation)</SelectItem>
+                  <SelectItem value="Hostel">Hostel (Purpose-built student accommodation)</SelectItem>
+                  <SelectItem value="Homestel">Homestel (Converted home for students)</SelectItem>
+                  <SelectItem value="Apartment">Apartment (Self-contained units)</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
@@ -83,24 +98,53 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
         <FormField
           control={form.control}
           name="type"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Property Type *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select type" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="hostel">Hostel</SelectItem>
-                  <SelectItem value="homestel">Homestel</SelectItem>
-                  <SelectItem value="apartment">Apartment</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const propertyCategory = form.watch('propertyCategory');
+
+            const getTypeOptions = () => {
+              switch (propertyCategory) {
+                case 'Hostel':
+                  return [
+                    { value: 'hostel', label: 'Hostel (Bed-based tracking)' }
+                  ];
+                case 'Homestel':
+                  return [
+                    { value: 'hostel', label: 'Operate as Hostel (Bed-based tracking)' },
+                    { value: 'homestel', label: 'Operate as Homestel (Room-based tracking)' }
+                  ];
+                case 'Apartment':
+                  return [
+                    { value: 'apartment', label: 'Apartment (Unit-based tracking)' }
+                  ];
+                default:
+                  return [];
+              }
+            };
+
+            return (
+              <FormItem>
+                <FormLabel>Property Type *</FormLabel>
+                <FormDescription>
+                  How the property operates - determines pricing and booking model
+                </FormDescription>
+                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select operational type" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {getTypeOptions().map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
       </div>
 

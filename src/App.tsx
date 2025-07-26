@@ -55,7 +55,9 @@ const StudentMaintenance = React.lazy(() => import('@/pages/student/Maintenance'
 const OwnerDashboard = React.lazy(() => import('@/pages/owner/Dashboard'));
 const OwnerProperties = React.lazy(() => import('@/pages/owner/Properties'));
 const PropertyNew = React.lazy(() => import('@/pages/owner/PropertyNew'));
+const PropertyNewSimple = React.lazy(() => import('@/pages/owner/PropertyNewSimple'));
 const PropertyEdit = React.lazy(() => import('@/pages/owner/PropertyEdit'));
+const PropertyView = React.lazy(() => import('@/pages/owner/PropertyView'));
 const OwnerBookings = React.lazy(() => import('@/pages/owner/Bookings'));
 const OwnerProfile = React.lazy(() => import('@/pages/owner/Profile'));
 const OwnerSettings = React.lazy(() => import('@/pages/owner/Settings'));
@@ -73,6 +75,7 @@ const FeatureManagement = React.lazy(() => import('@/pages/admin/FeatureManageme
 const SubscriptionManagement = React.lazy(() => import('@/pages/admin/SubscriptionManagement'));
 const VerificationManagement = React.lazy(() => import('@/pages/admin/VerificationManagement'));
 const OwnerSettingsAdmin = React.lazy(() => import('@/pages/admin/OwnerSettings'));
+const QuickVerify = React.lazy(() => import('@/pages/admin/QuickVerify'));
 
 // Supreme Admin Only Pages
 const AdminGlobalManagement = React.lazy(() => import('@/pages/admin/GlobalManagement'));
@@ -153,7 +156,8 @@ function App() {
             <AuthProvider>
               <AdminAuthProvider>
                 <div className="min-h-screen bg-gray-50">
-              <Routes>
+              <Suspense fallback={<LoadingSpinner />}>
+                <Routes>
                 {/* Public Routes */}
                 <Route path="/" element={<SafeRoute element={<AuthRedirect />} />} />
                 <Route path="/landing" element={<SafeRoute element={<Landing />} />} />
@@ -313,9 +317,19 @@ function App() {
                     <SafeRoute element={<PropertyNew />} />
                   </ProtectedRoute>
                 } />
+                <Route path="/owner/property/new-simple" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<PropertyNewSimple />} />
+                  </ProtectedRoute>
+                } />
                 <Route path="/owner/properties/:id/edit" element={
                   <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
                     <SafeRoute element={<PropertyEdit />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/property/:id/view" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<PropertyView />} />
                   </ProtectedRoute>
                 } />
                 <Route path="/owner/bookings" element={
@@ -371,6 +385,12 @@ function App() {
                   </AdminAuthGuard>
                 } />
 
+                <Route path="/admin/quick-verify" element={
+                  <AdminAuthGuard>
+                    <SafeRoute element={<QuickVerify />} />
+                  </AdminAuthGuard>
+                } />
+
                 {/* Supreme Admin Only Routes */}
                 <Route path="/admin/global" element={
                   <SupremeAdminGuard>
@@ -406,6 +426,7 @@ function App() {
                 {/* Catch all route */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
               </div>
               <Toaster />
             </AdminAuthProvider>

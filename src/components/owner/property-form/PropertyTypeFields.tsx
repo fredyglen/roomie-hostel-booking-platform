@@ -93,6 +93,8 @@ const PropertyTypeFields: React.FC<PropertyTypeFieldsProps> = ({ form, propertyC
                     <SelectItem value="2 in a room">2 in a room</SelectItem>
                     <SelectItem value="3 in a room">3 in a room</SelectItem>
                     <SelectItem value="4 in a room">4 in a room</SelectItem>
+                    <SelectItem value="5 in a room">5 in a room</SelectItem>
+                    <SelectItem value="6 in a room">6 in a room</SelectItem>
                   </>
                 )}
                 {propertyCategory === "Homestel" && (

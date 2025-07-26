@@ -32,8 +32,15 @@ const sanitizeString = (val: unknown) => typeof val === 'string' ? val.trim().re
 const propertyTypeSchema = z.enum(['hostel', 'homestel', 'apartment'] as const);
 const propertyCategorySchema = z.enum(['Hostel', 'Homestel', 'Apartment'] as const);
 
-// Room occupancy types - Ghana standard "X in a room" system
-const roomOccupancyTypeSchema = z.enum(['1_in_a_room', '2_in_a_room', '3_in_a_room', '4_in_a_room'] as const);
+// Room types - Comprehensive for all property categories
+const roomTypeSchema = z.enum([
+  // Hostel room types - Ghana standard "X in a room" system
+  '1_in_a_room', '2_in_a_room', '3_in_a_room', '4_in_a_room', '5_in_a_room', '6_in_a_room',
+  // Homestel room types
+  'single_room', 'shared_room',
+  // Apartment room types - bedroom-based units
+  '1_bedroom_apartment', '2_bedroom_apartment', '3_bedroom_apartment'
+] as const);
 
 // Gender restriction
 const genderTypeSchema = z.enum(['male', 'female', 'mixed'] as const);
@@ -97,8 +104,8 @@ export const propertyFormSchema = z.object({
   bedrooms: z.number().min(1, "Must have at least 1 room").transform(createBedroomCount),
   bathrooms: z.number().min(1, "Must have at least 1 washroom").transform(createWashroomCount),
 
-  // Room types - Ghana hostel terminology
-  room_types: z.array(roomOccupancyTypeSchema).min(1, 'Select at least one room type'),
+  // Room types - Comprehensive for all property categories
+  room_types: z.array(roomTypeSchema).min(1, 'Select at least one room type'),
   
   // Enhanced occupancy fields
   occupancy_type: z.enum(['beds', 'rooms', 'units']).optional(),

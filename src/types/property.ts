@@ -43,11 +43,13 @@ export type PropertyCategory =
   | 'Apartment';
 
 // Room occupancy type - Ghana standard "X in a room" system
-export type RoomOccupancyType = 
+export type RoomOccupancyType =
   | '1_in_a_room'
   | '2_in_a_room'
   | '3_in_a_room'
-  | '4_in_a_room';
+  | '4_in_a_room'
+  | '5_in_a_room'
+  | '6_in_a_room';
 
 // Property amenity type - No categorization, just owner-provided amenities
 export type PropertyAmenity = {

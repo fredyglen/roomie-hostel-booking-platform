@@ -5,8 +5,8 @@ import type {
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 5000 // 5 seconds auto-fade
 
 type ToasterToast = ToastProps & {
   id: string
@@ -160,6 +160,12 @@ function toast({ ...props }: Toast) {
       },
     },
   })
+
+  // Auto-dismiss after delay (unless it's a destructive toast which should stay longer)
+  const autoDismissDelay = props.variant === "destructive" ? 8000 : TOAST_REMOVE_DELAY;
+  setTimeout(() => {
+    dismiss()
+  }, autoDismissDelay)
 
   return {
     id: id,

@@ -212,7 +212,7 @@ export type PaymentStatus = 'pending' | 'processing' | 'completed' | 'failed' | 
 /**
  * Room occupancy types (Ghana hostel standard)
  */
-export type RoomOccupancyType = '1_in_a_room' | '2_in_a_room' | '3_in_a_room' | '4_in_a_room';
+export type RoomOccupancyType = '1_in_a_room' | '2_in_a_room' | '3_in_a_room' | '4_in_a_room' | '5_in_a_room' | '6_in_a_room';
 
 /**
  * Semester periods for Ghana academic calendar

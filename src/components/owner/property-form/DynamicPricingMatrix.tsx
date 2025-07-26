@@ -29,32 +29,77 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
   const bookingDuration = form.watch('booking_duration') || 'semester';
   const roomTypePricing = form.watch('room_type_pricing') || {};
 
-  // BE CONSCIOUS: Room type configurations with Ghana standards
+  // BE CONSCIOUS: Room type configurations for all property categories
   const getRoomTypeConfig = (roomType: string) => {
     const configs = {
-      '1_in_a_room': { 
-        label: '1 in a Room', 
-        occupants: 1, 
+      // Hostel room types - Ghana standard "X in a room" system
+      '1_in_a_room': {
+        label: '1 in a Room',
+        occupants: 1,
         description: 'Single occupancy - premium pricing',
         icon: '🏠'
       },
-      '2_in_a_room': { 
-        label: '2 in a Room', 
-        occupants: 2, 
+      '2_in_a_room': {
+        label: '2 in a Room',
+        occupants: 2,
         description: 'Double occupancy - popular choice',
         icon: '👥'
       },
-      '3_in_a_room': { 
-        label: '3 in a Room', 
-        occupants: 3, 
+      '3_in_a_room': {
+        label: '3 in a Room',
+        occupants: 3,
         description: 'Triple occupancy - affordable option',
         icon: '👨‍👩‍👧'
       },
-      '4_in_a_room': { 
-        label: '4 in a Room', 
-        occupants: 4, 
+      '4_in_a_room': {
+        label: '4 in a Room',
+        occupants: 4,
         description: 'Quad occupancy - budget-friendly',
         icon: '👨‍👩‍👧‍👦'
+      },
+      '5_in_a_room': {
+        label: '5 in a Room',
+        occupants: 5,
+        description: 'Five occupancy - very affordable',
+        icon: '👨‍👩‍👧‍👦‍👶'
+      },
+      '6_in_a_room': {
+        label: '6 in a Room',
+        occupants: 6,
+        description: 'Six occupancy - most affordable',
+        icon: '👨‍👩‍👧‍👦‍👶‍👧'
+      },
+      // Homestel room types
+      'single_room': {
+        label: 'Single Room',
+        occupants: 1,
+        description: 'Private room in family home',
+        icon: '🏡'
+      },
+      'shared_room': {
+        label: 'Shared Room',
+        occupants: 2,
+        description: 'Shared room in family home',
+        icon: '👫'
+      },
+      // Apartment room types - owner decides occupancy
+      '1_bedroom_apartment': {
+        label: '1 Bedroom Apartment',
+        occupants: 0, // No fixed occupancy - owner decides
+        description: 'One bedroom unit - owner sets occupancy',
+        icon: '🏠'
+      },
+      '2_bedroom_apartment': {
+        label: '2 Bedroom Apartment',
+        occupants: 0, // No fixed occupancy - owner decides
+        description: 'Two bedroom unit - owner sets occupancy',
+        icon: '🏘️'
+      },
+      '3_bedroom_apartment': {
+        label: '3 Bedroom Apartment',
+        occupants: 0, // No fixed occupancy - owner decides
+        description: 'Three bedroom unit - owner sets occupancy',
+        icon: '🏰'
       }
     };
     return configs[roomType as keyof typeof configs];
@@ -107,16 +152,7 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
   };
 
   if (roomTypes.length === 0) {
-    return (
-      <Card>
-        <CardContent className="pt-6">
-          <div className="text-center text-gray-500">
-            <Users className="h-8 w-8 mx-auto mb-2 opacity-50" />
-            <p>Select room types above to configure pricing</p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return null; // Don't show pricing matrix until room types are selected
   }
 
   return (
@@ -147,9 +183,12 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
                         <p className="text-sm text-gray-600">{config.description}</p>
                       </div>
                     </div>
-                    <Badge variant="outline">
-                      Max {config.occupants} student{config.occupants > 1 ? 's' : ''}
-                    </Badge>
+                    {/* Only show max students for Hostel and Homestel, NOT for Apartments */}
+                    {propertyCategory !== 'Apartment' && (
+                      <Badge variant="outline">
+                        Max {config.occupants} student{config.occupants > 1 ? 's' : ''}
+                      </Badge>
+                    )}
                   </div>
 
                   <FormField
@@ -186,14 +225,38 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
             })}
           </div>
 
-          {/* Pricing Guidelines */}
+          {/* Property-specific Pricing Guidelines */}
           <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h5 className="font-medium text-blue-900 mb-2">Ghana Hostel Pricing Guidelines</h5>
+            <h5 className="font-medium text-blue-900 mb-2">
+              {propertyCategory === 'Hostel' && 'Ghana Hostel Pricing Guidelines'}
+              {propertyCategory === 'Homestel' && 'Homestel Pricing Guidelines'}
+              {propertyCategory === 'Apartment' && 'Apartment Sharing Pricing Guidelines'}
+            </h5>
             <ul className="text-sm text-blue-800 space-y-1">
-              <li>• Single rooms (1 in a room): Premium pricing - typically 20-40% higher</li>
-              <li>• Double rooms (2 in a room): Standard pricing - most popular option</li>
-              <li>• Triple/Quad rooms: Budget pricing - 15-30% lower than double rooms</li>
-              <li>• Consider location, amenities, and university proximity when setting prices</li>
+              {propertyCategory === 'Hostel' && (
+                <>
+                  <li>• Single rooms (1 in a room): Premium pricing - typically 20-40% higher</li>
+                  <li>• Double rooms (2 in a room): Standard pricing - most popular option</li>
+                  <li>• Triple/Quad rooms: Budget pricing - 15-30% lower than double rooms</li>
+                  <li>• Consider location, amenities, and university proximity when setting prices</li>
+                </>
+              )}
+              {propertyCategory === 'Homestel' && (
+                <>
+                  <li>• Single rooms: Premium pricing for privacy in family setting</li>
+                  <li>• Shared rooms: Budget-friendly option with family atmosphere</li>
+                  <li>• Include meals and family support in pricing considerations</li>
+                  <li>• Factor in home amenities and family interaction level</li>
+                </>
+              )}
+              {propertyCategory === 'Apartment' && (
+                <>
+                  <li>• Studio: Individual student pricing - no sharing required</li>
+                  <li>• 1-3 Bedroom: Collective pricing - students share total cost</li>
+                  <li>• Price reflects entire unit cost divided among occupants</li>
+                  <li>• Consider utilities, internet, and maintenance in total pricing</li>
+                </>
+              )}
             </ul>
           </div>
         </CardContent>

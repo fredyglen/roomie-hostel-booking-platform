@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { startTransition, useMemo, Suspense } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -20,7 +20,7 @@ const PropertyEdit: React.FC = () => {
     queryKey: ['property', propertyId],
     queryFn: async () => {
       if (!propertyId) throw new Error('Property ID is required');
-      
+
       const { data, error } = await supabase
         .from('properties')
         .select('*')
@@ -33,6 +33,13 @@ const PropertyEdit: React.FC = () => {
     },
     enabled: !!propertyId && !!user?.id,
   });
+
+  // Transform database data to form format with memoization to prevent suspense issues
+  // MUST be called before any conditional returns to avoid hooks order violation
+  const initialData = useMemo(() => {
+    if (!property) return {};
+    return transformDbToFormValues(property);
+  }, [property, transformDbToFormValues]);
 
   if (isLoading) {
     return (
@@ -52,28 +59,31 @@ const PropertyEdit: React.FC = () => {
     );
   }
 
-  // Transform database data to form format
-  const initialData = transformDbToFormValues(property);
-
   return (
     <OwnerLayout pageTitle="Edit Property">
-      <Tabs defaultValue="details" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="details">Property Details</TabsTrigger>
-          <TabsTrigger value="verification">Verification Status</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="details">
-          <PropertyEditForm 
-            propertyId={propertyId!} 
-            initialData={initialData}
-          />
-        </TabsContent>
-        
-        <TabsContent value="verification">
-          <PropertyVerificationStatus propertyId={propertyId!} />
-        </TabsContent>
-      </Tabs>
+      <Suspense fallback={<LoadingIndicator />}>
+        <Tabs defaultValue="details" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Property Details</TabsTrigger>
+            <TabsTrigger value="verification">Verification Status</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details">
+            <Suspense fallback={<LoadingIndicator />}>
+              <PropertyEditForm
+                propertyId={propertyId!}
+                initialData={initialData}
+              />
+            </Suspense>
+          </TabsContent>
+
+          <TabsContent value="verification">
+            <Suspense fallback={<LoadingIndicator />}>
+              <PropertyVerificationStatus propertyId={propertyId!} />
+            </Suspense>
+          </TabsContent>
+        </Tabs>
+      </Suspense>
     </OwnerLayout>
   );
 };

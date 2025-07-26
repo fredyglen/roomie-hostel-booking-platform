@@ -102,7 +102,31 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const [viewingRestriction, setViewingRestriction] = useState<ViewingRestriction | null>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  const primaryImage = images && images.length > 0 ? images[0] : undefined;
+  // Get primary image with fallback - handle both array and string formats
+  const primaryImage = (() => {
+    // First check images array
+    if (Array.isArray(images) && images.length > 0 && images[0]?.trim()) {
+      // Filter out blob URLs that won't work
+      const validImage = images.find(img =>
+        img &&
+        typeof img === 'string' &&
+        img.trim() &&
+        !img.includes('blob:') &&
+        !img.includes('localhost')
+      );
+      if (validImage) {
+        return validImage;
+      }
+    }
+
+    // Check if images is a string
+    if (typeof images === 'string' && images.trim() && !images.includes('blob:') && !images.includes('localhost')) {
+      return images;
+    }
+
+    // Return a nice fallback image for properties
+    return 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
+  })();
 
   // Handle property card click - just navigate, no booking verification
   const handlePropertyClick = () => {
@@ -214,16 +238,18 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
       {/* Enhanced Image Section with Better Visibility */}
       <div className="relative h-[70px] flex-shrink-0">
-        <LazyImage
-          src={primaryImage || '/placeholder-property.jpg'}
+        <img
+          src={primaryImage}
           alt={title}
           className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${
             isAnonymous && !canViewImage() ? 'blur-sm' : ''
           }`}
           width={400}
           height={70}
-          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
-          priority={false}
+          loading="eager"
+          onError={(e) => {
+            e.currentTarget.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
+          }}
           onLoad={() => {
             if (isAnonymous) {
               handleImageView();
@@ -262,15 +288,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           </div>
         )}
 
-        {/* Property Type Badge - Bottom Right */}
-        <div className="absolute bottom-1 right-1">
-          <Badge
-            variant="secondary"
-            className="bg-black/70 text-white text-xs font-medium px-1 py-0.5"
-          >
-            {propertyType}
-          </Badge>
-        </div>
+
 
         {/* Story View Button - Bottom Left */}
         {onViewStory && (

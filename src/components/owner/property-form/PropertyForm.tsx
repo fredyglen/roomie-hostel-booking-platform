@@ -18,6 +18,8 @@ import MediaUploadTabs from './MediaUploadTabs';
 import FormSubmissionModal from './FormSubmissionModal';
 import BuildingStructureManager from '../BuildingStructureManager';
 import StructureTabModal from '../StructureTabModal';
+// Enhanced toast utilities
+import { showValidationErrorToast, showPropertyFormToasts } from '@/utils/toast';
 
 // BE CONSCIOUS: New enhanced components for comprehensive form improvements
 import BookingDurationFields from './BookingDurationFields';
@@ -198,7 +200,102 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     return occupancyText;
   };
 
-  const handleSubmit = (_data: PropertyFormValues) => {
+  // Intelligent tab navigation for validation errors
+  const navigateToErrorTab = (errorType: string) => {
+    const tabMapping = {
+      'Room Types': 'rooms',
+      'Room Types Mismatch': 'rooms',
+      'Property Title': 'info',
+      'Address': 'info',
+      'Nearest University': 'info',
+      'Description': 'info',
+      'Pricing': 'rooms',
+      'Incomplete Pricing': 'rooms',
+      'Total Rooms': 'rooms',
+      'Bathrooms': 'rooms',
+      'Washroom Location': 'rooms',
+      'Washroom Sharing': 'rooms'
+    };
+
+    const targetTab = tabMapping[errorType as keyof typeof tabMapping];
+    if (targetTab && targetTab !== activeTab) {
+      setActiveTab(targetTab);
+      // Show navigation toast
+      showValidationErrorToast("Navigation", `Switched to ${targetTab.charAt(0).toUpperCase() + targetTab.slice(1)} tab to fix the issue.`);
+    }
+  };
+
+  const handleSubmit = (data: PropertyFormValues) => {
+    console.log('🚀 PROPERTY FORM SUBMIT CALLED', { isEdit, data });
+
+    // FOR EDIT MODE - STILL VALIDATE BUT WITH RELAXED RULES
+    if (isEdit) {
+      console.log('🚀 EDIT MODE - VALIDATING WITH RELAXED RULES');
+
+      // Basic validation for edit mode
+      const errors = [];
+
+      if (!data.title?.trim()) {
+        errors.push("Property Title");
+        showValidationErrorToast("Property Title", "Please enter a title for your property.");
+        navigateToErrorTab("Property Title");
+      }
+
+      if (!data.address?.trim()) {
+        errors.push("Address");
+        showValidationErrorToast("Address", "Please enter the property address.");
+        navigateToErrorTab("Address");
+      }
+
+      // If there are validation errors in edit mode, don't proceed
+      if (errors.length > 0) {
+        console.log('🚨 EDIT MODE VALIDATION ERRORS FOUND', errors);
+        showValidationErrorToast("Form Incomplete", `Please complete all required fields. Found ${errors.length} issue(s).`);
+        return;
+      }
+
+      console.log('🚀 EDIT MODE - VALIDATION PASSED, CALLING onSubmit');
+      onSubmit(data);
+      return;
+    }
+
+    // Enhanced validation with immediate toast feedback and intelligent navigation
+    const errors = [];
+    const propertyCategory = data.propertyCategory;
+
+    // Validate basic required fields
+    console.log('🚀 VALIDATING FIELDS', { title: data.title, address: data.address, description: data.description });
+
+    if (!data.title) {
+      console.log('🚨 TITLE MISSING');
+      errors.push("Property Title");
+      showValidationErrorToast("Property Title", "Please enter a title for your property.");
+      navigateToErrorTab("Property Title");
+    }
+
+    if (!data.address) {
+      console.log('🚨 ADDRESS MISSING');
+      errors.push("Address");
+      showValidationErrorToast("Address", "Please enter the property address.");
+      navigateToErrorTab("Address");
+    }
+
+    if (!data.description || data.description.length < 10) {
+      console.log('🚨 DESCRIPTION MISSING OR TOO SHORT');
+      errors.push("Description");
+      showValidationErrorToast("Description", "Please provide a description of at least 10 characters.");
+      navigateToErrorTab("Description");
+    }
+
+    // If there are validation errors, don't proceed to preview
+    if (errors.length > 0) {
+      console.log('🚨 VALIDATION ERRORS FOUND', errors);
+      showValidationErrorToast("Form Incomplete", `Please complete all required fields. Found ${errors.length} issue(s).`);
+      // DO NOT RESET FORM - KEEP USER DATA
+      return;
+    }
+
+    // All validation passed, show preview
     setShowPreview(true);
   };
 
@@ -206,7 +303,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     const formData = form.getValues();
 
     // Clear saved form data on successful submission
-    localStorage.removeItem(FORM_STORAGE_KEY);
+    if (!isEdit) {
+      localStorage.removeItem(FORM_STORAGE_KEY);
+    }
 
     onSubmit(formData);
     setShowPreview(false);
@@ -259,8 +358,24 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="info">Property Info</TabsTrigger>
-              <TabsTrigger value="rooms">Room Config</TabsTrigger>
+              <TabsTrigger value="info" className={`relative ${
+                form.formState.errors.title || form.formState.errors.address || form.formState.errors.description || form.formState.errors.nearest_university
+                  ? 'text-red-600 border-red-300' : ''
+              }`}>
+                Property Info
+                {(form.formState.errors.title || form.formState.errors.address || form.formState.errors.description || form.formState.errors.nearest_university) && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="rooms" className={`relative ${
+                form.formState.errors.room_types || form.formState.errors.bedrooms || form.formState.errors.bathrooms || form.formState.errors.washroom_location || form.formState.errors.washroom_sharing
+                  ? 'text-red-600 border-red-300' : ''
+              }`}>
+                Room Config
+                {(form.formState.errors.room_types || form.formState.errors.bedrooms || form.formState.errors.bathrooms || form.formState.errors.washroom_location || form.formState.errors.washroom_sharing) && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="amenities">Amenities</TabsTrigger>
               <TabsTrigger value="structure">Structure</TabsTrigger>
               <TabsTrigger value="media">Media</TabsTrigger>
@@ -389,12 +504,29 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                     disabled={isLoading}
                     variant="outline"
                     className="ml-2"
+                    onClick={(e) => {
+                      console.log('🚀 UPDATE BUTTON CLICKED');
+                      // Force form submission
+                      const formData = form.getValues();
+                      console.log('🚀 FORCING FORM SUBMIT WITH DATA', formData);
+                      handleSubmit(formData);
+                    }}
                   >
                     {isLoading ? 'Saving...' : isEdit ? 'Update Property' : 'Preview & Submit'}
                   </Button>
                 </>
               ) : (
-                <Button type="submit" disabled={isLoading}>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  onClick={(e) => {
+                    console.log('🚀 MEDIA TAB UPDATE BUTTON CLICKED');
+                    // Force form submission
+                    const formData = form.getValues();
+                    console.log('🚀 FORCING FORM SUBMIT WITH DATA', formData);
+                    handleSubmit(formData);
+                  }}
+                >
                   {isLoading ? 'Saving...' : isEdit ? 'Update Property' : 'Preview & Submit'}
                 </Button>
               )}

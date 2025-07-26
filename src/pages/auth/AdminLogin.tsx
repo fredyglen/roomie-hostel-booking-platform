@@ -260,9 +260,35 @@ const AdminLogin: React.FC = () => {
           </div>
         </div>
 
+        {/* Development Bypass */}
+        {import.meta.env.DEV && (
+          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <p className="text-xs text-yellow-800 font-medium mb-2">🚀 Development Mode</p>
+            <p className="text-xs text-yellow-700 mb-3">
+              Skip authentication and access admin tools directly (development only)
+            </p>
+            <div className="flex gap-2">
+              <Button
+                size="sm"
+                onClick={() => navigate('/admin/quick-verify', { replace: true })}
+                className="text-xs bg-green-600 hover:bg-green-700"
+              >
+                🔧 Property Verifier
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate('/admin/dashboard', { replace: true })}
+                className="text-xs bg-blue-600 hover:bg-blue-700"
+              >
+                📊 Admin Dashboard
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* Production Admin Portal */}
         {import.meta.env.DEV && (
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-xs text-blue-800 font-medium mb-2">Production Admin Portal</p>
             <p className="text-xs text-blue-700">
               Use your assigned admin credentials to access the ROOMi admin portal.

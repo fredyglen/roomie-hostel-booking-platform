@@ -15,6 +15,7 @@ import { useAnonymousTimeLimit } from '@/hooks/useAnonymousTimeLimit';
 import { useDynamicProperties } from '@/hooks/property/useDynamicProperties';
 import { Property } from '@/types/property';
 
+
 const PropertyListing: React.FC = () => {
   const navigate = useNavigate();
   const { getViewingProgress, isAnonymous } = usePropertyViewingTracker();
@@ -451,6 +452,8 @@ const PropertyListing: React.FC = () => {
         </div>
       )}
 
+
+
       {/* Conditional Property Display */}
       {useAppleGradeDisplay ? (
         /* Apple-Grade Hostel Display Component */
@@ -476,23 +479,24 @@ const PropertyListing: React.FC = () => {
               <div key={property.id} style={{ pointerEvents: 'auto' }}>
                 <PropertyCard
                   id={property.id.toString()}
-                  title={property.title}
-                  rent={property.rent}
-                  location={property.location}
-                  bedrooms={property.roomType === '1 in a room' ? 1 : property.roomType === '2 in a room' ? 2 : property.roomType === '3 in a room' ? 3 : 4}
-                  bathrooms={1}
-                  maxOccupants={property.maxOccupants}
+                  title={property.title || property.name}
+                  rent={property.rent || property.price || property.base_price_per_semester || 0}
+                  location={property.address}
+                  bedrooms={property.bedrooms || 1}
+                  bathrooms={property.bathrooms || 1}
+                  maxOccupants={property.max_occupants || 1}
                   images={property.images || []}
                   amenities={property.amenities ? property.amenities.map(getAmenityLabel) : []}
-                  propertyType="Hostel"
-                  genderRestriction={property.genderRestriction}
-                  isAvailable={true}
-                  distanceToCampus={property.distanceToCampus || '5 mins'}
-                  totalBedsAvailable={Math.floor(Math.random() * 8) + 1}
-                  totalBeds={property.maxOccupants}
+                  propertyType={property.property_type || property.type || "hostel"}
+                  genderRestriction={(property as any).gender_type || (property as any).gender_restriction}
+                  isAvailable={property.is_available !== false}
+                  distanceToCampus={(property as any).distance_to_campus || 'N/A'}
+                  totalBedsAvailable={(property as any).beds_available || (property.max_occupants - ((property as any).current_occupancy || 0))}
+                  totalBeds={property.max_occupants || 1}
                   priceUnit="semester"
                   onViewDetails={() => handleViewDetails(property.id)}
                   onViewStory={() => handleViewStory(property.id)}
+
                 />
               </div>
             ))

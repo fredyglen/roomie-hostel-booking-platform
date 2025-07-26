@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
+import { showValidationErrorToast, showPropertyFormToasts } from '@/utils/toast';
+import { Users } from 'lucide-react';
 
 interface RoomConfigurationFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -12,6 +14,26 @@ interface RoomConfigurationFieldsProps {
 }
 
 const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form, propertyCategory }) => {
+  // Auto-calculate max occupants based on room types and total rooms
+  const totalRooms = form.watch('bedrooms') || 0;
+  const roomTypes = form.watch('room_types') || [];
+
+  useEffect(() => {
+    if (roomTypes.length > 0 && totalRooms > 0) {
+      // Calculate based on room types
+      const maxOccupantsPerRoom = Math.max(...roomTypes.map(type => {
+        const occupancyMap = {
+          '1_in_a_room': 1, '2_in_a_room': 2, '3_in_a_room': 3, '4_in_a_room': 4, '5_in_a_room': 5, '6_in_a_room': 6,
+          'single_room': 1, 'shared_room': 2,
+          '1_bedroom_apartment': 0, '2_bedroom_apartment': 0, '3_bedroom_apartment': 0 // Apartments have flexible occupancy
+        };
+        return occupancyMap[type as keyof typeof occupancyMap] || 1;
+      }));
+
+      const totalCapacity = totalRooms * maxOccupantsPerRoom;
+      form.setValue('max_occupants', totalCapacity);
+    }
+  }, [roomTypes, totalRooms, form]);
   const watchMeterType = form.watch('meter_type');
   const watchRoomTypes = form.watch('room_types') || [];
 
@@ -23,7 +45,9 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
           { value: '1_in_a_room', label: '1 in a room' },
           { value: '2_in_a_room', label: '2 in a room' },
           { value: '3_in_a_room', label: '3 in a room' },
-          { value: '4_in_a_room', label: '4 in a room' }
+          { value: '4_in_a_room', label: '4 in a room' },
+          { value: '5_in_a_room', label: '5 in a room' },
+          { value: '6_in_a_room', label: '6 in a room' }
         ];
       case 'Homestel':
         return [
@@ -32,10 +56,9 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
         ];
       case 'Apartment':
         return [
-          { value: 'studio', label: 'Studio' },
-          { value: '1_bedroom', label: '1 bedroom' },
-          { value: '2_bedroom', label: '2 bedroom' },
-          { value: '3_bedroom', label: '3 bedroom' }
+          { value: '1_bedroom_apartment', label: '1 Bedroom Apartment' },
+          { value: '2_bedroom_apartment', label: '2 Bedroom Apartment' },
+          { value: '3_bedroom_apartment', label: '3 Bedroom Apartment' }
         ];
       default:
         return [];
@@ -64,11 +87,26 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
                     checked={field.value?.includes(option.value)}
                     onCheckedChange={(checked) => {
                       const currentValue = field.value || [];
+                      let newValue;
+
                       if (checked) {
-                        field.onChange([...currentValue, option.value]);
+                        newValue = [...currentValue, option.value];
+                        field.onChange(newValue);
+
+                        // Show smart configuration toast for single room selection
+                        if (option.value === 'single_room' && propertyCategory === 'Homestel') {
+                          showPropertyFormToasts.smartConfigurationApplied('single room');
+                        }
                       } else {
-                        field.onChange(currentValue.filter((val) => val !== option.value));
+                        newValue = currentValue.filter((val) => val !== option.value);
+                        field.onChange(newValue);
+
+                        // Validate that at least one room type is selected
+                        if (newValue.length === 0) {
+                          showValidationErrorToast("Room Types", "Please select at least one room type for your property.");
+                        }
                       }
+
                       // BE CONSCIOUS: Room type changes will auto-update max occupants in DynamicPricingMatrix
                     }}
                   />
@@ -228,28 +266,45 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
         />
       )}
 
-      {/* Maximum Occupancy - Simplified for non-tech users */}
-      <FormField
-        control={form.control}
-        name="max_occupants"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>How Many Students Can Stay? *</FormLabel>
-            <FormControl>
-              <Input
-                type="number"
-                placeholder="20"
-                {...field}
-                onChange={(e) => field.onChange(Number(e.target.value))}
-              />
-            </FormControl>
-            <FormDescription>
-              What's the maximum number of students that can live in your property at the same time?
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* Auto-calculated Maximum Occupancy - Ghana standard: every bed = one student */}
+      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+        <div className="flex items-center gap-2 mb-2">
+          <Users className="h-5 w-5 text-green-600" />
+          <h4 className="font-medium text-green-800">Maximum Students Capacity</h4>
+        </div>
+        <p className="text-sm text-green-700 mb-3">
+          Based on Ghana hostel standards: <strong>Every bed = One student</strong>
+        </p>
+        <div className="text-lg font-semibold text-green-800">
+          {(() => {
+            if (roomTypes.length === 0 || totalRooms === 0) {
+              return 'Select room types and total rooms to calculate capacity';
+            }
+
+            // Calculate based on room types
+            const isApartment = roomTypes.some(type => type.includes('apartment'));
+
+            if (isApartment) {
+              return `Flexible occupancy - Owner decides`;
+            }
+
+            const maxOccupantsPerRoom = Math.max(...roomTypes.map(type => {
+              const occupancyMap = {
+                '1_in_a_room': 1, '2_in_a_room': 2, '3_in_a_room': 3, '4_in_a_room': 4, '5_in_a_room': 5, '6_in_a_room': 6,
+                'single_room': 1, 'shared_room': 2,
+                '1_bedroom_apartment': 0, '2_bedroom_apartment': 0, '3_bedroom_apartment': 0 // Flexible occupancy
+              };
+              return occupancyMap[type as keyof typeof occupancyMap] || 1;
+            }));
+
+            const totalCapacity = totalRooms * maxOccupantsPerRoom;
+            return `${totalCapacity} students maximum`;
+          })()}
+        </div>
+        <p className="text-xs text-green-600 mt-2">
+          This is automatically calculated based on your room configuration
+        </p>
+      </div>
     </div>
   );
 };

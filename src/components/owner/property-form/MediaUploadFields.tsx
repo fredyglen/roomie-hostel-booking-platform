@@ -24,21 +24,42 @@ export const MediaUploadFields: React.FC<MediaUploadFieldsProps> = ({
         
         <FormField
           control={form.control}
-          name="image_url"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Images</FormLabel>
-              <FormControl>
-                <SupabaseImageUpload
-                  images={field.value ? [field.value] : []}
-                  onImagesChange={(images) => field.onChange(images[0] || '')}
-                  maxImages={10}
-                  propertyId={propertyId}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
+          name="images"
+          render={({ field }) => {
+            // Get current images from both fields
+            const currentImages = field.value || [];
+            const imageUrl = form.watch('image_url');
+
+            // Combine images from both sources
+            const allImages = Array.isArray(currentImages) ? currentImages :
+                             currentImages ? [currentImages] :
+                             imageUrl ? [imageUrl] : [];
+
+            console.log('🚀 CURRENT IMAGES STATE', { field: field.value, imageUrl, allImages });
+
+            return (
+              <FormItem>
+                <FormLabel>Images</FormLabel>
+                <FormControl>
+                  <SupabaseImageUpload
+                    images={allImages}
+                    onImagesChange={(images) => {
+                      console.log('🚀 IMAGES CHANGED', images);
+                      // Update both fields to ensure persistence
+                      field.onChange(images);
+                      form.setValue('image_url', images[0] || '', { shouldDirty: true });
+
+                      // Force form to recognize changes
+                      form.trigger(['images', 'image_url']);
+                    }}
+                    maxImages={10}
+                    propertyId={propertyId}
+                  />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
       </div>
     </div>

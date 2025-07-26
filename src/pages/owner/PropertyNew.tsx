@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { startTransition } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { useToast } from "@/components/ui/use-toast";
@@ -34,16 +34,19 @@ const PropertyNew: React.FC = () => {
   const pipelineStatus = getStatus(result);
 
   const handleSubmit = (data: PropertyFormValues) => {
-    if (!user?.id) {
-      toast({
-        title: "Authentication Error",
-        description: "You must be logged in to create a property.",
-        variant: "destructive",
-      });
-      return;
-    }
+    // Fix React Suspense error by wrapping async operations in startTransition
+    startTransition(() => {
+      if (!user?.id) {
+        toast({
+          title: "Authentication Error",
+          description: "You must be logged in to create a property.",
+          variant: "destructive",
+        });
+        return;
+      }
 
-    createProperty({ formData: data, ownerId: user.id });
+      createProperty({ formData: data, ownerId: user.id });
+    });
   };
 
   const handleCancel = () => {

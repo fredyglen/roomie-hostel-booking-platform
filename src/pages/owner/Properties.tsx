@@ -55,7 +55,7 @@ const Properties: React.FC = () => {
         price_unit: 'month', // Default to month if not specified
         status: prop.is_available ? 'Available' : 'Not Available',
         occupancy: '0/1', // Default occupancy
-        image_url: prop.images && prop.images.length > 0 ? prop.images[0] : '',
+        image_url: (prop.images && prop.images.length > 0) ? prop.images[0] : prop.image_url || '',
         created_at: prop.created_at,
         owner_id: prop.owner_id,
       })) as PropertyDisplay[];

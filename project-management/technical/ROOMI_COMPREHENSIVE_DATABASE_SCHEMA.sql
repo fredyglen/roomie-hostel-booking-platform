@@ -134,13 +134,15 @@ CREATE TABLE IF NOT EXISTS rooms (
   room_name TEXT, -- "Ground Floor Room 1", "Block A Room 203"
   
   -- Room Configuration
-  beds_count INTEGER NOT NULL CHECK (beds_count >= 1 AND beds_count <= 4),
+  beds_count INTEGER NOT NULL CHECK (beds_count >= 1 AND beds_count <= 6),
   room_type TEXT GENERATED ALWAYS AS (
-    CASE 
+    CASE
       WHEN beds_count = 1 THEN '1 in a room'
       WHEN beds_count = 2 THEN '2 in a room'
       WHEN beds_count = 3 THEN '3 in a room'
       WHEN beds_count = 4 THEN '4 in a room'
+      WHEN beds_count = 5 THEN '5 in a room'
+      WHEN beds_count = 6 THEN '6 in a room'
       ELSE beds_count || ' in a room'
     END
   ) STORED,
