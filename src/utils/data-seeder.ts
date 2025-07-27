@@ -193,8 +193,8 @@ export class DataSeeder {
         password: adminPassword,
         options: {
           data: {
-            first_name: 'Demo',
-            last_name: 'Admin',
+            first_name: 'Mary',
+            last_name: 'Kwarteng',
             role: 'admin',
           }
         }
@@ -214,8 +214,8 @@ export class DataSeeder {
         .insert({
           id: authData.user?.id,
           email: adminEmail,
-          first_name: 'Demo',
-          last_name: 'Admin',
+          first_name: 'Mary',
+          last_name: 'Kwarteng',
           role: 'admin',
           phone: '+233 50 000 0000',
         });

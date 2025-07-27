@@ -72,9 +72,9 @@ describe('PaymentFirstBookingService - Apple-Level Test Suite', () => {
         specialRequests: 'Ground floor preferred'
       },
       studentInfo: {
-        emergencyContactName: 'John Doe',
+        emergencyContactName: 'Mary Kwarteng',
         emergencyContactPhone: '+233240000001',
-        emergencyContactRelationship: 'Father',
+        emergencyContactRelationship: 'Mother',
         studentIdNumber: 'STU123456',
         university: 'UPSA',
         program: 'Computer Science',
@@ -82,8 +82,8 @@ describe('PaymentFirstBookingService - Apple-Level Test Suite', () => {
       },
       roommates: [
         {
-          name: 'Jane Smith',
-          email: 'jane@student.com',
+          name: 'Mary Kwarteng',
+          email: 'mary@student.com',
           phone: '+233240000002',
           relationship: 'Friend'
         }

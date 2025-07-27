@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PropertyLocationTab from './PropertyLocationTab';
 import PropertyAmenitiesTab from './PropertyAmenitiesTab';
+import PropertyHouseRulesTab from './PropertyHouseRulesTab';
 import SmartPropertyDescription from './SmartPropertyDescription';
 import IntelligentRoomPricing from './IntelligentRoomPricing';
 
@@ -49,10 +50,11 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
 
   return (
     <Tabs defaultValue="about" value={activeTab} onValueChange={handleTabChange}>
-      {/* ✅ MOBILE-FIRST: 3 TABS ONLY */}
-      <TabsList className="grid grid-cols-3 mb-4 w-full">
+      {/* ✅ MOBILE-FIRST: 4 TABS INCLUDING RULES */}
+      <TabsList className="grid grid-cols-4 mb-4 w-full">
         <TabsTrigger value="about" className="text-xs md:text-sm">About</TabsTrigger>
         <TabsTrigger value="amenities" className="text-xs md:text-sm">Amenities</TabsTrigger>
+        <TabsTrigger value="rules" className="text-xs md:text-sm">Rules</TabsTrigger>
         <TabsTrigger value="location" className="text-xs md:text-sm">Location</TabsTrigger>
       </TabsList>
       
@@ -63,7 +65,7 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
           <h3 className="text-lg font-semibold text-gray-900 mb-3">About this property</h3>
           <SmartPropertyDescription
             description={description}
-            characterLimit={280}
+            characterLimit={400}
           />
         </div>
 
@@ -75,11 +77,13 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
           </div>
         )}
 
-        {/* Additional Property Info */}
+        {/* Things to Consider Section */}
         {goodToKnow && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Good to know</h3>
-            <p className="text-gray-700 text-sm leading-relaxed">{goodToKnow}</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Things to consider</h3>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-blue-800 text-sm leading-relaxed">{goodToKnow}</p>
+            </div>
           </div>
         )}
       </TabsContent>
@@ -87,6 +91,11 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
       {/* ✅ AMENITIES TAB: Clean, Organized */}
       <TabsContent value="amenities">
         <PropertyAmenitiesTab amenities={amenities} />
+      </TabsContent>
+
+      {/* ✅ RULES TAB: House Rules & Guidelines */}
+      <TabsContent value="rules">
+        <PropertyHouseRulesTab houseRules={houseRules} />
       </TabsContent>
 
       {/* ✅ LOCATION TAB: Essential Location Info */}

@@ -115,7 +115,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 relative">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-4">
           {/* ✅ IMAGE GALLERY with COVER OVERLAY */}
@@ -151,8 +151,8 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
           />
         </div>
         
-        {/* ✅ STREAMLINED SIDEBAR - No Giant Cards */}
-        <div className="space-y-6">
+        {/* ✅ STREAMLINED SIDEBAR - Essential Components Only */}
+        <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
           {/* Booking Card */}
           <PropertyBookingCard
             property={property}
@@ -160,10 +160,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             onViewStory={onViewStory}
           />
 
-          {/* Owner Card */}
-          {property.owner && (
-            <PropertyOwnerCard owner={property.owner} />
-          )}
+          {/* ✅ REMOVED: Property Owner Card to prevent outside booking */}
         </div>
       </div>
     </div>

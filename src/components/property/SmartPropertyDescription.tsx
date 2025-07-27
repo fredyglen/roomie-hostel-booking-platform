@@ -21,7 +21,7 @@ interface SmartPropertyDescriptionProps {
  */
 const SmartPropertyDescription: React.FC<SmartPropertyDescriptionProps> = ({
   description,
-  characterLimit = 280, // Twitter-style limit
+  characterLimit = 400, // User requested 400 character limit
   className = ''
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);

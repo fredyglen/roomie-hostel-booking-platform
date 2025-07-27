@@ -18,7 +18,7 @@ const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
   const priceUnit = property.priceUnit || property.price_unit || 'month';
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 sticky top-4">
+    <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 sticky top-4 z-30 border border-gray-200">
       <div className="flex justify-between items-center mb-3">
         <div>
           <span className="text-xl font-bold text-blue-600">{formatCurrency(price)}</span>
