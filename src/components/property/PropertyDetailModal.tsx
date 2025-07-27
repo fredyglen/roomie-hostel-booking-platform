@@ -3,11 +3,11 @@
 // Top 45% shows property cover photo, bottom 55% shows sliding card with details
 
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Heart, Share2, MapPin, Star } from 'lucide-react';
+import { X, Heart, Share2, MapPin, Star, Bed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { formatCurrency } from '@/utils/currency';
 import PropertyDetailTabs from './PropertyDetailTabs';
+import PropertyDetailCoverOverlay from './PropertyDetailCoverOverlay';
 
 // Property interface for detail components
 interface PropertyDetailData {
@@ -36,6 +36,8 @@ interface PropertyDetailModalProps {
   onViewStory?: () => void;
 }
 
+// ✅ REMOVED: Old CoverImageOverlay - Using new PropertyDetailCoverOverlay
+
 const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   property,
   isOpen,
@@ -43,7 +45,7 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   onBookNow,
   onViewStory
 }) => {
-  const [activeTab, setActiveTab] = useState<'description' | 'amenities' | 'location'>('description');
+  const [activeTab, setActiveTab] = useState<'description' | 'pricing' | 'amenities' | 'location'>('description');
   const [isAnimating, setIsAnimating] = useState(false);
   const [touchStartY, setTouchStartY] = useState<number>(0);
   const [cardOffset, setCardOffset] = useState<number>(0);
@@ -147,13 +149,6 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
     return 'Location not specified';
   };
 
-  const getAmenitiesArray = (): string[] => {
-    if (!property.amenities) return [];
-    return property.amenities.map(amenity => 
-      typeof amenity === 'string' ? amenity : amenity.name || 'Unknown amenity'
-    );
-  };
-
   const getDistanceText = (): string => {
     if (property.distanceToCampus) return property.distanceToCampus;
     if (property.distance_to_campus) return property.distance_to_campus;
@@ -180,8 +175,11 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
         {/* Overlay gradient */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-transparent to-black/60" />
         
+        {/* ✅ PRODUCTION-GRADE: Cover Image Overlay System */}
+        <PropertyDetailCoverOverlay propertyId={property.id.toString()} />
+
         {/* Header controls */}
-        <div className="absolute top-6 left-6 right-6 flex justify-between items-center">
+        <div className="absolute top-6 left-6 right-6 flex justify-between items-center z-20">
           <button
             onClick={onClose}
             className="w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl hover:bg-white transition-all duration-200"
@@ -251,16 +249,9 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
 
         {/* Content */}
         <div className="px-4 pb-4 h-full overflow-hidden flex flex-col">
-          {/* Price and rating header */}
-          <div className="flex justify-between items-center mb-4">
-            <div>
-              <div className="text-2xl font-bold text-primary">
-                ¢{property.rent?.toLocaleString() || '0'}
-              </div>
-              <div className="text-sm text-gray-600 font-medium">per semester</div>
-            </div>
-
-            <div className="flex items-center gap-2 bg-yellow-50 px-3 py-2 rounded-full">
+          {/* Compact rating header */}
+          <div className="flex justify-center mb-4">
+            <div className="flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-full">
               <Star size={18} className="text-yellow-500 fill-current" />
               <span className="font-bold text-gray-900">{property.rating || '4.5'}</span>
               <span className="text-gray-600 text-sm font-medium">(24 reviews)</span>

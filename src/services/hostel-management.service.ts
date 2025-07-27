@@ -219,7 +219,7 @@ export class HostelManagementService {
             id,
             room_number,
             room_type,
-            beds_count,
+            bed_count,
             beds_available,
             floor_number
           )

@@ -2,10 +2,11 @@
 // Premium bento-box layout with arranged media grids for desktop experience
 
 import React, { useState } from 'react';
-import { X, Heart, Share2, MapPin, Star, Play, Camera, ArrowLeft } from 'lucide-react';
+import { X, Heart, Share2, MapPin, Star, Play, Camera, ArrowLeft, Bed } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PropertyDetailTabs from './PropertyDetailTabs';
+import { useRealTimeBedAvailability } from '@/hooks/useRealTimeBedAvailability';
 
 import { Property, PropertyId, PropertyPrice } from '@/types/property';
 
@@ -44,6 +45,59 @@ interface PropertyDetailDesktopProps {
   onBookNow: () => void;
   onViewStory?: () => void;
 }
+
+// ✅ PHASE 2: Desktop Cover Image Overlay Component
+interface DesktopCoverImageOverlayProps {
+  propertyId: string | number;
+}
+
+const DesktopCoverImageOverlay: React.FC<DesktopCoverImageOverlayProps> = ({ propertyId }) => {
+  const { availability, isLoading } = useRealTimeBedAvailability({
+    propertyId: propertyId.toString(),
+    enableRealTimeUpdates: true,
+    refreshInterval: 30000
+  });
+
+  if (isLoading || !availability) {
+    return null;
+  }
+
+  const { overall } = availability;
+  const occupancyPercentage = Math.round(overall.occupancyRate * 100);
+
+  return (
+    <>
+      {/* ✅ TOP-RIGHT: Live Indicator */}
+      <div className="absolute top-4 right-4 z-10">
+        <div className="flex items-center gap-1 bg-black/70 backdrop-blur-sm rounded-full px-3 py-1.5">
+          <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+          <span className="text-white text-sm font-medium">Live</span>
+        </div>
+      </div>
+
+      {/* ✅ BOTTOM-LEFT: Bed Availability with Gradient */}
+      <div className="absolute bottom-4 left-4 z-10">
+        <div className="relative">
+          {/* Gradient backdrop for readability */}
+          <div className="absolute inset-0 bg-gradient-to-r from-black/80 to-transparent rounded-lg blur-sm" />
+          <div className="relative flex items-center gap-2 px-4 py-2">
+            <Bed className="h-5 w-5 text-white drop-shadow-lg" />
+            <span className="text-white font-medium drop-shadow-lg">
+              {overall.availableBeds} of {overall.totalBeds} beds available
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* ✅ BOTTOM-RIGHT: Occupancy Percentage Badge */}
+      <div className="absolute bottom-4 right-4 z-10">
+        <div className="w-14 h-14 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/20">
+          <span className="text-white font-bold">{occupancyPercentage}%</span>
+        </div>
+      </div>
+    </>
+  );
+};
 
 const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
   property,
@@ -142,6 +196,9 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
                 alt={property.title}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
               />
+
+              {/* ✅ PHASE 2: Desktop Cover Image Overlay System */}
+              <DesktopCoverImageOverlay propertyId={property.id} />
 
               {/* Image overlay controls */}
               <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300">

@@ -5,6 +5,8 @@ import PropertyImageGallery from './PropertyImageGallery';
 import PropertyTabs from './PropertyTabs';
 import PropertyBookingCard from './PropertyBookingCard';
 import PropertyOwnerCard from './PropertyOwnerCard';
+import PropertyOwnerTags from './PropertyOwnerTags';
+import PropertyDetailCoverOverlay from './PropertyDetailCoverOverlay';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 
@@ -116,9 +118,20 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
         {/* Main Content */}
         <div className="lg:col-span-2 space-y-4">
-          {/* Image Gallery */}
-          <PropertyImageGallery images={property.images} title={property.title} />
-          
+          {/* ✅ IMAGE GALLERY with COVER OVERLAY */}
+          <div className="relative">
+            <PropertyImageGallery images={property.images} title={property.title} />
+            {/* ✅ PRODUCTION-GRADE: Cover Image Overlay */}
+            <PropertyDetailCoverOverlay propertyId={property.id} />
+          </div>
+
+          {/* ✅ PRODUCTION-GRADE: Owner-Provided Tags */}
+          <PropertyOwnerTags
+            property={property}
+            showTitle={true}
+            compact={false}
+          />
+
           {/* Property Details Tabs */}
           <PropertyTabs
             description={property.description}
@@ -132,10 +145,13 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             goodToKnow={property.good_to_know}
             roomTypes={property.room_types}
             nearestUniversity={property.nearest_university}
+            // ✅ NEW: Pass pricing matrix data to tabs
+            propertyId={property.id}
+            propertyCategory={property.property_category || property.propertyCategory}
           />
         </div>
         
-        {/* Sidebar */}
+        {/* ✅ STREAMLINED SIDEBAR - No Giant Cards */}
         <div className="space-y-6">
           {/* Booking Card */}
           <PropertyBookingCard
@@ -143,7 +159,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             onBook={onBookNow}
             onViewStory={onViewStory}
           />
-          
+
           {/* Owner Card */}
           {property.owner && (
             <PropertyOwnerCard owner={property.owner} />

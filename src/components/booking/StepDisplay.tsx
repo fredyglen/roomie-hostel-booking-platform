@@ -128,16 +128,16 @@ const StepDisplay: React.FC<StepDisplayProps> = ({
     3: (
       <RoomSelectionStep
         selectedRoomType={formData.roomOptions.roomType}
-        selectedFurnishing={formData.roomOptions.furnishingOption}
         selectedFloor={formData.roomOptions.floor}
         extraRequests={formData.roomOptions.extraRequests}
         onRoomTypeChange={(value) => handlers.handleRoomOptionChange('roomType', value)}
-        onFurnishingChange={(value) => handlers.handleRoomOptionChange('furnishingOption', value)}
         onFloorChange={(value) => handlers.handleRoomOptionChange('floor', value)}
         onRequestsChange={(value) => handlers.handleRoomOptionChange('extraRequests', value)}
         onPrevious={handlers.handlePreviousStep}
         onNext={handlers.handleNextStep}
-        availableRoomTypes={property?.features || ['single', 'double', 'triple']}
+        // ✅ PRODUCTION-GRADE: Dynamic room types from owner configuration
+        propertyId={property.id}
+        propertyCategory={property.property_category || property.propertyCategory}
       />
     ),
     4: (

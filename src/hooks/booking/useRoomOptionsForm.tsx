@@ -3,7 +3,7 @@ import { useState } from 'react';
 
 interface RoomOptions {
   roomType: string;
-  furnishingOption: string;
+  // ✅ REMOVED: furnishingOption - Ghana hostels don't offer furnishing choices
   floor: string;
   extraRequests: string;
 }
@@ -11,7 +11,7 @@ interface RoomOptions {
 export const useRoomOptionsForm = (initialData?: Partial<RoomOptions>) => {
   const [roomOptions, setRoomOptions] = useState<RoomOptions>({
     roomType: initialData?.roomType || 'single',
-    furnishingOption: initialData?.furnishingOption || 'fully_furnished',
+    // ✅ REMOVED: furnishingOption - Ghana hostels don't offer furnishing choices
     floor: initialData?.floor || '1st',
     extraRequests: initialData?.extraRequests || ''
   });

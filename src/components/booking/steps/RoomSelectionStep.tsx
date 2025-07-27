@@ -4,40 +4,76 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { usePropertyRoomTypes, useRoomTypeSelection, getRoomTypeAvailabilityStatus, getAvailabilityStatusDisplay } from '@/hooks/usePropertyRoomTypes';
 
 interface RoomSelectionStepProps {
   selectedRoomType: string;
-  selectedFurnishing: string;
   selectedFloor: string;
   extraRequests: string;
   onRoomTypeChange: (value: string) => void;
-  onFurnishingChange: (value: string) => void;
   onFloorChange: (value: string) => void;
   onRequestsChange: (value: string) => void;
   onPrevious: () => void;
   onNext: () => void;
-  availableRoomTypes: string[];
+  // ✅ NEW: Dynamic property data instead of hardcoded types
+  propertyId: string;
+  propertyCategory?: string;
 }
 
 const RoomSelectionStep: React.FC<RoomSelectionStepProps> = ({
   selectedRoomType,
-  selectedFurnishing,
   selectedFloor,
   extraRequests,
   onRoomTypeChange,
-  onFurnishingChange,
   onFloorChange,
   onRequestsChange,
   onPrevious,
   onNext,
-  availableRoomTypes
+  propertyId,
+  propertyCategory
 }) => {
-  const isValid = selectedRoomType && selectedFurnishing;
+  // ✅ PRODUCTION-GRADE: Load dynamic room types from owner configuration
+  const { roomTypes, isLoading, error, hasRoomTypes } = usePropertyRoomTypes({
+    propertyId,
+    propertyCategory,
+    enableFallback: true
+  });
+
+  const isValid = selectedRoomType; // ✅ FIXED: Only room type required now
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-xl font-bold">Room Selection</h2>
+        <div className="animate-pulse">
+          <div className="h-4 bg-gray-200 rounded w-1/4 mb-2"></div>
+          <div className="h-10 bg-gray-200 rounded"></div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <h2 className="text-xl font-bold">Room Selection</h2>
+        <div className="text-red-600 p-4 border border-red-200 rounded-lg">
+          <p>Unable to load room types: {error}</p>
+          <Button variant="outline" onClick={() => window.location.reload()} className="mt-2">
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
       <h2 className="text-xl font-bold">Room Selection</h2>
-      
+
       <div>
         <Label htmlFor="roomType">Room Type</Label>
         <Select value={selectedRoomType} onValueChange={onRoomTypeChange}>
@@ -45,35 +81,41 @@ const RoomSelectionStep: React.FC<RoomSelectionStepProps> = ({
             <SelectValue placeholder="Select room type" />
           </SelectTrigger>
           <SelectContent>
-            {availableRoomTypes.length > 0 ? (
-              availableRoomTypes.map((type) => (
-                <SelectItem key={type} value={type}>{type}</SelectItem>
-              ))
+            {roomTypes.length > 0 ? (
+              roomTypes.map((roomType) => {
+                const status = getRoomTypeAvailabilityStatus(roomType);
+                const statusDisplay = getAvailabilityStatusDisplay(status);
+
+                return (
+                  <SelectItem
+                    key={roomType.value}
+                    value={roomType.value}
+                    disabled={status === 'full'}
+                  >
+                    <div className="flex items-center justify-between w-full">
+                      <span>{roomType.label}</span>
+                      <div className="flex items-center gap-2 ml-4">
+                        <span className="text-sm font-medium">₵{roomType.price.toLocaleString()}</span>
+                        <Badge
+                          variant="secondary"
+                          className={`text-xs ${statusDisplay.color} ${statusDisplay.bgColor}`}
+                        >
+                          {statusDisplay.text}
+                        </Badge>
+                      </div>
+                    </div>
+                  </SelectItem>
+                );
+              })
             ) : (
-              <>
-                <SelectItem value="1_in_room">1 in a room</SelectItem>
-                <SelectItem value="2_in_room">2 in a room</SelectItem>
-                <SelectItem value="3_in_room">3 in a room</SelectItem>
-                <SelectItem value="4_in_room">4 in a room</SelectItem>
-              </>
+              <SelectItem value="" disabled>No room types available</SelectItem>
             )}
           </SelectContent>
         </Select>
       </div>
       
-      <div>
-        <Label htmlFor="furnishing">Furnishing Option</Label>
-        <Select value={selectedFurnishing} onValueChange={onFurnishingChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select furnishing option" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="furnished">Fully Furnished</SelectItem>
-            <SelectItem value="semi_furnished">Semi Furnished</SelectItem>
-            <SelectItem value="unfurnished">Unfurnished</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+      {/* ✅ REMOVED: Furnishing selection removed as per Ghana hostel standards */}
+      {/* Students will see owner-provided furnishing details as read-only information */}
       
       <div>
         <Label htmlFor="floor">Preferred Floor</Label>

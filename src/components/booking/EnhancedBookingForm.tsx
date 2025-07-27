@@ -158,16 +158,16 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
         return (
           <RoomSelectionStep
             selectedRoomType={formData.roomType}
-            selectedFurnishing={formData.furnishing}
             selectedFloor={formData.floor}
             extraRequests={formData.extraRequests}
             onRoomTypeChange={(value) => handleRoomOptionChange('roomType', value)}
-            onFurnishingChange={(value) => handleRoomOptionChange('furnishing', value)}
             onFloorChange={(value) => handleRoomOptionChange('floor', value)}
             onRequestsChange={(value) => handleRoomOptionChange('extraRequests', value)}
             onPrevious={handlePrevious}
             onNext={handleNext}
-            availableRoomTypes={[]}
+            // ✅ PRODUCTION-GRADE: Dynamic room types from owner configuration
+            propertyId={property.id}
+            propertyCategory={property.property_category || property.propertyCategory}
           />
         );
       case 4:
