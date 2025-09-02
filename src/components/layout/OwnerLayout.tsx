@@ -76,99 +76,102 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar for desktop */}
-      <div className={`bg-white shadow-md z-20 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out md:relative md:translate-x-0 ${isSidebarOpen ? 'w-64' : 'w-0 md:w-20'}`}>
+      {/* Sidebar for desktop - 2024 Responsive Standards */}
+      <div className={`bg-white shadow-md z-20 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'w-64' : 'w-0 lg:w-16'}`}>
         <div className="flex flex-col h-full">
-          <div className={`p-4 flex items-center ${!isSidebarOpen && 'justify-center'}`}>
+          <div className={`p-2 lg:p-3 flex items-center ${!isSidebarOpen && 'justify-center'}`}>
             {isSidebarOpen ? (
               <div className="flex items-center">
                 <Logo variant="default" />
-                <span className="ml-2 text-xl font-bold text-[#7E69AB]">Owner</span>
+                <span className="ml-2 text-lg lg:text-xl font-bold text-[#7E69AB]">Owner</span>
               </div>
             ) : (
               <Logo variant="default" withText={false} />
             )}
-            <button 
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)} 
-              className="ml-auto md:block hidden"
+            <button
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="ml-auto lg:block hidden p-1 hover:bg-gray-100 rounded-md transition-colors"
             >
               {isSidebarOpen ? (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                 </svg>
               ) : (
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                 </svg>
               )}
             </button>
           </div>
           
-          <div className="py-4 flex-1 overflow-y-auto">
-            <nav className="px-2 space-y-1">
+          <div className="py-2 lg:py-3 flex-1 overflow-y-auto">
+            <nav className="px-1 lg:px-2 space-y-1">
               {navigationItems.map((item) => (
                 <Link
                   key={item.path}
                   to={item.path}
                   className={`
-                    flex items-center px-4 py-3 text-sm rounded-md transition-colors
-                    ${isActiveLink(item.path) 
-                      ? 'bg-[#9b87f5] text-white' 
+                    flex items-center px-2 lg:px-3 py-2 text-sm rounded-md transition-colors
+                    ${isActiveLink(item.path)
+                      ? 'bg-[#9b87f5] text-white'
                       : 'text-gray-600 hover:bg-[#9b87f5]/10'
                     }
+                    ${!isSidebarOpen ? 'justify-center' : ''}
                   `}
+                  title={!isSidebarOpen ? item.title : undefined}
                 >
-                  <span className="mr-3">{item.icon}</span>
-                  {isSidebarOpen && <span>{item.title}</span>}
+                  <span className={`${isSidebarOpen ? 'mr-3' : ''}`}>{item.icon}</span>
+                  {isSidebarOpen && <span className="text-sm">{item.title}</span>}
                 </Link>
               ))}
             </nav>
           </div>
 
-          <div className="p-4 border-t border-gray-200">
+          <div className="p-2 lg:p-3 border-t border-gray-200">
             <button
               onClick={handleLogout}
-              className="flex items-center w-full px-4 py-3 text-sm text-gray-600 rounded-md hover:bg-[#9b87f5]/10"
+              className={`flex items-center w-full px-2 lg:px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-[#9b87f5]/10 transition-colors ${!isSidebarOpen ? 'justify-center' : ''}`}
+              title={!isSidebarOpen ? 'Logout' : undefined}
             >
-              <LogOut className="w-5 h-5 mr-3" />
-              {isSidebarOpen && <span>Logout</span>}
+              <LogOut className={`w-4 h-4 lg:w-5 lg:h-5 ${isSidebarOpen ? 'mr-3' : ''}`} />
+              {isSidebarOpen && <span className="text-sm">Logout</span>}
             </button>
           </div>
         </div>
       </div>
 
-      {/* Mobile menu button */}
-      <div className="md:hidden fixed top-0 left-0 z-30 m-4">
+      {/* Mobile menu button - 2024 Standards */}
+      <div className="lg:hidden fixed top-0 left-0 z-30 m-2 lg:m-3">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="flex items-center justify-center h-10 w-10 rounded-md bg-white shadow-md text-gray-600"
+          className="flex items-center justify-center h-10 w-10 rounded-lg bg-white shadow-lg text-gray-600 hover:bg-gray-50 transition-colors"
         >
           {isMobileMenuOpen ? (
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5" />
           ) : (
-            <Menu className="h-6 w-6" />
+            <Menu className="h-5 w-5" />
           )}
         </button>
       </div>
 
-      {/* Mobile menu */}
+      {/* Mobile menu - 2024 Standards */}
       {isMobileMenuOpen && (
-        <div className="md:hidden fixed inset-0 z-20 bg-white">
+        <div className="lg:hidden fixed inset-0 z-20 bg-white">
           <div className="flex flex-col h-full">
-            <div className="p-4 border-b">
+            <div className="p-4 border-b border-gray-200">
               <Logo variant="default" />
             </div>
             <div className="p-4 flex-1 overflow-y-auto">
-              <nav className="space-y-1">
+              <nav className="space-y-2">
                 {navigationItems.map((item) => (
                   <Link
                     key={item.path}
                     to={item.path}
                     onClick={() => setIsMobileMenuOpen(false)}
                     className={`
-                      flex items-center px-4 py-3 text-sm rounded-md
-                      ${isActiveLink(item.path) 
-                        ? 'bg-[#9b87f5] text-white' 
+                      flex items-center px-4 py-3 text-base rounded-lg transition-colors
+                      ${isActiveLink(item.path)
+                        ? 'bg-[#9b87f5] text-white'
                         : 'text-gray-600 hover:bg-[#9b87f5]/10'
                       }
                     `}
@@ -179,10 +182,10 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 ))}
               </nav>
             </div>
-            <div className="p-4 border-t">
+            <div className="p-4 border-t border-gray-200">
               <button
                 onClick={handleLogout}
-                className="flex items-center w-full px-4 py-3 text-sm text-gray-600 rounded-md hover:bg-[#9b87f5]/10"
+                className="flex items-center w-full px-4 py-3 text-base text-gray-600 rounded-lg hover:bg-[#9b87f5]/10 transition-colors"
               >
                 <LogOut className="w-5 h-5 mr-3" />
                 <span>Logout</span>
@@ -192,40 +195,40 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
         </div>
       )}
 
-      {/* Main content */}
+      {/* Main content - 2024 Responsive Standards */}
       <div className="flex-1 flex flex-col overflow-hidden">
         <header className="bg-white shadow-sm z-10">
-          <div className="px-4 sm:px-6 lg:px-8 py-4">
+          <div className="px-3 sm:px-4 lg:px-4 py-2 lg:py-3">
             <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 lg:space-x-3">
                 {shouldShowBackButton && (
                   <Button
                     variant="ghost"
                     size="sm"
                     onClick={handleBack}
-                    className="flex items-center space-x-1"
+                    className="flex items-center space-x-1 text-sm"
                   >
                     <ArrowLeft className="h-4 w-4" />
-                    <span>Back</span>
+                    <span className="hidden sm:inline">Back</span>
                   </Button>
                 )}
-                <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">{pageTitle}</h1>
               </div>
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2 lg:space-x-3">
                 <div className="relative">
-                  <button className="p-1 rounded-full text-gray-500 hover:text-gray-600 focus:outline-none focus:text-gray-600">
+                  <button className="p-2 rounded-full text-gray-500 hover:text-gray-600 hover:bg-gray-100 focus:outline-none focus:text-gray-600 transition-colors">
                     <span className="sr-only">View notifications</span>
-                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="h-5 w-5 lg:h-6 lg:w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                   </button>
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
+                  <span className="absolute top-1 right-1 block h-2 w-2 rounded-full bg-red-500 ring-2 ring-white"></span>
                 </div>
 
-                <button className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9b87f5]">
+                <button className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9b87f5] hover:bg-gray-100 p-1 transition-colors">
                   <span className="sr-only">Open user menu</span>
-                  <div className="h-8 w-8 rounded-full bg-[#9b87f5] text-white flex items-center justify-center">
-                    <UserCircle className="h-6 w-6" />
+                  <div className="h-7 w-7 lg:h-8 lg:w-8 rounded-full bg-[#9b87f5] text-white flex items-center justify-center">
+                    <UserCircle className="h-5 w-5 lg:h-6 lg:w-6" />
                   </div>
                 </button>
               </div>
@@ -233,7 +236,7 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto bg-gray-50 p-3 sm:p-4 lg:p-4">
           {children}
         </main>
       </div>

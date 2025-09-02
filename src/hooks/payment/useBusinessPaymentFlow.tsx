@@ -1,10 +1,20 @@
 
 import { useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { verifyPaystackPayment } from '@/utils/paystack-verification';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { PaymentData } from '@/types/common';
+import { Booking } from '@/types/booking';
+
+interface PaymentMetadata {
+  propertyId: string;
+  studentId: string;
+  packageType: string;
+  startDate: string;
+  endDate: string;
+  [key: string]: string | number | boolean;
+}
 
 interface PaymentInitializationData {
   propertyId: string;
@@ -15,13 +25,13 @@ interface PaymentInitializationData {
   startDate: string;
   endDate: string;
   studentEmail: string;
-  metadata?: any;
+  metadata?: PaymentMetadata;
 }
 
 interface PaymentInitializationResult {
   success: boolean;
-  booking?: any;
-  paymentData?: any;
+  booking?: Booking;
+  paymentData?: PaymentData;
   error?: string;
 }
 
@@ -122,8 +132,7 @@ export const useBusinessPaymentFlow = () => {
       
       if (verification.success && verification.data) {
         // Update booking status - safely handle metadata access
-        const bookingId = verification.data.metadata?.booking_id || 
-                          (verification.data as any).metadata?.booking_id;
+        const bookingId = verification.data.metadata?.booking_id as string;
         
         if (bookingId) {
           const { error: updateError } = await supabase

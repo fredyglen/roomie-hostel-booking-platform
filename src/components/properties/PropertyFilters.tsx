@@ -39,7 +39,7 @@ const PropertyFilters: React.FC<PropertyFiltersProps> = ({
     'Security', 
     'Water Supply',
     'Study Area', 
-    'Inner Washroom'
+    'Private Washroom'
   ];
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
@@ -6,12 +6,18 @@ import { z } from 'zod';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import Logo from '@/components/common/Logo';
+import { ROOMiLogo } from '@/components/ui/SocialIcons';
 import { toast } from "@/components/ui/use-toast";
 import { ErrorHandler } from '@/utils/ErrorHandler';
+import { Loader } from 'lucide-react';
+import { UserRole } from '@/types/auth';
+import { logger } from '@/utils/enhanced-logger';
+import SuccessAnimation from '@/components/ui/SuccessAnimation';
+import SimpleRegistrationForm from '@/components/auth/SimpleRegistrationForm';
 
+// Define the form schema with Zod
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
@@ -19,7 +25,7 @@ const formSchema = z.object({
   firstName: z.string().min(2, { message: "First name must be at least 2 characters" }),
   lastName: z.string().min(2, { message: "Last name must be at least 2 characters" }),
   phone: z.string().optional(),
-  role: z.enum(['student', 'owner'], {
+  role: z.enum(['student', 'owner'] as const, {
     required_error: "Please select a role",
   }),
 }).refine((data) => data.password === data.confirmPassword, {
@@ -27,12 +33,18 @@ const formSchema = z.object({
   path: ["confirmPassword"],
 });
 
+// Infer the form values type from the schema
+type RegisterFormValues = z.infer<typeof formSchema>;
+
 const Register: React.FC = () => {
   const navigate = useNavigate();
   const { signUp, user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  
-  const form = useForm<z.infer<typeof formSchema>>({
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [successData, setSuccessData] = useState<{ name: string; role: string }>({ name: '', role: '' });
+
+  // Initialize form with react-hook-form and zod validation
+  const form = useForm<RegisterFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
@@ -46,7 +58,7 @@ const Register: React.FC = () => {
   });
 
   // If user is already logged in, redirect to appropriate dashboard
-  React.useEffect(() => {
+  useEffect(() => {
     if (user) {
       if (user.role === 'student') {
         navigate('/student/properties');
@@ -56,23 +68,59 @@ const Register: React.FC = () => {
     }
   }, [user, navigate]);
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  // Form submission handler
+  const onSubmit = async (values: RegisterFormValues): Promise<void> => {
     setIsSubmitting(true);
     try {
-      ErrorHandler.log('Register form submitted', JSON.stringify(values));
-      
-      await signUp(values.email, values.password, values.role);
-      
-      toast({
-        title: "Account created",
-        description: "Your account has been created successfully. Please log in.",
+      logger.info('Register form submitted', { email: values.email, role: values.role });
+
+      await signUp(
+        values.email,
+        values.password,
+        values.role as UserRole,
+        {
+          firstName: values.firstName,
+          lastName: values.lastName,
+          phone: values.phone
+        }
+      );
+
+      // Set success data and show animation
+      setSuccessData({
+        name: `${values.firstName} ${values.lastName}`,
+        role: values.role
       });
-      navigate('/login');
+      setShowSuccessAnimation(true);
+
+      // Clear the form
+      form.reset();
+
+      // Show success message
+      toast({
+        title: "Account Created Successfully!",
+        description: `Welcome ${values.firstName}! Your ${values.role} account has been created.`,
+      });
+
     } catch (error: unknown) {
       ErrorHandler.handle(error, "Registration submission error");
+
+      // Better error messages
+      let errorMessage = "Failed to create account";
+      if (error instanceof Error) {
+        if (error.message.includes("already registered") || error.message.includes("already exists")) {
+          errorMessage = "An account with this email already exists. Please try signing in instead.";
+        } else if (error.message.includes("password")) {
+          errorMessage = "Password must be at least 6 characters long.";
+        } else if (error.message.includes("email")) {
+          errorMessage = "Please enter a valid email address.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
       toast({
         title: "Registration failed",
-        description: error instanceof Error ? error.message : "Failed to create account",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -80,152 +128,77 @@ const Register: React.FC = () => {
     }
   };
 
+  // Handle success animation completion
+  const handleSuccessComplete = () => {
+    setShowSuccessAnimation(false);
+    // Navigate to login page with a message
+    navigate('/login', {
+      state: {
+        message: 'Account created successfully! Please sign in with your credentials.',
+        email: successData.name ? form.getValues('email') : undefined
+      }
+    });
+  };
+
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <Link to="/">
-            <Logo />
-          </Link>
+    <>
+      {/* Success Animation */}
+      <SuccessAnimation
+        isVisible={showSuccessAnimation}
+        title="Account Created Successfully!"
+        message={`Welcome ${successData.name}! Your ${successData.role} account has been created. You can now sign in.`}
+        onComplete={handleSuccessComplete}
+        duration={3000}
+      />
+    <div className="min-h-screen flex items-center justify-center" style={{
+      background: '#e8eaed',
+      padding: '16px'
+    }}>
+      <div className="bg-white shadow-lg" style={{
+        borderRadius: '12px',
+        width: '100%',
+        maxWidth: '400px',
+        padding: '32px 24px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+      }}>
+        {/* Logo */}
+        <div className="flex justify-center" style={{ marginBottom: '16px' }}>
+          <ROOMiLogo size={24} />
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Create your account</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
+
+        {/* Title */}
+        <h2 style={{
+          textAlign: 'center',
+          fontSize: '20px',
+          fontWeight: '400',
+          color: '#202124',
+          marginBottom: '8px'
+        }}>Create your account</h2>
+
+        <p style={{
+          textAlign: 'center',
+          fontSize: '13px',
+          color: '#5f6368',
+          marginBottom: '24px'
+        }}>
           Or{" "}
-          <Link to="/login" className="font-medium text-indigo-600 hover:text-indigo-500">
+          <Link to="/login" style={{
+            color: '#0f68fd',
+            textDecoration: 'none',
+            cursor: 'pointer'
+          }}>
             sign in to your existing account
           </Link>
         </p>
-      </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <div className="grid grid-cols-2 gap-4">
-                <FormField
-                  control={form.control}
-                  name="firstName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>First Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="John" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="lastName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Doe" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="you@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone (optional)</FormLabel>
-                    <FormControl>
-                      <Input placeholder="+233 50 123 4567" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="confirmPassword"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="role"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>I am a:</FormLabel>
-                    <FormControl>
-                      <RadioGroup 
-                        onValueChange={field.onChange} 
-                        defaultValue={field.value}
-                        className="flex space-x-4"
-                      >
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="student" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Student looking for accommodation</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-2 space-y-0">
-                          <FormControl>
-                            <RadioGroupItem value="owner" />
-                          </FormControl>
-                          <FormLabel className="font-normal">Property owner/agent</FormLabel>
-                        </FormItem>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Creating account..." : "Create account"}
-              </Button>
-            </form>
-          </Form>
-        </div>
+        <SimpleRegistrationForm
+          form={form}
+          onSubmit={onSubmit}
+          isSubmitting={isSubmitting}
+        />
       </div>
     </div>
+    </>
   );
 };
 

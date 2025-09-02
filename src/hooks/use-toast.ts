@@ -1,17 +1,17 @@
-import * as React from "react"
+import { useState, useEffect, ReactNode } from "react"
 
 import type {
   ToastActionElement,
   ToastProps,
 } from "@/components/ui/toast"
 
-const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 1000000
+const TOAST_LIMIT = 3
+const TOAST_REMOVE_DELAY = 5000 // 5 seconds auto-fade
 
 type ToasterToast = ToastProps & {
   id: string
-  title?: React.ReactNode
-  description?: React.ReactNode
+  title?: ReactNode
+  description?: ReactNode
   action?: ToastActionElement
 }
 
@@ -161,6 +161,12 @@ function toast({ ...props }: Toast) {
     },
   })
 
+  // Auto-dismiss after delay (unless it's a destructive toast which should stay longer)
+  const autoDismissDelay = props.variant === "destructive" ? 8000 : TOAST_REMOVE_DELAY;
+  setTimeout(() => {
+    dismiss()
+  }, autoDismissDelay)
+
   return {
     id: id,
     dismiss,
@@ -169,9 +175,9 @@ function toast({ ...props }: Toast) {
 }
 
 function useToast() {
-  const [state, setState] = React.useState<State>(memoryState)
+  const [state, setState] = useState<State>(memoryState)
 
-  React.useEffect(() => {
+  useEffect(() => {
     listeners.push(setState)
     return () => {
       const index = listeners.indexOf(setState)

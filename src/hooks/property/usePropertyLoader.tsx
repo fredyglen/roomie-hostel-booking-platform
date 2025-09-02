@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { Property, PropertyType, PropertyCategory } from '@/types/property';
 import { logger } from '@/utils/logger';
 
@@ -27,7 +27,7 @@ export const usePropertyLoader = (propertyId: string | undefined) => {
           .from('properties')
           .select(`
             *,
-            profiles!owner_id (
+            profiles:owner_id (
               id,
               first_name,
               last_name,

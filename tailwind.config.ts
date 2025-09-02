@@ -13,21 +13,45 @@ const config: Config = {
   theme: {
     container: {
       center: true,
-      padding: "2rem",
+      padding: "1rem",
       screens: {
         "2xl": "1400px",
       },
     },
     extend: {
       fontFamily: {
-        'space-grotesk': ['Space Grotesk', 'sans-serif'],
+        'bricolage': ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
+        'sans': ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
+        'space-grotesk': ['Space Grotesk', 'sans-serif'], // Keep for backward compatibility
+      },
+      spacing: {
+        // Use standard Tailwind spacing scale for proper responsive design
+        // Custom spacing for specific ROOMi design requirements only
+        '18': '4.5rem',   // 72px - Custom spacing for specific layouts
+        '22': '5.5rem',   // 88px - Custom spacing for specific layouts
+        '26': '6.5rem',   // 104px - Custom spacing for specific layouts
+        '30': '7.5rem',   // 120px - Custom spacing for specific layouts
       },
       colors: {
         roomi: {
-          blue: 'hsl(var(--roomi-blue))',
-          teal: 'hsl(var(--roomi-teal))',
-          dark: 'hsl(var(--roomi-dark))',
-          light: 'hsl(var(--roomi-light))',
+          blue: {
+            50: 'rgb(var(--roomi-blue-50))',
+            100: 'rgb(var(--roomi-blue-100))',
+            500: 'rgb(var(--roomi-blue-500))',
+            600: 'rgb(var(--roomi-blue-600))',
+            700: 'rgb(var(--roomi-blue-700))',
+            900: 'rgb(var(--roomi-blue-900))',
+          },
+          teal: {
+            50: 'rgb(var(--roomi-teal-50))',
+            500: 'rgb(var(--roomi-teal-500))',
+            600: 'rgb(var(--roomi-teal-600))',
+          },
+          orange: {
+            50: 'rgb(var(--roomi-orange-50))',
+            500: 'rgb(var(--roomi-orange-500))',
+            600: 'rgb(var(--roomi-orange-600))',
+          },
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -64,9 +88,10 @@ const config: Config = {
         },
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        lg: "6px",      // Reduced from 8px
+        md: "4px",      // Reduced from 6px
+        sm: "2px",      // Reduced from 4px
+        DEFAULT: "4px", // Minimal rounding as default
       },
       keyframes: {
         "accordion-down": {

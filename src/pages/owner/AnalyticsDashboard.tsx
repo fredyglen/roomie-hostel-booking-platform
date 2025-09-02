@@ -1,15 +1,17 @@
 
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/context/EnhancedAuthContext';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Users, 
-  Calendar, 
-  DollarSign, 
+import {
+  TrendingUp,
+  TrendingDown,
+  Users,
+  Calendar,
+  DollarSign,
   XCircle,
   MessageCircle,
   Eye,
@@ -19,120 +21,99 @@ import {
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import OwnerLayout from '@/components/layout/OwnerLayout';
+import { OwnerQueries } from '@/services/database/ownerQueries';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+import { unifiedConfigurationEngine } from '@/config/unified-configuration.config';
 
 const AnalyticsDashboard: React.FC = () => {
-  // Sample data for charts
-  const monthlyData = [
-    { month: 'Jan', revenue: 6800, occupancy: 72 },
-    { month: 'Feb', revenue: 7200, occupancy: 75 },
-    { month: 'Mar', revenue: 6900, occupancy: 71 },
-    { month: 'Apr', revenue: 7800, occupancy: 82 },
-    { month: 'May', revenue: 8200, occupancy: 85 },
-    { month: 'Jun', revenue: 7900, occupancy: 79 },
-    { month: 'Jul', revenue: 8500, occupancy: 88 },
-    { month: 'Aug', revenue: 7020, occupancy: 82 },
-    { month: 'Sep', revenue: 7600, occupancy: 78 },
-    { month: 'Oct', revenue: 7100, occupancy: 74 },
-    { month: 'Nov', revenue: 6800, occupancy: 71 },
-    { month: 'Dec', revenue: 7300, occupancy: 76 }
-  ];
+  const { user } = useAuth();
 
-  const bookingSourcesData = [
-    { name: 'Direct Website', value: 52, count: 5213, color: '#3b82f6' },
-    { name: 'Airbnb', value: 28, count: 2804, color: '#f97316' },
-    { name: 'Booking.com', value: 14, count: 1402, color: '#10b981' },
-    { name: 'Others', value: 6, count: 601, color: '#6b7280' }
-  ];
+  // Real data queries
+  const { data: dashboardStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['owner-dashboard-stats', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getDashboardStats(user.id);
+    },
+    enabled: !!user?.id,
+  });
 
-  const guestTypeData = [
-    { month: 'Jan', new: 180, repeat: 65 },
-    { month: 'Feb', new: 195, repeat: 72 },
-    { month: 'Mar', new: 210, repeat: 85 },
-    { month: 'Apr', new: 225, repeat: 95 },
-    { month: 'May', new: 240, repeat: 88 },
-    { month: 'Jun', new: 220, repeat: 92 }
-  ];
+  const { data: recentBookings, isLoading: bookingsLoading } = useQuery({
+    queryKey: ['owner-recent-bookings', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getRecentBookings(user.id, 10);
+    },
+    enabled: !!user?.id,
+  });
 
-  const latestBookings = [
-    {
-      id: 1,
-      guestName: 'Kwame Asante',
-      property: 'Legon Heights A',
-      room: 'Room 24',
-      checkIn: '2024-06-15',
-      checkOut: '2024-08-15',
-      status: 'Confirmed',
-      avatar: 'KA'
+  const { data: transactions, isLoading: transactionsLoading } = useQuery({
+    queryKey: ['owner-transactions', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getTransactionHistory(user.id, 10);
     },
-    {
-      id: 2,
-      guestName: 'Ama Serwaa',
-      property: 'Campus View B',
-      room: 'Room 12',
-      checkIn: '2024-06-20',
-      checkOut: '2024-12-20',
-      status: 'Pending',
-      avatar: 'AS'
-    },
-    {
-      id: 3,
-      guestName: 'Kofi Mensah',
-      property: 'Tech Hostel',
-      room: 'Room 8',
-      checkIn: '2024-06-25',
-      checkOut: '2024-06-30',
-      status: 'Checked-In',
-      avatar: 'KM'
-    },
-    {
-      id: 4,
-      guestName: 'Akosua Boateng',
-      property: 'Legon Heights B',
-      room: 'Room 15',
-      checkIn: '2024-07-01',
-      checkOut: '2024-12-15',
-      status: 'Confirmed',
-      avatar: 'AB'
-    }
-  ];
+    enabled: !!user?.id,
+  });
 
-  const transactions = [
-    {
-      id: 'PAY001321',
-      date: 'Jun 21, 2024, 3:30pm',
-      amount: 1200,
-      method: 'Mobile Money',
-      status: 'Completed'
-    },
-    {
-      id: 'PAY001320',
-      date: 'Jun 21, 2024, 2:45pm',
-      amount: 800,
-      method: 'Bank Transfer',
-      status: 'Completed'
-    },
-    {
-      id: 'PAY001319',
-      date: 'Jun 21, 2024, 1:15pm',
-      amount: 950,
-      method: 'Mobile Money',
-      status: 'Failed'
-    },
-    {
-      id: 'PAY001318',
-      date: 'Jun 21, 2024, 11:30am',
-      amount: 1500,
-      method: 'Card',
-      status: 'Completed'
-    },
-    {
-      id: 'PAY001317',
-      date: 'Jun 21, 2024, 9:20am',
-      amount: 750,
-      method: 'Mobile Money',
-      status: 'Pending'
-    }
-  ];
+  // Ghana Cedi currency formatting (BE CONSCIOUS: No hardcoded currency)
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-GH', {
+      style: 'currency',
+      currency: 'GHS',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  // ✅ BE CONSCIOUS: Real monthly data or honest empty state (no fake repeated values)
+  const monthlyData = React.useMemo(() => {
+    // TODO: Implement real monthly breakdown query
+    // For now, show current month only to avoid misleading repeated data
+    const currentMonth = new Date().toLocaleDateString('en-US', { month: 'short' });
+    return [
+      {
+        month: currentMonth,
+        revenue: dashboardStats?.monthlyEarnings || 0,
+        occupancy: dashboardStats?.occupancyRate || 0
+      }
+    ];
+  }, [dashboardStats?.monthlyEarnings, dashboardStats?.occupancyRate]);
+
+  // ✅ BE CONSCIOUS: Real booking sources or honest empty state (no hardcoded percentages)
+  const bookingSourcesData = React.useMemo(() => {
+    const totalBookings = dashboardStats?.totalBookings || 0;
+    return [
+      {
+        name: 'Direct Website',
+        value: totalBookings > 0 ? 100 : 0, // All current bookings are direct until tracking implemented
+        count: totalBookings,
+        color: '#3b82f6'
+      },
+      { name: 'ROOMi Platform', value: 0, count: 0, color: '#f97316' },
+      { name: 'Referrals', value: 0, count: 0, color: '#10b981' },
+      { name: 'Others', value: 0, count: 0, color: '#6b7280' }
+    ];
+  }, [dashboardStats?.totalBookings]);
+
+  // ✅ BE CONSCIOUS: Real guest type data or honest empty state (no repeated fake data)
+  const guestTypeData = React.useMemo(() => {
+    // TODO: Implement real new vs repeat guest tracking
+    // For now, show current month only to avoid misleading repeated data
+    const currentMonth = new Date().toLocaleDateString('en-US', { month: 'short' });
+    return [
+      {
+        month: currentMonth,
+        new: dashboardStats?.totalBookings || 0, // All current bookings are "new" until tracking implemented
+        repeat: 0 // No repeat tracking yet
+      }
+    ];
+  }, [dashboardStats?.totalBookings]);
+
+  // Use real bookings data or empty array if loading
+  const latestBookings = recentBookings || [];
+
+  // Use real transactions data or empty array if loading
+  const transactionHistory = transactions || [];
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -150,13 +131,7 @@ const AnalyticsDashboard: React.FC = () => {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-GH', {
-      style: 'currency',
-      currency: 'GHS',
-      minimumFractionDigits: 0
-    }).format(amount);
-  };
+
 
   return (
     <OwnerLayout pageTitle="">
@@ -184,11 +159,17 @@ const AnalyticsDashboard: React.FC = () => {
               </div>
               <div className="flex items-center space-x-2">
                 <Avatar className="h-8 w-8">
-                  <AvatarImage src="/placeholder-avatar.jpg" />
-                  <AvatarFallback>AR</AvatarFallback>
+                  <AvatarImage src={user?.user_metadata?.avatar_url} />
+                  <AvatarFallback>
+                    {user?.user_metadata?.full_name?.charAt(0)?.toUpperCase() ||
+                     user?.email?.charAt(0)?.toUpperCase() || 'O'}
+                  </AvatarFallback>
                 </Avatar>
                 <div className="text-sm">
-                  <div className="font-medium">Austin Robertson</div>
+                  {/* ✅ BE CONSCIOUS: Real user data, no hardcoded names */}
+                  <div className="font-medium">
+                    {user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Property Owner'}
+                  </div>
                   <div className="text-gray-500">Property Owner</div>
                 </div>
               </div>
@@ -204,10 +185,16 @@ const AnalyticsDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-                    <p className="text-2xl font-bold text-gray-900">$84,240</p>
-                    <p className="text-sm text-green-600 flex items-center mt-1">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {statsLoading ? (
+                        <div className="h-8 w-24 bg-gray-200 animate-pulse rounded"></div>
+                      ) : (
+                        `GH₵${(dashboardStats?.monthlyEarnings || 0).toLocaleString()}`
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-500 flex items-center mt-1">
                       <TrendingUp className="h-4 w-4 mr-1" />
-                      +18.2% vs. last year
+                      Real-time data
                     </p>
                   </div>
                   <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -222,10 +209,16 @@ const AnalyticsDashboard: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Occupancy Rate</p>
-                    <p className="text-2xl font-bold text-gray-900">78%</p>
-                    <p className="text-sm text-green-600 flex items-center mt-1">
+                    <p className="text-2xl font-bold text-gray-900">
+                      {statsLoading ? (
+                        <div className="h-8 w-16 bg-gray-200 animate-pulse rounded"></div>
+                      ) : (
+                        `${dashboardStats?.occupancyRate || 0}%`
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-500 flex items-center mt-1">
                       <TrendingUp className="h-4 w-4 mr-1" />
-                      +4.5% vs. last year
+                      Current period
                     </p>
                   </div>
                   <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
@@ -239,11 +232,17 @@ const AnalyticsDashboard: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">New Bookings</p>
-                    <p className="text-2xl font-bold text-gray-900">1,240</p>
-                    <p className="text-sm text-green-600 flex items-center mt-1">
+                    <p className="text-sm font-medium text-gray-600">Total Bookings</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {statsLoading ? (
+                        <div className="h-8 w-20 bg-gray-200 animate-pulse rounded"></div>
+                      ) : (
+                        (dashboardStats?.totalBookings || 0).toLocaleString()
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-500 flex items-center mt-1">
                       <TrendingUp className="h-4 w-4 mr-1" />
-                      +12.6% vs. last year
+                      All time
                     </p>
                   </div>
                   <div className="h-12 w-12 bg-green-100 rounded-full flex items-center justify-center">
@@ -257,15 +256,21 @@ const AnalyticsDashboard: React.FC = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600">Cancellations</p>
-                    <p className="text-2xl font-bold text-gray-900">42</p>
-                    <p className="text-sm text-red-600 flex items-center mt-1">
-                      <TrendingDown className="h-4 w-4 mr-1" />
-                      -3.7% vs. last year
+                    <p className="text-sm font-medium text-gray-600">Pending Bookings</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {statsLoading ? (
+                        <div className="h-8 w-12 bg-gray-200 animate-pulse rounded"></div>
+                      ) : (
+                        dashboardStats?.pendingBookings || 0
+                      )}
+                    </p>
+                    <p className="text-sm text-gray-500 flex items-center mt-1">
+                      <XCircle className="h-4 w-4 mr-1" />
+                      Awaiting action
                     </p>
                   </div>
-                  <div className="h-12 w-12 bg-red-100 rounded-full flex items-center justify-center">
-                    <XCircle className="h-6 w-6 text-red-600" />
+                  <div className="h-12 w-12 bg-orange-100 rounded-full flex items-center justify-center">
+                    <XCircle className="h-6 w-6 text-orange-600" />
                   </div>
                 </div>
               </CardContent>
@@ -296,7 +301,7 @@ const AnalyticsDashboard: React.FC = () => {
                             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)'
                           }}
                           formatter={(value, name) => [
-                            name === 'revenue' ? `$${value}` : `${value}%`,
+                            name === 'revenue' ? `GH₵${value}` : `${value}%`,
                             name === 'revenue' ? 'Revenue' : 'Occupancy'
                           ]}
                         />
@@ -329,51 +334,100 @@ const AnalyticsDashboard: React.FC = () => {
             <div className="space-y-6">
               <Card className="bg-white shadow-sm">
                 <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-gray-900">4.2</div>
-                  <div className="text-sm text-gray-600">nights</div>
-                  <div className="text-xs text-gray-500 mt-1">Avg. Length of Stay</div>
+                  {/* ✅ BE CONSCIOUS: Real average length of stay or honest empty state */}
+                  {dashboardStats?.totalBookings && dashboardStats.totalBookings > 0 ? (
+                    <>
+                      <div className="text-3xl font-bold text-gray-900">
+                        {/* TODO: Calculate real average from booking durations */}
+                        --
+                      </div>
+                      <div className="text-sm text-gray-600">nights</div>
+                      <div className="text-xs text-gray-500 mt-1">Avg. Length of Stay</div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-lg font-medium text-gray-500">No data yet</div>
+                      <div className="text-xs text-gray-500 mt-1">Average length calculated from bookings</div>
+                    </>
+                  )}
                 </CardContent>
               </Card>
 
               <Card className="bg-white shadow-sm">
                 <CardContent className="p-6 text-center">
-                  <div className="relative inline-flex items-center justify-center w-20 h-20 mb-2">
-                    <svg className="w-20 h-20 transform -rotate-90">
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r="36"
-                        stroke="#e5e7eb"
-                        strokeWidth="8"
-                        fill="transparent"
-                      />
-                      <circle
-                        cx="40"
-                        cy="40"
-                        r="36"
-                        stroke="#10b981"
-                        strokeWidth="8"
-                        fill="transparent"
-                        strokeDasharray={`${93 * 2.26} ${100 * 2.26}`}
-                        strokeLinecap="round"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-2xl font-bold text-gray-900">93%</span>
+                  {/* ✅ BE CONSCIOUS: Guest satisfaction should come from student reviews (not implemented yet) */}
+                  {dashboardStats?.averageRating !== null ? (
+                    <div className="relative inline-flex items-center justify-center w-20 h-20 mb-2">
+                      <svg className="w-20 h-20 transform -rotate-90">
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="36"
+                          stroke="#e5e7eb"
+                          strokeWidth="8"
+                          fill="transparent"
+                        />
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="36"
+                          stroke="#10b981"
+                          strokeWidth="8"
+                          fill="transparent"
+                          strokeDasharray={`${(dashboardStats.averageRating / 5) * 100 * 2.26} ${100 * 2.26}`}
+                          strokeLinecap="round"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-2xl font-bold text-gray-900">
+                          {Math.round((dashboardStats.averageRating / 5) * 100)}%
+                        </span>
+                      </div>
                     </div>
+                  ) : (
+                    <div className="relative inline-flex items-center justify-center w-20 h-20 mb-2">
+                      <svg className="w-20 h-20 transform -rotate-90">
+                        <circle
+                          cx="40"
+                          cy="40"
+                          r="36"
+                          stroke="#e5e7eb"
+                          strokeWidth="8"
+                          fill="transparent"
+                        />
+                      </svg>
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <span className="text-lg font-medium text-gray-500">--</span>
+                      </div>
+                    </div>
+                  )}
+                  <div className="text-xs text-gray-500">
+                    {dashboardStats?.averageRating !== null ? 'Guest Satisfaction' : 'No reviews yet'}
                   </div>
-                  <div className="text-xs text-gray-500">Guest Satisfaction</div>
                 </CardContent>
               </Card>
 
               <Card className="bg-white shadow-sm">
                 <CardContent className="p-6 text-center">
-                  <div className="text-3xl font-bold text-gray-900">18</div>
-                  <div className="text-sm text-gray-600">tickets</div>
-                  <div className="text-xs text-gray-500 mt-1">Pending Maintenance</div>
+                  {/* ✅ BE CONSCIOUS: Real maintenance requests from student portal */}
+                  <div className="text-3xl font-bold text-gray-900">
+                    {dashboardStats?.maintenanceRequests || 0}
+                  </div>
+                  <div className="text-sm text-gray-600">requests</div>
+                  <div className="text-xs text-gray-500 mt-1">Total Maintenance</div>
                   <div className="flex items-center justify-center mt-2">
-                    <TrendingUp className="h-4 w-4 text-red-500" />
-                    <span className="text-xs text-red-500 ml-1">+2 today</span>
+                    {dashboardStats?.pendingMaintenance ? (
+                      <div className="flex items-center">
+                        <TrendingUp className="h-4 w-4 text-orange-500" />
+                        <span className="text-xs text-orange-500 ml-1">
+                          {dashboardStats.pendingMaintenance} pending
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="text-xs text-green-600">
+                        All requests completed
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -401,7 +455,8 @@ const AnalyticsDashboard: React.FC = () => {
                         paddingAngle={5}
                         dataKey="value"
                       >
-                        {bookingSourcesData.map((entry, index) => (
+                        {/* ✅ BE CONSCIOUS: Safe .map() with null check to prevent crashes */}
+                        {(bookingSourcesData || []).map((entry, index) => (
                           <Cell key={`cell-${index}`} fill={entry.color} />
                         ))}
                       </Pie>
@@ -409,14 +464,21 @@ const AnalyticsDashboard: React.FC = () => {
                     </PieChart>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
-                        <div className="text-xl font-bold">10,020</div>
+                        <div className="text-xl font-bold">
+                          {statsLoading ? (
+                            <div className="h-6 w-16 bg-gray-200 animate-pulse rounded mx-auto"></div>
+                          ) : (
+                            (dashboardStats?.totalBookings || 0).toLocaleString()
+                          )}
+                        </div>
                         <div className="text-xs text-gray-500">Total Bookings</div>
                       </div>
                     </div>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4 mt-4">
-                  {bookingSourcesData.map((item, index) => (
+                  {/* ✅ BE CONSCIOUS: Safe .map() with null check to prevent crashes */}
+                  {(bookingSourcesData || []).map((item, index) => (
                     <div key={index} className="flex items-center space-x-2">
                       <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }}></div>
                       <span className="text-sm text-gray-600">{item.name}</span>
@@ -467,15 +529,30 @@ const AnalyticsDashboard: React.FC = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {latestBookings.map((booking) => (
+                  {bookingsLoading ? (
+                    <div className="space-y-3">
+                      {[1, 2, 3].map((i) => (
+                        <div key={i} className="flex items-center space-x-3 p-3">
+                          <div className="h-10 w-10 bg-gray-200 rounded-full animate-pulse"></div>
+                          <div className="flex-1">
+                            <div className="h-4 bg-gray-200 rounded animate-pulse mb-2"></div>
+                            <div className="h-3 bg-gray-200 rounded animate-pulse w-2/3"></div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : latestBookings && latestBookings.length > 0 ? (
+                    latestBookings.map((booking) => (
                     <div key={booking.id} className="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg transition-colors">
                       <div className="flex items-center space-x-3">
                         <Avatar className="h-10 w-10">
-                          <AvatarFallback className="text-sm">{booking.avatar}</AvatarFallback>
+                          <AvatarFallback className="text-sm">
+                            {booking.student_name ? booking.student_name.charAt(0).toUpperCase() : 'S'}
+                          </AvatarFallback>
                         </Avatar>
                         <div>
-                          <p className="font-medium text-gray-900">{booking.guestName}</p>
-                          <p className="text-sm text-gray-500">{booking.property} • {booking.room}</p>
+                          <p className="font-medium text-gray-900">{booking.student_name || 'Student'}</p>
+                          <p className="text-sm text-gray-500">{booking.property_title || 'Property'} • Room</p>
                           <p className="text-xs text-gray-400">{booking.checkIn} - {booking.checkOut}</p>
                         </div>
                       </div>
@@ -485,9 +562,18 @@ const AnalyticsDashboard: React.FC = () => {
                         <Eye className="h-4 w-4 text-gray-400 cursor-pointer hover:text-gray-600" />
                       </div>
                     </div>
-                  ))}
+                  ))
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <Calendar className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                      <p>No bookings yet</p>
+                      <p className="text-sm">Bookings will appear here once students start booking your properties.</p>
+                    </div>
+                  )}
                 </div>
-                <Button variant="link" className="mt-4 p-0 text-blue-600">View More Bookings</Button>
+                {latestBookings && latestBookings.length > 0 && (
+                  <Button variant="link" className="mt-4 p-0 text-blue-600">View More Bookings</Button>
+                )}
               </CardContent>
             </Card>
 
@@ -497,25 +583,49 @@ const AnalyticsDashboard: React.FC = () => {
                 <CardTitle className="text-lg font-semibold">Transaction History</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-1">
-                  <div className="grid grid-cols-5 gap-2 text-xs font-medium text-gray-500 pb-2 border-b">
-                    <span>PAYMENT ID</span>
-                    <span>DATE & TIME</span>
-                    <span>AMOUNT</span>
-                    <span>METHOD</span>
-                    <span>STATUS</span>
+                {/* ✅ BE CONSCIOUS: Proper loading and empty states */}
+                {transactionsLoading ? (
+                  <div className="space-y-3">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="grid grid-cols-5 gap-2 py-3">
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded animate-pulse"></div>
+                      </div>
+                    ))}
                   </div>
-                  {transactions.map((transaction) => (
-                    <div key={transaction.id} className="grid grid-cols-5 gap-2 py-3 text-sm hover:bg-gray-50 rounded">
-                      <span className="font-medium text-blue-600">{transaction.id}</span>
-                      <span className="text-gray-600">{transaction.date}</span>
-                      <span className="font-medium">{formatCurrency(transaction.amount)}</span>
-                      <span className="text-gray-600">{transaction.method}</span>
-                      <Badge className={getStatusColor(transaction.status)}>{transaction.status}</Badge>
+                ) : transactionHistory && transactionHistory.length > 0 ? (
+                  <div className="space-y-1">
+                    <div className="grid grid-cols-5 gap-2 text-xs font-medium text-gray-500 pb-2 border-b">
+                      <span>PAYMENT ID</span>
+                      <span>DATE & TIME</span>
+                      <span>AMOUNT</span>
+                      <span>METHOD</span>
+                      <span>STATUS</span>
                     </div>
-                  ))}
-                </div>
-                <Button variant="link" className="mt-4 p-0 text-blue-600">View All Transactions</Button>
+                    {/* ✅ BE CONSCIOUS: Fixed .map() crash - use correct variable name */}
+                    {(transactionHistory || []).map((transaction) => (
+                      <div key={transaction.id} className="grid grid-cols-5 gap-2 py-3 text-sm hover:bg-gray-50 rounded">
+                        <span className="font-medium text-blue-600">{transaction.id}</span>
+                        <span className="text-gray-600">{transaction.date}</span>
+                        <span className="font-medium">{formatCurrency(transaction.amount)}</span>
+                        <span className="text-gray-600">{transaction.method}</span>
+                        <Badge className={getStatusColor(transaction.status)}>{transaction.status}</Badge>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <DollarSign className="h-12 w-12 mx-auto mb-4 text-gray-300" />
+                    <p>No transactions yet</p>
+                    <p className="text-sm">Transaction history will appear here once payments are processed.</p>
+                  </div>
+                )}
+                {transactionHistory && transactionHistory.length > 0 && (
+                  <Button variant="link" className="mt-4 p-0 text-blue-600">View All Transactions</Button>
+                )}
               </CardContent>
             </Card>
           </div>

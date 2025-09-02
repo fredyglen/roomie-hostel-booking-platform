@@ -1,70 +1,151 @@
 
-import { supabase } from '@/lib/supabase';
-import { Property, PropertyType, PropertyCategory } from '@/types/property';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Property,
+  PropertyType,
+  PropertyCategory,
+  PropertyId,
+  PropertyPrice,
+  createPropertyId,
+  createPropertyPrice
+} from '@/types/property';
+import { User } from '@/types/core';
+import { PropertyQueries } from '@/services/database/standardizedQueries';
+import { Database } from '@/integrations/supabase/types';
+
+// Apple-grade branded type functions for type safety
+const createAddress = (address: string): string => address;
+
+// Type-safe database update interface
+type DatabasePropertyUpdate = Partial<Database['public']['Tables']['properties']['Update']>;
+
+// Apple-grade property field mapping for database updates
+// Mutable interface to handle readonly Property interface updates
+interface PropertyUpdateMapping {
+  title?: string;
+  description?: string;
+  address?: string;
+  city?: string;
+  state?: string;
+  zip?: string;
+  rent?: number;
+  property_type?: string;
+  property_category?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  is_available?: boolean;
+  available_from?: string;
+  amenities?: string[];
+  images?: string[];
+  base_price_per_semester?: number;
+  gender_type?: string;
+  max_occupancy?: number;
+  current_occupancy?: number;
+  verification_status?: string;
+}
 
 export const propertyService = {
   async getProperties(): Promise<Property[]> {
-    const { data, error } = await supabase
-      .from('properties')
-      .select(`*, profiles!owner_id (first_name, last_name, email, phone)`) 
-      .eq('is_available', true)
-      .order('created_at', { ascending: false });
-    if (error) throw error;
-    
-    // Transform the data to match our Property interface
-    return (data || []).map(property => {
-      const profileData = Array.isArray(property.profiles) ? property.profiles[0] : property.profiles;
-      
+    try {
+      // Use direct database query instead of PropertyQueries to avoid column issues
+      const { data, error } = await supabase
+        .from('properties')
+        .select(`
+          id,
+          owner_id,
+          title,
+          description,
+          property_type,
+          property_category,
+          address,
+          city,
+          state,
+          zip,
+          base_price_per_semester,
+          price_currency,
+          is_available,
+          gender_type,
+          max_occupancy,
+          current_occupancy,
+          amenities,
+          images,
+          cover_image_url,
+          verification_status,
+          created_at,
+          updated_at
+        `)
+        .eq('is_available', true)
+        .order('created_at', { ascending: false })
+        .limit(50);
+
+      if (error) {
+        throw error;
+      }
+
+      // Transform the data to match our Property interface
+      return (data || []).map(property => {
+
       return {
-        id: property.id,
-        owner_id: property.owner_id,
-        name: property.title,
+        // Core identification with branded types
+        id: createPropertyId(property.id),
+        name: property.title || 'Unnamed Property',
         title: property.title,
-        description: property.description,
-        address: property.address,
-        city: property.city,
-        state: property.state,
-        zip: property.zip || '00000',
-        rent: property.rent,
-        price: property.rent,
-        type: property.property_type as PropertyType,
-        propertyCategory: property.property_category as PropertyCategory,
-        verified: property.verification_status === 'verified',
+        description: property.description || '',
+        type: (property.property_type as PropertyType) || 'hostel',
+        property_type: property.property_type,
+        status: property.is_available ? 'available' : 'inactive',
         is_available: property.is_available,
-        bedrooms: property.bedrooms,
-        bathrooms: property.bathrooms,
-        images: property.images || [],
+
+        // Location information with branded types
+        address: createAddress(property.address || ''),
+        city: property.city || '',
+        state: property.state || '',
+        zip: property.zip || '',
+
+        // Pricing with branded types
+        price: createPropertyPrice(property.base_price_per_semester || 0),
+        base_price_per_semester: property.base_price_per_semester || 0,
+        currency: property.price_currency || 'GHS',
+
+        // Property category and occupancy
+        property_category: property.property_category,
+        gender_type: property.gender_type,
+        max_occupancy: property.max_occupancy,
+        current_occupancy: property.current_occupancy || 0,
+
+        // Verification
+        verification_status: property.verification_status,
+
+        // Features and amenities
         amenities: property.amenities || [],
-        location: `${property.city}, ${property.state}`,
-        available_from: property.available_from,
+        images: property.images || [],
+        cover_image_url: property.cover_image_url,
+
+        // Ownership and metadata
+        owner_id: property.owner_id,
+        ownerId: property.owner_id || '',
+
+        // Timestamps
         created_at: property.created_at,
         updated_at: property.updated_at,
-        owner: profileData ? {
-          id: 'unknown',
-          name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
-          email: profileData.email || 'owner@example.com',
-          phone: profileData.phone || '+233 50 123 4567',
-          responseRate: '95%',
-          verified: true
-        } : {
-          id: 'unknown',
-          name: 'Property Owner',
-          email: 'owner@example.com',
-          phone: '+233 50 123 4567',
-          responseRate: '95%',
-          verified: true
-        },
-        house_rules: '',
+        createdAt: property.created_at,
+        updatedAt: property.updated_at,
+
+        // Additional fields for compatibility
+        buildings: [],
         stories: [],
-        features: []
       } as Property;
     });
+    } catch (error) {
+      console.error('Error fetching properties:', error);
+      throw error;
+    }
   },
   
   async getPropertyById(id: string): Promise<Property> {
     const { data, error } = await supabase
       .from('properties')
-      .select(`*, profiles!owner_id (first_name, last_name, email, phone)`) 
+      .select(`*, profiles:owner_id (first_name, last_name, email, phone)`)
       .eq('id', id)
       .single();
     if (error) throw error;
@@ -72,62 +153,47 @@ export const propertyService = {
     const profileData = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
     
     return {
-      id: data.id,
+      id: createPropertyId(data.id),
       owner_id: data.owner_id,
       name: data.title,
       title: data.title,
       description: data.description,
-      address: data.address,
+      address: createAddress(data.address || ''),
       city: data.city,
       state: data.state,
       zip: data.zip || '00000',
-      rent: data.rent,
-      price: data.rent,
       type: data.property_type as PropertyType,
-      propertyCategory: data.property_category as PropertyCategory,
-      verified: data.verification_status === 'verified',
+      property_type: data.property_type,
+      property_category: data.property_category,
+      status: data.is_available ? 'available' : 'inactive',
       is_available: data.is_available,
-      bedrooms: data.bedrooms,
-      bathrooms: data.bathrooms,
+      verification_status: data.verification_status,
       images: data.images || [],
       amenities: data.amenities || [],
-      location: `${data.city}, ${data.state}`,
       available_from: data.available_from,
       created_at: data.created_at,
       updated_at: data.updated_at,
-      owner: profileData ? {
-        id: 'unknown',
-        name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
-        email: profileData.email || 'owner@example.com',
-        phone: profileData.phone || '+233 50 123 4567',
-        responseRate: '95%',
-        verified: true
-      } : {
-        id: 'unknown',
-        name: 'Property Owner',
-        email: 'owner@example.com',
-        phone: '+233 50 123 4567',
-        responseRate: '95%',
-        verified: true
-      },
-      house_rules: '',
+      createdAt: data.created_at,
+      updatedAt: data.updated_at,
+
+      // Additional fields for compatibility
+      buildings: [],
       stories: [],
-      features: []
     } as Property;
   },
   
   async createProperty(property: Omit<Property, 'id' | 'created_at' | 'updated_at'>): Promise<Property> {
     // Convert Property to database format
     const dbProperty = {
-      title: property.title,
+      title: property.title || property.name,
       description: property.description,
-      address: property.address,
+      address: typeof property.address === 'string' ? property.address : '',
       city: property.city,
       state: property.state,
       zip: property.zip,
       rent: property.rent,
       property_type: property.type,
-      property_category: property.propertyCategory,
+      property_category: property.property_category,
       bedrooms: property.bedrooms,
       bathrooms: property.bathrooms,
       owner_id: property.owner_id,
@@ -147,32 +213,66 @@ export const propertyService = {
   },
   
   async updateProperty(id: string, updates: Partial<Property>): Promise<Property> {
-    // Convert Property updates to database format
-    const dbUpdates: Record<string, any> = {};
-    
-    if (updates.title) dbUpdates.title = updates.title;
-    if (updates.description) dbUpdates.description = updates.description;
-    if (updates.address) dbUpdates.address = updates.address;
-    if (updates.city) dbUpdates.city = updates.city;
-    if (updates.state) dbUpdates.state = updates.state;
-    if (updates.zip) dbUpdates.zip = updates.zip;
-    if (updates.rent) dbUpdates.rent = updates.rent;
-    if (updates.type) dbUpdates.property_type = updates.type;
-    if (updates.propertyCategory) dbUpdates.property_category = updates.propertyCategory;
-    if (updates.bedrooms) dbUpdates.bedrooms = updates.bedrooms;
-    if (updates.bathrooms) dbUpdates.bathrooms = updates.bathrooms;
+    // Apple-grade type-safe conversion from Property updates to database format
+    const dbUpdates: PropertyUpdateMapping = {};
+
+    // Direct field mappings with type safety
+    if (updates.title !== undefined) dbUpdates.title = updates.title;
+    if (updates.description !== undefined) dbUpdates.description = updates.description;
+    if (typeof updates.address === 'string') dbUpdates.address = updates.address;
+    if (updates.city !== undefined) dbUpdates.city = updates.city;
+    if (updates.state !== undefined) dbUpdates.state = updates.state;
+    if (updates.zip !== undefined) dbUpdates.zip = updates.zip;
     if (updates.is_available !== undefined) dbUpdates.is_available = updates.is_available;
-    if (updates.available_from) dbUpdates.available_from = updates.available_from;
-    if (updates.amenities) dbUpdates.amenities = Array.isArray(updates.amenities) ? updates.amenities as string[] : [];
-    if (updates.images) dbUpdates.images = updates.images;
-    
+    if (updates.available_from !== undefined) dbUpdates.available_from = updates.available_from;
+
+    // Field name transformations with Apple-grade type safety
+    if (updates.rent !== undefined) {
+      dbUpdates.base_price_per_semester = updates.rent;
+    }
+    if (updates.type !== undefined) {
+      dbUpdates.property_type = updates.type;
+    }
+    if (updates.property_category !== undefined) {
+      dbUpdates.property_category = updates.property_category;
+    }
+    if (updates.gender_type !== undefined) {
+      dbUpdates.gender_type = updates.gender_type;
+    }
+    if (updates.max_occupancy !== undefined) {
+      dbUpdates.max_occupancy = updates.max_occupancy;
+    }
+    if (updates.current_occupancy !== undefined) {
+      dbUpdates.current_occupancy = updates.current_occupancy;
+    }
+    if (updates.verification_status !== undefined) {
+      dbUpdates.verification_status = updates.verification_status;
+    }
+
+    // Array fields with validation
+    if (updates.amenities !== undefined) {
+      dbUpdates.amenities = Array.isArray(updates.amenities) ? updates.amenities : [];
+    }
+    if (updates.images !== undefined) {
+      dbUpdates.images = Array.isArray(updates.images) ? updates.images : [];
+    }
+
+    // Perform the database update with type safety
     const { data, error } = await supabase
       .from('properties')
-      .update(dbUpdates)
+      .update(dbUpdates as DatabasePropertyUpdate)
       .eq('id', id)
       .select()
       .single();
-    if (error) throw error;
+
+    if (error) {
+      throw new Error(`Failed to update property: ${error.message}`);
+    }
+
+    if (!data) {
+      throw new Error('Property update returned no data');
+    }
+
     return data as Property;
   },
   

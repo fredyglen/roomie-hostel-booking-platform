@@ -9,19 +9,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
 import { propertyFormSchema, PropertyFormValues } from './PropertyFormSchema';
-import PropertyTypeFields from './PropertyTypeFields';
-import LocationFields from './LocationFields';
-import PropertyDetailsFields from './PropertyDetailsFields';
-import PricingFields from './PricingFields';
-import RoomFeaturesFields from './RoomFeaturesFields';
+// New restructured components
+import PropertyInfoFields from './PropertyInfoFields';
+import RoomConfigurationFields from './RoomConfigurationFields';
 import AmenitiesSelector from './AmenitiesSelector';
-import DescriptionFields from './DescriptionFields';
+import BuildingStructureFields from './BuildingStructureFields';
 import MediaUploadTabs from './MediaUploadTabs';
 import FormSubmissionModal from './FormSubmissionModal';
-import BuildingStructureFields from './BuildingStructureFields';
-import EnhancedPropertyFields from './EnhancedPropertyFields';
 import BuildingStructureManager from '../BuildingStructureManager';
 import StructureTabModal from '../StructureTabModal';
+// Enhanced toast utilities
+import { showValidationErrorToast, showPropertyFormToasts } from '@/utils/toast';
+
+// BE CONSCIOUS: New enhanced components for comprehensive form improvements
+import BookingDurationFields from './BookingDurationFields';
+import DynamicPricingMatrix from './DynamicPricingMatrix';
+import SmartWashroomConfig from './SmartWashroomConfig';
+import CriticalFieldsRestoration from './CriticalFieldsRestoration';
+import TagBasedAmenitiesSelector from './TagBasedAmenitiesSelector';
+import PropertySubmissionWorkflow from './PropertySubmissionWorkflow';
 
 // Category-specific components
 import HostelFields from './HostelFields';
@@ -44,38 +50,80 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   isEdit = false 
 }) => {
   const [showPreview, setShowPreview] = useState(false);
-  const [activeTab, setActiveTab] = useState('basic');
+  const [activeTab, setActiveTab] = useState('info');
   const [showStructureModal, setShowStructureModal] = useState(false);
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
     defaultValues: {
+      name: '',
       title: '',
-      type: '',
+      type: 'hostel', // Fixed: set default type to match schema
       propertyCategory: 'Hostel',
       address: '',
       city: '',
+      state: 'Greater Accra', // Fixed: added state field
       region: 'Greater Accra',
       zip: '',
+      nearest_university: '',
+
+      // BE CONSCIOUS: Enhanced booking duration and pricing system
+      booking_duration: 'semester', // Ghana university standard
+      custom_duration_weeks: undefined,
       price: 0,
+      room_type_pricing: {}, // Dynamic pricing matrix
       price_unit: 'semester',
+
       description: '',
       bedrooms: 1,
       bathrooms: 1,
       all_inclusive: false,
-      status: 'Available',
+      status: 'available', // Fixed: lowercase to match schema
       verification_status: 'pending',
-      gender_restriction: 'mixed',
+
+      // BE CONSCIOUS: Critical fields restoration - Ghana university compliance
+      gender_restriction: 'mixed', // Essential for university housing compliance
+      semester_availability: ['semester_1', 'semester_2'], // Ghana academic calendar
+
       pet_policy: 'not_allowed',
       parking_available: false,
       has_accessibility_features: false,
       cancellation_policy: 'moderate',
       internet_speed: 'standard',
+      room_types: ['1_in_a_room'],
+
+      // BE CONSCIOUS: Redesigned washroom configuration
+      washroom_location: undefined,
+      washroom_sharing: undefined,
+      people_per_washroom: undefined,
+
       ...initialData
     },
   });
 
   const propertyCategory = form.watch('propertyCategory');
+
+  // Form persistence constants
+  const FORM_STORAGE_KEY = 'roomi_property_form_draft';
+
+  // BE CONSCIOUS: Clear any legacy localStorage data with invalid status values
+  useEffect(() => {
+    const savedData = localStorage.getItem(FORM_STORAGE_KEY);
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        if (parsedData.status === 'Available' || parsedData.status === 'Partially Occupied' || parsedData.status === 'Fully Occupied') {
+          console.log('🧹 Clearing legacy localStorage data with invalid status values');
+          localStorage.removeItem(FORM_STORAGE_KEY);
+        }
+      } catch (error) {
+        localStorage.removeItem(FORM_STORAGE_KEY);
+      }
+    }
+  }, []);
+
+  // Watch all form values for auto-save
+  const formValues = form.watch();
 
   // Show structure modal when switching to structure tab
   useEffect(() => {
@@ -83,6 +131,52 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       setShowStructureModal(true);
     }
   }, [activeTab]);
+
+  // Auto-save form data to localStorage (only for new properties, not edits)
+  useEffect(() => {
+    if (!isEdit && formValues) {
+      // Only save if there's meaningful data (not just default values)
+      const hasData = formValues.title || formValues.name || formValues.address || formValues.description;
+      if (hasData) {
+        localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(formValues));
+      }
+    }
+  }, [formValues, isEdit]);
+
+  // Restore saved form data on component mount (only for new properties)
+  useEffect(() => {
+    if (!isEdit && !initialData) {
+      const savedData = localStorage.getItem(FORM_STORAGE_KEY);
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+
+          // BE CONSCIOUS: Sanitize and validate restored data
+          const sanitizedData = {
+            ...parsedData,
+            // Fix any legacy capitalized status values
+            status: parsedData.status === 'Available' ? 'available' :
+                   parsedData.status === 'Partially Occupied' ? 'unavailable' :
+                   parsedData.status === 'Fully Occupied' ? 'unavailable' :
+                   parsedData.status || 'available',
+            // Ensure type field is valid
+            type: parsedData.type || 'hostel',
+            // Ensure state field exists
+            state: parsedData.state || 'Greater Accra'
+          };
+
+          // Reset form with sanitized data, keeping current defaults for missing fields
+          form.reset({
+            ...form.getValues(), // Keep current defaults
+            ...sanitizedData // Override with sanitized saved data
+          });
+        } catch (error) {
+          console.error('Failed to restore saved form data:', error);
+          localStorage.removeItem(FORM_STORAGE_KEY);
+        }
+      }
+    }
+  }, [isEdit, initialData, form]);
 
   // Calculate occupancy details based on property type
   const updateOccupancyDetails = () => {
@@ -106,12 +200,113 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     return occupancyText;
   };
 
+  // Intelligent tab navigation for validation errors
+  const navigateToErrorTab = (errorType: string) => {
+    const tabMapping = {
+      'Room Types': 'rooms',
+      'Room Types Mismatch': 'rooms',
+      'Property Title': 'info',
+      'Address': 'info',
+      'Nearest University': 'info',
+      'Description': 'info',
+      'Pricing': 'rooms',
+      'Incomplete Pricing': 'rooms',
+      'Total Rooms': 'rooms',
+      'Bathrooms': 'rooms',
+      'Washroom Location': 'rooms',
+      'Washroom Sharing': 'rooms'
+    };
+
+    const targetTab = tabMapping[errorType as keyof typeof tabMapping];
+    if (targetTab && targetTab !== activeTab) {
+      setActiveTab(targetTab);
+      // Show navigation toast
+      showValidationErrorToast("Navigation", `Switched to ${targetTab.charAt(0).toUpperCase() + targetTab.slice(1)} tab to fix the issue.`);
+    }
+  };
+
   const handleSubmit = (data: PropertyFormValues) => {
+    console.log('🚀 PROPERTY FORM SUBMIT CALLED', { isEdit, data });
+
+    // FOR EDIT MODE - STILL VALIDATE BUT WITH RELAXED RULES
+    if (isEdit) {
+      console.log('🚀 EDIT MODE - VALIDATING WITH RELAXED RULES');
+
+      // Basic validation for edit mode
+      const errors = [];
+
+      if (!data.title?.trim()) {
+        errors.push("Property Title");
+        showValidationErrorToast("Property Title", "Please enter a title for your property.");
+        navigateToErrorTab("Property Title");
+      }
+
+      if (!data.address?.trim()) {
+        errors.push("Address");
+        showValidationErrorToast("Address", "Please enter the property address.");
+        navigateToErrorTab("Address");
+      }
+
+      // If there are validation errors in edit mode, don't proceed
+      if (errors.length > 0) {
+        console.log('🚨 EDIT MODE VALIDATION ERRORS FOUND', errors);
+        showValidationErrorToast("Form Incomplete", `Please complete all required fields. Found ${errors.length} issue(s).`);
+        return;
+      }
+
+      console.log('🚀 EDIT MODE - VALIDATION PASSED, CALLING onSubmit');
+      onSubmit(data);
+      return;
+    }
+
+    // Enhanced validation with immediate toast feedback and intelligent navigation
+    const errors = [];
+    const propertyCategory = data.propertyCategory;
+
+    // Validate basic required fields
+    console.log('🚀 VALIDATING FIELDS', { title: data.title, address: data.address, description: data.description });
+
+    if (!data.title) {
+      console.log('🚨 TITLE MISSING');
+      errors.push("Property Title");
+      showValidationErrorToast("Property Title", "Please enter a title for your property.");
+      navigateToErrorTab("Property Title");
+    }
+
+    if (!data.address) {
+      console.log('🚨 ADDRESS MISSING');
+      errors.push("Address");
+      showValidationErrorToast("Address", "Please enter the property address.");
+      navigateToErrorTab("Address");
+    }
+
+    if (!data.description || data.description.length < 10) {
+      console.log('🚨 DESCRIPTION MISSING OR TOO SHORT');
+      errors.push("Description");
+      showValidationErrorToast("Description", "Please provide a description of at least 10 characters.");
+      navigateToErrorTab("Description");
+    }
+
+    // If there are validation errors, don't proceed to preview
+    if (errors.length > 0) {
+      console.log('🚨 VALIDATION ERRORS FOUND', errors);
+      showValidationErrorToast("Form Incomplete", `Please complete all required fields. Found ${errors.length} issue(s).`);
+      // DO NOT RESET FORM - KEEP USER DATA
+      return;
+    }
+
+    // All validation passed, show preview
     setShowPreview(true);
   };
 
   const handleConfirmSubmission = () => {
     const formData = form.getValues();
+
+    // Clear saved form data on successful submission
+    if (!isEdit) {
+      localStorage.removeItem(FORM_STORAGE_KEY);
+    }
+
     onSubmit(formData);
     setShowPreview(false);
   };
@@ -132,7 +327,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     // Description
     if (formData.description && formData.description.length >= 10) completedSteps++;
     
-    return { completed: completedSteps, total: 8 };
+    return { completed: completedSteps, total: 5 };
   };
 
   const stepProgress = getCurrentStepCount();
@@ -153,87 +348,97 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               <Badge variant={stepProgress.completed >= 4 ? "default" : "secondary"}>
                 {stepProgress.completed >= 4 ? "Ready to Submit" : "In Progress"}
               </Badge>
+              {!isEdit && (
+                <Badge variant="outline" className="text-green-600 border-green-200">
+                  📝 Auto-saving
+                </Badge>
+              )}
             </div>
           </div>
 
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="grid w-full grid-cols-8">
-              <TabsTrigger value="basic">Basic Info</TabsTrigger>
-              <TabsTrigger value="location">Location</TabsTrigger>
-              <TabsTrigger value="details">Details</TabsTrigger>
-              <TabsTrigger value="features">Features</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-5">
+              <TabsTrigger value="info" className={`relative ${
+                form.formState.errors.title || form.formState.errors.address || form.formState.errors.description || form.formState.errors.nearest_university
+                  ? 'text-red-600 border-red-300' : ''
+              }`}>
+                Property Info
+                {(form.formState.errors.title || form.formState.errors.address || form.formState.errors.description || form.formState.errors.nearest_university) && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                )}
+              </TabsTrigger>
+              <TabsTrigger value="rooms" className={`relative ${
+                form.formState.errors.room_types || form.formState.errors.bedrooms || form.formState.errors.bathrooms || form.formState.errors.washroom_location || form.formState.errors.washroom_sharing
+                  ? 'text-red-600 border-red-300' : ''
+              }`}>
+                Room Config
+                {(form.formState.errors.room_types || form.formState.errors.bedrooms || form.formState.errors.bathrooms || form.formState.errors.washroom_location || form.formState.errors.washroom_sharing) && (
+                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                )}
+              </TabsTrigger>
               <TabsTrigger value="amenities">Amenities</TabsTrigger>
-              <TabsTrigger value="enhanced">Enhanced</TabsTrigger>
               <TabsTrigger value="structure">Structure</TabsTrigger>
               <TabsTrigger value="media">Media</TabsTrigger>
             </TabsList>
 
-            <TabsContent value="basic" className="space-y-6">
+            <TabsContent value="info" className="space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Basic Property Information</CardTitle>
+                  <CardTitle>Property Information</CardTitle>
+                  <p className="text-sm text-gray-600">Basic details, location, and description</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <PropertyTypeFields form={form} propertyCategory={propertyCategory} />
-                  <PricingFields form={form} propertyCategory={propertyCategory} />
+                  <PropertyInfoFields form={form} />
                 </CardContent>
               </Card>
+
+              {/* BE CONSCIOUS: Critical Fields Restoration */}
+              <CriticalFieldsRestoration form={form} propertyCategory={propertyCategory} />
             </TabsContent>
 
-            <TabsContent value="location" className="space-y-6">
+            <TabsContent value="rooms" className="space-y-6">
+              {/* BE CONSCIOUS: Booking Duration System */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Location Details</CardTitle>
+                  <CardTitle>Booking Duration & Pricing</CardTitle>
+                  <p className="text-sm text-gray-600">Configure booking periods and pricing structure</p>
                 </CardHeader>
                 <CardContent>
-                  <LocationFields form={form} />
+                  <BookingDurationFields form={form} propertyCategory={propertyCategory} />
                 </CardContent>
               </Card>
-            </TabsContent>
 
-            <TabsContent value="details" className="space-y-6">
+              {/* Room Configuration */}
               <Card>
                 <CardHeader>
-                  <CardTitle>Property Details</CardTitle>
+                  <CardTitle>Room Configuration</CardTitle>
+                  <p className="text-sm text-gray-600">Room types and basic configuration</p>
                 </CardHeader>
                 <CardContent className="space-y-6">
-                  <PropertyDetailsFields form={form} propertyCategory={propertyCategory} />
-                  
+                  <RoomConfigurationFields form={form} propertyCategory={propertyCategory} />
+
+                  {/* BE CONSCIOUS: Dynamic Pricing Matrix - moved below room config */}
+                  <DynamicPricingMatrix form={form} propertyCategory={propertyCategory} />
+
                   {/* Category-specific fields */}
                   {propertyCategory === 'Hostel' && <HostelFields form={form} updateOccupancyDetails={updateOccupancyDetails} />}
                   {propertyCategory === 'Homestel' && <HomestelFields form={form} updateOccupancyDetails={updateOccupancyDetails} />}
                   {propertyCategory === 'Apartment' && <ApartmentFields form={form} />}
-                  
-                  <DescriptionFields form={form} />
                 </CardContent>
               </Card>
+
+              {/* BE CONSCIOUS: Washroom Configuration */}
+              <SmartWashroomConfig form={form} propertyCategory={propertyCategory} />
             </TabsContent>
 
-            <TabsContent value="features" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Room Features</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <RoomFeaturesFields form={form} />
-                </CardContent>
-              </Card>
-            </TabsContent>
+
 
             <TabsContent value="amenities" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Amenities & Facilities</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <AmenitiesSelector form={form} />
-                </CardContent>
-              </Card>
+              {/* BE CONSCIOUS: Tag-Based Amenities System */}
+              <TagBasedAmenitiesSelector form={form} propertyCategory={propertyCategory} />
             </TabsContent>
 
-            <TabsContent value="enhanced" className="space-y-6">
-              <EnhancedPropertyFields form={form} propertyCategory={propertyCategory} />
-            </TabsContent>
+
 
             <TabsContent value="structure" className="space-y-6">
               <Card>
@@ -271,30 +476,57 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'].indexOf(activeTab);
+                  const currentIndex = ['info', 'rooms', 'amenities', 'structure', 'media'].indexOf(activeTab);
                   if (currentIndex > 0) {
-                    setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'][currentIndex - 1]);
+                    setActiveTab(['info', 'rooms', 'amenities', 'structure', 'media'][currentIndex - 1]);
                   }
                 }}
-                disabled={activeTab === 'basic'}
+                disabled={activeTab === 'info'}
               >
                 Previous
               </Button>
               
               {activeTab !== 'media' ? (
+                <>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      const currentIndex = ['info', 'rooms', 'amenities', 'structure', 'media'].indexOf(activeTab);
+                      if (currentIndex < 4) {
+                        setActiveTab(['info', 'rooms', 'amenities', 'structure', 'media'][currentIndex + 1]);
+                      }
+                    }}
+                  >
+                    Next
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isLoading}
+                    variant="outline"
+                    className="ml-2"
+                    onClick={(e) => {
+                      console.log('🚀 UPDATE BUTTON CLICKED');
+                      // Force form submission
+                      const formData = form.getValues();
+                      console.log('🚀 FORCING FORM SUBMIT WITH DATA', formData);
+                      handleSubmit(formData);
+                    }}
+                  >
+                    {isLoading ? 'Saving...' : isEdit ? 'Update Property' : 'Preview & Submit'}
+                  </Button>
+                </>
+              ) : (
                 <Button
-                  type="button"
-                  onClick={() => {
-                    const currentIndex = ['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'].indexOf(activeTab);
-                    if (currentIndex < 7) {
-                      setActiveTab(['basic', 'location', 'details', 'features', 'amenities', 'enhanced', 'structure', 'media'][currentIndex + 1]);
-                    }
+                  type="submit"
+                  disabled={isLoading}
+                  onClick={(e) => {
+                    console.log('🚀 MEDIA TAB UPDATE BUTTON CLICKED');
+                    // Force form submission
+                    const formData = form.getValues();
+                    console.log('🚀 FORCING FORM SUBMIT WITH DATA', formData);
+                    handleSubmit(formData);
                   }}
                 >
-                  Next
-                </Button>
-              ) : (
-                <Button type="submit" disabled={isLoading}>
                   {isLoading ? 'Saving...' : isEdit ? 'Update Property' : 'Preview & Submit'}
                 </Button>
               )}

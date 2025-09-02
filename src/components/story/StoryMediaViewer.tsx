@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, ChevronUp } from 'lucide-react';
 import { Story } from '@/types/property';
 
@@ -26,11 +26,39 @@ const StoryMediaViewer: React.FC<StoryMediaViewerProps> = ({
   onSwipeUp,
   showDetails,
 }) => {
+  const [touchStartY, setTouchStartY] = useState<number>(0);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    onPause(true);
+    setTouchStartY(e.touches[0].clientY);
+  }, [onPause]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartY) return;
+
+    const currentY = e.touches[0].clientY;
+    const diff = touchStartY - currentY;
+
+    // If swiping up significantly, trigger swipe up
+    if (diff > 50) {
+      onSwipeUp();
+      setTouchStartY(0); // Reset to prevent multiple triggers
+    }
+  }, [touchStartY, onSwipeUp]);
+
+  const handleTouchEnd = useCallback(() => {
+    if (!showDetails) {
+      onPause(false);
+    }
+    setTouchStartY(0);
+  }, [onPause, showDetails]);
+
   return (
-    <div 
+    <div
       className="flex-grow relative"
-      onTouchStart={() => onPause(true)}
-      onTouchEnd={() => !showDetails && onPause(false)}
+      onTouchStart={handleTouchStart}
+      onTouchMove={handleTouchMove}
+      onTouchEnd={handleTouchEnd}
       onMouseDown={() => onPause(true)}
       onMouseUp={() => !showDetails && onPause(false)}
     >

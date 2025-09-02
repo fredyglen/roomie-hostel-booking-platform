@@ -40,11 +40,8 @@ const RoomOptionsStep: React.FC<RoomOptionsStepProps> = ({
     { value: "quad", label: "4 in a room", price: "₵2,700" },
   ];
   
-  const furnishingOptions = [
-    { value: "fully_furnished", label: "Fully Furnished" },
-    { value: "partially_furnished", label: "Partially Furnished" },
-    { value: "unfurnished", label: "Unfurnished" },
-  ];
+  // ✅ REMOVED: Furnishing options removed as per Ghana hostel standards
+  // Students don't choose furnishing - they see what's provided by owner
   
   const floorOptions = [
     { value: "1st", label: "1st Floor" },
@@ -82,25 +79,8 @@ const RoomOptionsStep: React.FC<RoomOptionsStepProps> = ({
         </RadioGroup>
       </div>
       
-      <Separator />
-      
-      <div>
-        <h2 className="text-xl font-bold mb-2">Select Furnishing</h2>
-        <p className="text-gray-600 mb-4">Choose your preferred furnishing option.</p>
-        
-        <RadioGroup 
-          value={selectedFurnishing} 
-          onValueChange={onFurnishingChange}
-          className="space-y-3"
-        >
-          {furnishingOptions.map((option) => (
-            <div key={option.value} className="flex items-center space-x-2 border rounded-md p-3 hover:bg-gray-50 transition-colors">
-              <RadioGroupItem value={option.value} id={`furnishing-${option.value}`} />
-              <Label htmlFor={`furnishing-${option.value}`} className="cursor-pointer">{option.label}</Label>
-            </div>
-          ))}
-        </RadioGroup>
-      </div>
+      {/* ✅ REMOVED: Furnishing selection removed as per Ghana hostel standards */}
+      {/* Students will see owner-provided furnishing details as read-only information */}
       
       <Separator />
       

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Property } from '@/types/property';
 import { normalizePropertyData, getSampleProperties } from './usePropertyData';
@@ -53,24 +53,10 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
           }
         }
 
-        // If no UUID match or no data found in database, check the sample properties
-        ErrorHandler.log(`Checking sample data for ID: ${propertyId}`);
-        const sampleProperties = getSampleProperties();
-        
-        // Handle different ID formats consistently (string vs number)
-        const sampleProperty = sampleProperties.find(p => 
-          p.id === propertyId || 
-          p.id === String(propertyId) || 
-          String(p.id) === propertyId
-        );
-        
-        if (!sampleProperty) {
-          ErrorHandler.handle("Property not found in sample data either");
-          throw new Error('Property not found');
-        }
-        
-        ErrorHandler.log(`Found property in sample data: ${sampleProperty.id}`);
-        return sampleProperty;
+        // CRITICAL FIX: No fallback to sample data
+        // This ensures students only see real owner-provided properties
+        ErrorHandler.log(`Property not found in database: ${propertyId}`);
+        throw new Error('Property not found');
       } catch (error) {
         ErrorHandler.handle("Error in property loader:", error);
         throw error;

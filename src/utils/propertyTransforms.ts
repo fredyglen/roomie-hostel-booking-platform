@@ -1,64 +1,117 @@
 
-import { Property, PropertyType, PropertyStatus, PropertyCategory } from '@/types/property';
+import {
+  Property,
+  PropertyType,
+  PropertyStatus,
+  PropertyCategory,
+  createPropertyId,
+  createPropertyPrice,
+  createAddress
+} from '@/types/property';
+import { User } from '@/types/core';
+import { Database } from '@/integrations/supabase/types';
+
+// Type-safe database property interface
+type DatabasePropertyRow = Database['public']['Tables']['properties']['Row'] & {
+  profiles?: {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+  } | {
+    id: string;
+    first_name?: string;
+    last_name?: string;
+    email?: string;
+    phone?: string;
+  }[];
+};
 
 // Simple, reliable transformation function
-export function transformDbProperty(dbItem: any): Property {
+export function transformDbProperty(dbItem: DatabasePropertyRow): Property {
   // Safely extract profile data
-  const profileData = Array.isArray(dbItem.profiles) 
-    ? dbItem.profiles[0] 
+  const profileData = Array.isArray(dbItem.profiles)
+    ? dbItem.profiles[0]
     : dbItem.profiles;
-  
-  // Create property with all required fields, using defaults for missing data
+
+  // Create property with all required fields using unified Property interface
   const property: Property = {
-    id: String(dbItem.id || ''),
-    owner_id: String(dbItem.owner_id || ''),
-    name: String(dbItem.title || ''),
-    title: String(dbItem.title || ''),
+    // Core identification with branded types
+    id: createPropertyId(String(dbItem.id || '')),
+    name: String(dbItem.title || 'Unnamed Property'),
     description: String(dbItem.description || ''),
     type: (dbItem.property_type as PropertyType) || 'hostel',
-    status: (dbItem.is_available ? 'available' : 'occupied') as PropertyStatus,
-    price: Number(dbItem.rent || 0),
-    rent: Number(dbItem.rent || 0),
-    location: String(dbItem.address || ''),
-    address: String(dbItem.address || ''),
+    status: (dbItem.is_available ? 'available' : 'inactive') as PropertyStatus,
+
+    // Location information with branded types
+    address: createAddress(String(dbItem.address || '')),
     city: String(dbItem.city || ''),
     state: String(dbItem.state || ''),
     zip: String(dbItem.zip || ''),
-    propertyCategory: (dbItem.property_category as PropertyCategory) || 'Hostel',
-    verified: true,
-    is_available: Boolean(dbItem.is_available ?? true),
-    bedrooms: Number(dbItem.bedrooms || 1),
-    bathrooms: Number(dbItem.bathrooms || 1),
-    amenities: Array.isArray(dbItem.amenities) ? dbItem.amenities : [],
-    images: Array.isArray(dbItem.images) ? dbItem.images : [],
-    available_from: String(dbItem.available_from || ''),
-    created_at: String(dbItem.created_at || ''),
-    updated_at: String(dbItem.updated_at || ''),
-    house_rules: 'No smoking, no pets', // Default house rules since column doesn't exist
-    stories: [],
-    features: []
-  };
+    country: 'Ghana',
+    latitude: Number(dbItem.latitude || 0),
+    longitude: Number(dbItem.longitude || 0),
 
-  // Add owner info safely
-  if (profileData && typeof profileData === 'object') {
-    property.owner = {
+    // Pricing with branded types
+    price: createPropertyPrice(Number(dbItem.rent || dbItem.base_price_per_semester || 0)),
+
+    // Physical features
+    features: {
+      bedrooms: Number(dbItem.bedrooms || 1),
+      bathrooms: Number(dbItem.bathrooms || 1),
+      kitchens: 1,
+      parkingSpaces: 0,
+      furnished: Boolean(dbItem.is_furnished),
+      petsAllowed: false,
+      utilities: {
+        water: true,
+        electricity: true,
+        internet: true,
+        gas: false,
+        cleaning: false,
+        security: false,
+      },
+      amenities: Array.isArray(dbItem.amenities) ? dbItem.amenities : [],
+      rules: ['No smoking', 'No pets'],
+    },
+
+    // Media
+    media: Array.isArray(dbItem.images)
+      ? dbItem.images.map((url, index) => ({
+          id: `${dbItem.id}-${index}`,
+          url,
+          type: 'image' as const,
+          isCover: index === 0,
+        }))
+      : [],
+
+    // Ownership and metadata
+    ownerId: String(dbItem.owner_id || ''),
+    owner: profileData ? {
       id: String(profileData.id || dbItem.owner_id || ''),
-      name: `${profileData.first_name || ''} ${profileData.last_name || ''}`.trim() || 'Property Owner',
-      email: String(profileData.email || ''),
+      first_name: String(profileData.first_name || 'Property'),
+      last_name: String(profileData.last_name || 'Owner'),
+      email: String(profileData.email || 'owner@example.com'),
       phone: String(profileData.phone || ''),
-      verified: true,
-      responseRate: '95%'
-    };
-  } else {
-    property.owner = {
+      role: 'owner' as const,
+    } : {
       id: String(dbItem.owner_id || ''),
-      name: 'Property Owner',
-      email: '',
+      first_name: 'Property',
+      last_name: 'Owner',
+      email: 'owner@example.com',
       phone: '',
-      verified: false,
-      responseRate: '0%'
-    };
-  }
+      role: 'owner' as const,
+    },
+    buildings: [],
+
+    // Timestamps
+    createdAt: String(dbItem.created_at || new Date().toISOString()),
+    updatedAt: String(dbItem.updated_at || new Date().toISOString()),
+
+    // Verification
+    verificationStatus: (dbItem.verification_status as any) || 'pending',
+  };
 
   return property;
 }

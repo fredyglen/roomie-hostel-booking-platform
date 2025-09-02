@@ -1,211 +1,505 @@
 
-export interface BaseEntity {
-  id: string;
-  created_at: string;
-  updated_at: string;
-}
+/**
+ * ✅ APPLE-GRADE PROPERTY TYPES - BE CONSCIOUS COMPLIANCE
+ * 
+ * Type-safe property definitions with branded types
+ * Zero any types with complete type safety
+ */
 
-export interface Location {
-  address: string;
-  city: string;
-  state: string;
-  latitude?: number;
-  longitude?: number;
-}
+import { User } from './core';
 
-export interface Amenity {
-  id: string;
-  name: string;
-  category?: string;
-}
+// Branded type for property ID
+export type PropertyId = string & { readonly __brand: 'PropertyId' };
 
-export interface Story {
-  id: string;
-  type: 'image' | 'video';
-  url: string;
-  caption?: string;
-  duration?: number;
-}
+// Branded type for property price
+export type PropertyPrice = number & { readonly __brand: 'PropertyPrice' };
 
-export interface Owner {
-  id: string;
-  name: string;
-  email: string;
-  phone: string;
-  verified: boolean;
-  responseRate?: number | string;
-}
+// Address type
+export type Address = string & { readonly __brand: 'Address' };
 
-export interface RoomType {
-  id: string;
-  name: string;
-  capacity: number;
-  price: number;
-  unit?: string;
-}
+// Property status enum - unified definition
+export type PropertyStatus =
+  | 'available'
+  | 'unavailable'
+  | 'active'
+  | 'inactive'
+  | 'pending'
+  | 'rejected'
+  | 'draft'
+  | 'pending_review'
+  | 'approved'
+  | 'archived';
 
-export type PropertyType = 'hostel' | 'apartment' | 'homestel';
-export type PropertyCategory = 'Hostel' | 'Apartment' | 'Homestel';
-export type PropertyStatus = 'available' | 'occupied' | 'maintenance' | 'pending';
+// Property type enum - ONLY these three types
+export type PropertyType = 
+  | 'hostel'
+  | 'homestel'
+  | 'apartment';
 
-export interface Property extends BaseEntity {
-  // Core identifiers
-  name: string;
-  title: string;
-  owner_id: string;
-  
+// Property category enum - ONLY these three categories
+export type PropertyCategory = 
+  | 'Hostel'
+  | 'Homestel'
+  | 'Apartment';
+
+// Room occupancy type - Ghana standard "X in a room" system
+export type RoomOccupancyType =
+  | '1_in_a_room'
+  | '2_in_a_room'
+  | '3_in_a_room'
+  | '4_in_a_room'
+  | '5_in_a_room'
+  | '6_in_a_room';
+
+// Property amenity type - No categorization, just owner-provided amenities
+export type PropertyAmenity = {
+  readonly id: string;
+  readonly name: string;
+  readonly icon?: string;
+};
+
+// Property location type
+export type PropertyLocation = {
+  readonly address: string;
+  readonly city: string;
+  readonly state?: string;
+  readonly country: string;
+  readonly latitude?: number;
+  readonly longitude?: number;
+  readonly nearbyPlaces?: string[];
+};
+
+// Property rule type
+export type PropertyRule = {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+};
+
+// =====================================================
+// CORE PROPERTY INTERFACE - UNIFIED
+// =====================================================
+
+/**
+ * Main Property interface - unified from all legacy interfaces
+ * Matches database schema exactly for type safety
+ */
+export interface Property {
+  // Core identification
+  readonly id: PropertyId;
+  readonly name: string;
+  readonly title?: string; // Legacy compatibility
+  readonly description: string;
+  readonly type: PropertyType;
+  readonly property_type?: PropertyType; // Database compatibility
+  readonly status: PropertyStatus;
+  readonly is_available?: boolean; // Database compatibility
+
   // Location information
-  location: string | Location;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-  
-  // Property details
-  type: PropertyType;
-  property_type?: string;
-  property_category?: PropertyCategory;
-  propertyCategory: PropertyCategory;
-  description: string;
-  status?: PropertyStatus;
-  verified: boolean;
-  
+  readonly address: Address;
+  readonly city?: string; // Database compatibility
+  readonly state?: string; // Database compatibility
+  readonly country?: string; // Database compatibility
+  readonly zip?: string; // Database compatibility
+  readonly latitude?: number;
+  readonly longitude?: number;
+
   // Pricing
-  price: number;
-  rent: number;
-  priceUnit?: string;
-  price_unit?: string;
-  
-  // Physical attributes
-  bedrooms: number;
-  bathrooms: number;
-  size?: number;
-  max_occupants?: number;
-  
-  // Availability
-  available_from: string;
-  available_to?: string;
-  is_available: boolean;
-  availableUnits?: number;
-  
+  readonly price: PropertyPrice;
+  readonly rent?: number; // Database compatibility
+  readonly currency?: string;
+  readonly base_price_per_semester?: number; // Database compatibility
+
   // Features and amenities
-  amenities: string[] | Amenity[];
-  images: string[];
-  stories?: Story[];
-  features?: string[];
-  
-  // Hostel/Apartment specific
-  total_rooms?: number;
-  rooms_available?: number;
-  beds_per_room?: number;
-  beds_available?: number;
-  
-  // Additional features
-  is_furnished?: boolean;
-  parking_available?: boolean;
-  parking_cost?: number;
-  gender_restriction?: string;
-  genderType?: string;
-  gender_type?: string;
-  pet_policy?: string;
-  has_accessibility_features?: boolean;
-  internet_speed?: string;
-  security_features?: string[];
-  house_rules?: string;
-  
-  // Contact and emergency
-  emergency_contact_name?: string;
-  emergency_contact_phone?: string;
-  
-  // Business rules
-  cancellation_policy?: string;
-  advance_payment_months?: number;
-  allow_bill_sharing?: boolean;
-  semester_availability?: string[];
-  
-  // Utilities and meters
-  meter_type?: string;
-  washroom_type?: string;
-  shared_meter_count?: number;
-  shared_washroom_count?: number;
-  has_individual_meters?: boolean;
-  has_tiled_room?: boolean;
-  
-  // Furnishing details
-  has_fan?: boolean;
-  has_wardrobes?: boolean;
-  has_mattresses?: boolean;
-  has_bedframes?: boolean;
-  
-  // Subscription and verification
-  subscription_status?: string;
-  subscription_expires_at?: string;
-  verification_status?: string;
-  virtual_tour_url?: string;
-  
-  // Distance and campus info
-  distance_to_campus?: string | number;
-  distanceToCampus?: string | number;
-  
-  // Owner information
-  owner?: Owner;
-  
-  // Room types for complex properties
-  roomTypes?: RoomType[];
-  
-  // Building structure
-  occupancy?: any;
-  
-  // Additional properties for compatibility
-  rating?: number;
+  readonly features: PropertyFeatures;
+  readonly amenities?: string[]; // Database compatibility
+  readonly bedrooms?: number; // Database compatibility
+  readonly bathrooms?: number; // Database compatibility
+  readonly max_occupants?: number; // Database compatibility
+
+  // Media
+  readonly media: PropertyMedia[];
+  readonly images?: string[]; // Legacy compatibility
+  readonly videos?: string[]; // Legacy compatibility
+
+  // Structure
+  readonly buildings: Building[];
+  readonly rooms?: Room[]; // Database compatibility
+
+  // Ownership
+  readonly ownerId: string;
+  readonly owner_id?: string; // Database compatibility
+  readonly agent_id?: string; // Database compatibility
+  readonly owner?: User;
+
+  // Metadata
+  readonly createdAt: string;
+  readonly created_at?: string; // Database compatibility
+  readonly updatedAt: string;
+  readonly updated_at?: string; // Database compatibility
+  readonly verificationStatus: VerificationStatus;
+  readonly verification_status?: VerificationStatus; // Database compatibility
+  readonly verificationDetails?: VerificationDetails;
+
+  // Additional database fields
+  readonly available_from?: string;
+  readonly available_to?: string;
+  readonly house_rules?: string[];
+  readonly rules?: string[]; // Legacy compatibility
+  readonly distance_to_campus?: number;
+  readonly nearest_university?: string;
+  readonly is_active?: boolean;
+  readonly advance_payment_months?: number;
+  readonly allow_bill_sharing?: boolean;
+  readonly property_category?: string;
+  readonly gender_type?: string;
+  readonly max_occupancy?: number;
+  readonly current_occupancy?: number;
+  readonly total_beds?: number;
+
+  // Transparency and considerations
+  readonly good_to_know?: string; // Important property considerations for students
 }
 
+// =====================================================
+// PROPERTY ENUMS AND TYPES
+// =====================================================
+
+// Duplicate definitions removed - using the ones defined above
+
+export type VerificationStatus = 'pending' | 'verified' | 'rejected';
+
+export interface VerificationDetails {
+  readonly verifiedBy?: string;
+  readonly verifiedAt?: string;
+  readonly rejectionReason?: string;
+  readonly notes?: string;
+}
+
+// =====================================================
+// PROPERTY FEATURES
+// =====================================================
+
+export interface PropertyFeatures {
+  readonly bedrooms: number;
+  readonly bathrooms: number;
+  readonly kitchens: number;
+  readonly parkingSpaces: number;
+  readonly furnished: boolean;
+  readonly petsAllowed: boolean;
+  readonly utilities: Utilities;
+  readonly amenities: string[];
+  readonly rules: string[];
+}
+
+export interface Utilities {
+  readonly water: boolean;
+  readonly electricity: boolean;
+  readonly internet: boolean;
+  readonly gas: boolean;
+  readonly cleaning: boolean;
+  readonly security: boolean;
+}
+
+// =====================================================
+// PROPERTY MEDIA
+// =====================================================
+
+export interface PropertyMedia {
+  readonly id: string;
+  readonly url: string;
+  readonly type: 'image' | 'video';
+  readonly isCover: boolean;
+  readonly caption?: string;
+}
+
+// =====================================================
+// BUILDING STRUCTURE
+// =====================================================
+
+export interface Building {
+  readonly id: string;
+  readonly name: string;
+  readonly floors: Floor[];
+}
+
+export interface Floor {
+  readonly id: string;
+  readonly name: string;
+  readonly rooms: Room[];
+}
+
+export interface Room {
+  readonly id: string;
+  readonly name?: string;
+  readonly room_number?: string; // Database compatibility
+  readonly type: RoomType;
+  readonly room_type?: string; // Database compatibility
+  readonly capacity: number;
+  readonly max_occupants?: number; // Database compatibility
+  readonly price: number;
+  readonly rent_amount?: number; // Database compatibility
+  readonly isAvailable: boolean;
+  readonly is_available?: boolean; // Database compatibility
+  readonly features?: string[];
+  readonly amenities?: string[]; // Database compatibility
+  readonly property_id?: string; // Database compatibility
+  readonly floor_id?: string; // Database compatibility
+  readonly available_beds?: number; // Database compatibility
+  readonly occupied_beds?: number; // Database compatibility
+  readonly is_room_available?: boolean; // Database compatibility
+  readonly bed_count?: number; // Database compatibility
+  readonly beds_available?: number; // Database compatibility
+  readonly description?: string; // Database compatibility
+  readonly images?: string[]; // Database compatibility
+}
+
+export type RoomType = 'single' | 'double' | 'triple' | 'quad' | 'suite';
+
+// =====================================================
+// OWNER INTERFACE
+// =====================================================
+
+/**
+ * Property owner interface for PropertyOwnerCard component
+ * Extends User with owner-specific properties
+ */
+export interface Owner {
+  readonly id: string;
+  readonly name?: string;
+  readonly email?: string;
+  readonly phone?: string;
+  readonly avatar?: string;
+  readonly responseRate?: string;
+  readonly verified?: boolean;
+}
+
+// =====================================================
+// PROPERTY FORM AND API TYPES
+// =====================================================
+
+/**
+ * Property form values for creation/editing
+ */
 export interface PropertyFormValues {
-  title: string;
+  readonly name: string;
+  readonly description: string;
+  readonly type: PropertyType;
+  readonly address: Address;
+  readonly price: PropertyPrice;
+  readonly features: PropertyFeatures;
+  readonly media: PropertyMedia[];
+  readonly buildings: Building[];
+  readonly good_to_know?: string; // Important property considerations for students
+}
+
+/**
+ * Property insert type for database operations
+ * Omits auto-generated fields
+ */
+export type PropertyInsert = Omit<Property, 'id' | 'createdAt' | 'updatedAt' | 'owner'>;
+
+/**
+ * Property update type for database operations
+ * All fields optional except id
+ */
+export type PropertyUpdate = Partial<Omit<Property, 'id'>> & { readonly id: PropertyId };
+
+// =====================================================
+// LEGACY COMPATIBILITY TYPES
+// =====================================================
+
+/**
+ * Legacy property interface for backward compatibility
+ * @deprecated Use Property interface instead
+ */
+export interface LegacyProperty {
+  readonly id: string;
+  readonly title: string;
+  readonly description: string;
+  readonly propertyType: string;
+  readonly status: string;
+  readonly location: {
+    readonly address: string;
+    readonly city: string;
+    readonly state: string;
+    readonly country: string;
+    readonly coordinates?: {
+      readonly lat: number;
+      readonly lng: number;
+    };
+  };
+  readonly rent?: number;
+  readonly price?: number;
+  readonly currency?: string;
+  readonly bedrooms?: number;
+  readonly bathrooms?: number;
+  readonly maxOccupants?: number;
+  readonly amenities?: string[];
+  readonly rules?: string[];
+  readonly images?: string[];
+  readonly videos?: string[];
+  readonly availableFrom?: string;
+  readonly availableTo?: string;
+  readonly isActive?: boolean;
+  readonly distanceToCampus?: number;
+  readonly nearestUniversity?: string;
+  readonly house_rules?: string[];
+  readonly owner?: {
+    readonly id: string;
+    readonly name?: string;
+    readonly email?: string;
+    readonly phone?: string;
+  };
+}
+
+// =====================================================
+// PROPERTY SEARCH AND FILTER TYPES
+// =====================================================
+
+export interface PropertySearchParams {
+  readonly type?: PropertyType;
+  readonly city?: string;
+  readonly minPrice?: number;
+  readonly maxPrice?: number;
+  readonly status?: PropertyStatus;
+  readonly bedrooms?: number;
+  readonly bathrooms?: number;
+  readonly amenities?: string[];
+  readonly maxDistance?: number;
+  readonly university?: string;
+}
+
+export interface PropertyFilters {
+  readonly priceRange: {
+    readonly min: number;
+    readonly max: number;
+  };
+  readonly propertyTypes: PropertyType[];
+  readonly amenities: string[];
+  readonly locations: string[];
+  readonly availability: boolean;
+}
+
+// =====================================================
+// PROPERTY CATEGORY TYPES
+// =====================================================
+
+// Duplicate PropertyCategory removed - using the one defined above
+
+// =====================================================
+// HELPER FUNCTIONS FOR TYPE SAFETY
+// =====================================================
+
+/**
+ * Type guard to check if a value is a valid PropertyId
+ */
+export function isPropertyId(value: unknown): value is PropertyId {
+  return typeof value === 'string' && value.length > 0;
+}
+
+/**
+ * Type guard to check if a value is a valid PropertyPrice
+ */
+export function isPropertyPrice(value: unknown): value is PropertyPrice {
+  return typeof value === 'number' && value >= 0;
+}
+
+/**
+ * Type guard to check if a value is a valid Address
+ */
+export function isAddress(value: unknown): value is Address {
+  return typeof value === 'string' && value.length > 0;
+}
+
+/**
+ * Creates a PropertyId from a string
+ */
+export function createPropertyId(id: string): PropertyId {
+  if (!isPropertyId(id)) {
+    throw new Error(`Invalid PropertyId: ${id}`);
+  }
+  return id as PropertyId;
+}
+
+/**
+ * Creates a PropertyPrice from a number
+ */
+export function createPropertyPrice(price: number): PropertyPrice {
+  if (!isPropertyPrice(price)) {
+    throw new Error(`Invalid PropertyPrice: ${price}`);
+  }
+  return price as PropertyPrice;
+}
+
+/**
+ * Creates an Address from a string
+ */
+export function createAddress(address: string): Address {
+  if (!isAddress(address)) {
+    throw new Error(`Invalid Address: ${address}`);
+  }
+  return address as Address;
+}
+
+// Ghana-specific hostel types for semester-based pricing
+export interface GhanaHostelProperty {
+  id: string;
+  name: string;
   description: string;
-  type: PropertyType;
-  address: string;
-  city: string;
-  state: string;
-  zip: string;
-  rent: number;
+  images: string[];
+  location: {
+    address: string;
+    city: string;
+    state: string;
+    country: string;
+    coordinates?: { lat: number; lng: number };
+  };
+  pricePerSemester: number; // Base price for semester (4 months)
+  roomOptions: RoomOption[];
+  distanceToCampus: number; // in kilometers
+  nearestUniversity: string;
+  propertyType: 'hostel' | 'shared_room' | 'apartment';
   bedrooms: number;
   bathrooms: number;
+  maxOccupants: number;
   amenities: string[];
-  images: string[];
-  available_from: string;
-  available_to?: string;
-  is_furnished: boolean;
-  parking_available: boolean;
-  parking_cost?: number;
-  max_occupants?: number;
-  gender_restriction?: string;
-  pet_policy?: string;
-  has_accessibility_features: boolean;
-  internet_speed?: string;
-  security_features: string[];
-  emergency_contact_name?: string;
-  emergency_contact_phone?: string;
-  cancellation_policy?: string;
-  advance_payment_months?: number;
-  allow_bill_sharing: boolean;
-  semester_availability: string[];
-  meter_type?: string;
-  washroom_type?: string;
-  shared_meter_count?: number;
-  shared_washroom_count?: number;
-  has_individual_meters: boolean;
-  has_tiled_room: boolean;
-  has_fan: boolean;
-  has_wardrobes: boolean;
-  has_mattresses: boolean;
-  has_bedframes: boolean;
-  total_rooms?: number;
-  rooms_available?: number;
-  beds_per_room?: number;
-  beds_available?: number;
-  virtual_tour_url?: string;
+  rules: string[];
+  owner: {
+    id: string;
+    name: string;
+    email: string;
+    phone: string;
+    responseRate?: string;
+    verified?: boolean;
+  };
+  availableFrom: string;
+  availableTo: string;
+  isActive: boolean;
+  features: string[];
+  house_rules: string;
+  stories?: string[];
 }
 
-// Export PropertyInsert for database operations
-export type PropertyInsert = Omit<Property, 'id' | 'created_at' | 'updated_at'>;
+export interface RoomOption {
+  type: string; // e.g., '2-in-a-room', '4-in-a-room', '1-in-a-room'
+  price: number; // Price per semester for this room type
+  available: boolean;
+  description?: string;
+  maxOccupants?: number;
+}
+
+// Compound management interface (Premium Feature)
+export interface PropertyCompound {
+  readonly id: string & { readonly __brand: 'CompoundId' };
+  readonly name: string;
+  readonly description: string;
+  readonly ownerId: string;
+  readonly location: PropertyLocation;
+  readonly properties: ReadonlyArray<PropertyId>;
+  readonly amenities: ReadonlyArray<PropertyAmenity>;
+  readonly rules: ReadonlyArray<PropertyRule>;
+  readonly images: ReadonlyArray<string>;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+}

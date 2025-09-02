@@ -2,24 +2,35 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { useDemoProperties } from '@/hooks/property/useDemoProperties';
+import { useFeaturedProperties } from '@/hooks/property/useDynamicProperties';
 import LoadingIndicator from '@/components/common/LoadingIndicator';
 import EmptyState from '@/components/common/EmptyState';
 import { formatCurrency } from '@/utils/currency';
 import { MapPin, Users, Bed, Bath, Shield, Wifi, Car } from 'lucide-react';
 
 export const DemoPropertiesShowcase: React.FC = () => {
-  const { data: properties, isLoading, error } = useDemoProperties();
+  const {
+    properties,
+    isLoading,
+    isError,
+    error,
+    refetch
+  } = useFeaturedProperties(12); // Show 12 featured properties
 
   if (isLoading) {
     return <LoadingIndicator />;
   }
 
-  if (error) {
+  if (isError) {
     return (
       <EmptyState
         title="Failed to load properties"
-        description="There was an error loading the demo properties."
+        description={error?.message || "There was an error loading the featured properties."}
+        action={
+          <Button onClick={refetch} variant="outline">
+            Try Again
+          </Button>
+        }
       />
     );
   }
@@ -28,7 +39,7 @@ export const DemoPropertiesShowcase: React.FC = () => {
     return (
       <EmptyState
         title="No properties found"
-        description="No demo properties are currently available."
+        description="No featured properties are currently available."
       />
     );
   }
@@ -109,7 +120,7 @@ export const DemoPropertiesShowcase: React.FC = () => {
                 </div>
                 <div className="flex items-center">
                   <Bath className="h-4 w-4 mr-1" />
-                  {property.bathrooms || 1} bath
+                  {property.bathrooms || 1} washroom
                 </div>
                 <div className="flex items-center">
                   <Users className="h-4 w-4 mr-1" />

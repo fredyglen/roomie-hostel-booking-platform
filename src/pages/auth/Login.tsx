@@ -1,31 +1,41 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, FieldValues, ControllerRenderProps } from 'react-hook-form';
 import { z } from 'zod';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import Logo from '@/components/common/Logo';
+import { GoogleIcon, FacebookIcon, ROOMiLogo } from '@/components/ui/SocialIcons';
 import { toast } from "@/components/ui/use-toast";
 import { Loader } from 'lucide-react';
-import { ErrorHandler } from '@/utils/ErrorHandler';
-import { useStandardizedErrorHandler } from '@/hooks/common/useStandardizedErrorHandler';
+// Removed unused import
+import { logger } from '@/utils/enhanced-logger';
+import LoginRedirect from '@/components/auth/LoginRedirect';
 
+// JSX namespace is handled by React types - removing unnecessary declaration
+
+// Define the form schema with Zod
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
   password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
+// Infer the form values type from the schema
+type LoginFormValues = z.infer<typeof formSchema>;
+
+// Field props are handled by react-hook-form Controller
+
 const Login: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { signIn, user } = useAuth();
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isCreatingDemoUsers, setIsCreatingDemoUsers] = useState(false);
-  const { handleError } = useStandardizedErrorHandler();
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  // Error handling is done through form validation and toast notifications
   
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Initialize form with react-hook-form and zod validation
+  const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
@@ -33,182 +43,346 @@ const Login: React.FC = () => {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    setIsSubmitting(true);
-    try {
-      ErrorHandler.log('Login form submitted', JSON.stringify(values));
-      await signIn(values.email, values.password);
-      
+  // Show registration success message if coming from registration
+  useEffect(() => {
+    if (location.state?.message) {
+      toast({
+        title: "Registration Successful",
+        description: location.state.message,
+      });
+
+      // Pre-fill email if provided
+      if (location.state.email) {
+        form.setValue('email', location.state.email);
+      }
+
+      // Clear the state to prevent showing message again
+      navigate(location.pathname, { replace: true, state: {} });
+    }
+  }, [location.state, navigate, toast]);
+
+  // Redirect if user is already logged in
+  useEffect(() => {
+    if (user) {
+      // Type-safe access to user role with fallback
+      const userRole = user.role || 'student';
+
+      logger.debug('Login redirect - user role detected', {
+        userId: user.id,
+        role: userRole,
+        userObject: user
+      });
+
+      // Reset submitting state before navigation
+      setIsSubmitting(false);
+
+      // Show success message
       toast({
         title: "Login successful",
-        description: "You have been signed in",
+        description: `Welcome back! Redirecting to your ${userRole} dashboard...`,
       });
+
+      const from = location.state?.from ||
+        (userRole === 'student' ? '/student/properties' :
+         userRole === 'owner' || userRole === 'agent' ? '/owner/dashboard' :
+         userRole === 'admin' ? '/admin/dashboard' : '/student/properties');
+
+      navigate(from, { replace: true });
+    }
+  }, [user, navigate, location, toast]);
+
+  // Form submission handler
+  const onSubmit = async (values: LoginFormValues): Promise<void> => {
+    setIsSubmitting(true);
+    try {
+      logger.info('Login form submitted', { email: values.email });
+      await signIn(values.email, values.password);
+
+      // Don't show success toast immediately - wait for navigation
+      logger.info('Sign in completed, waiting for auth state change and navigation');
+
       // The redirection will be handled by the useEffect above when the user state updates
     } catch (error: unknown) {
-      ErrorHandler.handle(error, 'Login submission error');
-      handleError(error, 'Login submission error');
-    } finally {
+      logger.error('Login error', { error });
+
+      // Provide more specific error messages
+      let errorMessage = "An error occurred during login";
+      if (error instanceof Error) {
+        if (error.message.includes('Invalid login credentials')) {
+          errorMessage = "Invalid email or password. Please check your credentials and try again.";
+        } else if (error.message.includes('Email not confirmed')) {
+          errorMessage = "Please check your email and confirm your account before signing in.";
+        } else if (error.message.includes('Too many requests')) {
+          errorMessage = "Too many login attempts. Please wait a moment and try again.";
+        } else {
+          errorMessage = error.message;
+        }
+      }
+
+      toast({
+        title: "Login failed",
+        description: errorMessage,
+        variant: "destructive",
+      });
+
+      // Reset submitting state on error
       setIsSubmitting(false);
     }
-  };
-
-  const createDemoUsers = async () => {
-    setIsCreatingDemoUsers(true);
-    try {
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/create-demo-users`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_DEMO_API_KEY,
-        }
-      });
-      
-      const data = await response.json();
-      
-      if (data.success) {
-        toast({
-          title: "Demo users created",
-          description: "Demo accounts are ready to use",
-        });
-      } else {
-        throw new Error(data.error || 'Failed to create demo users');
-      }
-    } catch (error: unknown) {
-      ErrorHandler.handle(error, 'Login create demo users error');
-      handleError(error, 'Login create demo users error');
-    } finally {
-      setIsCreatingDemoUsers(false);
-    }
+    // Don't set isSubmitting to false on success - let navigation handle it
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="flex justify-center">
-          <Link to="/">
-            <Logo />
+    <div className="min-h-screen flex items-center justify-center" style={{
+      background: '#e8eaed',
+      padding: '16px'
+    }}>
+      <div className="bg-white shadow-lg" style={{
+        borderRadius: '12px',
+        width: '100%',
+        maxWidth: '400px',
+        padding: '32px 24px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+      }}>
+        {/* Logo */}
+        <div className="flex justify-center" style={{ marginBottom: '24px' }}>
+          <ROOMiLogo size={24} />
+        </div>
+
+        {/* Social Login Buttons */}
+        <div className="flex" style={{ gap: '12px', marginBottom: '20px' }}>
+          <button style={{
+            flex: 1,
+            height: '44px',
+            border: '1px solid #dadce0',
+            borderRadius: '8px',
+            background: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'box-shadow 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+          >
+            <GoogleIcon size={16} />
+            Google
+          </button>
+          <button style={{
+            flex: 1,
+            height: '44px',
+            border: '1px solid #dadce0',
+            borderRadius: '8px',
+            background: 'white',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '6px',
+            fontSize: '14px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            transition: 'box-shadow 0.2s'
+          }}
+          onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'}
+          onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+          >
+            <FacebookIcon size={16} />
+            Facebook
+          </button>
+        </div>
+
+        {/* Divider */}
+        <div style={{
+          textAlign: 'center',
+          color: '#5f6368',
+          fontSize: '13px',
+          margin: '20px 0',
+          position: 'relative'
+        }}>
+          <span style={{ background: 'white', padding: '0 10px' }}>or sign in with</span>
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '0',
+            right: '0',
+            height: '1px',
+            background: '#dadce0',
+            zIndex: -1
+          }}></div>
+        </div>
+
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} style={{ marginBottom: '20px' }}>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem style={{ marginBottom: '20px' }}>
+                  <FormLabel style={{
+                    color: '#202124',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '6px',
+                    display: 'block'
+                  }}>Username</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="email"
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        border: '1px solid #dadce0',
+                        borderRadius: '8px',
+                        padding: '0 14px',
+                        fontSize: '16px',
+                        outline: 'none'
+                      }}
+                      autoComplete="email"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem style={{ marginBottom: '20px' }}>
+                  <FormLabel style={{
+                    color: '#202124',
+                    fontSize: '14px',
+                    fontWeight: '500',
+                    marginBottom: '6px',
+                    display: 'block'
+                  }}>Password</FormLabel>
+                  <FormControl>
+                    <Input
+                      type="password"
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        border: '1px solid #dadce0',
+                        borderRadius: '8px',
+                        padding: '0 14px',
+                        fontSize: '16px',
+                        outline: 'none'
+                      }}
+                      autoComplete="current-password"
+                      {...field}
+                      disabled={isSubmitting}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {/* Remember Device and Forgot Password */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              marginBottom: '20px',
+              flexWrap: 'wrap',
+              gap: '8px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <input type="checkbox" style={{
+                  width: '14px',
+                  height: '14px',
+                  border: '1px solid #dadce0',
+                  borderRadius: '2px',
+                  background: 'white'
+                }} />
+                <span style={{ fontSize: '13px', color: '#5f6368' }}>Remember this Device</span>
+              </div>
+              <Link to="/forgot-password" style={{
+                color: '#0f68fd',
+                fontSize: '13px',
+                textDecoration: 'none',
+                cursor: 'pointer'
+              }}>
+                Forgot Password ?
+              </Link>
+            </div>
+
+            <Button
+              type="submit"
+              style={{
+                width: '100%',
+                height: '44px',
+                background: isSubmitting ? '#6b7280' : '#0f68fd',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '22px',
+                fontSize: '14px',
+                fontWeight: '500',
+                cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+              disabled={isSubmitting}
+            >
+              {isSubmitting && (
+                <Loader className="animate-spin" size={16} />
+              )}
+              {isSubmitting ? "Signing in..." : "Sign In"}
+            </Button>
+          </form>
+        </Form>
+
+
+
+        {/* Sign Up Link */}
+        <div style={{
+          textAlign: 'center',
+          fontSize: '13px',
+          color: '#5f6368',
+          marginTop: '20px'
+        }}>
+          New to ROOMi?{" "}
+          <Link to="/register" style={{
+            color: '#0f68fd',
+            textDecoration: 'none',
+            cursor: 'pointer'
+          }}>
+            Create an account
           </Link>
         </div>
-        <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">Sign in to your account</h2>
-        <p className="mt-2 text-center text-sm text-gray-600">
-          Or{" "}
-          <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
-            create a new account
+
+        {/* Admin Access Link */}
+        <div style={{
+          textAlign: 'center',
+          fontSize: '11px',
+          color: '#9aa0a6',
+          marginTop: '16px',
+          borderTop: '1px solid #f1f3f4',
+          paddingTop: '16px'
+        }}>
+          <Link to="/admin/login" style={{
+            color: '#9aa0a6',
+            textDecoration: 'none',
+            cursor: 'pointer',
+            opacity: 0.7,
+            transition: 'opacity 0.2s'
+          }}
+          onMouseEnter={(e) => e.target.style.opacity = '1'}
+          onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+          >
+            Admin Portal
           </Link>
-        </p>
-      </div>
-
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Email</FormLabel>
-                    <FormControl>
-                      <Input placeholder="you@example.com" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Password</FormLabel>
-                    <FormControl>
-                      <Input type="password" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex items-center justify-between">
-                <div className="text-sm">
-                  <Link to="#" className="font-medium text-indigo-600 hover:text-indigo-500">
-                    Forgot your password?
-                  </Link>
-                </div>
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isSubmitting}>
-                {isSubmitting ? "Signing in..." : "Sign in"}
-              </Button>
-            </form>
-          </Form>
-          
-          {/* Demo accounts section */}
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Demo accounts</span>
-              </div>
-            </div>
-            
-            <div className="mt-4 grid grid-cols-1 gap-3">
-              <button
-                type="button"
-                onClick={() => {
-                  form.setValue('email', 'student@roomi.com');
-                  form.setValue('password', 'password123');
-                }}
-                className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Use Student Demo
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => {
-                  form.setValue('email', 'owner@roomi.com');
-                  form.setValue('password', 'password123');
-                }}
-                className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Use Property Owner Demo
-              </button>
-              
-              <button
-                type="button"
-                onClick={() => {
-                  form.setValue('email', 'admin@roomi.com');
-                  form.setValue('password', 'password123');
-                }}
-                className="py-2 px-4 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
-              >
-                Use Admin Demo
-              </button>
-            </div>
-            
-            <div className="mt-4">
-              <Button 
-                variant="secondary" 
-                className="w-full" 
-                onClick={createDemoUsers}
-                disabled={isCreatingDemoUsers}
-              >
-                {isCreatingDemoUsers ? (
-                  <>
-                    <Loader className="mr-2 h-4 w-4 animate-spin" />
-                    Creating demo users...
-                  </>
-                ) : (
-                  "Create/Reset Demo Users"
-                )}
-              </Button>
-            </div>
-          </div>
         </div>
+
       </div>
     </div>
   );

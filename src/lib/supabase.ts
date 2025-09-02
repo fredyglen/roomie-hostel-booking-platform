@@ -1,21 +1,8 @@
 
-import { createClient } from '@supabase/supabase-js';
-import { supabase as supabaseClient } from '@/integrations/supabase/client';
-import { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
+// DEPRECATED: This file is deprecated and redirects to the properly configured client
+// Use @/integrations/supabase/client directly in new code
+// This file exists only for backward compatibility
 
-// Export the supabase client from the Lovable-generated integration
-export const supabase = supabaseClient;
-
-export type AuthUser = {
-  id: string;
-  email: string;
-  role: 'owner' | 'student' | 'admin';
-  firstName?: string;
-  lastName?: string;
-  phone?: string;
-  avatarUrl?: string;
-  createdAt?: string;
-};
-
-// Re-export the Property type from our consolidated definition
-export type { Property, PropertyFormValues, PropertyInsert } from '@/types/property';
+// Re-export the properly configured supabase client
+export { supabase } from '@/integrations/supabase/client';
+export type { Database } from '@/integrations/supabase/types';

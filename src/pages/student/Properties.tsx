@@ -1,39 +1,59 @@
 
 import React, { useState, useEffect } from 'react';
-import { usePropertyData } from '@/hooks/property/usePropertyData';
+import { useDynamicProperties } from '@/hooks/property/useDynamicProperties';
 import PropertyListContainer from '@/components/properties/PropertyListContainer';
 import { BaseLoading } from '@/components/ui/BaseLoading';
 import { BaseError } from '@/components/ui/BaseError';
 import { Property } from '@/types/property';
+import { logger } from '@/utils/enhanced-logger';
 
 const Properties: React.FC = () => {
-  const { getProperties, loading, error } = usePropertyData();
-  const [properties, setProperties] = useState<Property[]>([]);
+  // Use dynamic properties hook with available properties filter
+  const {
+    properties,
+    isLoading,
+    isError,
+    error,
+    totalCount,
+    refetch
+  } = useDynamicProperties({
+    filters: {
+      isAvailable: true,
+      verified: true
+    },
+    sortBy: 'created_at',
+    sortOrder: 'desc'
+  });
 
   useEffect(() => {
-    const fetchProperties = async () => {
-      try {
-        const result = await getProperties();
-        setProperties(result.properties);
-      } catch (err) {
-        console.error('Failed to fetch properties:', err);
-      }
-    };
+    logger.info('Properties page loaded', {
+      propertiesCount: properties.length,
+      totalCount
+    });
+  }, [properties.length, totalCount]);
 
-    fetchProperties();
-  }, [getProperties]);
-
-  if (loading) {
-    return <BaseLoading message="Loading properties..." />;
+  if (isLoading) {
+    return <BaseLoading message="Loading available properties..." />;
   }
 
-  if (error) {
-    return <BaseError message={error} />;
+  if (isError) {
+    logger.error('Failed to load properties', { error });
+    return (
+      <BaseError
+        message={error?.message || 'Failed to load properties'}
+        onRetry={refetch}
+      />
+    );
   }
 
   return (
     <div className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-6">Available Properties</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-2xl font-bold">Available Properties</h1>
+        <div className="text-sm text-gray-600">
+          {totalCount} {totalCount === 1 ? 'property' : 'properties'} available
+        </div>
+      </div>
       <PropertyListContainer properties={properties} />
     </div>
   );

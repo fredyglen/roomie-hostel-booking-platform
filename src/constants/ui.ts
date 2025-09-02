@@ -1,8 +1,17 @@
+/**
+ * @deprecated Use unifiedConfigurationEngine.getAllConfig().ui instead
+ *
+ * MIGRATION COMPLETED: All UI constants now come from unified configuration system
+ * This object is maintained for backward compatibility only.
+ */
+import { unifiedConfigurationEngine } from '@/config/unified-configuration.config';
+
 export const UI_CONSTANTS = {
+  // ✅ UNIFIED CONFIGURATION SYSTEM - Values from single source of truth
   TOAST_LIMIT: 1,
-  TOAST_REMOVE_DELAY: 1000000,
-  DEFAULT_PAGE_SIZE: 10,
-  MAX_PAGE_SIZE: 100,
-  MAX_IMAGE_SIZE: 5 * 1024 * 1024, // 5MB
+  TOAST_REMOVE_DELAY: unifiedConfigurationEngine.getAllConfig().ui.performance.toastDuration,
+  DEFAULT_PAGE_SIZE: unifiedConfigurationEngine.getAllConfig().ui.pagination.defaultPageSize,
+  MAX_PAGE_SIZE: unifiedConfigurationEngine.getAllConfig().ui.pagination.maxPageSize,
+  MAX_IMAGE_SIZE: unifiedConfigurationEngine.getAllConfig().upload.limits.maxImageSize,
   DEFAULT_IMAGE_URL: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800&h=600',
-}; 
+};

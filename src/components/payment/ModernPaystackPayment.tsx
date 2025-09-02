@@ -7,8 +7,48 @@ import { ModernPaymentSuccessResult, PaystackVerificationData } from '@/types/bo
 
 declare global {
   interface Window {
-    PaystackPop?: any;
+    PaystackPop?: {
+      new(): {
+        newTransaction(config: PaystackConfig): void;
+      };
+    };
   }
+}
+
+interface PaystackConfig {
+  key: string;
+  email: string;
+  amount: number;
+  currency: string;
+  ref: string;
+  metadata?: Record<string, unknown>;
+  onSuccess: (transaction: PaystackTransaction) => void;
+  onCancel: () => void;
+  onError: (error: unknown) => void;
+  split_code?: string;
+  split?: SplitPaymentConfig;
+  subaccount?: string;
+  bearer?: string;
+  transaction_charge?: number;
+}
+
+interface PaystackTransaction {
+  reference: string;
+  transaction?: string;
+  trans?: string;
+  channel?: string;
+  customer?: Record<string, unknown>;
+  status: string;
+}
+
+interface SplitPaymentConfig {
+  type: 'percentage' | 'flat';
+  bearer_type: 'all' | 'all-proportional' | 'account' | 'subaccount';
+  subaccounts: Array<{
+    subaccount: string;
+    share: number;
+  }>;
+  bearer_subaccount?: string;
 }
 
 interface ModernPaystackPaymentProps {
@@ -22,6 +62,12 @@ interface ModernPaystackPaymentProps {
   title?: string;
   description?: string;
   disabled?: boolean;
+  // New split payment support
+  splitCode?: string;
+  split?: SplitPaymentConfig;
+  subaccountCode?: string;
+  bearer?: 'account' | 'subaccount';
+  transactionCharge?: number;
 }
 
 interface MinimalPaystackTransaction {
@@ -40,13 +86,18 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
   onError,
   title = 'Complete Payment',
   description = 'Secure payment processing',
-  disabled = false
+  disabled = false,
+  splitCode,
+  split,
+  subaccountCode,
+  bearer = 'account',
+  transactionCharge
 }) => {
   const { toast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
   const [paystackLoaded, setPaystackLoaded] = useState(false);
 
-  // Load Paystack script
+  // Load Paystack InlineJS V2 script
   useEffect(() => {
     if (window.PaystackPop) {
       setPaystackLoaded(true);
@@ -54,11 +105,11 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
     }
 
     const script = document.createElement('script');
-    script.src = 'https://js.paystack.co/v1/inline.js';
+    script.src = 'https://js.paystack.co/v2/inline.js'; // Updated to V2
     script.async = true;
     script.onload = () => setPaystackLoaded(true);
     script.onerror = () => {
-      console.error('Failed to load Paystack script');
+      console.error('Failed to load Paystack V2 script');
       onError('Failed to load payment system');
     };
     document.body.appendChild(script);
@@ -85,57 +136,84 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
     setIsProcessing(true);
 
     try {
-      const reference = `ref_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
-      
-      const handler = window.PaystackPop.setup({
+      const reference = `roomi_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+
+      // Create PaystackPop instance (V2 approach)
+      const popup = new window.PaystackPop();
+
+      // Build transaction configuration
+      const transactionConfig: PaystackConfig = {
         key: publicKey,
         email: email,
-        amount: amount * 100, // Paystack expects amount in pesewas
+        amount: amount * 100, // Paystack expects amount in pesewas (GHS subunit)
         currency: 'GHS',
         ref: reference,
-        firstname: firstName,
-        lastname: lastName,
+        firstName: firstName,
+        lastName: lastName,
         phone: phone,
+        channels: ['card', 'bank', 'ussd', 'mobile_money', 'bank_transfer'], // Ghana payment channels
         metadata: {
           firstName,
           lastName,
-          phone
+          phone,
+          platform: 'ROOMi',
+          payment_type: 'accommodation_booking'
         },
-        callback: function(response: any) {
+        onSuccess: (transaction: PaystackTransaction) => {
           setIsProcessing(false);
-          
+
           const verification: PaystackVerificationData = {
             amount: amount,
-            reference: response.reference,
-            channel: response.channel || 'unknown',
-            id: response.id,
-            customer: response.customer || {}
+            reference: transaction.reference,
+            channel: transaction.channel || 'unknown',
+            id: transaction.transaction || transaction.trans,
+            customer: transaction.customer || {}
           };
 
           const result: ModernPaymentSuccessResult = {
-            reference: response.reference,
-            status: response.status || 'success',
+            reference: transaction.reference,
+            status: transaction.status || 'success',
             transaction: {
-              reference: response.reference,
+              reference: transaction.reference,
               amount: amount,
-              status: response.status || 'success'
+              status: transaction.status || 'success'
             },
             verification
           };
-          
+
           onSuccess(result);
         },
-        onClose: function() {
+        onCancel: () => {
           setIsProcessing(false);
           toast({
             title: "Payment Cancelled",
             description: "You cancelled the payment process.",
             variant: "destructive"
           });
+        },
+        onError: (error: unknown) => {
+          setIsProcessing(false);
+          const errorMessage = handlePaystackError(error);
+          onError(errorMessage);
         }
-      });
+      };
 
-      handler.openIframe();
+      // Add split payment configuration if provided
+      if (splitCode) {
+        transactionConfig.split_code = splitCode;
+      } else if (split) {
+        transactionConfig.split = split;
+      } else if (subaccountCode) {
+        transactionConfig.subaccountCode = subaccountCode;
+        transactionConfig.bearer = bearer;
+        if (transactionCharge) {
+          transactionConfig.transactionCharge = transactionCharge;
+        }
+      }
+
+      // Initialize transaction using V2 method
+      popup.newTransaction(transactionConfig);
+
     } catch (error) {
       setIsProcessing(false);
       const errorMessage = handlePaystackError(error);
@@ -149,8 +227,17 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
         <h3 className="text-lg font-semibold">{title}</h3>
         <p className="text-gray-600">{description}</p>
         <p className="text-2xl font-bold text-green-600">GH₵{amount.toFixed(2)}</p>
+
+        {/* Show split payment indicator */}
+        {(splitCode || split || subaccountCode) && (
+          <div className="bg-blue-50 p-2 rounded-lg">
+            <p className="text-xs text-blue-700">
+              ✓ Automatic payment distribution enabled
+            </p>
+          </div>
+        )}
       </div>
-      
+
       <Button
         onClick={handlePayment}
         disabled={disabled || isProcessing || !paystackLoaded}
@@ -159,10 +246,17 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
       >
         {isProcessing ? 'Processing...' : `Pay GH₵${amount.toFixed(2)}`}
       </Button>
-      
+
       {!paystackLoaded && (
-        <p className="text-sm text-gray-500 text-center">Loading payment system...</p>
+        <p className="text-sm text-gray-500 text-center">Loading payment system (V2)...</p>
       )}
+
+      {/* Payment methods info for Ghana */}
+      <div className="text-xs text-gray-500 text-center space-y-1">
+        <p>Secure payment via Paystack</p>
+        <p>Supports: Cards • Mobile Money • Bank Transfer</p>
+        <p>Networks: MTN • Vodafone • AirtelTigo</p>
+      </div>
     </div>
   );
 };

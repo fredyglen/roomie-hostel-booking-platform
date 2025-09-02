@@ -4,7 +4,8 @@ import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import PropertyDetailsView from '@/components/properties/PropertyDetailsView';
+import StudentNavBar from '@/components/navigation/StudentNavBar';
+import PropertyDetailView from '@/components/property/PropertyDetailView';
 import { usePropertyData } from '@/hooks/property/usePropertyData';
 import { navigateToBooking, navigateBack } from '@/utils/navigation';
 import { Property } from '@/types/property';
@@ -64,6 +65,12 @@ const PropertyDetail: React.FC = () => {
     navigateBack(navigate, '/student/properties', location.state);
   };
 
+  const handleViewStory = () => {
+    if (property?.id) {
+      navigate(`/student/property/${property.id}/story`);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col">
@@ -100,20 +107,33 @@ const PropertyDetail: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{property.title} - ROOMi</title>
-        <meta name="description" content={property.description} />
+        <title>{property?.title || 'Property Details'} - ROOMi</title>
+        <meta name="description" content={property?.description || 'View property details on ROOMi'} />
       </Helmet>
       
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col pb-16">
         <Header />
         <main className="flex-grow">
-          <PropertyDetailsView 
-            property={property}
-            onBookNow={handleBookNow}
-            onGoBack={handleGoBack}
-          />
+          {property ? (
+            <PropertyDetailView
+              property={property}
+              onBookNow={handleBookNow}
+              onGoBack={handleGoBack}
+              onViewStory={handleViewStory}
+            />
+          ) : (
+            <div className="max-w-6xl mx-auto p-3 sm:p-4">
+              <div className="text-center py-8">
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-200 rounded w-1/3 mx-auto mb-4"></div>
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mx-auto"></div>
+                </div>
+              </div>
+            </div>
+          )}
         </main>
-        <Footer />
+        {/* ✅ REMOVED: Footer removed from property detail page as requested */}
+        <StudentNavBar />
       </div>
     </>
   );

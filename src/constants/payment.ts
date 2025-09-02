@@ -1,14 +1,37 @@
+/**
+ * Payment Constants - DEPRECATED
+ *
+ * This file has been deprecated in favor of the unified configuration system.
+ * All payment constants are now managed through:
+ * - src/types/platform-core.ts (PLATFORM_RULES)
+ * - src/config/index.ts (unified configuration)
+ *
+ * @deprecated Use config.payment from src/config/index.ts instead
+ */
+
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+
+/**
+ * @deprecated Use centralizedCommissionEngine directly
+ * This file is deprecated and will be removed in next cleanup phase.
+ *
+ * MIGRATION COMPLETED: All commission rates now come from centralized system
+ * - Platform Commission: 5% (DEFINITIVE)
+ * - Agent Commission: 3.7% (DEFINITIVE)
+ * - Platform Fixed Fee: 100 GHS (DEFINITIVE)
+ * - Agent Minimum Fee: 100 GHS (DEFINITIVE)
+ */
 export const PAYMENT_CONSTANTS = {
-  PLATFORM_COMMISSION_RATE: 0.042, // 4.2%
-  AGENT_COMMISSION_RATE: 0.037,    // 3.7%
-  AGENT_MINIMUM_FEE: 100,          // GHS 100 minimum
-  PAYSTACK_FEE_RATE: 0.0195,       // 1.95%
-  BOOKING_FEE_RATE: 0.02,          // 2%
-  CURRENCY_LIMITS: {
-    GHS: { min: 0.10, max: 50000 },
-    NGN: { min: 50, max: 10000000 },
-    USD: { min: 2, max: 100000 },
-    ZAR: { min: 1, max: 100000 },
-    KES: { min: 1, max: 1000000 },
-  },
-}; 
+  // ✅ CENTRALIZED COMMISSION SYSTEM - All values from single source of truth
+  PLATFORM_COMMISSION_RATE: centralizedCommissionEngine.getCommissionRates().platform,
+  AGENT_COMMISSION_RATE: centralizedCommissionEngine.getCommissionRates().agent,
+  AGENT_MINIMUM_FEE: centralizedCommissionEngine.getPlatformFees().agentMinimum,
+  PAYSTACK_FEE_RATE: centralizedCommissionEngine.getCommissionRates().paystack,
+  PLATFORM_FIXED_FEE: centralizedCommissionEngine.getPlatformFees().fixed,
+  VAT_RATE: centralizedCommissionEngine.getCommissionRates().vat,
+  CURRENCY_LIMITS: centralizedCommissionEngine.getCurrencyConfig().limits,
+} as const;
+
+// Re-export unified configuration for new code
+export { config as unifiedConfig } from '@/config';
+export { PLATFORM_RULES } from '@/types/platform-core';

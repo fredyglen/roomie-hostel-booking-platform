@@ -3,7 +3,8 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, CreditCard } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Calendar, Users, CreditCard, Info } from 'lucide-react';
 import { Property } from '@/types/property';
 
 interface BookingWizardProps {
@@ -15,11 +16,22 @@ const BookingWizard: React.FC<BookingWizardProps> = ({ property }) => {
 
   const handleStartBooking = () => {
     // Navigate to the booking steps container
-    navigate(`/student/book-property/${property.id}`);
+    navigate(`/student/book/${property.id}`);
   };
 
   return (
     <div className="space-y-6">
+      {/* Good to Know Alert */}
+      {property.good_to_know && (
+        <Alert className="border-blue-200 bg-blue-50">
+          <Info className="h-4 w-4" />
+          <AlertTitle>Good to Know</AlertTitle>
+          <AlertDescription>
+            {property.good_to_know}
+          </AlertDescription>
+        </Alert>
+      )}
+
       <Card>
         <CardHeader>
           <CardTitle>Book {property.title}</CardTitle>
@@ -54,8 +66,8 @@ const BookingWizard: React.FC<BookingWizardProps> = ({ property }) => {
           <div className="border-t pt-4">
             <div className="flex justify-between items-center mb-4">
               <div>
-                <p className="text-lg font-semibold">₵{property.price}</p>
-                <p className="text-sm text-gray-600">per {property.priceUnit}</p>
+                <p className="text-lg font-semibold">₵{property.rent?.toLocaleString() || property.price || '0'}</p>
+                <p className="text-sm text-gray-600">per semester</p>
               </div>
               <Button onClick={handleStartBooking} size="lg">
                 Start Booking Process

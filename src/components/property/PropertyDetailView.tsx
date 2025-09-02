@@ -5,27 +5,63 @@ import PropertyImageGallery from './PropertyImageGallery';
 import PropertyTabs from './PropertyTabs';
 import PropertyBookingCard from './PropertyBookingCard';
 import PropertyOwnerCard from './PropertyOwnerCard';
+import PropertyOwnerTags from './PropertyOwnerTags';
+import PropertyDetailCoverOverlay from './PropertyDetailCoverOverlay';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 interface PropertyDetailViewProps {
   property: Property;
-  onBook?: () => void;
+  onBookNow?: () => void;
+  onGoBack?: () => void;
+  onViewStory?: () => void;
 }
 
-const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBook }) => {
-  // Helper functions to safely extract data
-  const getLocationText = (location: string | { city: string; state: string; address: string }): string => {
+const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBookNow, onGoBack, onViewStory }) => {
+  // Apple-grade error handling: Guard against undefined property
+  if (!property) {
+    return (
+      <div className="max-w-6xl mx-auto p-3 sm:p-4">
+        <div className="text-center py-8">
+          <h2 className="text-xl font-semibold text-gray-900 mb-2">Property not found</h2>
+          <p className="text-gray-600 mb-4">The property you're looking for could not be loaded.</p>
+          {onGoBack && (
+            <Button variant="outline" onClick={onGoBack}>
+              <ArrowLeft className="mr-2 h-4 w-4" />
+              Back to Properties
+            </Button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Helper functions to safely extract data with Apple-grade error handling
+  const getLocationText = (location?: string | { city?: string; state?: string; address?: string } | null): string => {
+    if (!location) {
+      return 'Location not specified';
+    }
     if (typeof location === 'string') {
       return location;
     }
-    return `${location.address}, ${location.city}, ${location.state}`;
+    // Safely construct location string with fallbacks
+    const address = location.address || '';
+    const city = location.city || '';
+    const state = location.state || '';
+
+    const parts = [address, city, state].filter(part => part.trim().length > 0);
+    return parts.length > 0 ? parts.join(', ') : 'Location not specified';
   };
 
-  const getAmenityText = (amenity: string | { id: string; name: string }): string => {
-    return typeof amenity === 'string' ? amenity : amenity.name;
+  const getAmenityText = (amenity: string | { id?: string; name?: string } | null | undefined): string => {
+    if (!amenity) return '';
+    if (typeof amenity === 'string') return amenity;
+    return amenity.name || amenity.id || '';
   };
 
-  const getAmenitiesArray = (amenities: (string | { id: string; name: string })[]): string[] => {
-    return amenities.map(getAmenityText);
+  const getAmenitiesArray = (amenities?: (string | { id?: string; name?: string } | null)[] | null): string[] => {
+    if (!amenities || !Array.isArray(amenities)) return [];
+    return amenities.map(getAmenityText).filter(text => text.length > 0);
   };
 
   const getPriceNumber = (): number => {
@@ -68,13 +104,34 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6">
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+    <div className="max-w-6xl mx-auto p-3 sm:p-4">
+      {/* Back Button */}
+      {onGoBack && (
+        <div className="mb-4">
+          <Button variant="outline" onClick={onGoBack} className="mb-4">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Properties
+          </Button>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 relative">
         {/* Main Content */}
-        <div className="lg:col-span-2 space-y-6">
-          {/* Image Gallery */}
-          <PropertyImageGallery images={property.images} title={property.title} />
-          
+        <div className="lg:col-span-2 space-y-4">
+          {/* ✅ IMAGE GALLERY with COVER OVERLAY */}
+          <div className="relative">
+            <PropertyImageGallery images={property.images} title={property.title} />
+            {/* ✅ PRODUCTION-GRADE: Cover Image Overlay */}
+            <PropertyDetailCoverOverlay propertyId={property.id} />
+          </div>
+
+          {/* ✅ PRODUCTION-GRADE: Owner-Provided Tags */}
+          <PropertyOwnerTags
+            property={property}
+            showTitle={true}
+            compact={false}
+          />
+
           {/* Property Details Tabs */}
           <PropertyTabs
             description={property.description}
@@ -85,21 +142,25 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             type={property.type}
             location={safeProperty.location}
             availableUnits={property.availableUnits}
+            goodToKnow={property.good_to_know}
+            roomTypes={property.room_types}
+            nearestUniversity={property.nearest_university}
+            // ✅ NEW: Pass pricing matrix data to tabs
+            propertyId={property.id}
+            propertyCategory={property.property_category || property.propertyCategory}
           />
         </div>
         
-        {/* Sidebar */}
-        <div className="space-y-6">
+        {/* ✅ STREAMLINED SIDEBAR - Essential Components Only */}
+        <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
           {/* Booking Card */}
           <PropertyBookingCard
             property={property}
-            onBook={onBook}
+            onBook={onBookNow}
+            onViewStory={onViewStory}
           />
-          
-          {/* Owner Card */}
-          {property.owner && (
-            <PropertyOwnerCard owner={property.owner} />
-          )}
+
+          {/* ✅ REMOVED: Property Owner Card to prevent outside booking */}
         </div>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
+import { PropertyFormValues, GhanaRegion, ghanaRegions } from '@/components/owner/property-form/PropertyFormSchema';
 import { useCallback } from 'react';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
@@ -95,25 +95,46 @@ export const useFormTransformation = () => {
   };
 
   const transformDbToFormValues = (dbData: Record<string, unknown>): Partial<PropertyFormValues> => {
+    console.log('🚀 TRANSFORMING DB DATA TO FORM', dbData);
+
     return {
       title: typeof dbData.title === 'string' ? dbData.title : '',
       type: typeof dbData.property_type === 'string' ? dbData.property_type : '',
       propertyCategory: typeof dbData.property_category === 'string' ? dbData.property_category as 'Hostel' | 'Homestel' | 'Apartment' : 'Hostel',
       address: typeof dbData.address === 'string' ? dbData.address : '',
       city: typeof dbData.city === 'string' ? dbData.city : '',
-      region: typeof dbData.state === 'string' ? dbData.state as any : 'Greater Accra',
+      region: typeof dbData.state === 'string' && isValidGhanaRegion(dbData.state) ? dbData.state : 'Greater Accra',
       zip: typeof dbData.zip === 'string' ? dbData.zip : '',
       price: typeof dbData.rent === 'number' ? dbData.rent : 0,
       price_unit: 'semester',
       description: typeof dbData.description === 'string' ? dbData.description : '',
       bedrooms: typeof dbData.bedrooms === 'number' ? dbData.bedrooms : 1,
       bathrooms: typeof dbData.bathrooms === 'number' ? dbData.bathrooms : 1,
-      status: dbData.is_available ? 'Available' : 'Unavailable',
+      status: dbData.is_available ? 'available' : 'unavailable',
       all_inclusive: false,
-      amenities: Array.isArray(dbData.amenities) ? dbData.amenities.join(', ') : '',
+      amenities: Array.isArray(dbData.amenities) ? dbData.amenities : [],
       images: Array.isArray(dbData.images) ? dbData.images as string[] : [],
-      
-      // Enhanced property features
+      image_url: typeof dbData.image_url === 'string' ? dbData.image_url : '',
+
+      // CRITICAL MISSING FIELDS
+      nearest_university: typeof dbData.nearest_university === 'string' ? dbData.nearest_university : '',
+      available_semesters: Array.isArray(dbData.available_semesters) ? dbData.available_semesters : [],
+      distance_to_campus: typeof dbData.distance_to_campus === 'string' ? dbData.distance_to_campus : '',
+
+      // Room types - set default based on property category
+      room_types: Array.isArray(dbData.room_types) ? dbData.room_types :
+        dbData.property_category === 'Apartment' ? ['1_bedroom_apartment'] :
+        dbData.property_category === 'Homestel' ? ['single_room'] :
+        ['1_in_a_room'],
+
+      // Room type pricing - create default pricing object
+      room_type_pricing: typeof dbData.room_type_pricing === 'object' && dbData.room_type_pricing ?
+        dbData.room_type_pricing :
+        dbData.property_category === 'Apartment' ? { '1_bedroom_apartment': dbData.rent || 0 } :
+        dbData.property_category === 'Homestel' ? { 'single_room': dbData.rent || 0 } :
+        { '1_in_a_room': dbData.rent || 0 },
+
+      // Enhanced property features (remove duplicates)
       total_rooms: typeof dbData.total_rooms === 'number' ? dbData.total_rooms : undefined,
       rooms_available: typeof dbData.rooms_available === 'number' ? dbData.rooms_available : undefined,
       beds_per_room: typeof dbData.beds_per_room === 'number' ? dbData.beds_per_room : undefined,
@@ -173,6 +194,9 @@ export const useFormTransformation = () => {
 };
 
 // Type guards for string literal unions
+const isValidGhanaRegion = (val: unknown): val is GhanaRegion =>
+  typeof val === 'string' && ghanaRegions.includes(val as GhanaRegion);
+
 const isWashroomType = (val: unknown): val is 'inside' | 'outside' | 'shared' =>
   val === 'inside' || val === 'outside' || val === 'shared';
 const isMeterType = (val: unknown): val is 'shared' | 'self' =>

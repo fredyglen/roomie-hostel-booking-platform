@@ -13,68 +13,30 @@ interface HostelFieldsProps {
 const HostelFields: React.FC<HostelFieldsProps> = ({ form, updateOccupancyDetails }) => {
   return (
     <>
-      <FormField
-        control={form.control}
-        name="total_rooms"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Total Rooms</FormLabel>
-            <FormControl>
-              <Input 
-                type="number" 
-                placeholder="e.g. 10" 
-                {...field}
-                onChange={(e) => {
-                  field.onChange(e.target.valueAsNumber);
-                  updateOccupancyDetails();
-                }} 
-              />
-            </FormControl>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* Removed duplicate Total Rooms field - now handled in RoomConfigurationFields */}
 
-      <FormField
-        control={form.control}
-        name="beds_per_room"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel>Beds Per Room</FormLabel>
-            <FormControl>
-              <Input 
-                type="number" 
-                placeholder="e.g. 4" 
-                {...field}
-                onChange={(e) => {
-                  field.onChange(e.target.valueAsNumber);
-                  updateOccupancyDetails();
-                }} 
-              />
-            </FormControl>
-            <FormDescription>How many beds in each room (1-4)</FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {/* Removed duplicate Beds Per Room field - now handled conditionally in RoomConfigurationFields */}
 
       <FormField
         control={form.control}
         name="beds_available"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Beds Available</FormLabel>
+            <FormLabel>Beds Available for Booking</FormLabel>
             <FormControl>
-              <Input 
-                type="number" 
-                placeholder="e.g. 5" 
+              <Input
+                type="number"
+                placeholder="e.g. 5"
                 {...field}
                 onChange={(e) => {
                   field.onChange(e.target.valueAsNumber);
                   updateOccupancyDetails();
-                }} 
+                }}
               />
             </FormControl>
+            <FormDescription>
+              How many beds are currently available for new bookings?
+            </FormDescription>
             <FormMessage />
           </FormItem>
         )}

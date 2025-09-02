@@ -8,19 +8,20 @@ import { Property } from '@/types/property';
 interface PropertyBookingCardProps {
   property: Property;
   onBook?: () => void;
+  onViewStory?: () => void;
 }
 
 const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
-  property, onBook
+  property, onBook, onViewStory
 }) => {
   const price = property.price || property.rent;
   const priceUnit = property.priceUnit || property.price_unit || 'month';
   
   return (
-    <div className="bg-white rounded-lg shadow-md p-6 sticky top-4">
-      <div className="flex justify-between items-center mb-4">
+    <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 sticky top-4 z-30 border border-gray-200">
+      <div className="flex justify-between items-center mb-3">
         <div>
-          <span className="text-2xl font-bold text-blue-600">{formatCurrency(price)}</span>
+          <span className="text-xl font-bold text-blue-600">{formatCurrency(price)}</span>
           <span className="text-gray-600">/{priceUnit}</span>
         </div>
         {property.verified && (
@@ -30,21 +31,32 @@ const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
           </span>
         )}
       </div>
-      
+
       {property.availableUnits !== undefined && (
-        <p className="mb-4 text-sm">{property.availableUnits} units available</p>
+        <p className="mb-3 text-sm">{property.availableUnits} units available</p>
       )}
-      
-      <Button 
-        variant="default" 
-        className="w-full mb-4 bg-blue-500 hover:bg-blue-600 text-white"
+
+      <Button
+        variant="default"
+        className="w-full mb-3 bg-blue-500 hover:bg-blue-600 text-white"
         onClick={onBook}
       >
         Book Now
       </Button>
-      
-      <Button 
-        variant="outline" 
+
+      {onViewStory && (
+        <Button
+          variant="outline"
+          className="w-full mb-3 border-blue-500 text-blue-500 hover:bg-blue-50"
+          onClick={onViewStory}
+        >
+          <Icon icon="solar:play-circle-bold" className="mr-2" width={16} height={16} />
+          View Story
+        </Button>
+      )}
+
+      <Button
+        variant="outline"
         className="w-full text-gray-400 border-gray-300 cursor-not-allowed"
         disabled
       >

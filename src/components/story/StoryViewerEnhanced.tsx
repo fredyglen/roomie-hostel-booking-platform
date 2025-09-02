@@ -34,14 +34,31 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
   isMobile = true,
   progressPercentage
 }) => {
-  const handleTouchStart = useCallback(() => {
+  const [touchStartY, setTouchStartY] = useState<number>(0);
+
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
     onPause(true);
+    setTouchStartY(e.touches[0].clientY);
   }, [onPause]);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (!touchStartY || !onSwipeUp) return;
+
+    const currentY = e.touches[0].clientY;
+    const diff = touchStartY - currentY;
+
+    // If swiping up significantly, trigger swipe up (reduced threshold for better responsiveness)
+    if (diff > 30) {
+      onSwipeUp();
+      setTouchStartY(0); // Reset to prevent multiple triggers
+    }
+  }, [touchStartY, onSwipeUp]);
 
   const handleTouchEnd = useCallback(() => {
     if (!showDetails) {
       onPause(false);
     }
+    setTouchStartY(0);
   }, [onPause, showDetails]);
 
   if (!story) return null;
@@ -63,12 +80,13 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
       </div>
       
       {/* Main content */}
-      <div 
+      <div
         className="w-full h-full touch-none relative z-10 flex items-center justify-center"
         onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
-        onMouseDown={handleTouchStart}
-        onMouseUp={handleTouchEnd}
+        onMouseDown={(e) => onPause(true)}
+        onMouseUp={(e) => !showDetails && onPause(false)}
       >
         <div className="story-content">
           {story.type === 'image' ? (
@@ -162,14 +180,33 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
         )}
       </div>
       
-      {/* Swipe Up Indicator */}
+      {/* Enhanced Swipe Up Indicator with Book Now Option */}
       {onSwipeUp && !showDetails && (
-        <div 
-          className="absolute bottom-20 left-0 right-0 flex flex-col items-center animate-bounce cursor-pointer z-20"
-          onClick={onSwipeUp}
-        >
-          <p className="text-white text-sm font-medium mb-1 drop-shadow-md">Swipe up for details</p>
-          <Icon icon="solar:arrow-up-linear" className="h-6 w-6 text-white drop-shadow-md" />
+        <div className="absolute bottom-16 left-0 right-0 flex flex-col items-center z-20">
+          {/* Book Now Button - More Prominent */}
+          <div className="mb-4 px-4">
+            <button
+              onClick={() => {
+                // Navigate directly to booking
+                const propertyId = property?.id;
+                if (propertyId) {
+                  window.location.href = `/student/book/${propertyId}`;
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105"
+            >
+              Book Now
+            </button>
+          </div>
+
+          {/* Swipe Up for Details */}
+          <div
+            className="flex flex-col items-center animate-bounce cursor-pointer"
+            onClick={onSwipeUp}
+          >
+            <p className="text-white text-xs font-medium mb-1 drop-shadow-md">Swipe up for details</p>
+            <Icon icon="solar:arrow-up-linear" className="h-5 w-5 text-white drop-shadow-md" />
+          </div>
         </div>
       )}
     </div>

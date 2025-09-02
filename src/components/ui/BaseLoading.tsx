@@ -1,17 +1,25 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import PremiumLoader from './PremiumLoader';
 
 interface BaseLoadingProps {
   message?: string;
   className?: string;
+  size?: 'sm' | 'md' | 'lg';
+  variant?: 'spinner' | 'dots' | 'pulse';
 }
 
-export const BaseLoading: React.FC<BaseLoadingProps> = ({ message, className }) => (
-  <div className={cn('flex flex-col items-center justify-center p-8', className)}>
-    <Loader2 className="animate-spin text-primary w-8 h-8" />
-    {message && (
-      <p className="text-muted-foreground mt-4 text-sm text-center">{message}</p>
-    )}
+export const BaseLoading: React.FC<BaseLoadingProps> = ({
+  message,
+  className,
+  size = 'md',
+  variant = 'spinner'
+}) => (
+  <div className={cn('flex flex-col items-center justify-center p-8 animate-fade-in-up', className)}>
+    <PremiumLoader
+      size={size}
+      variant={variant}
+      message={message}
+    />
   </div>
-); 
+);

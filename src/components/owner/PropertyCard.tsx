@@ -6,35 +6,59 @@ import { Eye, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { formatCurrency } from '@/utils/currency';
 import { IMAGE_URLS } from '@/constants/images';
+import { PropertyId, PropertyPrice } from '@/types/property';
 
 interface PropertyCardProps {
   property: {
-    id: string;
-    title: string;
-    type: string;
-    address: string;
-    price: number;
-    price_unit: string;
-    status: string;
-    occupancy: string;
-    image_url: string;
+    readonly id: PropertyId | string;
+    readonly title: string;
+    readonly type: string;
+    readonly address: string;
+    readonly price: PropertyPrice | number;
+    readonly price_unit: string;
+    readonly status: string;
+    readonly occupancy: string;
+    readonly image_url: string;
   };
   onDelete: (id: string) => void;
 }
 
 const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete }) => {
+  const [imageLoaded, setImageLoaded] = React.useState(false);
+  const [imageError, setImageError] = React.useState(false);
+
   return (
     <Card className="overflow-hidden">
-      <div className="h-48 relative">
-        <img 
-          src={property.image_url || IMAGE_URLS.DEFAULT} 
-          alt={property.title} 
-          className="w-full h-full object-cover"
-          onError={(e) => {
-            const target = e.target as HTMLImageElement;
-            target.src = IMAGE_URLS.DEFAULT; // Fallback image
-          }}
-        />
+      <div className="h-48 relative bg-gray-100">
+        {property.image_url && !imageError ? (
+          <>
+            {!imageLoaded && (
+              <div className="w-full h-full flex items-center justify-center bg-gray-200 absolute inset-0">
+                <div className="text-center text-gray-500">
+                  <div className="text-2xl mb-2">⏳</div>
+                  <div className="text-sm">Loading...</div>
+                </div>
+              </div>
+            )}
+            <img
+              src={property.image_url}
+              alt={property.title}
+              className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+              onLoad={() => setImageLoaded(true)}
+              onError={() => {
+                console.log('🚨 IMAGE LOAD ERROR', property.image_url);
+                setImageError(true);
+              }}
+            />
+          </>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-gray-200">
+            <div className="text-center text-gray-500">
+              <div className="text-2xl mb-2">🏠</div>
+              <div className="text-sm">No Image</div>
+            </div>
+          </div>
+        )}
         <div className="absolute top-2 right-2">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
             property.status === 'Available' ? 'bg-green-100 text-green-800' : 
@@ -60,10 +84,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete }) => {
         </div>
       </CardContent>
       <CardFooter className="pt-0 flex justify-between">
-        <Button variant="outline" size="sm">
-          <Eye className="w-4 h-4 mr-1" /> View
-        </Button>
-        <Link to={`/owner/property/${property.id}/edit`}>
+        <Link to={`/owner/property/${property.id}/view`}>
+          <Button variant="outline" size="sm">
+            <Eye className="w-4 h-4 mr-1" /> View
+          </Button>
+        </Link>
+        <Link to={`/owner/properties/${property.id}/edit`}>
           <Button variant="outline" size="sm">
             <Edit className="w-4 h-4 mr-1" /> Edit
           </Button>

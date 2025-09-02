@@ -12,7 +12,7 @@ const StudentSubscription: React.FC = () => {
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
       <div className="bg-white shadow-sm border-b">
-        <div className="container mx-auto px-4 py-4">
+        <div className="container mx-auto px-4 py-3">
           <div className="flex items-center gap-4">
             <Button
               variant="ghost"
@@ -30,7 +30,7 @@ const StudentSubscription: React.FC = () => {
       </div>
 
       {/* Content */}
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-4">
         <SubscriptionManager />
       </div>
     </div>

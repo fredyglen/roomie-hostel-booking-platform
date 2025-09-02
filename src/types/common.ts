@@ -41,7 +41,7 @@ export interface BookingFormData {
   studentId: string;
   university: string;
   program: string;
-  idImage: any;
+  idImage: File | FileList | null;
   termsAgreed: boolean;
 }
 
@@ -83,9 +83,4 @@ export interface LogContext {
   [key: string]: unknown;
 }
 
-// Global window extension for Paystack
-declare global {
-  interface Window {
-    PaystackPop?: any;
-  }
-}
+// Note: Paystack Window interface is declared in src/types/paystack.d.ts

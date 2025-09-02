@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Button from './common/Button';
 import { Icon } from '@iconify/react';
+import { supabase } from '@/integrations/supabase/client';
 
 interface StoryViewerProps {
   propertyId: string;
@@ -17,27 +17,40 @@ interface StoryMedia {
 }
 
 const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
-  // In a real app, we would fetch this data from an API
-  const storyMedia: StoryMedia[] = [
-    {
-      id: '1',
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80',
-      duration: 5
-    },
-    {
-      id: '2',
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80',
-      duration: 5
-    },
-    {
-      id: '3',
-      type: 'image',
-      url: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80',
-      duration: 5
+  // Fetch property data to get real images
+  const [property, setProperty] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProperty = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('id', propertyId)
+          .single();
+
+        if (error) throw error;
+        setProperty(data);
+      } catch (error) {
+        console.error('Error fetching property:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (propertyId) {
+      fetchProperty();
     }
-  ];
+  }, [propertyId]);
+
+  // Convert property images to story media format
+  const storyMedia: StoryMedia[] = property?.images ? property.images.map((imageUrl: string, index: number) => ({
+    id: `${propertyId}_${index}`,
+    type: 'image' as const,
+    url: imageUrl,
+    duration: 5
+  })) : [];
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -47,25 +60,39 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
   const detailsRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
 
-  // Property details (mock data)
-  const propertyDetails = {
+  // Property details from real data
+  const propertyDetails = property ? {
     id: propertyId,
-    title: 'Cozy Studio Near UPSA',
-    type: 'Studio',
-    price: 850,
-    priceUnit: 'month',
-    address: '123 University Road, East Legon, Accra',
-    distanceToCampus: '5 min walk',
-    amenities: ['Wi-Fi', 'Air Conditioning', 'Security', 'Water', 'Bathroom'],
-    description: 'This cozy studio apartment is perfect for students looking for comfort and convenience. Located just a 5-minute walk from UPSA, it offers all the amenities you need for a comfortable student life.',
-    rating: 4.5,
-    reviewCount: 23
+    title: property.title || 'Property',
+    type: property.property_type || property.type || 'Property',
+    price: property.rent || property.base_price_per_semester || 0,
+    priceUnit: 'semester',
+    address: property.address || 'Address not available',
+    distanceToCampus: property.distance_to_campus || 'Distance not specified',
+    amenities: property.amenities || [],
+    description: property.description || 'No description available',
+    rating: 4.5, // TODO: Get from reviews
+    reviewCount: 0 // TODO: Get from reviews
+  } : {
+    id: propertyId,
+    title: 'Loading...',
+    type: 'Property',
+    price: 0,
+    priceUnit: 'semester',
+    address: 'Loading...',
+    distanceToCampus: 'Loading...',
+    amenities: [],
+    description: 'Loading...',
+    rating: 0,
+    reviewCount: 0
   };
 
   useEffect(() => {
-    if (isPaused) return;
-    
+    if (isPaused || storyMedia.length === 0) return;
+
     const currentMedia = storyMedia[currentIndex];
+    if (!currentMedia || !currentMedia.duration) return;
+
     const interval = setInterval(() => {
       setProgress(prev => {
         const newProgress = prev + (100 / (currentMedia.duration * 10));
@@ -76,7 +103,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
             setCurrentIndex(currentIndex + 1);
             setProgress(0);
           } else {
-            onClose();
+            setTimeout(() => onClose(), 0);
           }
         }
         return newProgress < 100 ? newProgress : 0;
@@ -84,7 +111,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
     }, 100);
 
     return () => clearInterval(interval);
-  }, [currentIndex, isPaused]);
+  }, [currentIndex, isPaused, storyMedia, onClose]);
 
   const handlePrev = () => {
     if (currentIndex > 0) {
@@ -144,8 +171,39 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
     setShowDetails(!showDetails);
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <div className="text-white text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white mx-auto mb-4"></div>
+          <p>Loading property...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show empty state if no images
+  if (storyMedia.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <div className="text-white text-center">
+          <Icon icon="solar:gallery-linear" className="h-16 w-16 mx-auto mb-4 text-gray-400" />
+          <h3 className="text-xl font-bold mb-2">No Images Available</h3>
+          <p className="text-gray-300 mb-4">This property doesn't have any images to display.</p>
+          <button
+            onClick={onClose}
+            className="bg-white text-black px-6 py-2 rounded-lg font-medium"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div 
+    <div
       className="story-viewer"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
@@ -224,7 +282,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
           
           <div className="flex justify-between items-center mb-4">
             <div>
-              <span className="font-bold text-xl text-blue-600">₵{propertyDetails.price}</span>
+              <span className="font-bold text-xl" style={{ color: '#0f68fd' }}>₵{propertyDetails.price}</span>
               <span className="text-gray-500">/{propertyDetails.priceUnit}</span>
             </div>
             <div className="flex items-center">
@@ -249,9 +307,22 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
             <p className="text-gray-600">{propertyDetails.description}</p>
           </div>
           
-          <Button variant="primary" fullWidth onClick={handleBookNow}>
+          <button
+            onClick={handleBookNow}
+            style={{
+              width: '100%',
+              height: '48px',
+              background: '#0f68fd',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '24px',
+              fontSize: '16px',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }}
+          >
             Book Now
-          </Button>
+          </button>
         </div>
       </div>
     </div>

@@ -1,52 +1,98 @@
+/**
+ * ⚠️ DEPRECATED HOOK - USE useDynamicProperties INSTEAD
+ *
+ * This hook contains hardcoded sample data and is being replaced by:
+ * - useDynamicProperties from @/hooks/property/useDynamicProperties
+ * - enhancedPropertyService from @/services/enhanced-property.service
+ *
+ * This file remains for backward compatibility only.
+ * All new components should use the dynamic data loading system.
+ */
+
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { Property } from '@/types/property';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Property,
+  PropertyId,
+  PropertyPrice,
+  createPropertyId,
+  createPropertyPrice
+} from '@/types/property';
+import { User } from '@/types/core';
 import { logger } from '@/utils/logger';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
-// Sample properties data as fallback (keeping existing implementation)
+// Sample properties data as fallback (using unified Property interface)
 const getSampleProperties = (): Property[] => {
   return [
     {
-      id: '1',
+      // Core identification with branded types
+      id: createPropertyId('sample-1'),
       name: 'Modern Apartment',
-      title: 'Modern Apartment',
-      description: 'A modern apartment in Accra.',
+      description: 'A modern apartment in Accra with excellent amenities.',
       type: 'apartment',
       status: 'available',
-      price: 1200,
-      rent: 1200,
-      location: {
-        address: '123 Main St',
+
+      // Location information
+      address: {
+        street: '123 Main St',
         city: 'Accra',
         state: 'Greater Accra',
+        zipCode: '00233',
+        country: 'Ghana',
+        coordinates: {
+          latitude: 5.6037,
+          longitude: -0.1870
+        }
       },
-      address: '123 Main St',
-      city: 'Accra',
-      state: 'Greater Accra',
-      zip: '00233',
-      owner_id: 'owner1',
-      propertyCategory: 'Apartment',
-      verified: true,
-      is_available: true,
-      bedrooms: 2,
-      bathrooms: 1,
-      available_from: '2024-01-01',
-      amenities: ['WiFi', 'AC', 'Parking'],
-      images: ['/placeholder.svg'],
-      created_at: '2024-01-01T00:00:00Z',
-      updated_at: '2024-01-01T00:00:00Z',
+
+      // Pricing with branded types
+      price: createPropertyPrice(1200),
+
+      // Physical features
+      features: {
+        bedrooms: 2,
+        bathrooms: 2,
+        kitchens: 1,
+        parkingSpaces: 1,
+        furnished: true,
+        petsAllowed: false,
+        utilities: {
+          water: true,
+          electricity: true,
+          internet: true,
+          gas: true,
+          cleaning: false,
+          security: true,
+        },
+        amenities: ['WiFi', 'Air Conditioning', 'Parking', 'Security'],
+        rules: ['No smoking', 'No pets'],
+      },
+
+      // Media
+      media: [
+        {
+          id: 'sample-1-img-1',
+          url: '/images/sample-apartment-1.jpg',
+          type: 'image',
+          isCover: true,
+        }
+      ],
+
+      // Ownership and metadata
+      ownerId: 'owner1',
       owner: {
         id: 'owner1',
-        name: 'John Owner',
-        email: 'owner@example.com',
+        first_name: 'John',
+        last_name: 'Doe',
+        email: 'john.doe@example.com',
         phone: '+233123456789',
-        verified: true,
-        responseRate: '95%'
+        role: 'owner',
       },
-      house_rules: 'No smoking, no pets',
-      stories: [],
-      features: ['balcony', 'ensuite']
+      buildings: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      verificationStatus: 'verified',
     }
     // ... other sample properties
   ];
@@ -117,7 +163,7 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
         .from('properties')
         .select(`
           *,
-          profiles!owner_id (
+          profiles:owner_id (
             first_name,
             last_name,
             email,
@@ -129,9 +175,10 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
 
       if (fetchError) {
         ErrorHandler.handle(fetchError, 'usePropertyData error fetching properties from database');
-        // Fall back to sample data
-        logger.info('Falling back to sample properties after fetch error');
-        setProperties(getSampleProperties());
+        // CRITICAL FIX: Return empty array instead of sample data
+        // This ensures students only see real owner-provided properties
+        logger.info('Database error - showing empty state instead of fake data');
+        setProperties([]);
         return;
       }
 
@@ -141,9 +188,10 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
         setProperties(transformedProperties);
         logger.info(`Successfully loaded ${transformedProperties.length} properties from database`);
       } else {
-        // No data in database, use sample data
-        logger.info('No properties in database, using sample data');
-        setProperties(getSampleProperties());
+        // CRITICAL FIX: Show empty state instead of sample data
+        // This ensures students only see real owner-provided properties
+        logger.info('No properties in database - showing empty state');
+        setProperties([]);
       }
       
     } catch (err) {
@@ -165,7 +213,7 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
         .from('properties')
         .select(`
           *,
-          profiles!owner_id (
+          profiles:owner_id (
             first_name,
             last_name,
             email,
@@ -177,13 +225,9 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
 
       if (error) {
         ErrorHandler.handle(error, 'usePropertyData error fetching property by ID from database');
-        // Fall back to sample data
-        const sampleProperties = getSampleProperties();
-        const sampleProperty = sampleProperties.find(p => p.id === id);
-        if (sampleProperty) {
-          ErrorHandler.log(`Found property in sample data: ${sampleProperty.name}`);
-          return sampleProperty;
-        }
+        // CRITICAL FIX: Return null instead of falling back to sample data
+        // This ensures students only see real owner-provided properties
+        logger.info('Database error - property not found');
         return null;
       }
 
@@ -193,24 +237,14 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
         return transformedProperty;
       }
 
-      // Fall back to sample data
-      const sampleProperties = getSampleProperties();
-      const sampleProperty = sampleProperties.find(p => p.id === id);
-      if (sampleProperty) {
-        ErrorHandler.log(`Found property in sample data: ${sampleProperty.name}`);
-        return sampleProperty;
-      }
+      // CRITICAL FIX: Return null instead of sample data
+      // This ensures students only see real owner-provided properties
       return null;
       
     } catch (err) {
       ErrorHandler.handle(err, 'usePropertyData property fetch by ID error');
-      // Fall back to sample data
-      const sampleProperties = getSampleProperties();
-      const sampleProperty = sampleProperties.find(p => p.id === id);
-      if (sampleProperty) {
-        ErrorHandler.log(`Found property in sample data: ${sampleProperty.name}`);
-        return sampleProperty;
-      }
+      // CRITICAL FIX: Return null instead of sample data
+      // This ensures students only see real owner-provided properties
       return null;
     }
   };
@@ -219,7 +253,13 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
     fetchProperties();
   }, []);
 
-  return [properties, loading, error];
+  return {
+    properties,
+    loading,
+    error,
+    getPropertyById,
+    fetchProperties
+  };
 };
 
 // Export the getSampleProperties for use in other components

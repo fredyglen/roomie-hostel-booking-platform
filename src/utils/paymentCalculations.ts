@@ -1,14 +1,10 @@
 
 import { Property } from '@/types/property';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 
-// Payment configuration constants
-const PAYMENT_CONFIG = {
-  platformFeePercentage: 0.05, // 5% platform fee
-  paymentProcessorFeePercentage: 0.015, // 1.5% Paystack fee
-  agentCommissionPercentage: 0.10, // 10% agent commission
-  vatRate: 0.125, // 12.5% VAT in Ghana
-  currency: 'GHS'
-};
+// ✅ CENTRALIZED COMMISSION SYSTEM - Single Source of Truth
+// All payment calculations now use the centralized commission engine
+// This eliminates hardcoded values and ensures consistency across the platform
 
 export interface PaymentBreakdown {
   propertyRent: number;
@@ -35,26 +31,17 @@ export const calculatePaymentBreakdown = (
   propertyRent: number,
   packageType: 'standard' | 'premium' | 'luxury' = 'standard'
 ): PaymentBreakdown => {
-  // Base calculations
-  const platformFee = propertyRent * PAYMENT_CONFIG.platformFeePercentage;
-  const paymentProcessorFee = propertyRent * PAYMENT_CONFIG.paymentProcessorFeePercentage;
-  const agentFee = propertyRent * PAYMENT_CONFIG.agentCommissionPercentage;
-  
-  const subtotal = propertyRent + platformFee + paymentProcessorFee + agentFee;
-  const vat = subtotal * PAYMENT_CONFIG.vatRate;
-  const totalAmount = subtotal + vat;
-  
-  // What the property owner receives (rent minus platform and agent fees)
-  const ownerReceives = propertyRent - platformFee - agentFee;
+  // ✅ CENTRALIZED COMMISSION CALCULATION - Using single source of truth
+  const commissionResult = centralizedCommissionEngine.calculateCommissions(propertyRent, true);
 
   return {
-    propertyRent,
-    platformFee,
-    paymentProcessorFee,
-    agentFee,
-    vat,
-    totalAmount,
-    ownerReceives
+    propertyRent: commissionResult.baseAmount,
+    platformFee: commissionResult.platformCommission + commissionResult.platformFixedFee,
+    paymentProcessorFee: commissionResult.paystackFee,
+    agentFee: commissionResult.agentCommission,
+    vat: commissionResult.vatAmount,
+    totalAmount: commissionResult.totalAmount,
+    ownerReceives: commissionResult.ownerReceives
   };
 };
 
@@ -65,24 +52,19 @@ export const calculateBookingCosts = (
 ): BookingCosts => {
   const baseRent = property.rent || property.price;
   const subtotal = baseRent * durationMonths;
-  
-  const platformFee = subtotal * PAYMENT_CONFIG.platformFeePercentage;
-  const processingFee = subtotal * PAYMENT_CONFIG.paymentProcessorFeePercentage;
-  const agentFee = subtotal * PAYMENT_CONFIG.agentCommissionPercentage;
-  
-  const beforeVat = subtotal + platformFee + processingFee + agentFee;
-  const vat = beforeVat * PAYMENT_CONFIG.vatRate;
-  const total = beforeVat + vat;
+
+  // ✅ CENTRALIZED COMMISSION CALCULATION - Using single source of truth
+  const commissionResult = centralizedCommissionEngine.calculateCommissions(subtotal, true);
 
   return {
     baseRent,
     duration: durationMonths,
     subtotal,
-    platformFee,
-    processingFee,
-    agentFee,
-    vat,
-    total
+    platformFee: commissionResult.platformCommission + commissionResult.platformFixedFee,
+    processingFee: commissionResult.paystackFee,
+    agentFee: commissionResult.agentCommission,
+    vat: commissionResult.vatAmount,
+    total: commissionResult.totalAmount
   };
 };
 
@@ -182,10 +164,12 @@ export const calculatePaymentDistribution = (
   processorFee: number;
 } => {
   const processorFee = totalAmount * PAYMENT_CONFIG.paymentProcessorFeePercentage;
-  const platformFee = totalAmount * PAYMENT_CONFIG.platformFeePercentage;
+  // Updated to match BE CONSCIOUS structure (5% + GHS 100)
+  const platformFee = (totalAmount * PAYMENT_CONFIG.platformFeePercentage) + PAYMENT_CONFIG.platformFixedFee;
   const agentFee = agentId ? totalAmount * PAYMENT_CONFIG.agentCommissionPercentage : 0;
-  
-  const ownerAmount = totalAmount - processorFee - platformFee - agentFee;
+
+  // Property owner gets 88% as per BE CONSCIOUS
+  const ownerAmount = totalAmount * 0.88;
   
   return {
     ownerAmount: Math.max(0, ownerAmount),

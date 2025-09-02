@@ -1,6 +1,15 @@
 
-import { supabase } from '@/lib/supabase';
-import { Property, PropertyType, PropertyStatus } from '@/types/property';
+import { supabase } from '@/integrations/supabase/client';
+import {
+  Property,
+  PropertyType,
+  PropertyStatus,
+  PropertyCategory,
+  PropertyId,
+  PropertyPrice,
+  createPropertyId,
+  createPropertyPrice
+} from '@/types/property';
 import { transformDbProperty } from '@/utils/propertyTransforms';
 
 export interface PropertyQueryOptions {
@@ -78,7 +87,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
         available_to,
         created_at,
         updated_at,
-        profiles!properties_owner_id_fkey (
+        profiles:owner_id (
           id,
           first_name,
           last_name,
@@ -99,7 +108,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
       };
     }
 
-    const properties = (data || []).map((item: any) => {
+    const properties = (data || []).map((item: SimpleDbProperty) => {
       try {
         return transformDbProperty(item);
       } catch (transformError) {
@@ -120,7 +129,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
           city: item.city || '',
           state: item.state || '',
           zip: item.zip || '',
-          propertyCategory: 'Hostel' as any,
+          propertyCategory: 'Hostel' as PropertyCategory,
           verified: true,
           is_available: true,
           bedrooms: item.bedrooms || 1,
@@ -158,6 +167,8 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
 
 export async function fetchPropertyById(id: string): Promise<Property | null> {
   try {
+    console.log('fetchPropertyById called with ID:', id);
+
     const { data, error } = await supabase
       .from('properties')
       .select(`
@@ -180,26 +191,28 @@ export async function fetchPropertyById(id: string): Promise<Property | null> {
         available_from,
         available_to,
         created_at,
-        updated_at,
-        profiles!properties_owner_id_fkey (
-          id,
-          first_name,
-          last_name,
-          email,
-          phone
-        )
+        updated_at
       `)
       .eq('id', id)
       .single();
+
+    console.log('Supabase query result:', { data, error });
 
     if (error) {
       console.error('Database error:', error);
       return null;
     }
-    
-    if (!data) return null;
 
-    return transformDbProperty(data as any);
+    if (!data) {
+      console.log('No data returned from query');
+      return null;
+    }
+
+    console.log('Raw data before transform:', data);
+    const transformedProperty = transformDbProperty(data);
+    console.log('Transformed property:', transformedProperty);
+
+    return transformedProperty;
   } catch (error) {
     console.error('Fetch property by ID error:', error);
     return null;

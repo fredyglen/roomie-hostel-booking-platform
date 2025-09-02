@@ -1,8 +1,8 @@
 
-import React from 'react';
-import { useMutation } from '@tanstack/react-query';
+import React, { startTransition } from 'react';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
@@ -19,6 +19,7 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ propertyId, initial
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const { transformFormToDbFormat } = useFormTransformation();
 
   // Update property mutation
@@ -93,9 +94,14 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ propertyId, initial
     onSuccess: () => {
       toast({
         title: "Property Updated",
-        description: "Your property has been updated successfully.",
+        description: "Your property has been updated successfully. You can continue editing or go back to your properties.",
+        duration: 5000,
       });
-      navigate('/owner/properties');
+      // Invalidate queries to refresh the properties list
+      queryClient.invalidateQueries({ queryKey: ['properties'] });
+      queryClient.invalidateQueries({ queryKey: ['property', propertyId] });
+      // DON'T AUTO-NAVIGATE - Let user decide
+      // navigate('/owner/properties');
     },
     onError: (error) => {
       toast({
@@ -107,7 +113,21 @@ const PropertyEditForm: React.FC<PropertyEditFormProps> = ({ propertyId, initial
   });
 
   const handleSubmit = (data: PropertyFormValues) => {
-    updatePropertyMutation.mutate(data);
+    console.log('🚀 EDIT FORM SUBMIT CALLED', data);
+
+    startTransition(() => {
+      try {
+        console.log('🚀 CALLING MUTATION');
+        updatePropertyMutation.mutate(data);
+      } catch (error) {
+        console.error('Error submitting form:', error);
+        toast({
+          title: "Submission Error",
+          description: "Failed to submit form. Please try again.",
+          variant: "destructive",
+        });
+      }
+    });
   };
 
   const handleCancel = () => {

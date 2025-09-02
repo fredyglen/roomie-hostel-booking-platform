@@ -1,6 +1,10 @@
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { User } from '@/types/common';
+import { Database } from '@/integrations/supabase/types';
+
+// Database profile update type
+type ProfileUpdate = Database['public']['Tables']['profiles']['Update'];
 
 export const userService = {
   async getUsers(): Promise<User[]> {
@@ -53,7 +57,7 @@ export const userService = {
   
   async updateUser(id: string, updates: Partial<Omit<User, 'id' | 'created_at'>>): Promise<User> {
     // Map the User type fields to database fields
-    const updateData: any = {};
+    const updateData: ProfileUpdate = {};
     if (updates.email) updateData.email = updates.email;
     if (updates.role) updateData.role = updates.role;
     if (updates.firstName) updateData.first_name = updates.firstName;

@@ -17,81 +17,37 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { BaseLoading } from '@/components/ui/BaseLoading';
 import { BaseError } from '@/components/ui/BaseError';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/context/EnhancedAuthContext';
+import { OwnerQueries } from '@/services/database/ownerQueries';
 
-// Mock bookings data
-const bookingsData = [
-  { 
-    id: 'BK001', 
-    property: 'Cozy Studio Apartment Near UPSA', 
-    propertyId: '1',
-    student: 'John Doe', 
-    studentId: 'ST001',
-    checkIn: '2025-06-01', 
-    checkOut: '2025-12-01', 
-    status: 'Pending',
-    paymentStatus: 'Awaiting Payment',
-    amount: 850,
-    duration: '6 months',
-    date: '2025-05-15'
-  },
-  { 
-    id: 'BK002', 
-    property: 'Shared 2-Bedroom Apartment', 
-    propertyId: '2',
-    student: 'Jane Smith', 
-    studentId: 'ST002',
-    checkIn: '2025-05-20', 
-    checkOut: '2025-11-20', 
-    status: 'Confirmed',
-    paymentStatus: 'Paid',
-    amount: 500 * 6,
-    duration: '6 months',
-    date: '2025-05-14'
-  },
-  { 
-    id: 'BK003', 
-    property: 'Premium Single Room in Hostel', 
-    propertyId: '3',
-    student: 'Michael Johnson', 
-    studentId: 'ST003',
-    checkIn: '2025-05-30', 
-    checkOut: '2025-12-15', 
-    status: 'Cancelled',
-    paymentStatus: 'Refunded',
-    amount: 950,
-    duration: '1 semester',
-    date: '2025-05-12'
-  },
-  { 
-    id: 'BK004', 
-    property: 'Cozy Studio Apartment Near UPSA', 
-    propertyId: '1',
-    student: 'Emily Brown', 
-    studentId: 'ST004',
-    checkIn: '2025-06-15', 
-    checkOut: '2025-12-15', 
-    status: 'Confirmed',
-    paymentStatus: 'Paid',
-    amount: 850 * 6,
-    duration: '6 months',
-    date: '2025-05-10'
-  }
-];
+// BE CONSCIOUS: NO HARDCODED DATA - Use real database queries only
 
 const Bookings: React.FC = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState("all");
-  
-  const filteredBookings = activeTab === "all" 
-    ? bookingsData 
-    : bookingsData.filter(booking => booking.status.toLowerCase() === activeTab);
-  
+
+  // Real data queries (BE CONSCIOUS: No hardcoded data)
+  const { data: bookingsData, isLoading } = useQuery({
+    queryKey: ['owner-bookings', user?.id],
+    queryFn: async () => {
+      if (!user?.id) throw new Error('User not authenticated');
+      return await OwnerQueries.getRecentBookings(user.id, 50); // Get more bookings for full list
+    },
+    enabled: !!user?.id,
+  });
+
+  const filteredBookings = activeTab === "all"
+    ? (bookingsData || [])
+    : (bookingsData || []).filter(booking => booking.status.toLowerCase() === activeTab);
+
   const handleApproveBooking = (bookingId: string) => {
     toast({
       title: "Booking Approved",
       description: `Booking #${bookingId} has been approved`,
     });
   };
-  
+
   const handleRejectBooking = (bookingId: string) => {
     toast({
       variant: "destructive",
@@ -99,9 +55,8 @@ const Bookings: React.FC = () => {
       description: `Booking #${bookingId} has been rejected`,
     });
   };
-  
-  const isLoading = false; // Replace with actual loading state when data fetching is implemented
-  const bookings = bookingsData; // Replace with actual data when implemented
+
+  const bookings = bookingsData || [];
 
   if (isLoading) {
     return <BaseLoading message="Loading bookings..." />;
@@ -202,45 +157,47 @@ const Bookings: React.FC = () => {
                     {filteredBookings.length > 0 ? (
                       filteredBookings.map((booking) => (
                         <TableRow key={booking.id}>
-                          <TableCell>{booking.id}</TableCell>
-                          <TableCell>{booking.property}</TableCell>
-                          <TableCell>{booking.student}</TableCell>
-                          <TableCell>{booking.date}</TableCell>
-                          <TableCell>{booking.checkIn}</TableCell>
-                          <TableCell>{booking.duration}</TableCell>
-                          <TableCell>${booking.amount}</TableCell>
+                          <TableCell>{booking.booking_reference || booking.id}</TableCell>
+                          <TableCell>{booking.property_title}</TableCell>
+                          <TableCell>{booking.student_name}</TableCell>
+                          <TableCell>{new Date(booking.created_at).toLocaleDateString()}</TableCell>
+                          <TableCell>{new Date(booking.check_in_date).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            {Math.ceil((new Date(booking.check_out_date).getTime() - new Date(booking.check_in_date).getTime()) / (1000 * 60 * 60 * 24 * 30))} months
+                          </TableCell>
+                          <TableCell>GH₵{booking.total_amount.toLocaleString()}</TableCell>
                           <TableCell>
                             <div className="flex items-center">
-                              {booking.status === 'Confirmed' && (
+                              {booking.status === 'confirmed' && (
                                 <CheckCircle className="w-4 h-4 mr-1 text-green-600" />
                               )}
-                              {booking.status === 'Pending' && (
+                              {booking.status === 'pending' && (
                                 <Clock className="w-4 h-4 mr-1 text-yellow-600" />
                               )}
-                              {booking.status === 'Cancelled' && (
+                              {booking.status === 'cancelled' && (
                                 <XCircle className="w-4 h-4 mr-1 text-red-600" />
                               )}
                               <span className={`
-                                ${booking.status === 'Confirmed' && 'text-green-600'}
-                                ${booking.status === 'Pending' && 'text-yellow-600'}
-                                ${booking.status === 'Cancelled' && 'text-red-600'}
+                                ${booking.status === 'confirmed' && 'text-green-600'}
+                                ${booking.status === 'pending' && 'text-yellow-600'}
+                                ${booking.status === 'cancelled' && 'text-red-600'}
                               `}>
-                                {booking.status}
+                                {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
                               </span>
                             </div>
                           </TableCell>
                           <TableCell>
                             <span className={`px-2 py-1 rounded-full text-xs ${
-                              booking.paymentStatus === 'Paid' ? 'bg-green-100 text-green-800' :
-                              booking.paymentStatus === 'Awaiting Payment' ? 'bg-yellow-100 text-yellow-800' :
+                              booking.payment_status === 'paid' ? 'bg-green-100 text-green-800' :
+                              booking.payment_status === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                               'bg-red-100 text-red-800'
                             }`}>
-                              {booking.paymentStatus}
+                              {booking.payment_status.charAt(0).toUpperCase() + booking.payment_status.slice(1)}
                             </span>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
-                              {booking.status === 'Pending' && (
+                              {booking.status === 'pending' && (
                                 <>
                                   <Button 
                                     variant="outline" 
@@ -260,13 +217,13 @@ const Bookings: React.FC = () => {
                                   </Button>
                                 </>
                               )}
-                              {booking.status === 'Confirmed' && (
+                              {booking.status === 'confirmed' && (
                                 <Button variant="outline" size="sm">
                                   <Calendar className="w-4 h-4 mr-1" />
                                   Schedule
                                 </Button>
                               )}
-                              {booking.status === 'Cancelled' && (
+                              {booking.status === 'cancelled' && (
                                 <Button variant="outline" size="sm">
                                   View Details
                                 </Button>

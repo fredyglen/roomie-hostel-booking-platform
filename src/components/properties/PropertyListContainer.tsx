@@ -4,7 +4,7 @@ import PropertyList from './PropertyList';
 import PropertiesFiltersPanel from './PropertiesFiltersPanel';
 import { Property } from '@/types/property';
 import { usePropertiesFilter } from '@/hooks/filters';
-import { toast } from '@/components/ui/sonner';
+import { useToast } from '@/hooks/use-toast';
 import { navigateToProperty, navigateToStory } from '@/utils/navigation';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { logger } from '@/utils/logger';

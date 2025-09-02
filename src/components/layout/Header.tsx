@@ -36,11 +36,21 @@ const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
           </div>
           
           {/* Mobile menu button */}
-          <button 
+          <button
             className="md:hidden text-roomi-blue"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            aria-label={isMobileMenuOpen ? "Close mobile menu" : "Open mobile menu"}
+            aria-expanded={isMobileMenuOpen}
+            aria-controls="mobile-menu"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-6 w-6"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              aria-hidden="true"
+            >
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16m-7 6h7" />
             </svg>
           </button>
@@ -48,7 +58,12 @@ const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
         
         {/* Mobile menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden bg-white py-4">
+          <div
+            className="md:hidden bg-white py-4"
+            id="mobile-menu"
+            role="navigation"
+            aria-label="Mobile navigation menu"
+          >
             <nav className="flex flex-col space-y-4">
               <Link to="/properties" className="px-4 py-2 hover:bg-gray-100 rounded-md">Properties</Link>
               <Link to="/about" className="px-4 py-2 hover:bg-gray-100 rounded-md">About Us</Link>

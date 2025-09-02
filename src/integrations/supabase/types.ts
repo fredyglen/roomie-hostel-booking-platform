@@ -44,33 +44,102 @@ export type Database = {
       }
       bookings: {
         Row: {
+          agent_fee: number | null
+          agent_id: string | null
+          booking_reference: string
+          check_in_date: string
+          check_out_date: string
           created_at: string
-          end_date: string
+          emergency_contact_name: string | null
+          emergency_contact_phone: string | null
+          emergency_contact_relationship: string | null
+          end_date: string | null
           id: string
-          property_id: string
-          start_date: string
+          metadata: Json | null
+          package_type: string | null
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string
+          paystack_access_code: string | null
+          paystack_reference: string | null
+          platform_fee: number | null
+          property_id: string | null
+          property_owner_id: string | null
+          property_rent: number | null
+          room_id: string | null
+          special_requests: string | null
+          start_date: string | null
           status: string
-          student_id: string
+          student_id: string | null
+          total_amount: number
+          total_price: number | null
+          transaction_reference: string | null
           updated_at: string
         }
         Insert: {
+          agent_fee?: number | null
+          agent_id?: string | null
+          booking_reference?: string
+          check_in_date: string
+          check_out_date: string
           created_at?: string
-          end_date: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          end_date?: string | null
           id?: string
-          property_id: string
-          start_date: string
-          status: string
-          student_id: string
+          metadata?: Json | null
+          package_type?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          paystack_access_code?: string | null
+          paystack_reference?: string | null
+          platform_fee?: number | null
+          property_id?: string | null
+          property_owner_id?: string | null
+          property_rent?: number | null
+          room_id?: string | null
+          special_requests?: string | null
+          start_date?: string | null
+          status?: string
+          student_id?: string | null
+          total_amount: number
+          total_price?: number | null
+          transaction_reference?: string | null
           updated_at?: string
         }
         Update: {
+          agent_fee?: number | null
+          agent_id?: string | null
+          booking_reference?: string
+          check_in_date?: string
+          check_out_date?: string
           created_at?: string
-          end_date?: string
+          emergency_contact_name?: string | null
+          emergency_contact_phone?: string | null
+          emergency_contact_relationship?: string | null
+          end_date?: string | null
           id?: string
-          property_id?: string
-          start_date?: string
+          metadata?: Json | null
+          package_type?: string | null
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          paystack_access_code?: string | null
+          paystack_reference?: string | null
+          platform_fee?: number | null
+          property_id?: string | null
+          property_owner_id?: string | null
+          property_rent?: number | null
+          room_id?: string | null
+          special_requests?: string | null
+          start_date?: string | null
           status?: string
-          student_id?: string
+          student_id?: string | null
+          total_amount?: number
+          total_price?: number | null
+          transaction_reference?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -79,6 +148,13 @@ export type Database = {
             columns: ["property_id"]
             isOneToOne: false
             referencedRelation: "properties"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bookings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -455,7 +531,7 @@ export type Database = {
             foreignKeyName: "payment_distributions_booking_id_fkey"
             columns: ["booking_id"]
             isOneToOne: false
-            referencedRelation: "bookings_enhanced"
+            referencedRelation: "bookings"
             referencedColumns: ["id"]
           },
         ]

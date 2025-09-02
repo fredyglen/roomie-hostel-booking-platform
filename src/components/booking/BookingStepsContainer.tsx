@@ -1,238 +1,121 @@
 
 import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { usePropertyData } from '@/hooks/property/usePropertyData';
-import { useBookingState } from '@/hooks/booking/useBookingState';
-import BookingSteps from './BookingSteps';
-import StepDisplay from './StepDisplay';
 import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { formatDate } from '@/lib/utils';
+import { Property } from '@/types/property';
+import { supabase } from '@/integrations/supabase/client';
+import EnhancedBookingForm from './EnhancedBookingForm';
+import LoadingSpinner from '@/components/common/LoadingSpinner';
+import ErrorDisplay from '@/components/common/ErrorDisplay';
 
 const BookingStepsContainer: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
-  
-  const totalSteps = 7;
-  const stepLabels = [
-    'Personal Info',
-    'Dates',
-    'Room Type',
-    'Roommates',
-    'Emergency',
-    'Verification', 
-    'Payment'
-  ];
-  
-  // Property data - using the correct hook
-  const { getPropertyById } = usePropertyData();
-  const [property, setProperty] = React.useState(null);
-  const [propertyLoading, setPropertyLoading] = React.useState(true);
-  
+
+  // Property data
+  const [property, setProperty] = React.useState<Property | null>(null);
+  const [loading, setLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
   React.useEffect(() => {
     const loadProperty = async () => {
-      if (id) {
-        setPropertyLoading(true);
-        const propertyData = await getPropertyById(id);
-        setProperty(propertyData);
-        setPropertyLoading(false);
+      if (!id) {
+        setError('Property ID is required');
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        console.log('Loading property with ID:', id);
+
+        // Direct Supabase query
+        const { data, error: dbError } = await supabase
+          .from('properties')
+          .select('*')
+          .eq('id', id)
+          .single();
+
+        console.log('Supabase query result:', { data, error: dbError });
+
+        if (dbError) {
+          console.error('Database error:', dbError);
+          setError('Property not found');
+          return;
+        }
+
+        if (data) {
+          console.log('Property data found:', data);
+          // Create a simple property object
+          const propertyData = {
+            id: data.id,
+            name: data.title,
+            title: data.title,
+            description: data.description,
+            address: data.address,
+            city: data.city,
+            state: data.state,
+            rent: data.rent,
+            price: data.rent,
+            bedrooms: data.bedrooms,
+            bathrooms: data.bathrooms,
+            images: data.images || [],
+            amenities: data.amenities || [],
+            is_available: data.is_available
+          };
+          setProperty(propertyData);
+        } else {
+          console.error('No property data returned for ID:', id);
+          setError('Property not found');
+        }
+      } catch (err) {
+        console.error('Error loading property:', err);
+        setError(err instanceof Error ? err.message : 'Failed to load property');
+      } finally {
+        setLoading(false);
       }
     };
     loadProperty();
-  }, [id, getPropertyById]);
-  
-  // Centralized booking state
-  const {
-    bookingState,
-    currentStep,
-    setCurrentStep,
-    bookingComplete,
-    setBookingComplete,
-    loading,
-    setLoading,
-    updatePersonalInfo,
-    updateBookingDates,
-    updateRoomOptions,
-    updateRoommate,
-    addRoommate,
-    removeRoommate,
-    updateEmergencyContact,
-    updateStudentVerification,
-    updatePaymentInfo
-  } = useBookingState(id);
-  
-  // Handler functions
-  const handlePersonalInfoAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    updatePersonalInfo(name, value);
-  };
-  
-  const handleMoveInDateAdapter = (date: Date) => {
-    updateBookingDates('moveIn', date);
-  };
-  
-  const handleMoveOutDateAdapter = (date: Date) => {
-    updateBookingDates('moveOut', date);
-  };
-  
-  const handleDateChange = (name: string, value: Date | string) => {
-    updateBookingDates(name, value);
-  };
-  
-  const handleRoomOptionChange = (name: string, value: string) => {
-    updateRoomOptions(name, value);
-  };
-  
-  const handleRoommateChange = (index: number, field: string, value: string) => {
-    updateRoommate(index, field, value);
-  };
-  
-  const handleEmergencyContactAdapter = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    updateEmergencyContact(name, value);
-  };
-  
-  const handleRelationshipChange = (value: string) => {
-    updateEmergencyContact('relationship', value);
-  };
-  
-  const handleVerificationChange = (name: string, value: string) => {
-    updateStudentVerification(name, value);
-  };
-  
-  const handleIdUpload = (file: File) => {
-    updateStudentVerification('idImage', file);
-  };
-  
-  const handleVerifyStudent = () => {
-    setLoading(true);
-    // Simulate verification process
-    setTimeout(() => {
-      updateStudentVerification('verified', true);
-      setLoading(false);
-      toast({
-        title: "Verification Successful",
-        description: "Your student status has been verified.",
-      });
-    }, 2000);
-  };
-  
-  const handleNextStep = () => {
-    if (currentStep < totalSteps) {
-      setCurrentStep(currentStep + 1);
-    }
-  };
-  
-  const handlePreviousStep = () => {
-    if (currentStep > 1) {
-      setCurrentStep(currentStep - 1);
-    }
-  };
-  
-  const handleProcessPayment = () => {
-    updatePaymentInfo({ isProcessing: true });
-    
-    // Simulate payment processing
-    setTimeout(() => {
-      updatePaymentInfo({
-        isProcessing: false,
-        isComplete: true,
-      });
-      
-      setBookingComplete(true);
-      
-      toast({
-        title: "Booking Successful!",
-        description: "Your booking has been confirmed. You will receive an email with details shortly.",
-      });
-      
-      // Redirect to booking confirmation or dashboard after a delay
-      setTimeout(() => {
-        navigate('/student/properties');
-      }, 3000);
-    }, 3000);
-  };
-  
-  if (propertyLoading) {
-    return <div className="flex justify-center p-8">Loading...</div>;
-  }
-  
-  // Prepare handlers to pass to StepDisplay
-  const handlers = {
-    handlePreviousStep,
-    handleNextStep,
-    handlePersonalInfoAdapter,
-    handleMoveInDateAdapter,
-    handleMoveOutDateAdapter,
-    handleDateChange,
-    handleRoomOptionChange,
-    handleRoommateChange,
-    addRoommate,
-    removeRoommate,
-    handleEmergencyContactAdapter,
-    handleRelationshipChange,
-    handleVerificationChange,
-    handleIdUpload,
-    handleVerifyStudent,
-    handleProcessPayment,
-    loading
+  }, [id]);
+
+  const handleBookingSuccess = (bookingId: string) => {
+    toast({
+      title: "Booking Successful!",
+      description: "Your booking has been created successfully.",
+    });
+    navigate(`/student/booking-confirmation?id=${bookingId}`);
   };
 
-  // For payment step, we'll render a custom component
-  if (currentStep === 7) {
-    return (
-      <div className="container mx-auto p-4 md:p-8 max-w-3xl">
-        <BookingSteps 
-          currentStep={currentStep} 
-          totalSteps={totalSteps}
-          stepLabels={stepLabels}
-        />
-        
-        <div className="mt-8 space-y-6">
-          <h2 className="text-xl font-bold mb-4">Payment</h2>
-          <div className="border p-4 rounded-lg space-y-2">
-            <p className="font-medium">Booking Summary</p>
-            <p className="flex justify-between"><span>Property:</span> <span className="font-medium">{property?.title}</span></p>
-            <p className="flex justify-between"><span>Total Amount:</span> <span className="font-medium">₵{property?.price || 0}</span></p>
-            <p className="flex justify-between"><span>Room Type:</span> <span>{bookingState.roomOptions.roomType}</span></p>
-            <p className="flex justify-between"><span>Duration:</span> <span>{bookingState.bookingDates.duration}</span></p>
-            <p className="flex justify-between"><span>Move In:</span> <span>{formatDate(bookingState.bookingDates.moveIn)}</span></p>
-            <p className="flex justify-between"><span>Move Out:</span> <span>{formatDate(bookingState.bookingDates.moveOut)}</span></p>
-          </div>
-          <div className="flex justify-between pt-4">
-            <Button type="button" variant="outline" onClick={handlePreviousStep}>
-              Previous
-            </Button>
-            <Button 
-              type="button" 
-              onClick={handleProcessPayment}
-              disabled={bookingState.paymentInfo.isProcessing}
-            >
-              {bookingState.paymentInfo.isProcessing ? 'Processing...' : 'Complete Payment'}
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
+  const handleBookingCancel = () => {
+    navigate(`/student/properties`);
+  };
+
+  if (loading) {
+    return <LoadingSpinner message="Loading property details..." />;
   }
 
+  if (error || !property) {
+    return <ErrorDisplay error={error || 'Property not found'} title="Unable to load property" />;
+  }
   return (
-    <div className="container mx-auto p-4 md:p-8 max-w-3xl">
-      <BookingSteps 
-        currentStep={currentStep} 
-        totalSteps={totalSteps}
-        stepLabels={stepLabels}
-      />
-      
-      <div className="mt-8">
-        <StepDisplay 
-          currentStep={currentStep} 
-          property={property}
-          formData={bookingState}
-          handlers={handlers}
-        />
+    <div className="container mx-auto p-4 max-w-4xl">
+      <div className="mb-6">
+        <button
+          onClick={() => navigate('/student/properties')}
+          className="text-primary hover:text-primary/80 flex items-center gap-2 mb-4"
+        >
+          ← Back to Properties
+        </button>
+        <h1 className="text-2xl font-bold text-gray-900">Book Property</h1>
+        <p className="text-gray-600 mt-1">Complete your booking for {property.name}</p>
       </div>
+
+      <EnhancedBookingForm
+        property={property}
+        onSuccess={handleBookingSuccess}
+        onCancel={handleBookingCancel}
+      />
     </div>
   );
 };
