@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { TABLE_NAMES } from '@/services/database/standardizedQueries';
 import {
   Booking,
   BookingInsert,
@@ -23,7 +24,7 @@ export async function getBookings(
     const to = from + pageSize - 1;
 
     let query = supabase
-      .from('bookings')
+      .from(TABLE_NAMES.BOOKINGS)
       .select('*, property:property_id(*), student:student_id(*)', { count: 'exact' });
 
     // Apply filters
@@ -70,7 +71,7 @@ export async function getBookings(
 export async function getBookingById(id: string): Promise<ApiResponse<Booking>> {
   try {
     const { data, error } = await supabase
-      .from('bookings')
+      .from(TABLE_NAMES.BOOKINGS)
       .select('*, property:property_id(*), student:student_id(*)')
       .eq('id', id)
       .single();
@@ -98,7 +99,7 @@ export async function getBookingById(id: string): Promise<ApiResponse<Booking>> 
 export async function createBooking(booking: BookingInsert): Promise<ApiResponse<Booking>> {
   try {
     const { data, error } = await supabase
-      .from('bookings')
+      .from(TABLE_NAMES.BOOKINGS)
       .insert(booking)
       .select()
       .single();
@@ -129,7 +130,7 @@ export async function updateBooking(
 ): Promise<ApiResponse<Booking>> {
   try {
     const { data, error } = await supabase
-      .from('bookings')
+      .from(TABLE_NAMES.BOOKINGS)
       .update(booking)
       .eq('id', id)
       .select()
@@ -158,7 +159,7 @@ export async function updateBooking(
 export async function cancelBooking(id: string, reason?: string): Promise<ApiResponse<Booking>> {
   try {
     const { data, error } = await supabase
-      .from('bookings')
+      .from(TABLE_NAMES.BOOKINGS)
       .update({
         status: 'CANCELLED',
         notes: reason ? `Cancelled: ${reason}` : 'Cancelled by user'
@@ -194,7 +195,7 @@ export async function updateBookingPaymentStatus(
 ): Promise<ApiResponse<Booking>> {
   try {
     const { data, error } = await supabase
-      .from('bookings')
+      .from(TABLE_NAMES.BOOKINGS)
       .update({
         payment_status: paymentStatus,
         payment_details: paymentDetails
@@ -233,7 +234,7 @@ export async function getBookingsByStudentId(
     const to = from + pageSize - 1;
 
     const { data, error, count } = await supabase
-      .from('bookings')
+      .from(TABLE_NAMES.BOOKINGS)
       .select('*, property:property_id(*)', { count: 'exact' })
       .eq('student_id', studentId)
       .range(from, to)
@@ -274,7 +275,7 @@ export async function getBookingsByPropertyId(
     const offset = (page - 1) * pageSize;
 
     const { data, error, count } = await supabase
-      .from('bookings')
+      .from(TABLE_NAMES.BOOKINGS)
       .select('*', { count: 'exact' })
       .eq('property_id', propertyId)
       .order('created_at', { ascending: false })

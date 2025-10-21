@@ -18,6 +18,7 @@ import AnalyticsDashboard from '@/pages/owner/AnalyticsDashboard';
 import { UserRole } from '@/types/roles';
 import { createAdminPermission } from '@/types/auth';
 import { initializePerformanceOptimizations } from '@/utils/bundleOptimization';
+import { showAuthError } from './components/auth/AuthFeedback';
 
 
 // Lazy load all pages for better performance
@@ -62,6 +63,11 @@ const OwnerBookings = React.lazy(() => import('@/pages/owner/Bookings'));
 const OwnerProfile = React.lazy(() => import('@/pages/owner/Profile'));
 const OwnerSettings = React.lazy(() => import('@/pages/owner/Settings'));
 const OwnerSubscription = React.lazy(() => import('@/pages/owner/Subscription'));
+
+
+
+
+
 
 // Enhanced Admin Pages with Role-Based Access
 const AdminDashboard = React.lazy(() => import('@/pages/admin/Dashboard'));

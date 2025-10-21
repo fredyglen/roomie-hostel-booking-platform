@@ -4,6 +4,7 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { TABLE_NAMES } from '@/services/database/standardizedQueries';
 import { logger } from '@/utils/enhanced-logger';
 
 export interface AdminUser {
@@ -66,14 +67,14 @@ export class AdminQueries {
 
       // Get total count
       const { count, error: countError } = await supabase
-        .from('profiles')
+        .from(TABLE_NAMES.PROFILES)
         .select('*', { count: 'exact', head: true });
 
       if (countError) throw countError;
 
       // Get users with pagination
       const { data, error } = await supabase
-        .from('profiles')
+        .from(TABLE_NAMES.PROFILES)
         .select(`
           id,
           email,
@@ -107,28 +108,28 @@ export class AdminQueries {
     try {
       // Get total users
       const { count: totalUsers, error: usersError } = await supabase
-        .from('profiles')
+        .from(TABLE_NAMES.PROFILES)
         .select('*', { count: 'exact', head: true });
 
       if (usersError) throw usersError;
 
       // Get total properties
       const { count: totalProperties, error: propertiesError } = await supabase
-        .from('properties')
+        .from(TABLE_NAMES.PROPERTIES)
         .select('*', { count: 'exact', head: true });
 
       if (propertiesError) throw propertiesError;
 
       // Get total bookings
       const { count: totalBookings, error: bookingsError } = await supabase
-        .from('bookings')
+        .from(TABLE_NAMES.BOOKINGS)
         .select('*', { count: 'exact', head: true });
 
       if (bookingsError) throw bookingsError;
 
       // Get total revenue
       const { data: revenueData, error: revenueError } = await supabase
-        .from('bookings')
+        .from(TABLE_NAMES.BOOKINGS)
         .select('total_amount')
         .eq('payment_status', 'paid');
 
@@ -141,7 +142,7 @@ export class AdminQueries {
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const { count: activeUsers, error: activeError } = await supabase
-        .from('profiles')
+        .from(TABLE_NAMES.PROFILES)
         .select('*', { count: 'exact', head: true })
         .gte('created_at', thirtyDaysAgo.toISOString()); // Approximation
 
@@ -149,7 +150,7 @@ export class AdminQueries {
 
       // Get pending verifications
       const { count: pendingVerifications, error: verificationsError } = await supabase
-        .from('properties')
+        .from(TABLE_NAMES.PROPERTIES)
         .select('*', { count: 'exact', head: true })
         .eq('verification_status', 'pending');
 
@@ -160,22 +161,22 @@ export class AdminQueries {
       lastMonth.setMonth(lastMonth.getMonth() - 1);
 
       const { count: newUsersThisMonth } = await supabase
-        .from('profiles')
+        .from(TABLE_NAMES.PROFILES)
         .select('*', { count: 'exact', head: true })
         .gte('created_at', lastMonth.toISOString());
 
       const { count: newPropertiesThisMonth } = await supabase
-        .from('properties')
+        .from(TABLE_NAMES.PROPERTIES)
         .select('*', { count: 'exact', head: true })
         .gte('created_at', lastMonth.toISOString());
 
       const { count: newBookingsThisMonth } = await supabase
-        .from('bookings')
+        .from(TABLE_NAMES.BOOKINGS)
         .select('*', { count: 'exact', head: true })
         .gte('created_at', lastMonth.toISOString());
 
       const { data: monthlyRevenueData } = await supabase
-        .from('bookings')
+        .from(TABLE_NAMES.BOOKINGS)
         .select('total_amount')
         .eq('payment_status', 'paid')
         .gte('created_at', lastMonth.toISOString());

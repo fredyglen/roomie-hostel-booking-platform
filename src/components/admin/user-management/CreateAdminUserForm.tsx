@@ -174,7 +174,7 @@ const CreateAdminUserForm: React.FC<CreateAdminUserFormProps> = ({
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="John"
+                    placeholder="Gladys"
                     disabled={isSubmitting}
                   />
                 </FormControl>
@@ -192,7 +192,7 @@ const CreateAdminUserForm: React.FC<CreateAdminUserFormProps> = ({
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="Doe"
+                    placeholder="Kyei Baffour"
                     disabled={isSubmitting}
                   />
                 </FormControl>

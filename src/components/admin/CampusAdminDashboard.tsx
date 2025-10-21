@@ -200,18 +200,30 @@ const CampusAdminDashboard: React.FC = () => {
       return [
         {
           id: '1',
-          studentName: 'Kwame Asante',
-          studentId: 'UPSA/2024/001234',
+          studentName: 'Obed Afrifa ',
+          studentId: 'UPSA/2025/001234',
           university: 'UPSA',
-          program: 'Business Administration',
+          program: 'BSc in Business Administration',
           submittedAt: new Date('2024-01-08T10:30:00'),
           status: 'pending',
           documents: ['student_id.pdf', 'enrollment_letter.pdf']
-        },
+        }
+        
+        {
+          id: '1',
+          studentName: 'Obed Afrifa ',
+          studentId: 'UPSA/2025/001234',
+          university: 'University of Professional Studies',
+          program: 'BSc in Information Technology',
+          submittedAt: new Date('2024-01-08T10:30:00'),
+          status: 'pending',
+          documents: ['student_id.pdf', 'enrollment_letter.pdf']
+        }
+        ,
         {
           id: '2',
-          studentName: 'Ama Osei',
-          studentId: 'UPSA/2024/001235',
+          studentName: 'Precious Blame',
+          studentId: 'UPSA/2025/001235',
           university: 'UPSA',
           program: 'Computer Science',
           submittedAt: new Date('2024-01-08T09:15:00'),
@@ -233,8 +245,8 @@ const CampusAdminDashboard: React.FC = () => {
       return [
         {
           id: '1',
-          propertyTitle: 'Modern 2BR Apartment near UPSA',
-          ownerName: 'John Mensah',
+          propertyTitle: 'Heavens Gate Hostel near UPSA',
+          ownerName: 'Mr. Henry Ghaan',
           location: 'East Legon, Accra',
           submittedAt: new Date('2024-01-08T08:00:00'),
           status: 'pending',

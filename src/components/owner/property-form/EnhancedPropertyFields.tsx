@@ -114,7 +114,7 @@ const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, p
                 <FormItem>
                   <FormLabel>Emergency Contact Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="John Doe" {...field} />
+                    <Input placeholder="Hansel Adu Gyan" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

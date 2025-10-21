@@ -11,6 +11,8 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { TABLE_NAMES } from '@/services/database/standardizedQueries';
+
 import {
   Property,
   PropertyId,
@@ -83,8 +85,8 @@ const getSampleProperties = (): Property[] => {
       ownerId: 'owner1',
       owner: {
         id: 'owner1',
-        first_name: 'John',
-        last_name: 'Doe',
+        first_name: 'Bismark',
+        last_name: 'Agyiri',
         email: 'john.doe@example.com',
         phone: '+233123456789',
         role: 'owner',
@@ -100,7 +102,7 @@ const getSampleProperties = (): Property[] => {
 
 export const normalizePropertyData = (dbProperty: Record<string, unknown>): Property => {
   const profileData = Array.isArray(dbProperty.profiles) ? dbProperty.profiles[0] : dbProperty.profiles;
-  
+
   return {
     id: String(dbProperty.id ?? ''),
     owner_id: String(dbProperty.owner_id ?? ''),
@@ -155,12 +157,12 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
     try {
       setLoading(true);
       setError(null);
-      
+
       logger.info('Fetching properties from database');
-      
+
       // Try to fetch from Supabase first
       const { data, error: fetchError } = await supabase
-        .from('properties')
+        .from(TABLE_NAMES.PROPERTIES)
         .select(`
           *,
           profiles:owner_id (
@@ -193,7 +195,7 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
         logger.info('No properties in database - showing empty state');
         setProperties([]);
       }
-      
+
     } catch (err) {
       ErrorHandler.handle(err, 'usePropertyData.fetchProperties');
       const errorMessage = err instanceof Error ? err.message : 'Failed to fetch properties';
@@ -207,10 +209,10 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
   const getPropertyById = async (id: string): Promise<Property | null> => {
     try {
       logger.info('Fetching property by ID:', id);
-      
+
       // First try database
       const { data, error } = await supabase
-        .from('properties')
+        .from(TABLE_NAMES.PROPERTIES)
         .select(`
           *,
           profiles:owner_id (
@@ -240,7 +242,7 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
       // CRITICAL FIX: Return null instead of sample data
       // This ensures students only see real owner-provided properties
       return null;
-      
+
     } catch (err) {
       ErrorHandler.handle(err, 'usePropertyData property fetch by ID error');
       // CRITICAL FIX: Return null instead of sample data
@@ -262,5 +264,4 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
   };
 };
 
-// Export the getSampleProperties for use in other components
-export { getSampleProperties };
+

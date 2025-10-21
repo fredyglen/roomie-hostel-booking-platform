@@ -1,8 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
+import { TABLE_NAMES } from '@/services/database/standardizedQueries';
+
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Property } from '@/types/property';
-import { normalizePropertyData, getSampleProperties } from './usePropertyData';
+import { normalizePropertyData } from './usePropertyData';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 
 interface UsePropertyLoaderOptions {
@@ -18,22 +20,22 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
     queryKey: ['property', propertyId],
     queryFn: async (): Promise<Property> => {
       if (!propertyId) throw new Error('Property ID is required');
-      
+
       // For owner view, we require owner authentication
       if (forOwner && !user?.id) throw new Error('User not authenticated');
 
       try {
         ErrorHandler.log(`Fetching property with ID: ${propertyId}`);
-        
+
         // First check if the ID is a valid UUID format (required for Supabase query)
         const isUuid = propertyId.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
-        
+
         if (isUuid) {
           let query = supabase
-            .from('properties')
+            .from(TABLE_NAMES.PROPERTIES)
             .select('*')
             .eq('id', propertyId);
-          
+
           // Add owner check if this is for owner view
           if (forOwner) {
             query = query.eq('owner_id', user!.id);
@@ -44,7 +46,7 @@ export const usePropertyLoader = ({ propertyId, enabled = true, forOwner = false
             ErrorHandler.handle(error, "usePropertyLoader error fetching property from database");
             throw error;
           }
-          
+
           if (data) {
             ErrorHandler.log(`Found property in database: ${data.title}`);
             // Convert database property to our frontend property format

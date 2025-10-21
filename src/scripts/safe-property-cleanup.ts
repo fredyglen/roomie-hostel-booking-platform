@@ -33,7 +33,7 @@ const CLEANUP_TABLES = [
   'beds',                  // Child of rooms
   'rooms',                 // Child of properties
   'payments',              // Independent but property-related
-  'bookings',              // Child of properties
+  'bookings_enhanced',     // Child of properties (unified authoritative table)
   'property_amenities',    // Child of properties
   'agent_properties',      // Child of properties
   'properties'             // Parent table (last)
@@ -219,7 +219,7 @@ async function performSafeCleanup(): Promise<CleanupStats> {
           case 'properties':
             stats.propertiesDeleted = deletedCount;
             break;
-          case 'bookings':
+          case 'bookings_enhanced':
             stats.bookingsDeleted = deletedCount;
             break;
           case 'rooms':

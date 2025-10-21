@@ -244,7 +244,7 @@ const EditAdminUserForm: React.FC<EditAdminUserFormProps> = ({
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="John"
+                    placeholder="Hansel"
                     disabled={isSubmitting}
                   />
                 </FormControl>
@@ -262,7 +262,7 @@ const EditAdminUserForm: React.FC<EditAdminUserFormProps> = ({
                 <FormControl>
                   <Input
                     {...field}
-                    placeholder="Doe"
+                    placeholder="Adu Gyan"
                     disabled={isSubmitting}
                   />
                 </FormControl>

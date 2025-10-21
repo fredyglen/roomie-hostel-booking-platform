@@ -3,7 +3,7 @@
  * Quick verification tool for admin authentication
  * Following BE CONSCIOUS Apple-grade standards
  */
-
+import second from 'booking'
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -106,8 +106,7 @@ export const AdminAccessTest: React.FC = () => {
         testResults.push({
           step: 'Test Summary',
           status: 'success',
-          message: '✅ All admin access tests passed! Admin portal should work correctly.'
-        });
+          message: '✅ Operation successfully initiated. Continue to the <portal className=""></portal>
       } else if (hasErrors) {
         testResults.push({
           step: 'Test Summary',

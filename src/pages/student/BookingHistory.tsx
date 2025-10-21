@@ -3,6 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
+import { TABLE_NAMES } from '@/services/database/standardizedQueries';
+
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Calendar } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -52,7 +54,7 @@ const BookingHistory: React.FC = () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('bookings')
+        .from(TABLE_NAMES.BOOKINGS)
         .select('*')
         .eq('student_id', user?.id)
         .order('created_at', { ascending: false });
@@ -84,14 +86,14 @@ const BookingHistory: React.FC = () => {
   if (selectedBooking) {
     return (
       <div className="space-y-4">
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={() => setSelectedBooking(null)}
           className="mb-4"
         >
           ← Back to Bookings
         </Button>
-        <BookingConfirmation 
+        <BookingConfirmation
           booking={selectedBooking}
           onDownloadReceipt={() => handleDownloadReceipt(selectedBooking)}
           onContactSupport={handleContactSupport}
@@ -164,7 +166,7 @@ const BookingHistory: React.FC = () => {
             <Calendar className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 mb-2">No bookings found</h3>
             <p className="text-gray-600">
-              {searchTerm || statusFilter !== 'all' 
+              {searchTerm || statusFilter !== 'all'
                 ? 'Try adjusting your search or filter criteria.'
                 : 'You haven\'t made any bookings yet. Start exploring properties!'}
             </p>

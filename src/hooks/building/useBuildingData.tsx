@@ -28,22 +28,9 @@ export const useBuildingData = (properties: Property[]) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const generateBuildingData = () => {
-      const mockBuilding: Building = {
-        id: '1',
-        property_id: '1',
-        name: 'Main Building',
-        description: 'Primary accommodation building',
-        floors_count: 3,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-
-      setBuildings([mockBuilding]);
-      setLoading(false);
-    };
-
-    generateBuildingData();
+    // Remove mock building generation - return empty until real data is available
+    setBuildings([]);
+    setLoading(false);
   }, [properties]);
 
   const generateFloorsAndRooms = (property: Property): Floor[] => {
@@ -94,18 +81,8 @@ export const useBuildingData = (properties: Property[]) => {
     const propertyBuildings = getBuildingsByProperty(property.id);
     
     if (propertyBuildings.length === 0) {
-      // Generate mock building data
-      const mockBuilding: Building = {
-        id: `${property.id}_building_1`,
-        property_id: property.id,
-        name: `${property.title} - Main Building`,
-        description: property.description,
-        floors_count: 3,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      return [mockBuilding];
+      // No mock fallback - return empty to enforce real data usage
+      return [];
     }
     
     return propertyBuildings;

@@ -9,7 +9,7 @@
  * Technical Implementation: Integrates with AdminAuthContext for jurisdiction
  * validation, university APIs, and Ghana academic system requirements
  * 
- * @author ROOMi Platform Team
+ * @author <ROOMie></ROOMie> Platform Team
  * @version 2.0.0
  * @compliance BE CONSCIOUS Apple-Grade Standards
  */

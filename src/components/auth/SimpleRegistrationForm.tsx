@@ -48,7 +48,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
                 }}>First Name</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="John"
+                    placeholder="Bismark"
                     style={{
                       width: '100%',
                       height: '44px',
@@ -80,7 +80,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
                 }}>Last Name</FormLabel>
                 <FormControl>
                   <Input
-                    placeholder="Doe"
+                    placeholder="Agyiri"
                     style={{
                       width: '100%',
                       height: '44px',
