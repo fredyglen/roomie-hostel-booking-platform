@@ -25,7 +25,6 @@ export const COLUMN_SELECTIONS = {
   PROPERTIES_BASIC: `
     id,
     owner_id,
-    agent_id,
     title,
     description,
     property_type,
@@ -35,14 +34,12 @@ export const COLUMN_SELECTIONS = {
     state,
     zip,
     base_price_per_semester,
-    price_currency,
+    currency,
     is_available,
-    gender_type,
-    max_occupancy,
-    current_occupancy,
+    gender_restriction:gender_type,
+    max_occupants,
     amenities,
     images,
-    cover_image_url,
     verification_status,
     created_at,
     updated_at
@@ -51,7 +48,6 @@ export const COLUMN_SELECTIONS = {
   PROPERTIES_WITH_OWNER: `
     id,
     owner_id,
-    agent_id,
     title,
     description,
     property_type,
@@ -61,14 +57,13 @@ export const COLUMN_SELECTIONS = {
     state,
     zip,
     base_price_per_semester,
-    price_currency,
+    currency,
     is_available,
-    gender_type,
+    gender_restriction:gender_type,
     max_occupants,
     beds_available,
     amenities,
     images,
-    cover_image_url,
     verification_status,
     created_at,
     updated_at,
@@ -87,17 +82,11 @@ export const COLUMN_SELECTIONS = {
     student_id,
     property_id,
     property_owner_id,
-    agent_id,
-    room_id,
-    bed_id,
     check_in_date,
     check_out_date,
     total_amount,
-    platform_fee,
     status,
     payment_status,
-    payment_reference,
-    paystack_reference,
     created_at,
     updated_at
   `,
@@ -108,17 +97,11 @@ export const COLUMN_SELECTIONS = {
     student_id,
     property_id,
     property_owner_id,
-    agent_id,
-    room_id,
-    bed_id,
     check_in_date,
     check_out_date,
     total_amount,
-    platform_fee,
     status,
     payment_status,
-    payment_reference,
-    paystack_reference,
     created_at,
     updated_at,
     properties (
@@ -160,7 +143,7 @@ export class PropertyQueries {
       }
       
       if (options.genderType && options.genderType !== 'mixed') {
-        query = query.in('gender_type', [options.genderType, 'mixed']);
+        query = query.in('gender_restriction', [options.genderType, 'mixed']);
       }
 
       // Apply pagination

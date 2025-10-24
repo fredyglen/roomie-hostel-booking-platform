@@ -39,7 +39,7 @@ interface PropertyUpdateMapping {
   images?: string[];
   base_price_per_semester?: number;
   gender_type?: string;
-  max_occupancy?: number;
+  max_occupants?: number;
   current_occupancy?: number;
   verification_status?: string;
 }
@@ -62,14 +62,12 @@ export const propertyService = {
           state,
           zip,
           base_price_per_semester,
-          price_currency,
+          currency,
           is_available,
-          gender_type,
-          max_occupancy,
-          current_occupancy,
+          gender_restriction:gender_type,
+          max_occupants,
           amenities,
           images,
-          cover_image_url,
           verification_status,
           created_at,
           updated_at
@@ -105,13 +103,13 @@ export const propertyService = {
         // Pricing with branded types
         price: createPropertyPrice(property.base_price_per_semester || 0),
         base_price_per_semester: property.base_price_per_semester || 0,
-        currency: property.price_currency || 'GHS',
+        currency: property.currency || 'GHS',
 
         // Property category and occupancy
         property_category: property.property_category,
         gender_type: property.gender_type,
-        max_occupancy: property.max_occupancy,
-        current_occupancy: property.current_occupancy || 0,
+        max_occupancy: property.max_occupants,
+        current_occupancy: 0,
 
         // Verification
         verification_status: property.verification_status,
@@ -119,7 +117,7 @@ export const propertyService = {
         // Features and amenities
         amenities: property.amenities || [],
         images: property.images || [],
-        cover_image_url: property.cover_image_url,
+        cover_image_url: Array.isArray(property.images) && property.images.length > 0 ? property.images[0] : null,
 
         // Ownership and metadata
         owner_id: property.owner_id,
@@ -237,14 +235,12 @@ export const propertyService = {
       dbUpdates.property_category = updates.property_category;
     }
     if (updates.gender_type !== undefined) {
-      dbUpdates.gender_type = updates.gender_type;
+      dbUpdates.gender_restriction = updates.gender_type;
     }
     if (updates.max_occupancy !== undefined) {
-      dbUpdates.max_occupancy = updates.max_occupancy;
+      dbUpdates.max_occupants = updates.max_occupancy;
     }
-    if (updates.current_occupancy !== undefined) {
-      dbUpdates.current_occupancy = updates.current_occupancy;
-    }
+    // current_occupancy is not a physical column; skip updating it
     if (updates.verification_status !== undefined) {
       dbUpdates.verification_status = updates.verification_status;
     }

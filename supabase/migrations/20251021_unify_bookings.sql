@@ -37,36 +37,89 @@ alter table public.bookings_enhanced
 --      bookings.amount              -> total_amount
 --      bookings.status              -> status
 --      generated 'LEGACY-'||id      -> booking_reference (if missing)
-insert into public.bookings_enhanced (
-  id,
-  property_id,
-  student_id,
-  property_owner_id,
-  booking_reference,
-  check_in_date,
-  check_out_date,
-  total_amount,
-  payment_status,
-  status,
-  created_at,
-  updated_at
-)
-select
-  b.id,
-  b.property_id,
-  b.student_id,
-  b.owner_id as property_owner_id,
-  coalesce(be.booking_reference, 'LEGACY-'||b.id::text) as booking_reference,
-  coalesce(be.check_in_date, b.start_date) as check_in_date,
-  coalesce(be.check_out_date, b.end_date) as check_out_date,
-  coalesce(be.total_amount, b.amount)::numeric(12,2) as total_amount,
-  coalesce(be.payment_status, 'pending') as payment_status,
-  coalesce(be.status, b.status, 'pending') as status,
-  least(b.created_at, now()) as created_at,
-  greatest(b.updated_at, now()) as updated_at
-from public.bookings b
-left join public.bookings_enhanced be on be.id = b.id
-where be.id is null;
+do $$
+declare
+  has_start boolean;
+  has_end boolean;
+  has_amount boolean;
+  has_status boolean;
+  sql text;
+begin
+  -- Skip backfill if legacy bookings table does not exist
+  if to_regclass('public.bookings') is null then
+    raise notice 'Legacy table public.bookings not found; skipping backfill.';
+    return;
+  end if;
+
+  select exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'bookings' and column_name = 'start_date'
+  ) into has_start;
+
+  select exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'bookings' and column_name = 'end_date'
+  ) into has_end;
+
+  select exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'bookings' and column_name = 'amount'
+  ) into has_amount;
+
+  select exists (
+    select 1 from information_schema.columns
+    where table_schema = 'public' and table_name = 'bookings' and column_name = 'status'
+  ) into has_status;
+
+  sql := format($fmt$
+    insert into public.bookings_enhanced (
+      id,
+      property_id,
+      student_id,
+      property_owner_id,
+      booking_reference,
+      check_in_date,
+      check_out_date,
+      total_amount,
+      payment_status,
+      status,
+      created_at,
+      updated_at
+    )
+    select
+      b.id,
+      b.property_id,
+      b.student_id,
+      p.owner_id as property_owner_id,
+      coalesce(be.booking_reference, 'LEGACY-'||b.id::text) as booking_reference,
+      %s as check_in_date,
+      %s as check_out_date,
+      %s as total_amount,
+      coalesce(be.payment_status, 'pending') as payment_status,
+      %s as status,
+      least(b.created_at, now()) as created_at,
+      greatest(b.updated_at, now()) as updated_at
+    from public.bookings b
+    left join public.properties p on p.id = b.property_id
+    left join public.bookings_enhanced be on be.id = b.id
+    where be.id is null;
+  $fmt$,
+    case when has_start then 'coalesce(be.check_in_date, b.start_date::date)'
+         else 'coalesce(be.check_in_date, b.created_at::date)'
+    end,
+    case when has_end then 'coalesce(be.check_out_date, b.end_date::date)'
+         else 'coalesce(be.check_out_date, (b.created_at + interval ''90 days'')::date)'
+    end,
+    case when has_amount then 'coalesce(be.total_amount, b.amount)::numeric(12,2)'
+         else 'coalesce(be.total_amount, 0)::numeric(12,2)'
+    end,
+    case when has_status then 'coalesce(be.status, b.status, ''pending'')'
+         else 'coalesce(be.status, ''pending'')'
+    end
+  );
+
+  execute sql;
+end $$;
 
 -- 4) Indexes to support portal queries
 create index if not exists idx_bookings_enhanced_student_id on public.bookings_enhanced(student_id);

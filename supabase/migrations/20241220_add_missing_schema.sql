@@ -1,6 +1,6 @@
 -- ROOMi Platform Database Schema Updates
 -- Apple-Level Database Migration for Production Readiness
--- 
+--
 -- This migration adds missing tables and columns required for TypeScript compatibility
 -- and ensures the database schema matches our Apple-Level application architecture
 
@@ -9,16 +9,16 @@
 -- =====================================================
 
 -- Add base_price_per_semester column for semester-based pricing
-ALTER TABLE properties 
+ALTER TABLE properties
 ADD COLUMN IF NOT EXISTS base_price_per_semester DECIMAL(10,2);
 
 -- Add currency column for multi-currency support
-ALTER TABLE properties 
+ALTER TABLE properties
 ADD COLUMN IF NOT EXISTS currency VARCHAR(3) DEFAULT 'GHS';
 
 -- Update existing properties to have base_price_per_semester = rent for backward compatibility
-UPDATE properties 
-SET base_price_per_semester = rent 
+UPDATE properties
+SET base_price_per_semester = rent
 WHERE base_price_per_semester IS NULL;
 
 -- =====================================================
@@ -30,17 +30,17 @@ CREATE TABLE IF NOT EXISTS notifications (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
+
     -- Notification content
     user_id UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
     title TEXT NOT NULL CHECK (char_length(title) BETWEEN 1 AND 200),
     message TEXT NOT NULL CHECK (char_length(message) BETWEEN 1 AND 1000),
     type VARCHAR(50) NOT NULL CHECK (type IN ('info', 'success', 'warning', 'error', 'booking', 'payment', 'property', 'system')),
-    
+
     -- Notification state
     read BOOLEAN NOT NULL DEFAULT FALSE,
     data JSONB DEFAULT '{}',
-    
+
     -- Indexes for performance
     CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
 );
@@ -60,16 +60,16 @@ CREATE TABLE IF NOT EXISTS subscription_plans (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
     updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    
+
     -- Plan details
     name VARCHAR(100) NOT NULL UNIQUE CHECK (char_length(name) BETWEEN 1 AND 100),
     description TEXT NOT NULL CHECK (char_length(description) BETWEEN 10 AND 500),
-    
+
     -- Pricing
     price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
     currency VARCHAR(3) NOT NULL DEFAULT 'GHS',
     duration_months INTEGER NOT NULL CHECK (duration_months > 0),
-    
+
     -- Features and status
     features TEXT[] NOT NULL DEFAULT '{}',
     is_active BOOLEAN NOT NULL DEFAULT TRUE
@@ -85,7 +85,7 @@ CREATE INDEX IF NOT EXISTS idx_subscription_plans_price ON subscription_plans(pr
 
 -- Insert default subscription plans for ROOMi platform
 INSERT INTO subscription_plans (name, description, price, currency, duration_months, features, is_active)
-VALUES 
+VALUES
     (
         'Basic Plan',
         'Perfect for individual property owners with up to 5 properties',
@@ -129,13 +129,24 @@ END;
 $$ language 'plpgsql';
 
 -- Add triggers for updated_at columns
-CREATE TRIGGER update_notifications_updated_at 
-    BEFORE UPDATE ON notifications 
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'update_notifications_updated_at'
+  ) THEN
+    CREATE TRIGGER update_notifications_updated_at
+      BEFORE UPDATE ON notifications
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
 
-CREATE TRIGGER update_subscription_plans_updated_at 
-    BEFORE UPDATE ON subscription_plans 
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'update_subscription_plans_updated_at'
+  ) THEN
+    CREATE TRIGGER update_subscription_plans_updated_at
+      BEFORE UPDATE ON subscription_plans
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END$$;
 
 -- =====================================================
 -- PHASE 6: ROW LEVEL SECURITY (RLS)
@@ -146,13 +157,16 @@ ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 ALTER TABLE subscription_plans ENABLE ROW LEVEL SECURITY;
 
 -- Notifications policies
+DROP POLICY IF EXISTS "Users can view their own notifications" ON notifications;
 CREATE POLICY "Users can view their own notifications" ON notifications
-    FOR SELECT USING (auth.uid()::text = user_id);
+    FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can update their own notifications" ON notifications;
 CREATE POLICY "Users can update their own notifications" ON notifications
-    FOR UPDATE USING (auth.uid()::text = user_id);
+    FOR UPDATE USING (auth.uid() = user_id);
 
 -- Subscription plans policies (read-only for all authenticated users)
+DROP POLICY IF EXISTS "Authenticated users can view subscription plans" ON subscription_plans;
 CREATE POLICY "Authenticated users can view subscription plans" ON subscription_plans
     FOR SELECT USING (auth.role() = 'authenticated');
 
@@ -177,12 +191,42 @@ CREATE TABLE IF NOT EXISTS property_views (
     source_page TEXT, -- where user came from
     device_type TEXT CHECK (device_type IN ('mobile', 'tablet', 'desktop')),
 
-    -- Constraints
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    -- Prevent duplicate views within 1 hour
-    UNIQUE(user_id, property_id, date_trunc('hour', viewed_at))
+    -- Timestamps
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
+
+-- Hour bucket column for 1-hour uniqueness on property views
+ALTER TABLE property_views
+ADD COLUMN IF NOT EXISTS viewed_hour_epoch BIGINT;
+
+-- Trigger function to maintain viewed_hour_epoch (avoids IMMUTABLE requirement on generated columns)
+CREATE OR REPLACE FUNCTION set_property_views_hour_bucket()
+RETURNS TRIGGER
+LANGUAGE plpgsql
+AS $$
+BEGIN
+  NEW.viewed_hour_epoch := (extract(epoch FROM NEW.viewed_at)::bigint) / 3600;
+  RETURN NEW;
+END;
+$$;
+
+-- Create trigger if not exists
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'set_property_views_hour_bucket_trg'
+  ) THEN
+    CREATE TRIGGER set_property_views_hour_bucket_trg
+      BEFORE INSERT OR UPDATE OF viewed_at ON property_views
+      FOR EACH ROW EXECUTE FUNCTION set_property_views_hour_bucket();
+  END IF;
+END$$;
+
+-- Backfill existing rows
+UPDATE property_views
+SET viewed_hour_epoch = (extract(epoch FROM viewed_at)::bigint) / 3600
+WHERE viewed_hour_epoch IS NULL;
+
 
 -- Payments Table (comprehensive payment tracking)
 CREATE TABLE IF NOT EXISTS payments (
@@ -209,13 +253,7 @@ CREATE TABLE IF NOT EXISTS payments (
 
     -- Audit Trail
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-
-    -- Indexes for performance
-    INDEX idx_payments_user_id (user_id),
-    INDEX idx_payments_reference (reference),
-    INDEX idx_payments_status (status),
-    INDEX idx_payments_date (transaction_date)
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- User Subscriptions Table (for premium features)
@@ -258,12 +296,15 @@ CREATE TABLE IF NOT EXISTS user_subscriptions (
 -- Property Views RLS
 ALTER TABLE property_views ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own property views" ON property_views;
 CREATE POLICY "Users can view their own property views" ON property_views
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own property views" ON property_views;
 CREATE POLICY "Users can insert their own property views" ON property_views
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Property owners can view their property views" ON property_views;
 CREATE POLICY "Property owners can view their property views" ON property_views
     FOR SELECT USING (
         EXISTS (
@@ -276,18 +317,22 @@ CREATE POLICY "Property owners can view their property views" ON property_views
 -- Payments RLS
 ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own payments" ON payments;
 CREATE POLICY "Users can view their own payments" ON payments
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can insert their own payments" ON payments;
 CREATE POLICY "Users can insert their own payments" ON payments
     FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- User Subscriptions RLS
 ALTER TABLE user_subscriptions ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view their own subscriptions" ON user_subscriptions;
 CREATE POLICY "Users can view their own subscriptions" ON user_subscriptions
     FOR SELECT USING (auth.uid() = user_id);
 
+DROP POLICY IF EXISTS "Users can manage their own subscriptions" ON user_subscriptions;
 CREATE POLICY "Users can manage their own subscriptions" ON user_subscriptions
     FOR ALL USING (auth.uid() = user_id);
 
@@ -296,39 +341,53 @@ CREATE POLICY "Users can manage their own subscriptions" ON user_subscriptions
 -- =====================================================
 
 -- Property Views Indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_property_views_user_property
+-- Note: CONCURRENTLY not supported in Supabase CLI pipeline; using standard CREATE INDEX
+CREATE INDEX IF NOT EXISTS idx_property_views_user_property
     ON property_views(user_id, property_id);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_property_views_property_date
+CREATE UNIQUE INDEX IF NOT EXISTS idx_property_views_user_property_hour
+    ON property_views (user_id, property_id, viewed_hour_epoch);
+CREATE INDEX IF NOT EXISTS idx_property_views_property_date
     ON property_views(property_id, viewed_at DESC);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_property_views_session
+CREATE INDEX IF NOT EXISTS idx_property_views_session
     ON property_views(session_id) WHERE session_id IS NOT NULL;
 
 -- Payments Indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payments_user_status
+CREATE INDEX IF NOT EXISTS idx_payments_user_status
     ON payments(user_id, status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payments_date_status
+CREATE INDEX IF NOT EXISTS idx_payments_date_status
     ON payments(transaction_date DESC, status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_payments_metadata
+CREATE INDEX IF NOT EXISTS idx_payments_metadata
     ON payments USING GIN(metadata);
 
 -- User Subscriptions Indexes
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_subscriptions_user_status
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_user_status
     ON user_subscriptions(user_id, status);
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_subscriptions_period
+CREATE INDEX IF NOT EXISTS idx_user_subscriptions_period
     ON user_subscriptions(current_period_end) WHERE status = 'active';
 
 -- =====================================================
 -- PHASE 10: TRIGGERS FOR UPDATED_AT
 -- =====================================================
 
--- Add updated_at triggers for new tables
-CREATE TRIGGER update_payments_updated_at
-    BEFORE UPDATE ON payments
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+-- Add updated_at triggers for new tables (idempotent)
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'update_payments_updated_at'
+  ) THEN
+    CREATE TRIGGER update_payments_updated_at
+      BEFORE UPDATE ON payments
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
 
-CREATE TRIGGER update_user_subscriptions_updated_at
-    BEFORE UPDATE ON user_subscriptions
-    FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_trigger WHERE tgname = 'update_user_subscriptions_updated_at'
+  ) THEN
+    CREATE TRIGGER update_user_subscriptions_updated_at
+      BEFORE UPDATE ON user_subscriptions
+      FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+  END IF;
+END$$;
 
 -- =====================================================
 -- PHASE 11: COMMENTS FOR DOCUMENTATION

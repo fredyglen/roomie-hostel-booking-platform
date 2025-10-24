@@ -19,13 +19,15 @@ CREATE POLICY "Users can manage their own favorites"
   USING (auth.uid() = user_id);
 
 -- Indexes for performance
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_favorites_user_id 
+-- Note: CONCURRENTLY cannot run in Supabase CLI pipeline/transaction mode.
+-- Using standard CREATE INDEX to ensure migration applies via CLI.
+CREATE INDEX IF NOT EXISTS idx_favorites_user_id
   ON favorites (user_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_favorites_property_id 
+CREATE INDEX IF NOT EXISTS idx_favorites_property_id
   ON favorites (property_id);
 
-CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_favorites_user_created 
+CREATE INDEX IF NOT EXISTS idx_favorites_user_created
   ON favorites (user_id, created_at DESC);
 
 -- Add favorites table to Supabase types
