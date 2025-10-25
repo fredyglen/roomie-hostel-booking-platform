@@ -164,7 +164,7 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
             Pricing Matrix - {getDurationLabel()}
           </CardTitle>
           <p className="text-sm text-gray-600">
-            Set prices for each room type. Ghana hostel pricing varies by occupancy level.
+            Set prices per room type and duration.
           </p>
         </CardHeader>
         <CardContent>
@@ -198,18 +198,24 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
                       <FormItem>
                         <FormLabel className="flex items-center gap-2">
                           <DollarSign className="h-4 w-4" />
-                          Price per {getDurationLabel()}
+                          Price per {getDurationLabel()} <span className="text-red-500">*</span>
                         </FormLabel>
                         <FormControl>
                           <Input
                             type="number"
                             min="1"
                             placeholder={`e.g. ${config.occupants === 1 ? '3000' : config.occupants === 2 ? '2500' : config.occupants === 3 ? '2000' : '1500'}`}
-                            value={roomTypePricing[roomType] || ''}
+                            value={roomTypePricing[roomType] ?? ''}
                             onChange={(e) => {
-                              const price = Number(e.target.value);
-                              updateRoomTypePrice(roomType, price);
-                              field.onChange(price);
+                              const val = e.target.value;
+                              if (val === '') {
+                                updateRoomTypePrice(roomType, undefined as any);
+                                field.onChange(undefined);
+                              } else {
+                                const price = Number(val);
+                                updateRoomTypePrice(roomType, price);
+                                field.onChange(price);
+                              }
                             }}
                           />
                         </FormControl>
@@ -225,40 +231,6 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
             })}
           </div>
 
-          {/* Property-specific Pricing Guidelines */}
-          <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-            <h5 className="font-medium text-blue-900 mb-2">
-              {propertyCategory === 'Hostel' && 'Ghana Hostel Pricing Guidelines'}
-              {propertyCategory === 'Homestel' && 'Homestel Pricing Guidelines'}
-              {propertyCategory === 'Apartment' && 'Apartment Sharing Pricing Guidelines'}
-            </h5>
-            <ul className="text-sm text-blue-800 space-y-1">
-              {propertyCategory === 'Hostel' && (
-                <>
-                  <li>• Single rooms (1 in a room): Premium pricing - typically 20-40% higher</li>
-                  <li>• Double rooms (2 in a room): Standard pricing - most popular option</li>
-                  <li>• Triple/Quad rooms: Budget pricing - 15-30% lower than double rooms</li>
-                  <li>• Consider location, amenities, and university proximity when setting prices</li>
-                </>
-              )}
-              {propertyCategory === 'Homestel' && (
-                <>
-                  <li>• Single rooms: Premium pricing for privacy in family setting</li>
-                  <li>• Shared rooms: Budget-friendly option with family atmosphere</li>
-                  <li>• Include meals and family support in pricing considerations</li>
-                  <li>• Factor in home amenities and family interaction level</li>
-                </>
-              )}
-              {propertyCategory === 'Apartment' && (
-                <>
-                  <li>• Studio: Individual student pricing - no sharing required</li>
-                  <li>• 1-3 Bedroom: Collective pricing - students share total cost</li>
-                  <li>• Price reflects entire unit cost divided among occupants</li>
-                  <li>• Consider utilities, internet, and maintenance in total pricing</li>
-                </>
-              )}
-            </ul>
-          </div>
         </CardContent>
       </Card>
     </div>

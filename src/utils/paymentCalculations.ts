@@ -72,7 +72,8 @@ export const calculatePlatformRevenue = (
   totalPayments: number,
   paymentProcessorFees: number
 ): number => {
-  const platformRevenue = (totalPayments * PAYMENT_CONFIG.platformFeePercentage) - paymentProcessorFees;
+  const platformRate = centralizedCommissionEngine.getCommissionRates().platform;
+  const platformRevenue = (totalPayments * platformRate) - paymentProcessorFees;
   return Math.max(0, platformRevenue);
 };
 
@@ -80,14 +81,13 @@ export const calculateOwnerEarnings = (
   propertyRent: number,
   bookingsCount: number = 1
 ): number => {
-  const platformFee = propertyRent * PAYMENT_CONFIG.platformFeePercentage;
-  const agentFee = propertyRent * PAYMENT_CONFIG.agentCommissionPercentage;
-  const ownerReceivesPerBooking = propertyRent - platformFee - agentFee;
+  // Owner receives the base rent; platform/agent fees are charged on top per centralized engine
+  const ownerReceivesPerBooking = propertyRent;
   
   return ownerReceivesPerBooking * bookingsCount;
 };
 
-export const formatCurrency = (amount: number, currency: string = PAYMENT_CONFIG.currency): string => {
+export const formatCurrency = (amount: number, currency: string = 'GHS'): string => {
   if (currency === 'GHS') {
     return `GH₵ ${amount.toFixed(2)}`;
   }
@@ -123,7 +123,8 @@ export const calculateRefund = (
   switch (cancellationPolicy) {
     case 'flexible':
       // Full refund minus platform fee if cancelled early
-      refundRatio = Math.max(0, refundRatio - PAYMENT_CONFIG.platformFeePercentage);
+      const platformRate = centralizedCommissionEngine.getCommissionRates().platform;
+      refundRatio = Math.max(0, refundRatio - platformRate);
       break;
     case 'moderate':
       // 50% refund of unused portion
@@ -163,10 +164,11 @@ export const calculatePaymentDistribution = (
   platformAmount: number;
   processorFee: number;
 } => {
-  const processorFee = totalAmount * PAYMENT_CONFIG.paymentProcessorFeePercentage;
-  // Updated to match BE CONSCIOUS structure (5% + GHS 100)
-  const platformFee = (totalAmount * PAYMENT_CONFIG.platformFeePercentage) + PAYMENT_CONFIG.platformFixedFee;
-  const agentFee = agentId ? totalAmount * PAYMENT_CONFIG.agentCommissionPercentage : 0;
+  const rates = centralizedCommissionEngine.getCommissionRates();
+  const fees = centralizedCommissionEngine.getPlatformFees();
+  const processorFee = totalAmount * rates.paystack;
+  const platformFee = (totalAmount * rates.platform) + fees.fixed;
+  const agentFee = agentId ? totalAmount * rates.agent : 0;
 
   // Property owner gets 88% as per BE CONSCIOUS
   const ownerAmount = totalAmount * 0.88;
@@ -179,4 +181,4 @@ export const calculatePaymentDistribution = (
   };
 };
 
-export { PAYMENT_CONFIG };
+

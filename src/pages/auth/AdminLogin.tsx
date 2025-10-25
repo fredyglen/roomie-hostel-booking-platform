@@ -8,7 +8,7 @@
  * Technical Implementation: Uses AdminAuthContext for admin-specific authentication
  * separate from regular user authentication, with proper error handling and validation
  * 
- * @author ROOMi Platform Team
+ * @author ROOMie Platform Team
  * @version 2.0.0
  * @compliance BE CONSCIOUS Apple-Grade Standards
  */
@@ -260,54 +260,7 @@ const AdminLogin: React.FC = () => {
           </div>
         </div>
 
-        {/* Development Bypass */}
-        {import.meta.env.DEV && (
-          <div className="mt-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <p className="text-xs text-yellow-800 font-medium mb-2">🚀 Development Mode</p>
-            <p className="text-xs text-yellow-700 mb-3">
-              Skip authentication and access admin tools directly (development only)
-            </p>
-            <div className="flex gap-2">
-              <Button
-                size="sm"
-                onClick={() => navigate('/admin/quick-verify', { replace: true })}
-                className="text-xs bg-green-600 hover:bg-green-700"
-              >
-                🔧 Property Verifier
-              </Button>
-              <Button
-                size="sm"
-                onClick={() => navigate('/admin/dashboard', { replace: true })}
-                className="text-xs bg-blue-600 hover:bg-blue-700"
-              >
-                📊 Admin Dashboard
-              </Button>
-            </div>
-          </div>
-        )}
 
-        {/* Production Admin Portal */}
-        {import.meta.env.DEV && (
-          <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-            <p className="text-xs text-blue-800 font-medium mb-2">Production Admin Portal</p>
-            <p className="text-xs text-blue-700">
-              Use your assigned admin credentials to access the ROOMi admin portal.
-              Contact your system administrator if you need access.
-            </p>
-            {adminUser && (
-              <div className="mt-3">
-                <p className="text-xs text-green-700 mb-2">✅ Logged in as: {adminUser.role}</p>
-                <Button
-                  size="sm"
-                  onClick={() => navigate('/admin/dashboard', { replace: true })}
-                  className="text-xs"
-                >
-                  Go to Admin Dashboard
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

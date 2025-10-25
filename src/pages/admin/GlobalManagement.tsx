@@ -14,6 +14,8 @@
  */
 
 import React from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
 import AdminLayout from '@/components/layout/AdminLayout';
 import GhanaAdminFeatures from '@/components/admin/GhanaAdminFeatures';
 import { useAdminAuth } from '@/context/AdminAuthContext';
@@ -21,12 +23,12 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  Globe, 
-  Crown, 
-  TrendingUp, 
-  Users, 
-  Building, 
+import {
+  Globe,
+  Crown,
+  TrendingUp,
+  Users,
+  Building,
   DollarSign,
   Settings,
   Shield,
@@ -55,77 +57,81 @@ const AdminGlobalManagement: React.FC = () => {
     );
   }
 
+  // Live global metrics
+  const { data: globalStats } = useQuery({
+    queryKey: ['supreme-global-stats'],
+    queryFn: async () => {
+      const [usersRes, propertiesRes, bookingsRes] = await Promise.all([
+        supabase.from('profiles').select('*', { count: 'exact', head: true }),
+        supabase.from('properties').select('*', { count: 'exact', head: true }),
+        supabase.from('bookings_enhanced').select('*', { count: 'exact', head: true }),
+      ]);
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0);
+      const { data: monthlyBookings } = await supabase
+        .from('bookings_enhanced')
+        .select('total_amount, payment_status, created_at')
+        .gte('created_at', startOfMonth.toISOString());
+      const monthlyRevenue = (monthlyBookings || [])
+        .filter(b => (b as any).payment_status === 'paid' || (b as any).payment_status === 'success')
+        .reduce((sum, b: any) => sum + (b.total_amount || 0), 0);
+      return {
+        totalUsers: usersRes.count || 0,
+        totalProperties: propertiesRes.count || 0,
+        totalBookings: bookingsRes.count || 0,
+        monthlyRevenue
+      };
+    }
+  });
+
   return (
-    <AdminLayout 
-      pageTitle="Global Management" 
+    <AdminLayout
+      pageTitle="Global Management"
       showRoleInfo={true}
-      requiredPermission={createAdminPermission('global.write')}
     >
       <div className="space-y-6">
-        {/* Supreme Admin Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <Crown className="h-8 w-8 text-purple-600" />
-            <div>
-              <h1 className="text-2xl font-bold text-gray-900">Global Platform Management</h1>
-              <p className="text-gray-600">Supreme Administrator Control Center</p>
-            </div>
-          </div>
-          <Badge className="bg-purple-100 text-purple-800 flex items-center gap-2">
-            <Crown className="h-4 w-4" />
-            Supreme Admin Access
-          </Badge>
-        </div>
-
-        {/* Global Overview Cards */}
+        {/* Global Overview Cards (data-driven) */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <Globe className="h-8 w-8 text-blue-600" />
+                <Users className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Countries</p>
-                  <p className="text-2xl font-bold">1</p>
-                  <p className="text-xs text-blue-600">Ghana Active</p>
+                  <p className="text-sm font-medium text-gray-600">Global Users</p>
+                  <p className="text-2xl font-bold">{globalStats?.totalUsers || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
                 <Building className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Total Campuses</p>
-                  <p className="text-2xl font-bold">8</p>
-                  <p className="text-xs text-green-600">Universities</p>
+                  <p className="text-sm font-medium text-gray-600">Total Properties</p>
+                  <p className="text-2xl font-bold">{globalStats?.totalProperties || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
-                <Users className="h-8 w-8 text-purple-600" />
+                <TrendingUp className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Global Users</p>
-                  <p className="text-2xl font-bold">12,456</p>
-                  <p className="text-xs text-purple-600">Active Students</p>
+                  <p className="text-sm font-medium text-gray-600">Total Bookings</p>
+                  <p className="text-2xl font-bold">{globalStats?.totalBookings || 0}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
-
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center">
                 <DollarSign className="h-8 w-8 text-orange-600" />
                 <div className="ml-4">
-                  <p className="text-sm font-medium text-gray-600">Global Revenue</p>
-                  <p className="text-2xl font-bold">GHS 456K</p>
-                  <p className="text-xs text-orange-600">This Month</p>
+                  <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
+                  <p className="text-2xl font-bold">GHS {Number(globalStats?.monthlyRevenue || 0).toLocaleString()}</p>
                 </div>
               </div>
             </CardContent>
@@ -237,36 +243,10 @@ const AdminGlobalManagement: React.FC = () => {
           </Card>
         </div>
 
-        {/* Ghana-Specific Features */}
+        {/* Ghana-Specific Features (kept as feature module, no mock stats) */}
         <div className="mt-8">
           <GhanaAdminFeatures />
         </div>
-
-        {/* System Health Status */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5" />
-              Global System Health
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-600">98.5%</div>
-                <div className="text-sm text-gray-600">System Uptime</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">1.2s</div>
-                <div className="text-sm text-gray-600">Avg Response Time</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-purple-600">99.8%</div>
-                <div className="text-sm text-gray-600">Transaction Success</div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </AdminLayout>
   );

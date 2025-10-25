@@ -1,17 +1,17 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, 
-  Building, 
-  Calendar,
-  UserCircle,
-  Settings,
-  LogOut,
-  Menu,
-  X,
-  ArrowLeft,
-  TrendingUp
-} from "lucide-react";
+import {
+  DashboardIcon,
+  BuildingIcon,
+  CalendarIcon,
+  UserCircleIcon,
+  SettingsIcon,
+  LogoutIcon,
+  MenuIcon,
+  CloseIcon,
+  ArrowLeftIcon,
+  TrendingUpIcon
+} from '@/components/ui/SolarIcons';
 import Logo from '../common/Logo';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { Button } from '@/components/ui/button';
@@ -36,14 +36,17 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
   const { signOut } = useAuth();
   const [isSidebarOpen, setIsSidebarOpen] = React.useState(true);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
-  
+  // Reveal sidebar on hover when collapsed
+  const [isHoveringSidebar, setIsHoveringSidebar] = React.useState(false);
+  const computedSidebarOpen = isSidebarOpen || isHoveringSidebar;
+
   const navigationItems = [
-    { title: 'Dashboard', path: '/owner/dashboard', icon: <LayoutDashboard className="w-5 h-5" /> },
-    { title: 'Analytics', path: '/owner/analytics', icon: <TrendingUp className="w-5 h-5" /> },
-    { title: 'Properties', path: '/owner/properties', icon: <Building className="w-5 h-5" /> },
-    { title: 'Bookings', path: '/owner/bookings', icon: <Calendar className="w-5 h-5" /> },
-    { title: 'Profile', path: '/owner/profile', icon: <UserCircle className="w-5 h-5" /> },
-    { title: 'Settings', path: '/owner/settings', icon: <Settings className="w-5 h-5" /> },
+    { title: 'Dashboard', path: '/owner/dashboard', icon: <DashboardIcon /> },
+    { title: 'Analytics', path: '/owner/analytics', icon: <TrendingUpIcon /> },
+    { title: 'Properties', path: '/owner/properties', icon: <BuildingIcon /> },
+    { title: 'Bookings', path: '/owner/bookings', icon: <CalendarIcon /> },
+    { title: 'Profile', path: '/owner/profile', icon: <UserCircleIcon /> },
+    { title: 'Settings', path: '/owner/settings', icon: <SettingsIcon /> },
   ];
 
   const isActiveLink = (path: string) => {
@@ -77,10 +80,14 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar for desktop - 2024 Responsive Standards */}
-      <div className={`bg-white shadow-md z-20 fixed inset-y-0 left-0 transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${isSidebarOpen ? 'w-64' : 'w-0 lg:w-16'}`}>
+      <div
+        onMouseEnter={() => setIsHoveringSidebar(true)}
+        onMouseLeave={() => setIsHoveringSidebar(false)}
+        className={`bg-white shadow-md z-20 fixed inset-y-0 left-0 transform ${computedSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-200 ease-in-out lg:relative lg:translate-x-0 ${computedSidebarOpen ? 'w-60' : 'w-0 lg:w-16'}`}
+      >
         <div className="flex flex-col h-full">
-          <div className={`p-2 lg:p-3 flex items-center ${!isSidebarOpen && 'justify-center'}`}>
-            {isSidebarOpen ? (
+          <div className={`p-2 lg:p-3 flex items-center ${!computedSidebarOpen && 'justify-center'}`}>
+            {computedSidebarOpen ? (
               <div className="flex items-center">
                 <Logo variant="default" />
                 <span className="ml-2 text-lg lg:text-xl font-bold text-[#7E69AB]">Owner</span>
@@ -91,12 +98,15 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
             <button
               onClick={() => setIsSidebarOpen(!isSidebarOpen)}
               className="ml-auto lg:block hidden p-1 hover:bg-gray-100 rounded-md transition-colors"
+              title={computedSidebarOpen ? 'Collapse' : 'Expand'}
             >
-              {isSidebarOpen ? (
+              {computedSidebarOpen ? (
+                // ««« icon
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
                 </svg>
               ) : (
+                // »»» icon
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 5l7 7-7 7M5 5l7 7-7 7" />
                 </svg>
@@ -116,12 +126,12 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                       ? 'bg-[#9b87f5] text-white'
                       : 'text-gray-600 hover:bg-[#9b87f5]/10'
                     }
-                    ${!isSidebarOpen ? 'justify-center' : ''}
+                    ${!computedSidebarOpen ? 'justify-center' : ''}
                   `}
-                  title={!isSidebarOpen ? item.title : undefined}
+                  title={!computedSidebarOpen ? item.title : undefined}
                 >
-                  <span className={`${isSidebarOpen ? 'mr-3' : ''}`}>{item.icon}</span>
-                  {isSidebarOpen && <span className="text-sm">{item.title}</span>}
+                  <span className={`${computedSidebarOpen ? 'mr-3' : ''}`}>{item.icon}</span>
+                  {computedSidebarOpen && <span className="text-sm">{item.title}</span>}
                 </Link>
               ))}
             </nav>
@@ -130,11 +140,11 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
           <div className="p-2 lg:p-3 border-t border-gray-200">
             <button
               onClick={handleLogout}
-              className={`flex items-center w-full px-2 lg:px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-[#9b87f5]/10 transition-colors ${!isSidebarOpen ? 'justify-center' : ''}`}
-              title={!isSidebarOpen ? 'Logout' : undefined}
+              className={`flex items-center w-full px-2 lg:px-3 py-2 text-sm text-gray-600 rounded-md hover:bg-[#9b87f5]/10 transition-colors ${!computedSidebarOpen ? 'justify-center' : ''}`}
+              title={!computedSidebarOpen ? 'Logout' : undefined}
             >
-              <LogOut className={`w-4 h-4 lg:w-5 lg:h-5 ${isSidebarOpen ? 'mr-3' : ''}`} />
-              {isSidebarOpen && <span className="text-sm">Logout</span>}
+              <span className={`${computedSidebarOpen ? 'mr-3' : ''}`}><LogoutIcon /></span>
+              {computedSidebarOpen && <span className="text-sm">Logout</span>}
             </button>
           </div>
         </div>
@@ -147,9 +157,9 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
           className="flex items-center justify-center h-10 w-10 rounded-lg bg-white shadow-lg text-gray-600 hover:bg-gray-50 transition-colors"
         >
           {isMobileMenuOpen ? (
-            <X className="h-5 w-5" />
+            <CloseIcon />
           ) : (
-            <Menu className="h-5 w-5" />
+            <MenuIcon />
           )}
         </button>
       </div>
@@ -208,7 +218,7 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                     onClick={handleBack}
                     className="flex items-center space-x-1 text-sm"
                   >
-                    <ArrowLeft className="h-4 w-4" />
+                    <ArrowLeftIcon />
                     <span className="hidden sm:inline">Back</span>
                   </Button>
                 )}
@@ -228,7 +238,7 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
                 <button className="flex items-center text-sm rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[#9b87f5] hover:bg-gray-100 p-1 transition-colors">
                   <span className="sr-only">Open user menu</span>
                   <div className="h-7 w-7 lg:h-8 lg:w-8 rounded-full bg-[#9b87f5] text-white flex items-center justify-center">
-                    <UserCircle className="h-5 w-5 lg:h-6 lg:w-6" />
+                    <UserCircleIcon />
                   </div>
                 </button>
               </div>

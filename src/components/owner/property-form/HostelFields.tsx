@@ -22,20 +22,23 @@ const HostelFields: React.FC<HostelFieldsProps> = ({ form, updateOccupancyDetail
         name="beds_available"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Beds Available for Booking</FormLabel>
+            <FormLabel>
+              Beds Available for Booking <span className="text-red-500">*</span>
+            </FormLabel>
             <FormControl>
               <Input
                 type="number"
                 placeholder="e.g. 5"
-                {...field}
+                value={field.value ?? ''}
                 onChange={(e) => {
-                  field.onChange(e.target.valueAsNumber);
+                  const val = e.target.value;
+                  field.onChange(val === '' ? undefined : Number(val));
                   updateOccupancyDetails();
                 }}
               />
             </FormControl>
             <FormDescription>
-              How many beds are currently available for new bookings?
+              Enter the number of occupied beds out of total beds available (e.g., 5 occupied out of 20 total)
             </FormDescription>
             <FormMessage />
           </FormItem>

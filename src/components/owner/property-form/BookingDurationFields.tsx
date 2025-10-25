@@ -4,8 +4,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
-import { Calendar, Clock, Info } from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Clock, Info } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BookingDurationFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -62,16 +62,6 @@ const BookingDurationFields: React.FC<BookingDurationFieldsProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Ghana University Standards Info */}
-      {propertyCategory === 'Hostel' && (
-        <Alert>
-          <Calendar className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Ghana University Standard:</strong> Hostels operate on semester-based bookings (4 months) 
-            to align with the academic calendar of UPSA, University of Ghana, KNUST, and UCC.
-          </AlertDescription>
-        </Alert>
-      )}
 
       {/* Booking Duration Selection */}
       <FormField
@@ -81,9 +71,21 @@ const BookingDurationFields: React.FC<BookingDurationFieldsProps> = ({
           <FormItem>
             <FormLabel className="flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              Booking Duration *
+              Booking Duration <span className="text-red-500">*</span>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button type="button" aria-label="What is a semester?" className="text-gray-500 hover:text-gray-700">
+                      <Info className="h-4 w-4" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    A semester is approximately 4 months.
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
             </FormLabel>
-            <Select 
+            <Select
               onValueChange={(value) => {
                 field.onChange(value);
                 // BE CONSCIOUS: Auto-update price_unit to match booking_duration
@@ -150,32 +152,6 @@ const BookingDurationFields: React.FC<BookingDurationFieldsProps> = ({
         />
       )}
 
-      {/* Duration Summary for Pricing Context */}
-      {bookingDuration && (
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Duration Summary:</strong> {getDurationInWeeks()} weeks 
-            {bookingDuration === 'semester' && ' (Ghana university semester)'}
-            {bookingDuration === 'custom' && ' (custom duration)'}
-            <br />
-            <span className="text-sm text-gray-600">
-              Your pricing will be calculated per {bookingDuration === 'custom' ? 'custom period' : bookingDuration}.
-            </span>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Flexibility Info for Non-Hostels */}
-      {propertyCategory !== 'Hostel' && (
-        <Alert>
-          <Info className="h-4 w-4" />
-          <AlertDescription>
-            <strong>Flexible Booking:</strong> When students vacate early, you can adjust to shorter durations 
-            for new bookings. This helps maximize occupancy and revenue.
-          </AlertDescription>
-        </Alert>
-      )}
     </div>
   );
 };

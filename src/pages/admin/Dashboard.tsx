@@ -60,9 +60,7 @@ import {
   createCountryJurisdiction
 } from '@/types/auth';
 import { formatCurrency } from '@/utils/currency';
-import DatabaseSeeder from '@/components/admin/DatabaseSeeder';
-import PropertyVisibilityMonitor from '@/components/admin/PropertyVisibilityMonitor';
-import AdminAccessTest from '@/components/admin/AdminAccessTest';
+
 
 /**
  * Enhanced Admin Dashboard Component
@@ -81,103 +79,77 @@ const AdminDashboard: React.FC = () => {
     validateAccess
   } = useAdminAuth();
 
-  // Real platform statistics
-  const { data: platformStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['admin-platform-stats'],
+  // Real platform statistics (strictly from database)
+  const { data: stats, isLoading: statsLoading } = useQuery({
+    queryKey: ['admin-platform-stats-v2'],
     queryFn: async () => {
-      try {
-        const stats = await AdminQueries.getPlatformStats();
-        return {
-          ...stats,
-          monthlyRevenue: 45600, // TODO: Calculate from bookings
-          pendingVerifications: 12, // TODO: Get from verification table
-          activeDisputes: 3, // TODO: Get from disputes table
-          newRegistrations: 28, // TODO: Calculate from recent profiles
-          platformGrowth: 15.3 // TODO: Calculate growth percentage
-        };
-      } catch (error) {
-        console.error('Error fetching platform stats:', error);
-        // Fallback to mock data on error
-        return {
-          totalUsers: 1247,
-          totalProperties: 89,
-          totalBookings: 342,
-          monthlyRevenue: 45600,
-          pendingVerifications: 12,
-          activeDisputes: 3,
-          newRegistrations: 28,
-          platformGrowth: 15.3
-        };
-      }
+      // Users count
+      const usersCountPromise = supabase.from('profiles').select('*', { count: 'exact', head: true });
+      // Properties count
+      const propertiesCountPromise = supabase.from('properties').select('*', { count: 'exact', head: true });
+      // Bookings count
+      const bookingsCountPromise = supabase.from('bookings_enhanced').select('*', { count: 'exact', head: true });
+      // Pending verifications count
+      const pendingVerificationsPromise = supabase
+        .from('property_verifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'pending');
+
+      const [usersRes, propertiesRes, bookingsRes, verificationsRes] = await Promise.all([
+        usersCountPromise, propertiesCountPromise, bookingsCountPromise, pendingVerificationsPromise
+      ]);
+
+      // Monthly revenue from paid bookings in current month
+      const startOfMonth = new Date();
+      startOfMonth.setDate(1); startOfMonth.setHours(0,0,0,0);
+      const { data: monthlyBookings, error: monthlyErr } = await supabase
+        .from('bookings_enhanced')
+        .select('total_amount, payment_status, created_at')
+        .gte('created_at', startOfMonth.toISOString());
+      if (monthlyErr) throw monthlyErr;
+      const monthlyRevenue = (monthlyBookings || [])
+        .filter(b => (b as any).payment_status === 'paid' || (b as any).payment_status === 'success')
+        .reduce((sum, b: any) => sum + (b.total_amount || 0), 0);
+
+      return {
+        totalUsers: usersRes.count || 0,
+        totalProperties: propertiesRes.count || 0,
+        totalBookings: bookingsRes.count || 0,
+        monthlyRevenue,
+        pendingVerifications: verificationsRes.count || 0
+      };
     },
-    refetchInterval: 30000 // Refresh every 30 seconds
+    refetchInterval: 30000
   });
 
-  const [recentActivities] = useState([
-    {
-      id: 1,
-      type: 'registration',
-      description: 'New property owner registered: Kwame Properties Ltd',
-      timestamp: '2 hours ago',
-      status: 'new'
-    },
-    {
-      id: 2,
-      type: 'verification',
-      description: 'Property verification completed: Modern Student Apartment',
-      timestamp: '4 hours ago',
-      status: 'completed'
-    },
-    {
-      id: 3,
-      type: 'booking',
-      description: 'High-value booking: GH₵3,500 for Premium Suite',
-      timestamp: '6 hours ago',
-      status: 'success'
-    },
-    {
-      id: 4,
-      type: 'dispute',
-      description: 'New dispute opened: Booking #BK-2024-156',
-      timestamp: '1 day ago',
-      status: 'pending'
+  // Real recent bookings (latest 6)
+  const { data: recentBookings } = useQuery({
+    queryKey: ['admin-recent-bookings'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('bookings_enhanced')
+        .select('booking_reference, total_amount, payment_status, created_at, properties(title, city)')
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (error) throw error;
+      return data || [];
     }
-  ]);
+  });
 
-  const [pendingActions] = useState([
-    {
-      id: 1,
-      title: 'Property Verifications',
-      count: 12,
-      priority: 'high',
-      action: 'verify',
-      route: '/admin/verification'
-    },
-    {
-      id: 2,
-      title: 'User Reports',
-      count: 5,
-      priority: 'medium',
-      action: 'review',
-      route: '/admin/users'
-    },
-    {
-      id: 3,
-      title: 'Payment Disputes',
-      count: 3,
-      priority: 'high',
-      action: 'resolve',
-      route: '/admin/bookings'
-    },
-    {
-      id: 4,
-      title: 'Content Reviews',
-      count: 8,
-      priority: 'low',
-      action: 'moderate',
-      route: '/admin/properties'
+  // Real pending verifications preview (latest 6)
+  const { data: pendingVerificationsList } = useQuery({
+    queryKey: ['admin-pending-verifications-preview'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('property_verifications')
+        .select('id, created_at, verification_type, properties(title)')
+        .eq('status', 'pending')
+        .order('created_at', { ascending: false })
+        .limit(6);
+      if (error) throw error;
+      return data || [];
     }
-  ]);
+  });
 
   // Fetch real data
   const { data: usersCount, isLoading: usersLoading } = useQuery({
@@ -232,7 +204,7 @@ const AdminDashboard: React.FC = () => {
     }
   };
 
-  if (usersLoading || propertiesLoading || statsLoading) {
+  if (statsLoading) {
     return (
       <AdminLayout pageTitle="Dashboard">
         <LoadingSpinner message="Loading admin dashboard..." />
@@ -253,24 +225,10 @@ const AdminDashboard: React.FC = () => {
     );
   }
 
-  // Supreme Admin Dashboard (existing functionality enhanced)
+  // Supreme Admin Dashboard (data-driven)
   return (
-    <AdminLayout pageTitle="Supreme Admin Dashboard">
+    <AdminLayout pageTitle="Supreme Admin Dashboard" showRoleInfo>
       <div className="space-y-6">
-        {/* Welcome Section */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Supreme Admin Dashboard</h1>
-            <p className="text-gray-600">
-              Global platform oversight and administrative controls for ROOMi Ghana.
-            </p>
-          </div>
-          <Badge className="bg-purple-100 text-purple-800 flex items-center gap-2">
-            <Crown className="h-4 w-4" />
-            Supreme Admin
-          </Badge>
-        </div>
-
         {/* Key Platform Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <Card>
@@ -279,8 +237,7 @@ const AdminDashboard: React.FC = () => {
                 <Users className="h-8 w-8 text-blue-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Users</p>
-                  <p className="text-2xl font-bold">{usersCount || platformStats?.totalUsers || 0}</p>
-                  <p className="text-xs text-green-600">+{platformStats?.newRegistrations || 0} this month</p>
+                  <p className="text-2xl font-bold">{stats?.totalUsers || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -292,8 +249,7 @@ const AdminDashboard: React.FC = () => {
                 <Building className="h-8 w-8 text-green-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Properties</p>
-                  <p className="text-2xl font-bold">{propertiesCount || platformStats?.totalProperties || 0}</p>
-                  <p className="text-xs text-yellow-600">{platformStats?.pendingVerifications || 0} pending</p>
+                  <p className="text-2xl font-bold">{stats?.totalProperties || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -305,8 +261,7 @@ const AdminDashboard: React.FC = () => {
                 <Calendar className="h-8 w-8 text-purple-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Total Bookings</p>
-                  <p className="text-2xl font-bold">{platformStats?.totalBookings || 0}</p>
-                  <p className="text-xs text-red-600">{platformStats?.activeDisputes || 0} disputes</p>
+                  <p className="text-2xl font-bold">{stats?.totalBookings || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -318,203 +273,58 @@ const AdminDashboard: React.FC = () => {
                 <DollarSign className="h-8 w-8 text-orange-600" />
                 <div className="ml-4">
                   <p className="text-sm font-medium text-gray-600">Monthly Revenue</p>
-                  <p className="text-2xl font-bold">{formatCurrency(platformStats?.monthlyRevenue || 0)}</p>
-                  <p className="text-xs text-green-600">+{platformStats?.platformGrowth || 0}% growth</p>
+                  <p className="text-2xl font-bold">{formatCurrency(stats?.monthlyRevenue || 0)}</p>
                 </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Data-driven panels */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Pending Actions */}
           <Card>
             <CardHeader>
-              <CardTitle>Pending Actions</CardTitle>
+              <CardTitle>Pending Verifications</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {pendingActions.map((action) => (
-                  <div 
-                    key={action.id} 
-                    className="flex items-center justify-between p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
-                    onClick={() => navigate(action.route)}
-                  >
+              <div className="space-y-3">
+                {(pendingVerificationsList || []).map((v: any) => (
+                  <div key={v.id} className="flex items-center justify-between p-3 border rounded">
                     <div>
-                      <h4 className="font-medium">{action.title}</h4>
-                      <p className="text-sm text-gray-600 capitalize">{action.action} required</p>
+                      <div className="font-medium text-sm">{v.properties?.title || 'Property'}</div>
+                      <div className="text-xs text-gray-500">{new Date(v.created_at).toLocaleString()}</div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold">{action.count}</p>
-                      <Badge className={getPriorityColor(action.priority)}>
-                        {action.priority} priority
-                      </Badge>
-                    </div>
+                    <Badge variant="secondary">{v.verification_type}</Badge>
                   </div>
                 ))}
+                {(!pendingVerificationsList || pendingVerificationsList.length === 0) && (
+                  <div className="text-sm text-gray-500">No pending verifications</div>
+                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Recent Platform Activity */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle>Recent Bookings</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {recentActivities.map((activity) => (
-                  <div key={activity.id} className="flex items-start space-x-3">
-                    {getActivityIcon(activity.type)}
-                    <div className="flex-1">
-                      <p className="text-sm">{activity.description}</p>
-                      <p className="text-xs text-gray-500">{activity.timestamp}</p>
+              <div className="space-y-3">
+                {(recentBookings || []).map((b: any, idx: number) => (
+                  <div key={idx} className="flex items-center justify-between p-3 border rounded">
+                    <div>
+                      <div className="font-medium text-sm">{b.properties?.title || b.booking_reference}</div>
+                      <div className="text-xs text-gray-500">{new Date(b.created_at).toLocaleString()}</div>
                     </div>
-                    <Badge variant="outline" className="text-xs">
-                      {activity.status}
-                    </Badge>
+                    <div className="text-sm font-semibold">{formatCurrency(b.total_amount || 0)}</div>
                   </div>
                 ))}
-              </div>
-              <Button variant="outline" className="w-full mt-4">
-                <Eye className="h-4 w-4 mr-2" />
-                View All Activity
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Quick Admin Actions */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <Card>
-              <CardHeader>
-                <CardTitle>Quick Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                  <Button
-                    className="h-20 flex flex-col"
-                    onClick={() => navigate('/admin/verification')}
-                  >
-                    <CheckCircle className="h-6 w-6 mb-2" />
-                    Verify Properties
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="h-20 flex flex-col"
-                    onClick={() => navigate('/admin/users')}
-                  >
-                    <Users className="h-6 w-6 mb-2" />
-                    Manage Users
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="h-20 flex flex-col"
-                    onClick={() => navigate('/admin/properties')}
-                  >
-                    <Building className="h-6 w-6 mb-2" />
-                    Review Properties
-                  </Button>
-
-                  <Button
-                    variant="outline"
-                    className="h-20 flex flex-col"
-                    onClick={() => navigate('/admin/settings')}
-                  >
-                    <TrendingUp className="h-6 w-6 mb-2" />
-                    Platform Settings
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div>
-            <DatabaseSeeder />
-          </div>
-        </div>
-
-        {/* Property Visibility Monitor */}
-        <PropertyVisibilityMonitor />
-
-        {/* Admin Access Test */}
-        <AdminAccessTest />
-
-        {/* System Health */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>System Health</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Database Status</span>
-                  <Badge className="bg-green-100 text-green-800">Online</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Payment Gateway</span>
-                  <Badge className="bg-green-100 text-green-800">Active</Badge>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Email Service</span>
-                  <Badge className="bg-green-100 text-green-800">Running</Badge>
-                </div>
+                {(!recentBookings || recentBookings.length === 0) && (
+                  <div className="text-sm text-gray-500">No recent bookings</div>
+                )}
               </div>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Performance Metrics</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Response Time</span>
-                  <span className="text-sm font-medium">245ms</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Uptime</span>
-                  <span className="text-sm font-medium">99.9%</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Error Rate</span>
-                  <span className="text-sm font-medium">0.1%</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Storage & Bandwidth</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Storage Used</span>
-                  <span className="text-sm font-medium">2.3 GB</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">Bandwidth</span>
-                  <span className="text-sm font-medium">45.2 GB</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-sm">API Calls</span>
-                  <span className="text-sm font-medium">12.4K</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Ghana-Specific Features for Supreme Admin */}
-        <div className="mt-8">
-          <GhanaAdminFeatures />
         </div>
       </div>
     </AdminLayout>

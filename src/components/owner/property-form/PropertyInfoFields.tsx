@@ -19,11 +19,12 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
         name="name"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Property Name *</FormLabel>
+            <FormLabel>Property Name <span className="text-red-500">*</span></FormLabel>
             <FormControl>
               <Input
                 placeholder="e.g., Sunrise Hostel, Campus View Homestel"
                 {...field}
+                className={form.formState.errors.name ? 'border-red-500 focus-visible:ring-red-500' : ''}
               />
             </FormControl>
             <FormDescription>
@@ -40,11 +41,12 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
         name="title"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Property Title *</FormLabel>
+            <FormLabel>Property Title <span className="text-red-500">*</span></FormLabel>
             <FormControl>
               <Input
                 placeholder="e.g., Affordable Student Housing Near Campus"
                 {...field}
+                className={form.formState.errors.title ? 'border-red-500 focus-visible:ring-red-500' : ''}
               />
             </FormControl>
             <FormDescription>
@@ -62,7 +64,7 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
           name="propertyCategory"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Property Category *</FormLabel>
+              <FormLabel>Property Category <span className="text-red-500">*</span></FormLabel>
               <FormDescription>
                 The building type - determines room configuration options
               </FormDescription>
@@ -123,7 +125,7 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
 
             return (
               <FormItem>
-                <FormLabel>Property Type *</FormLabel>
+                <FormLabel>Property Type <span className="text-red-500">*</span></FormLabel>
                 <FormDescription>
                   How the property operates - determines pricing and booking model
                 </FormDescription>
@@ -155,7 +157,7 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
           name="region"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Region *</FormLabel>
+              <FormLabel>Region <span className="text-red-500">*</span></FormLabel>
               <Select onValueChange={field.onChange} defaultValue={field.value}>
                 <FormControl>
                   <SelectTrigger>
@@ -179,11 +181,12 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
           name="city"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>City/Town *</FormLabel>
+              <FormLabel>City/Town <span className="text-red-500">*</span></FormLabel>
               <FormControl>
-                <Input 
+                <Input
                   placeholder="e.g., Accra, Kumasi, Cape Coast"
-                  {...field} 
+                  {...field}
+                  className={form.formState.errors.city ? 'border-red-500 focus-visible:ring-red-500' : ''}
                 />
               </FormControl>
               <FormMessage />
@@ -197,11 +200,12 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
         name="address"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Full Address *</FormLabel>
+            <FormLabel>Full Address <span className="text-red-500">*</span></FormLabel>
             <FormControl>
-              <Input 
+              <Input
                 placeholder="e.g., Near UPSA Main Gate, Madina-Accra"
-                {...field} 
+                {...field}
+                className={form.formState.errors.address ? 'border-red-500 focus-visible:ring-red-500' : ''}
               />
             </FormControl>
             <FormDescription>
@@ -218,7 +222,7 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
         name="nearest_university"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Nearest University *</FormLabel>
+            <FormLabel>Nearest University <span className="text-red-500">*</span></FormLabel>
             <Select onValueChange={field.onChange} defaultValue={field.value}>
               <FormControl>
                 <SelectTrigger>
@@ -243,11 +247,11 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
         name="description"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Property Description *</FormLabel>
+            <FormLabel>Property Description <span className="text-red-500">*</span></FormLabel>
             <FormControl>
               <Textarea
                 placeholder="Describe your property, its unique features, and what makes it special for students..."
-                className="min-h-[120px] resize-none"
+                className={`min-h-[120px] resize-none ${form.formState.errors.description ? 'border-red-500 focus-visible:ring-red-500' : ''}`}
                 maxLength={1000}
                 {...field}
               />

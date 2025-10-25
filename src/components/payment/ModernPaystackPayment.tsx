@@ -62,6 +62,8 @@ interface ModernPaystackPaymentProps {
   title?: string;
   description?: string;
   disabled?: boolean;
+  // Optional metadata to be attached to Paystack transaction
+  metadata?: Record<string, unknown>;
   // New split payment support
   splitCode?: string;
   split?: SplitPaymentConfig;
@@ -87,6 +89,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
   title = 'Complete Payment',
   description = 'Secure payment processing',
   disabled = false,
+  metadata = {},
   splitCode,
   split,
   subaccountCode,
@@ -153,6 +156,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
         phone: phone,
         channels: ['card', 'bank', 'ussd', 'mobile_money', 'bank_transfer'], // Ghana payment channels
         metadata: {
+          ...metadata,
           firstName,
           lastName,
           phone,

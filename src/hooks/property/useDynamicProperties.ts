@@ -364,7 +364,7 @@ export const useAvailableProperties = (
   options: UseDynamicPropertiesOptions = {}
 ): UseDynamicPropertiesResult => {
   const searchOptions: PropertySearchOptions = {
-    filters: { isAvailable: true, verified: true }
+    filters: { isAvailable: true }
   };
 
   return useDynamicProperties(searchOptions, options);

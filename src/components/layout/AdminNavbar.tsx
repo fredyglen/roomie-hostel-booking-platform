@@ -29,27 +29,28 @@ import {
 } from '@/components/ui/dropdown-menu';
 import Logo from '@/components/common/Logo';
 import {
-  User,
-  Settings,
-  LayoutDashboard,
-  LogOut,
-  Users,
-  Building,
-  Calendar,
-  Shield,
-  Globe,
-  School,
-  DollarSign,
-  FileCheck,
-  AlertTriangle,
-  Crown
-} from 'lucide-react';
+  UserCircleIcon as User,
+  SettingsIcon as Settings,
+  DashboardIcon as LayoutDashboard,
+  LogoutIcon as LogOut,
+  UsersIcon as Users,
+  BuildingIcon as Building,
+  CalendarIcon as Calendar,
+  ShieldOutlineIcon as Shield,
+  GlobeIcon as Globe,
+  SchoolIcon as School,
+  DollarIcon as DollarSign,
+  FileCheckIcon as FileCheck,
+  CrownIcon as Crown
+} from '@/components/ui/SolarIcons';
 import {
   AdminRoleType,
   createAdminPermission,
   createCampusJurisdiction,
   createCountryJurisdiction
 } from '@/types/auth';
+
+import { ADMIN_PERMISSIONS } from '@/services/auth/permissionService';
 
 /**
  * Enhanced Admin Navbar Component
@@ -117,19 +118,19 @@ const AdminNavbar: React.FC = () => {
         return {
           label: 'Supreme Admin',
           color: 'bg-purple-100 text-purple-800',
-          icon: <Crown className="h-3 w-3" />
+          icon: <Crown size={12} />
         };
       case 'campus_admin':
         return {
           label: 'Campus Admin',
           color: 'bg-blue-100 text-blue-800',
-          icon: <School className="h-3 w-3" />
+          icon: <School size={12} />
         };
       default:
         return {
           label: 'Admin',
           color: 'bg-gray-100 text-gray-800',
-          icon: <Shield className="h-3 w-3" />
+          icon: <Shield size={12} />
         };
     }
   };
@@ -147,6 +148,8 @@ const AdminNavbar: React.FC = () => {
       isExpiringSoon: remaining < 30 * 60 * 1000 // Less than 30 minutes
     };
   };
+
+  const roleInfo = getAdminRoleInfo();
 
   return (
     <header className="bg-white shadow-sm border-b">
@@ -171,7 +174,7 @@ const AdminNavbar: React.FC = () => {
                 to="/admin/dashboard"
                 className={`${isActive('/admin/dashboard') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center transition-colors`}
               >
-                <LayoutDashboard className="h-4 w-4 mr-1" />
+                <span className="mr-1"><LayoutDashboard size={16} /></span>
                 Dashboard
               </Link>
 
@@ -182,7 +185,7 @@ const AdminNavbar: React.FC = () => {
                   to="/admin/users"
                   className={`${isActive('/admin/users') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center transition-colors`}
                 >
-                  <Users className="h-4 w-4 mr-1" />
+                  <span className="mr-1"><Users size={16} /></span>
                   Users
                 </Link>
               )}
@@ -192,7 +195,7 @@ const AdminNavbar: React.FC = () => {
                 to="/admin/properties"
                 className={`${isActive('/admin/properties') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center transition-colors`}
               >
-                <Building className="h-4 w-4 mr-1" />
+                <span className="mr-1"><Building size={16} /></span>
                 Properties
               </Link>
 
@@ -201,7 +204,7 @@ const AdminNavbar: React.FC = () => {
                 to="/admin/bookings"
                 className={`${isActive('/admin/bookings') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center transition-colors`}
               >
-                <Calendar className="h-4 w-4 mr-1" />
+                <span className="mr-1"><Calendar size={16} /></span>
                 Bookings
               </Link>
 
@@ -210,7 +213,7 @@ const AdminNavbar: React.FC = () => {
                 to="/admin/verification"
                 className={`${isActive('/admin/verification') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center transition-colors`}
               >
-                <FileCheck className="h-4 w-4 mr-1" />
+                <span className="mr-1"><FileCheck size={16} /></span>
                 Verification
               </Link>
 
@@ -220,31 +223,30 @@ const AdminNavbar: React.FC = () => {
                   to="/admin/global"
                   className={`${isActive('/admin/global') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center transition-colors`}
                 >
-                  <Globe className="h-4 w-4 mr-1" />
+                  <span className="mr-1"><Globe size={16} /></span>
                   Global
                 </Link>
               )}
 
               {/* Financial Management - Role-based access */}
-              {(hasPermission(createAdminPermission('revenue.global')) ||
-                hasPermission(createAdminPermission('revenue.campus'))) && (
+              {(getAdminRole() === 'supreme_admin' || getAdminRole() === 'campus_admin' || hasPermission(ADMIN_PERMISSIONS.FINANCE.VIEW_REVENUE)) && (
                 <Link
                   to="/admin/finance"
                   className={`${isActive('/admin/finance') ? 'text-[#9b87f5]' : 'text-gray-500'} hover:text-[#9b87f5] text-sm font-medium flex items-center transition-colors`}
                 >
-                  <DollarSign className="h-4 w-4 mr-1" />
+                  <span className="mr-1"><DollarSign size={16} /></span>
                   Finance
                 </Link>
               )}
             </nav>
           </div>
-          
+
           <div className="flex items-center">
             {/* Admin Badge */}
             <div className="mr-4 px-2 py-1 bg-red-100 text-red-800 text-xs font-medium rounded">
               ADMIN
             </div>
-            
+
             {/* User Menu */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -272,12 +274,12 @@ const AdminNavbar: React.FC = () => {
                 </div>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate('/admin/settings')}>
-                  <Settings className="mr-2 h-4 w-4" />
+                  <span className="mr-2"><Settings size={16} /></span>
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleSignOut}>
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <span className="mr-2"><LogOut size={16} /></span>
                   <span>Log out</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>

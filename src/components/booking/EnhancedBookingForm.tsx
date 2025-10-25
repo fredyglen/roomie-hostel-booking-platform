@@ -20,6 +20,9 @@ import RoommatesStep from './steps/RoommatesStep';
 import EmergencyContactStep from './steps/EmergencyContactStep';
 import VerificationStep from './steps/VerificationStep';
 import PaymentStep from './PaymentStep';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+import { useRealTimeCommissionConfig } from '@/hooks/useRealTimeCommissionConfig';
+
 
 interface EnhancedBookingFormProps {
   property: Property;
@@ -62,6 +65,8 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
     validateStep,
     createBooking
   } = useEnhancedBooking(property);
+  const { rates, config } = useRealTimeCommissionConfig({ portal: 'student' });
+
 
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -215,6 +220,18 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
             onTermsChange={(agreed) => updateFormData('termsAgreed', agreed)}
             onPaymentProceed={handlePaymentProceed}
             onPrevious={handlePrevious}
+            paystackMetadata={{
+              commission_breakdown: centralizedCommissionEngine.calculateCommissions(
+                pricing.propertyRent,
+                Boolean(property.agent_id)
+              ),
+              base_amount_ghs: pricing.propertyRent,
+              total_amount_ghs: pricing.totalAmount,
+              platform_fee_ghs: pricing.platformCommission + pricing.platformFixedFee,
+              agent_fee_ghs: pricing.agentFee,
+              commission_version: centralizedCommissionEngine.getConfigurationInfo().version,
+              property_id: property.id
+            }}
           />
         );
       default:
@@ -244,8 +261,8 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
           {STEPS.map((step, index) => (
             <div key={step.id} className="flex items-center">
               <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                currentStep >= step.id 
-                  ? 'bg-primary border-primary text-white' 
+                currentStep >= step.id
+                  ? 'bg-primary border-primary text-white'
                   : 'border-gray-300 text-gray-500'
               }`}>
                 {currentStep > step.id ? (
@@ -287,11 +304,13 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
                   <span>₵{pricing.propertyRent.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Platform Fee (5%)</span>
+                  <span>
+                    Platform Commission ({(((rates?.platform ?? centralizedCommissionEngine.getCommissionRates().platform) * 100).toFixed(2))}%)
+                  </span>
                   <span>₵{pricing.platformCommission.toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span>Service Fee</span>
+                  <span>Service Fee (GHS {(config?.fees.fixed ?? centralizedCommissionEngine.getPlatformFees().fixed).toLocaleString()})</span>
                   <span>₵{pricing.platformFixedFee.toLocaleString()}</span>
                 </div>
                 {pricing.agentFee > 0 && (
@@ -301,14 +320,14 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
                   </div>
                 )}
               </div>
-              
+
               <Separator />
-              
+
               <div className="flex justify-between font-bold text-lg">
                 <span>Total</span>
                 <span className="text-primary">₵{pricing.totalAmount.toLocaleString()}</span>
               </div>
-              
+
               <div className="text-sm text-gray-600">
                 <p>Duration: {formData.duration}</p>
                 {formData.roomType && <p>Room: {formData.roomType}</p>}

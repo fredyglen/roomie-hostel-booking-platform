@@ -87,6 +87,10 @@ const QuickVerify = React.lazy(() => import('@/pages/admin/QuickVerify'));
 const AdminGlobalManagement = React.lazy(() => import('@/pages/admin/GlobalManagement'));
 const AdminSystemConfig = React.lazy(() => import('@/pages/admin/SystemConfig'));
 
+
+// Finance Page
+const AdminFinance = React.lazy(() => import('@/pages/admin/Finance'));
+
 // Booking Components
 const BookingStepsContainer = React.lazy(() => import('@/components/booking/BookingStepsContainer'));
 
@@ -362,7 +366,7 @@ function App() {
                 {/* Enhanced Admin Routes with Role-Based Access Control */}
                 <Route path="/admin/dashboard" element={
                   <AdminAuthGuard>
-                    <SafeRoute element={<TestDashboard />} />
+                    <SafeRoute element={<AdminDashboard />} />
                   </AdminAuthGuard>
                 } />
                 <Route path="/admin/properties" element={
@@ -371,12 +375,12 @@ function App() {
                   </AdminAuthGuard>
                 } />
                 <Route path="/admin/bookings" element={
-                  <AdminAuthGuard requiredPermission={createAdminPermission('bookings.manage')}>
+                  <AdminAuthGuard requiredPermission={createAdminPermission('bookings.read')}>
                     <SafeRoute element={<AdminBookings />} />
                   </AdminAuthGuard>
                 } />
                 <Route path="/admin/users" element={
-                  <AdminAuthGuard requiredPermission={createAdminPermission('users.manage')}>
+                  <AdminAuthGuard requiredPermission={createAdminPermission('users.read')}>
                     <SafeRoute element={<AdminUsers />} />
                   </AdminAuthGuard>
                 } />
@@ -396,6 +400,11 @@ function App() {
                     <SafeRoute element={<QuickVerify />} />
                   </AdminAuthGuard>
                 } />
+                <Route path="/admin/finance" element={
+                  <AdminAuthGuard>
+                    <SafeRoute element={<AdminFinance />} />
+                  </AdminAuthGuard>
+                } />
 
                 {/* Supreme Admin Only Routes */}
                 <Route path="/admin/global" element={
@@ -409,24 +418,24 @@ function App() {
                   </SupremeAdminGuard>
                 } />
                 <Route path="/admin/features" element={
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                  <SupremeAdminGuard>
                     <SafeRoute element={<FeatureManagement />} />
-                  </ProtectedRoute>
+                  </SupremeAdminGuard>
                 } />
                 <Route path="/admin/subscriptions" element={
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                  <SupremeAdminGuard>
                     <SafeRoute element={<SubscriptionManagement />} />
-                  </ProtectedRoute>
+                  </SupremeAdminGuard>
                 } />
                 <Route path="/admin/verification" element={
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                  <AdminAuthGuard requiredPermission={createAdminPermission('properties.approve')}>
                     <SafeRoute element={<VerificationManagement />} />
-                  </ProtectedRoute>
+                  </AdminAuthGuard>
                 } />
                 <Route path="/admin/owner-settings" element={
-                  <ProtectedRoute allowedRoles={[UserRole.ADMIN]}>
+                  <AdminAuthGuard>
                     <SafeRoute element={<OwnerSettingsAdmin />} />
-                  </ProtectedRoute>
+                  </AdminAuthGuard>
                 } />
 
                 {/* Catch all route */}

@@ -124,17 +124,7 @@ class EnhancedPropertyService {
 
       const { data, error } = await supabase
         .from('properties')
-        .select(`
-          *,
-          profiles:owner_id(
-            id,
-            first_name,
-            last_name,
-            email,
-            phone,
-            avatar_url
-          )
-        `)
+        .select(`*`)
         .eq('id', propertyId)
         .eq('is_available', true)
         .single();
@@ -177,19 +167,12 @@ class EnhancedPropertyService {
         sortOrder = 'desc'
       } = options;
 
+      // IMPORTANT: Avoid embedding profiles to prevent RLS recursion (stack depth exceeded)
+      // See migrations where profiles policies call is_admin(), which queries profiles again.
+      // This embed triggers policy evaluation on profiles and can recurse.
       let queryBuilder = supabase
         .from('properties')
-        .select(`
-          *,
-          profiles:owner_id(
-            id,
-            first_name,
-            last_name,
-            email,
-            phone,
-            avatar_url
-          )
-        `, { count: 'exact' });
+        .select('*', { count: 'exact' });
 
       // Apply filters
       if (filters.category) {
@@ -291,17 +274,7 @@ class EnhancedPropertyService {
 
       const { data, error } = await supabase
         .from('properties')
-        .select(`
-          *,
-          profiles:owner_id(
-            id,
-            first_name,
-            last_name,
-            email,
-            phone,
-            avatar_url
-          )
-        `)
+        .select(`*`)
         .eq('is_available', true)
         .eq('verification_status', 'verified')
         .order('created_at', { ascending: false })

@@ -34,26 +34,24 @@ const QuickPropertyVerifier: React.FC = () => {
     }
   });
 
-  // Verify property mutation
+  // Verify property mutation (avoid .single() to prevent JSON object error under RLS)
   const verifyPropertyMutation = useMutation({
-    mutationFn: async (propertyId: string) => {
-      const { data, error } = await supabase
+    mutationFn: async (vars: { id: string; title: string }) => {
+      const { error } = await supabase
         .from('properties')
-        .update({ 
+        .update({
           verification_status: 'verified',
           updated_at: new Date().toISOString()
         })
-        .eq('id', propertyId)
-        .select()
-        .single();
+        .eq('id', vars.id);
 
       if (error) throw error;
-      return data;
+      return { id: vars.id, title: vars.title };
     },
-    onSuccess: (data) => {
+    onSuccess: (_data, variables) => {
       toast({
         title: "Property Verified",
-        description: `${data.title} has been verified and is now visible to students.`,
+        description: `${variables.title} has been verified and is now visible to students.`,
         variant: "default"
       });
       queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
@@ -67,26 +65,24 @@ const QuickPropertyVerifier: React.FC = () => {
     }
   });
 
-  // Reject property mutation
+  // Reject property mutation (avoid .single() to prevent JSON object error under RLS)
   const rejectPropertyMutation = useMutation({
-    mutationFn: async (propertyId: string) => {
-      const { data, error } = await supabase
+    mutationFn: async (vars: { id: string; title: string }) => {
+      const { error } = await supabase
         .from('properties')
-        .update({ 
+        .update({
           verification_status: 'rejected',
           updated_at: new Date().toISOString()
         })
-        .eq('id', propertyId)
-        .select()
-        .single();
+        .eq('id', vars.id);
 
       if (error) throw error;
-      return data;
+      return { id: vars.id, title: vars.title };
     },
-    onSuccess: (data) => {
+    onSuccess: (_data, variables) => {
       toast({
         title: "Property Rejected",
-        description: `${data.title} has been rejected.`,
+        description: `${variables.title} has been rejected.`,
         variant: "destructive"
       });
       queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
@@ -174,7 +170,7 @@ const QuickPropertyVerifier: React.FC = () => {
                   <div className="flex gap-2">
                     <Button
                       size="sm"
-                      onClick={() => verifyPropertyMutation.mutate(property.id)}
+                      onClick={() => verifyPropertyMutation.mutate({ id: property.id, title: property.title })}
                       disabled={verifyPropertyMutation.isPending}
                       className="bg-green-600 hover:bg-green-700"
                     >
@@ -184,7 +180,7 @@ const QuickPropertyVerifier: React.FC = () => {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() => rejectPropertyMutation.mutate(property.id)}
+                      onClick={() => rejectPropertyMutation.mutate({ id: property.id, title: property.title })}
                       disabled={rejectPropertyMutation.isPending}
                     >
                       <XCircle className="h-4 w-4 mr-1" />

@@ -14,10 +14,11 @@ import PropertyInfoFields from './PropertyInfoFields';
 import RoomConfigurationFields from './RoomConfigurationFields';
 import AmenitiesSelector from './AmenitiesSelector';
 import BuildingStructureFields from './BuildingStructureFields';
-import MediaUploadTabs from './MediaUploadTabs';
+import { MediaUploadFields } from './MediaUploadFields';
 import FormSubmissionModal from './FormSubmissionModal';
 import BuildingStructureManager from '../BuildingStructureManager';
 import StructureTabModal from '../StructureTabModal';
+import BuildingCreatorGatingModal from './BuildingCreatorGatingModal';
 // Enhanced toast utilities
 import { showValidationErrorToast, showPropertyFormToasts } from '@/utils/toast';
 
@@ -52,6 +53,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
   const [showStructureModal, setShowStructureModal] = useState(false);
+  const [gatingOpen, setGatingOpen] = useState(false);
+  const [requiresStructure, setRequiresStructure] = useState<boolean | null>(null);
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
@@ -70,13 +73,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       // BE CONSCIOUS: Enhanced booking duration and pricing system
       booking_duration: 'semester', // Ghana university standard
       custom_duration_weeks: undefined,
-      price: 0,
+      price: undefined,
       room_type_pricing: {}, // Dynamic pricing matrix
       price_unit: 'semester',
 
       description: '',
-      bedrooms: 1,
-      bathrooms: 1,
+      bedrooms: undefined,
+      bathrooms: undefined,
       all_inclusive: false,
       status: 'available', // Fixed: lowercase to match schema
       verification_status: 'pending',
@@ -261,16 +264,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
     // Enhanced validation with immediate toast feedback and intelligent navigation
     const errors = [];
-    const propertyCategory = data.propertyCategory;
+    // const propertyCategoryForValidation = data.propertyCategory;
 
     // Validate basic required fields
     console.log('🚀 VALIDATING FIELDS', { title: data.title, address: data.address, description: data.description });
 
+    let focused = false;
     if (!data.title) {
       console.log('🚨 TITLE MISSING');
       errors.push("Property Title");
       showValidationErrorToast("Property Title", "Please enter a title for your property.");
       navigateToErrorTab("Property Title");
+      if (!focused) { form.setFocus('title' as any); focused = true; }
     }
 
     if (!data.address) {
@@ -278,6 +283,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       errors.push("Address");
       showValidationErrorToast("Address", "Please enter the property address.");
       navigateToErrorTab("Address");
+      if (!focused) { form.setFocus('address' as any); focused = true; }
     }
 
     if (!data.description || data.description.length < 10) {
@@ -285,6 +291,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       errors.push("Description");
       showValidationErrorToast("Description", "Please provide a description of at least 10 characters.");
       navigateToErrorTab("Description");
+      if (!focused) { form.setFocus('description' as any); focused = true; }
     }
 
     // If there are validation errors, don't proceed to preview
@@ -356,7 +363,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             </div>
           </div>
 
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <Tabs value={activeTab} onValueChange={(val) => {
+              if (val === 'structure' && requiresStructure === null) {
+                setGatingOpen(true);
+                return;
+              }
+              if (requiresStructure && (form.watch('buildings') || []).length === 0 && val !== 'structure') {
+                setGatingOpen(true);
+                setActiveTab('structure');
+                return;
+              }
+              setActiveTab(val);
+            }} className="w-full">
             <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="info" className={`relative ${
                 form.formState.errors.title || form.formState.errors.address || form.formState.errors.description || form.formState.errors.nearest_university
@@ -367,7 +385,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="rooms" className={`relative ${
+              <TabsTrigger value="rooms" disabled={requiresStructure === true && (form.watch('buildings') || []).length === 0} className={`relative ${
                 form.formState.errors.room_types || form.formState.errors.bedrooms || form.formState.errors.bathrooms || form.formState.errors.washroom_location || form.formState.errors.washroom_sharing
                   ? 'text-red-600 border-red-300' : ''
               }`}>
@@ -376,9 +394,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="amenities">Amenities</TabsTrigger>
+              <TabsTrigger value="amenities" disabled={requiresStructure === true && (form.watch('buildings') || []).length === 0}>Amenities</TabsTrigger>
               <TabsTrigger value="structure">Structure</TabsTrigger>
-              <TabsTrigger value="media">Media</TabsTrigger>
+              <TabsTrigger value="media" disabled={requiresStructure === true && (form.watch('buildings') || []).length === 0}>Media</TabsTrigger>
             </TabsList>
 
             <TabsContent value="info" className="space-y-6">
@@ -460,7 +478,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <CardTitle>Property Media</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <MediaUploadTabs form={form} />
+                  <MediaUploadFields form={form} />
                 </CardContent>
               </Card>
             </TabsContent>
@@ -491,20 +509,39 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <Button
                     type="button"
                     onClick={() => {
-                      const currentIndex = ['info', 'rooms', 'amenities', 'structure', 'media'].indexOf(activeTab);
+                      const tabs = ['info', 'rooms', 'amenities', 'structure', 'media'] as const;
+                      const currentIndex = tabs.indexOf(activeTab as any);
+                      const next = tabs[currentIndex + 1];
+                      if (requiresStructure && (form.watch('buildings') || []).length === 0 && next !== 'structure') {
+                        setGatingOpen(true);
+                        setActiveTab('structure');
+                        return;
+                      }
                       if (currentIndex < 4) {
-                        setActiveTab(['info', 'rooms', 'amenities', 'structure', 'media'][currentIndex + 1]);
+                        setActiveTab(next);
                       }
                     }}
                   >
                     Next
                   </Button>
                   <Button
+                    type="button"
+                    variant="secondary"
+                    className="ml-2"
+                    onClick={() => {
+                      const draft = form.getValues();
+                      localStorage.setItem(FORM_STORAGE_KEY, JSON.stringify(draft));
+                      showPropertyFormToasts.formSaved();
+                    }}
+                  >
+                    Save Draft
+                  </Button>
+                  <Button
                     type="submit"
                     disabled={isLoading}
                     variant="outline"
                     className="ml-2"
-                    onClick={(e) => {
+                    onClick={() => {
                       console.log('🚀 UPDATE BUTTON CLICKED');
                       // Force form submission
                       const formData = form.getValues();
@@ -519,7 +556,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 <Button
                   type="submit"
                   disabled={isLoading}
-                  onClick={(e) => {
+                  onClick={() => {
                     console.log('🚀 MEDIA TAB UPDATE BUTTON CLICKED');
                     // Force form submission
                     const formData = form.getValues();
@@ -547,6 +584,18 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       <StructureTabModal
         isOpen={showStructureModal}
         onClose={() => setShowStructureModal(false)}
+      />
+
+      <BuildingCreatorGatingModal
+        isOpen={gatingOpen}
+        onClose={() => setGatingOpen(false)}
+        onConfirm={(decision) => {
+          setRequiresStructure(decision);
+          setGatingOpen(false);
+          if (decision) {
+            setActiveTab('structure');
+          }
+        }}
       />
     </>
   );

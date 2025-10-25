@@ -9,6 +9,7 @@ import { formatCurrency } from '@/utils/currency';
 import { Calculator, Calendar, MapPin, Users } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ModernPaymentSuccessResult, ConfirmedBookingData } from '@/types/booking';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 
 interface BusinessPaymentModalProps {
   isOpen: boolean;
@@ -168,6 +169,13 @@ const BusinessPaymentModal: React.FC<BusinessPaymentModalProps> = ({
               firstName="Student"
               lastName="User"
               phone="0200000000"
+              metadata={{
+                // Treat selectedPkg.price as base rent here (business packages)
+                commission_breakdown: centralizedCommissionEngine.calculateCommissions(selectedPkg.price, false),
+                base_amount_ghs: selectedPkg.price,
+                commission_version: centralizedCommissionEngine.getConfigurationInfo().version,
+                payment_type: 'booking'
+              }}
               onSuccess={handlePaymentSuccess}
               onError={handlePaymentError}
               title={`Payment for ${selectedPkg.name}`}

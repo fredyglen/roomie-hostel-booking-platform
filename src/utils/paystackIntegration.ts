@@ -4,6 +4,7 @@ import { config } from '@/config';
 import PaystackPop from '@paystack/inline-js';
 import { logger } from '@/utils/enhanced-logger';
 import type { PaymentData, PaymentTransaction, MobileMoneyNetwork } from '@/types/payment';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 
 /**
  * Type-safe payment metadata interface
@@ -91,7 +92,36 @@ export interface PaymentInitResult {
 export const initializePaystackPayment = (paymentData: PaymentData): void => {
   try {
     const publicKey = validatePaystackConfig();
-    
+
+    // Enrich metadata with commission info if available
+    const enrichedMeta: Record<string, unknown> = {
+      ...(paymentData.metadata ?? {})
+    };
+    try {
+      // Always stamp commission_version
+      if (!('commission_version' in enrichedMeta)) {
+        enrichedMeta['commission_version'] = centralizedCommissionEngine.getConfigurationInfo().version;
+      }
+      // Include rates snapshot once
+      if (!('rates_snapshot' in enrichedMeta)) {
+        enrichedMeta['rates_snapshot'] = centralizedCommissionEngine.getCommissionRates();
+      }
+      // If caller provided base_amount_ghs but no breakdown, compute it
+      const baseGhs = Number((enrichedMeta as any)?.base_amount_ghs);
+      const agentFee = Number((enrichedMeta as any)?.agent_fee_ghs);
+      const includeAgent = !Number.isNaN(agentFee) ? agentFee > 0 : false;
+      if (!Number.isNaN(baseGhs) && baseGhs > 0 && !(enrichedMeta as any)?.commission_breakdown) {
+        const breakdown = centralizedCommissionEngine.calculateCommissions(baseGhs, includeAgent);
+        (enrichedMeta as any).commission_breakdown = breakdown;
+        (enrichedMeta as any).total_amount_ghs = breakdown.totalAmount;
+        (enrichedMeta as any).paystack_fee_ghs = breakdown.paystackFee;
+        (enrichedMeta as any).vat_amount_ghs = breakdown.vatAmount;
+      }
+    } catch (e) {
+      // Non-fatal enrichment failure; proceed with original metadata
+      logger.warn('Failed to enrich Paystack metadata with commission info', { error: String(e) });
+    }
+
     const paystack = PaystackPop.setup({
       key: publicKey,
       email: paymentData.email,
@@ -99,11 +129,11 @@ export const initializePaystackPayment = (paymentData: PaymentData): void => {
       currency: config.paystack.currency,
       channels: config.paystack.channels as unknown as string[],
       ref: paymentData.reference || generatePaymentReference(),
-      metadata: paymentData.metadata,
+      metadata: enrichedMeta,
       onSuccess: (transaction: PaymentTransaction) => {
-        logger.info('Payment successful', { 
+        logger.info('Payment successful', {
           reference: transaction?.reference || 'unknown',
-          amount: paymentData.amount 
+          amount: paymentData.amount
         });
         paymentData.onSuccess(transaction);
       },
@@ -112,7 +142,7 @@ export const initializePaystackPayment = (paymentData: PaymentData): void => {
         paymentData.onCancel();
       },
     });
-    
+
     paystack.openIframe();
   } catch (error) {
     const err = error instanceof Error ? error : new Error(String(error));

@@ -134,11 +134,14 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
             <FormItem>
               <FormLabel>Total Rooms *</FormLabel>
               <FormControl>
-                <Input 
+                <Input
                   type="number"
                   placeholder="10"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === '' ? undefined : Number(val));
+                  }}
                 />
               </FormControl>
               <FormMessage />
@@ -156,8 +159,11 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
                 <Input
                   type="number"
                   placeholder="5"
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
+                  value={field.value ?? ''}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    field.onChange(val === '' ? undefined : Number(val));
+                  }}
                 />
               </FormControl>
               <FormDescription>
@@ -266,45 +272,6 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
         />
       )}
 
-      {/* Auto-calculated Maximum Occupancy - Ghana standard: every bed = one student */}
-      <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-        <div className="flex items-center gap-2 mb-2">
-          <Users className="h-5 w-5 text-green-600" />
-          <h4 className="font-medium text-green-800">Maximum Students Capacity</h4>
-        </div>
-        <p className="text-sm text-green-700 mb-3">
-          Based on Ghana hostel standards: <strong>Every bed = One student</strong>
-        </p>
-        <div className="text-lg font-semibold text-green-800">
-          {(() => {
-            if (roomTypes.length === 0 || totalRooms === 0) {
-              return 'Select room types and total rooms to calculate capacity';
-            }
-
-            // Calculate based on room types
-            const isApartment = roomTypes.some(type => type.includes('apartment'));
-
-            if (isApartment) {
-              return `Flexible occupancy - Owner decides`;
-            }
-
-            const maxOccupantsPerRoom = Math.max(...roomTypes.map(type => {
-              const occupancyMap = {
-                '1_in_a_room': 1, '2_in_a_room': 2, '3_in_a_room': 3, '4_in_a_room': 4, '5_in_a_room': 5, '6_in_a_room': 6,
-                'single_room': 1, 'shared_room': 2,
-                '1_bedroom_apartment': 0, '2_bedroom_apartment': 0, '3_bedroom_apartment': 0 // Flexible occupancy
-              };
-              return occupancyMap[type as keyof typeof occupancyMap] || 1;
-            }));
-
-            const totalCapacity = totalRooms * maxOccupantsPerRoom;
-            return `${totalCapacity} students maximum`;
-          })()}
-        </div>
-        <p className="text-xs text-green-600 mt-2">
-          This is automatically calculated based on your room configuration
-        </p>
-      </div>
     </div>
   );
 };

@@ -15,6 +15,8 @@ interface PaymentStepProps {
   onTermsChange: (agreed: boolean) => void;
   onPaymentProceed: () => void;
   onPrevious?: () => void;
+  // Optional metadata to be passed to Paystack
+  paystackMetadata?: Record<string, unknown>;
 }
 
 const PaymentStep: React.FC<PaymentStepProps> = ({
@@ -23,7 +25,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   termsAgreed,
   onTermsChange,
   onPaymentProceed,
-  onPrevious
+  onPrevious,
+  paystackMetadata
 }) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -228,6 +231,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             firstName={user?.user_metadata?.first_name || ''}
             lastName={user?.user_metadata?.last_name || ''}
             phone={user?.user_metadata?.phone || ''}
+            metadata={paystackMetadata}
             onSuccess={handlePaymentSuccess}
             onError={handlePaymentError}
             title="ROOMi Accommodation Payment"

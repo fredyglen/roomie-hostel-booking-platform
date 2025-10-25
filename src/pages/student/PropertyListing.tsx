@@ -43,8 +43,7 @@ const PropertyListing: React.FC = () => {
     refetch
   } = useDynamicProperties({
     filters: {
-      isAvailable: true,
-      verified: true
+      isAvailable: true
     },
     sortBy: 'created_at',
     sortOrder: 'desc'

@@ -54,8 +54,8 @@ export const usePropertyCreation = (options: PropertyCreationOptions = {}) => {
           .join(', ');
         
         toast({
-          title: "Property Created Successfully! 🎉",
-          description: `Your property is now live and visible to students. Pipeline completed: ${completedSteps}`,
+          title: "Property Submitted for Review! 🎉",
+          description: "Your property has been submitted successfully. Our admin team will review it within 24–48 hours and you'll be notified once it's approved.",
           duration: 5000,
         });
 

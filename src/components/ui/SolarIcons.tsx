@@ -83,3 +83,125 @@ export const KitchenIcon: React.FC<{ size?: number; color?: string }> = ({ size 
     <path d="M18 2.01L6 2C4.89 2 4 2.89 4 4V20C4 21.11 4.89 22 6 22H18C19.11 22 20 21.11 20 20V4C20 2.89 19.11 2.01 18 2.01ZM8 4H9V10H8V4ZM11 4H12V10H11V4ZM18 20H6V12H18V20Z" fill={color}/>
   </svg>
 );
+
+
+// Admin/Owner Navigation Icons (Outline style)
+export const DashboardIcon: React.FC<{ size?: number; color?: string }> = ({ size = 20, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+    <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+    <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+    <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+  </svg>
+);
+
+export const TrendingUpIcon: React.FC<{ size?: number; color?: string }> = ({ size = 20, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 17L9 11L13 15L21 7" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M21 11V7H17" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const BuildingIcon: React.FC<{ size?: number; color?: string }> = ({ size = 20, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="3" width="8" height="18" rx="1.5"/>
+    <rect x="13" y="7" width="8" height="14" rx="1.5"/>
+    <path d="M6 7H8M6 11H8M6 15H8" strokeLinecap="round"/>
+  </svg>
+);
+
+export const CalendarIcon: React.FC<{ size?: number; color?: string }> = ({ size = 20, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <rect x="3" y="4" width="18" height="17" rx="2"/>
+    <path d="M8 2V6M16 2V6M3 10H21" strokeLinecap="round"/>
+  </svg>
+);
+
+export const UserCircleIcon: React.FC<{ size?: number; color?: string }> = ({ size = 20, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="8" r="3"/>
+    <path d="M4 20C4 16.6863 7.13401 14 12 14C16.866 14 20 16.6863 20 20" strokeLinecap="round"/>
+    <circle cx="12" cy="12" r="10"/>
+  </svg>
+);
+
+export const SettingsIcon: React.FC<{ size?: number; color?: string }> = ({ size = 20, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="3"/>
+    <path d="M19.4 15A1.65 1.65 0 0 0 20 13.6L22 12L20 10.4A1.65 1.65 0 0 0 19.4 9L19 7L17 6.6A1.65 1.65 0 0 0 15.6 6L14 4L12 6L10.4 6A1.65 1.65 0 0 0 9 6.6L7 7L6.6 9A1.65 1.65 0 0 0 6 10.4L4 12L6 13.6A1.65 1.65 0 0 0 6.6 15L7 17L9 17.4A1.65 1.65 0 0 0 10.4 18L12 20L14 18L15.6 18A1.65 1.65 0 0 0 17 17.4L19 17L19.4 15Z" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const LogoutIcon: React.FC<{ size?: number; color?: string }> = ({ size = 18, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M16 17L21 12L16 7" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M21 12H9" strokeLinecap="round" strokeLinejoin="round"/>
+    <path d="M12 19H7C5.89543 19 5 18.1046 5 17V7C5 5.89543 5.89543 5 7 5H12"/>
+  </svg>
+);
+
+export const MenuIcon: React.FC<{ size?: number; color?: string }> = ({ size = 20, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 6H21M3 12H21M3 18H21" strokeLinecap="round"/>
+  </svg>
+);
+
+export const CloseIcon: React.FC<{ size?: number; color?: string }> = ({ size = 20, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M6 6L18 18M6 18L18 6" strokeLinecap="round"/>
+  </svg>
+);
+
+export const ArrowLeftIcon: React.FC<{ size?: number; color?: string }> = ({ size = 16, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M15 6L9 12L15 18" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const UsersIcon: React.FC<{ size?: number; color?: string }> = ({ size = 18, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="9" cy="8" r="3"/>
+    <path d="M2 20C2 16.6863 5.13401 14 9 14C12.866 14 16 16.6863 16 20"/>
+    <circle cx="17" cy="9" r="2"/>
+    <path d="M21.5 20C21.5 17.7909 19.7091 16 17.5 16"/>
+  </svg>
+);
+
+export const GlobeIcon: React.FC<{ size?: number; color?: string }> = ({ size = 18, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <circle cx="12" cy="12" r="9"/>
+    <path d="M3 12H21M12 3C14.7614 6.5 14.7614 17.5 12 21C9.23858 17.5 9.23858 6.5 12 3Z"/>
+  </svg>
+);
+
+export const DollarIcon: React.FC<{ size?: number; color?: string }> = ({ size = 18, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2V22M17 7C17 5.34315 15.2091 4 13 4H10C8.34315 4 7 5.34315 7 7C7 8.65685 8.34315 10 10 10H14C15.6569 10 17 11.3431 17 13C17 14.6569 15.6569 16 14 16H7" strokeLinecap="round"/>
+  </svg>
+);
+
+export const FileCheckIcon: React.FC<{ size?: number; color?: string }> = ({ size = 18, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M14 2H6C4.89543 2 4 2.89543 4 4V20C4 21.1046 4.89543 22 6 22H18C19.1046 22 20 21.1046 20 20V8L14 2Z"/>
+    <path d="M9 13L11 15L15 11" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const ShieldOutlineIcon: React.FC<{ size?: number; color?: string }> = ({ size = 16, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 2L4 5V11C4 16 7.5 20.5 12 22C16.5 20.5 20 16 20 11V5L12 2Z"/>
+  </svg>
+);
+
+export const CrownIcon: React.FC<{ size?: number; color?: string }> = ({ size = 14, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M3 7L7 12L12 6L17 12L21 7V18H3V7Z" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);
+
+export const SchoolIcon: React.FC<{ size?: number; color?: string }> = ({ size = 14, color = '#7E69AB' }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.8" xmlns="http://www.w3.org/2000/svg">
+    <path d="M12 3L2 8L12 13L22 8L12 3Z"/>
+    <path d="M6 10V16C6 17.6569 8.68629 19 12 19C15.3137 19 18 17.6569 18 16V10"/>
+  </svg>
+);

@@ -143,13 +143,12 @@ export const propertyService = {
   async getPropertyById(id: string): Promise<Property> {
     const { data, error } = await supabase
       .from('properties')
-      .select(`*, profiles:owner_id (first_name, last_name, email, phone)`)
+      .select(`*`)
       .eq('id', id)
       .single();
     if (error) throw error;
     
-    const profileData = Array.isArray(data.profiles) ? data.profiles[0] : data.profiles;
-    
+
     return {
       id: createPropertyId(data.id),
       owner_id: data.owner_id,
@@ -235,7 +234,7 @@ export const propertyService = {
       dbUpdates.property_category = updates.property_category;
     }
     if (updates.gender_type !== undefined) {
-      dbUpdates.gender_restriction = updates.gender_type;
+      dbUpdates.gender_type = updates.gender_type;
     }
     if (updates.max_occupancy !== undefined) {
       dbUpdates.max_occupants = updates.max_occupancy;

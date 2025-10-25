@@ -18,7 +18,7 @@ import React, { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAdminAuth } from '@/context/AdminAuthContext';
 import { AdminAuthProvider } from '@/context/AdminAuthContext';
-import AdminNavbar from './AdminNavbar';
+import AdminSidebar from './AdminSidebar';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -197,71 +197,73 @@ const AdminLayoutContent: React.FC<AdminLayoutProps> = ({
   const isSessionExpiringSoon = sessionTimeRemaining < 30 * 60 * 1000; // 30 minutes
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <AdminNavbar />
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Left Sidebar */}
+      <AdminSidebar />
 
-      {/* Session Warning */}
-      {isSessionExpiringSoon && (
-        <Alert className="mx-4 mt-4 border-yellow-200 bg-yellow-50">
-          <Clock className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>
-              Your admin session will expire in {Math.floor(sessionTimeRemaining / (1000 * 60))} minutes.
-            </span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleRefreshSession}
-              className="ml-4"
-            >
-              <RefreshCw className="h-3 w-3 mr-1" />
-              Refresh Session
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {/* Error Display */}
-      {error && (
-        <Alert className="mx-4 mt-4 border-red-200 bg-red-50">
-          <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="flex items-center justify-between">
-            <span>{error.message}</span>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={clearError}
-              className="ml-4"
-            >
-              Dismiss
-            </Button>
-          </AlertDescription>
-        </Alert>
-      )}
-
-      <main className="container mx-auto px-4 py-4">
-        {/* Page Header */}
-        {pageTitle && (
-          <div className="mb-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
-              {showRoleInfo && (
-                <div className="flex items-center space-x-2">
-                  <Badge variant="secondary" className="bg-purple-100 text-purple-800">
-                    {getAdminRole() === 'supreme_admin' ? 'Supreme Admin' : 'Campus Admin'}
-                  </Badge>
-                  <Badge variant="outline" className="bg-green-50 text-green-700">
-                    🇬🇭 Ghana
-                  </Badge>
-                </div>
-              )}
-            </div>
+      {/* Main content column */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Minimal Top Header */}
+        <header className="h-14 bg-white border-b flex items-center justify-between px-4">
+          <div className="flex items-center gap-3">
+            <span className="text-sm font-semibold text-gray-800">ROOMi Admin</span>
+            {showRoleInfo && (
+              <div className="hidden md:flex items-center gap-2">
+                <Badge variant="secondary" className="bg-purple-100 text-purple-800">
+                  {getAdminRole() === 'supreme_admin' ? 'Supreme Admin' : 'Campus Admin'}
+                </Badge>
+                <Badge variant="outline" className="bg-green-50 text-green-700">
+                  🇬🇭 Ghana
+                </Badge>
+              </div>
+            )}
           </div>
+
+          {/* Session Warning (icon-only) */}
+          {isSessionExpiringSoon && (
+            <div className="hidden md:flex items-center gap-2 text-xs text-yellow-700 bg-yellow-50 border border-yellow-200 px-2 py-1 rounded">
+              <Clock className="h-3 w-3" />
+              {Math.floor(sessionTimeRemaining / (1000 * 60))}m left
+              <Button size="sm" variant="outline" className="h-6 px-2" onClick={handleRefreshSession}>
+                <RefreshCw className="h-3 w-3 mr-1" />
+                Refresh
+              </Button>
+            </div>
+          )}
+        </header>
+
+        {/* Error Display */}
+        {error && (
+          <Alert className="mx-4 mt-4 border-red-200 bg-red-50">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription className="flex items-center justify-between">
+              <span>{error.message}</span>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={clearError}
+                className="ml-4"
+              >
+                Dismiss
+              </Button>
+            </AlertDescription>
+          </Alert>
         )}
 
-        {/* Page Content */}
-        {children}
-      </main>
+        <main className="px-4 py-4">
+          {/* Page Header */}
+          {pageTitle && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between">
+                <h1 className="text-2xl font-bold text-gray-900">{pageTitle}</h1>
+              </div>
+            </div>
+          )}
+
+          {/* Page Content */}
+          {children}
+        </main>
+      </div>
     </div>
   );
 };

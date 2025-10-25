@@ -10,12 +10,21 @@ import { Eye, EyeOff, Key, Shield, AlertTriangle } from 'lucide-react';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { API_ENDPOINTS } from '@/constants/api';
 
+import { useRealTimeCommissionConfig } from '@/hooks/useRealTimeCommissionConfig';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+
 const PaystackConfigForm: React.FC = () => {
   const [showTestKey, setShowTestKey] = useState(false);
   const [showLiveKey, setShowLiveKey] = useState(false);
   const [testSecretKey, setTestSecretKey] = useState('');
   const [liveSecretKey, setLiveSecretKey] = useState('');
   const [environment, setEnvironment] = useState<'test' | 'live'>('test');
+
+  const { rates, config } = useRealTimeCommissionConfig({ portal: 'admin' });
+  const platformRatePct = ((rates?.platform ?? centralizedCommissionEngine.getCommissionRates().platform) * 100);
+  const agentRatePct = ((rates?.agent ?? centralizedCommissionEngine.getCommissionRates().agent) * 100);
+  const fixedFee = config?.fees.fixed ?? centralizedCommissionEngine.getPlatformFees().fixed;
+  const agentMinimum = config?.fees.agentMinimum ?? centralizedCommissionEngine.getPlatformFees().agentMinimum;
 
   const handleSaveConfiguration = () => {
     // This would typically save to your secure backend/environment variables
@@ -203,18 +212,18 @@ const PaystackConfigForm: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="text-lg font-bold text-blue-800">Property Owner</div>
-              <div className="text-2xl font-bold text-blue-600">98%</div>
-              <div className="text-sm text-blue-600">Of booking amount</div>
+              <div className="text-2xl font-bold text-blue-600">{(100 - platformRatePct).toFixed(1)}%</div>
+              <div className="text-sm text-blue-600">Of booking amount (after platform commission)</div>
             </div>
             <div className="bg-green-50 p-4 rounded-lg">
               <div className="text-lg font-bold text-green-800">Agent Commission</div>
-              <div className="text-2xl font-bold text-green-600">3.7%</div>
-              <div className="text-sm text-green-600">Min. GHS 100</div>
+              <div className="text-2xl font-bold text-green-600">{agentRatePct.toFixed(1)}%</div>
+              <div className="text-sm text-green-600">Min. GHS {agentMinimum.toLocaleString()}</div>
             </div>
             <div className="bg-purple-50 p-4 rounded-lg">
               <div className="text-lg font-bold text-purple-800">Platform Fee</div>
-              <div className="text-2xl font-bold text-purple-600">4.2%</div>
-              <div className="text-sm text-purple-600">Includes Paystack fees</div>
+              <div className="text-2xl font-bold text-purple-600">{platformRatePct.toFixed(1)}%</div>
+              <div className="text-sm text-purple-600">Includes Paystack + fixed GHS {fixedFee.toLocaleString()}</div>
             </div>
           </div>
         </CardContent>

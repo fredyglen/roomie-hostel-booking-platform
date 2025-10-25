@@ -10,6 +10,9 @@ import { formatCurrency } from '@/utils/currency';
 import { usePaymentProcessor } from '@/hooks/subscription/usePaymentProcessor';
 import { SubscriptionTier } from '@/types/subscription';
 import { ErrorHandler } from '@/utils/ErrorHandler';
+import { useRealTimeCommissionConfig } from '@/hooks/useRealTimeCommissionConfig';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+
 
 interface PaymentData {
   amount: number;
@@ -48,16 +51,22 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     cvv: '',
     momoNumber: '',
     momoNetwork: 'mtn' as 'mtn' | 'vodafone' | 'airtel'
+
   });
 
   const { processPayment, processing } = usePaymentProcessor();
 
+
+  const { rates } = useRealTimeCommissionConfig({ portal: 'owner' });
+  const platformRate = rates?.platform ?? centralizedCommissionEngine.getCommissionRates().platform;
+
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+
   };
 
   const handlePayment = () => {
-    const serviceFee = tier.price * 0.05;
+    const serviceFee = tier.price * platformRate;
     const totalAmount = tier.price + serviceFee;
 
     const paymentData: PaymentData = {
@@ -85,10 +94,10 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
     );
   };
 
-  const serviceFee = tier.price * 0.05; // 5% service fee
+  const serviceFee = tier.price * platformRate; // dynamic platform rate
   const totalAmount = tier.price + serviceFee;
   const isFormValid = formData.email && (
-    paymentMethod === 'card' ? 
+    paymentMethod === 'card' ?
       formData.cardNumber && formData.expiryDate && formData.cvv :
       formData.momoNumber
   );
@@ -220,7 +229,7 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
               <span>{formatCurrency(tier.price)}</span>
             </div>
             <div className="flex justify-between text-sm">
-              <span>Service Fee</span>
+              <span>Service Fee ({(platformRate * 100).toFixed(1)}%)</span>
               <span>{formatCurrency(serviceFee)}</span>
             </div>
             <Separator />
@@ -235,8 +244,8 @@ export const PaymentModal: React.FC<PaymentModalProps> = ({
           <Button variant="outline" onClick={onClose} disabled={processing}>
             Cancel
           </Button>
-          <Button 
-            onClick={handlePayment} 
+          <Button
+            onClick={handlePayment}
             disabled={!isFormValid || processing || isLoading}
           >
             {processing ? (

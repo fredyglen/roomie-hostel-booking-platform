@@ -240,12 +240,7 @@ export class AdminQueries {
           title,
           address,
           city,
-          property_type,
-          profiles:owner_id (
-            first_name,
-            last_name,
-            email
-          )
+          property_type
         `)
         .eq('verification_status', 'pending')
         .order('created_at', { ascending: true })
@@ -269,9 +264,9 @@ export class AdminQueries {
           property_type: property.property_type,
         },
         owner: {
-          first_name: property.profiles?.first_name || null,
-          last_name: property.profiles?.last_name || null,
-          email: property.profiles?.email || '',
+          first_name: null,
+          last_name: null,
+          email: property.owner_id || '',
         },
       })) || [];
 

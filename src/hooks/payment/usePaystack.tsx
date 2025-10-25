@@ -3,6 +3,7 @@ import { useToast } from '@/hooks/use-toast';
 import { PaystackService, PaystackTransactionInitParams } from '@/services/payment/PaystackService';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { logger } from '@/utils/enhanced-logger';
+import { enhancedPaystackService } from '@/services/enhanced-paystack.service';
 
 interface UsePaystackOptions {
   onSuccess?: (reference: string) => void;
@@ -34,17 +35,38 @@ export function usePaystack(options: UsePaystackOptions = {}) {
       // Generate reference if not provided
       const reference = paymentOptions.reference || PaystackService.generateReference();
       
-      // Initialize transaction
+      // Prepare enriched metadata using enhancedPaystackService (does not alter amount)
+      let enrichedMetadata = paymentOptions.metadata ?? {};
+      try {
+        const base = (enrichedMetadata as any)?.base_amount_ghs as number | undefined;
+        const hasBreakdown = Boolean((enrichedMetadata as any)?.commission_breakdown);
+        if (base && !hasBreakdown) {
+          const includeAgent = Number((enrichedMetadata as any)?.agent_fee_ghs) > 0;
+          const prepared = enhancedPaystackService.preparePaymentData(
+            paymentOptions.email,
+            base,
+            reference,
+            includeAgent,
+            enrichedMetadata
+          );
+          enrichedMetadata = prepared.metadata ?? enrichedMetadata;
+        }
+      } catch (e) {
+        logger.warn('Enhanced Paystack preparation skipped', { error: String(e) });
+      }
+
+      // Initialize transaction (keep caller-provided amount to avoid UI mismatch)
       const response = await PaystackService.initializeTransaction({
         ...paymentOptions,
+        metadata: enrichedMetadata,
         reference
       });
-      
+
       setTransactionRef(reference);
-      
+
       // Open Paystack checkout in new window
       window.open(response.data.authorization_url, '_blank');
-      
+
       toast({
         title: "Payment Initiated",
         description: "Please complete your payment in the new window.",

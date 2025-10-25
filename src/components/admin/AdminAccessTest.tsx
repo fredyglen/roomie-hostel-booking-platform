@@ -3,7 +3,6 @@
  * Quick verification tool for admin authentication
  * Following BE CONSCIOUS Apple-grade standards
  */
-import second from 'booking'
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -92,7 +91,7 @@ export const AdminAccessTest: React.FC = () => {
         } else if (profile) {
           testResults.push({
             step: 'Profile Check',
-            status: profile.role === 'admin' ? 'success' : 'warning',
+            status: ['admin','supreme_admin','campus_admin'].includes(profile.role) ? 'success' : 'warning',
             message: `Profile found - Role: ${profile.role}, Name: ${profile.first_name} ${profile.last_name}`
           });
         }
@@ -106,7 +105,8 @@ export const AdminAccessTest: React.FC = () => {
         testResults.push({
           step: 'Test Summary',
           status: 'success',
-          message: '✅ Operation successfully initiated. Continue to the <portal className=""></portal>
+          message: '✅ All admin access checks passed. You can proceed to the Admin Portal.'
+        });
       } else if (hasErrors) {
         testResults.push({
           step: 'Test Summary',

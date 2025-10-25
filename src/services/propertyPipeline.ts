@@ -143,7 +143,7 @@ export class PropertyPipelineService {
       amenities: formData.amenities || [],
       images: formData.images || [],
       verification_status: 'pending',
-      gender_restriction: formData.gender_restriction || 'mixed',
+      gender_type: formData.gender_restriction || 'mixed',
       parking_available: formData.parking_available || false,
       has_accessibility_features: formData.has_accessibility_features || false,
       pet_policy: formData.pet_policy || 'not_allowed',

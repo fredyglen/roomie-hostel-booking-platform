@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ErrorHandler } from '@/utils/ErrorHandler';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 
 interface PaystackCheckoutProps {
   amount: number;
@@ -59,10 +60,12 @@ export function PaystackCheckout({
         description,
         metadata: {
           ...metadata,
-          description
+          description,
+          base_amount_ghs: (metadata as any)?.base_amount_ghs ?? amount,
+          commission_version: centralizedCommissionEngine.getConfigurationInfo().version
         }
       });
-      
+
       // Set up verification check
       // In a real app, you'd handle this via webhook or callback URL
       // This is a simplified approach for demo purposes

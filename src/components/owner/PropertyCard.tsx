@@ -27,10 +27,13 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete }) => {
   const [imageLoaded, setImageLoaded] = React.useState(false);
   const [imageError, setImageError] = React.useState(false);
 
+  // Avoid local blob URLs saved in drafts; use only persisted URLs
+  const safeImageUrl = property.image_url && property.image_url.startsWith('blob:') ? '' : property.image_url;
+
   return (
     <Card className="overflow-hidden">
       <div className="h-48 relative bg-gray-100">
-        {property.image_url && !imageError ? (
+        {safeImageUrl && !imageError ? (
           <>
             {!imageLoaded && (
               <div className="w-full h-full flex items-center justify-center bg-gray-200 absolute inset-0">
@@ -41,12 +44,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete }) => {
               </div>
             )}
             <img
-              src={property.image_url}
+              src={safeImageUrl}
               alt={property.title}
               className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
               onLoad={() => setImageLoaded(true)}
               onError={() => {
-                console.log('🚨 IMAGE LOAD ERROR', property.image_url);
+                console.log('🚨 IMAGE LOAD ERROR', safeImageUrl);
                 setImageError(true);
               }}
             />
@@ -61,8 +64,8 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete }) => {
         )}
         <div className="absolute top-2 right-2">
           <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-            property.status === 'Available' ? 'bg-green-100 text-green-800' : 
-            property.status === 'Partially Occupied' ? 'bg-yellow-100 text-yellow-800' : 
+            property.status === 'Available' ? 'bg-green-100 text-green-800' :
+            property.status === 'Partially Occupied' ? 'bg-yellow-100 text-yellow-800' :
             'bg-red-100 text-red-800'
           }`}>
             {property.status}
@@ -109,7 +112,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete }) => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction 
+              <AlertDialogAction
                 onClick={() => onDelete(property.id)}
                 className="bg-red-600 hover:bg-red-700"
               >

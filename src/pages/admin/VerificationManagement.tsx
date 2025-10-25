@@ -19,13 +19,13 @@ const VerificationManagement: React.FC = () => {
   const [selectedStatus, setSelectedStatus] = React.useState<string>('all');
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  const { data: verifications, isLoading } = useQuery({
+  const { data: verifications, isLoading, isError, error } = useQuery({
     queryKey: ['admin-verifications'],
     queryFn: async () => {
       const { data, error } = await supabase
         .from('property_verifications')
         .select(`
-          *,
+          id, status, verification_type, priority_level, verification_deadline, resubmission_count, notes, admin_notes, rejection_reason, created_at,
           properties!inner (
             id,
             title,
@@ -36,26 +36,7 @@ const VerificationManagement: React.FC = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-
-      // Fetch owner profiles separately
-      const ownerIds = data?.map(v => v.properties?.owner_id).filter(Boolean) || [];
-      const { data: profiles, error: profilesError } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, email')
-        .in('id', ownerIds);
-
-      if (profilesError) throw profilesError;
-
-      // Combine the data
-      const verificationsWithProfiles = data?.map(verification => ({
-        ...verification,
-        properties: {
-          ...verification.properties,
-          profile: profiles?.find(p => p.id === verification.properties?.owner_id)
-        }
-      }));
-
-      return verificationsWithProfiles;
+      return data || [];
     },
   });
 
@@ -103,18 +84,21 @@ const VerificationManagement: React.FC = () => {
   });
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
+    const s = String(status || '').toLowerCase();
+    switch (s) {
       case 'verified':
         return <CheckCircle className="h-4 w-4 text-green-500" />;
       case 'rejected':
         return <XCircle className="h-4 w-4 text-red-500" />;
+      case 'pending':
       default:
         return <Clock className="h-4 w-4 text-yellow-500" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
-    switch (status) {
+    const s = String(status || '').toLowerCase();
+    switch (s) {
       case 'verified':
         return <Badge className="bg-green-500">Verified</Badge>;
       case 'rejected':
@@ -126,24 +110,37 @@ const VerificationManagement: React.FC = () => {
     }
   };
 
-  const filteredVerifications = verifications?.filter(verification => {
-    const matchesStatus = selectedStatus === 'all' || verification.status === selectedStatus;
-    const matchesSearch = searchTerm === '' || 
-      verification.properties?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      verification.properties?.profile?.email?.toLowerCase().includes(searchTerm.toLowerCase());
-    
+  const filteredVerifications = verifications?.filter((verification: any) => {
+    const statusVal = String(verification.status || '').toLowerCase();
+    const matchesStatus = selectedStatus === 'all' || statusVal === selectedStatus;
+    const q = searchTerm.toLowerCase();
+    const matchesSearch =
+      q === '' ||
+      String(verification.properties?.title || '').toLowerCase().includes(q) ||
+      String(verification.properties?.owner_id || '').toLowerCase().includes(q);
+
     return matchesStatus && matchesSearch;
   });
 
-  const pendingCount = verifications?.filter(v => v.status === 'pending').length || 0;
-  const verifiedCount = verifications?.filter(v => v.status === 'verified').length || 0;
-  const rejectedCount = verifications?.filter(v => v.status === 'rejected').length || 0;
+  const pendingCount = verifications?.filter(v => String(v.status || '').toLowerCase() === 'pending').length || 0;
+  const verifiedCount = verifications?.filter(v => String(v.status || '').toLowerCase() === 'verified').length || 0;
+  const rejectedCount = verifications?.filter(v => String(v.status || '').toLowerCase() === 'rejected').length || 0;
 
   if (isLoading) {
     return (
       <AdminLayout pageTitle="Verification Management">
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  if (isError) {
+    return (
+      <AdminLayout pageTitle="Verification Management">
+        <div className="mx-4 mt-4 p-4 border border-red-200 bg-red-50 text-sm text-red-700 rounded">
+          {error instanceof Error ? error.message : 'Failed to load verifications'}
         </div>
       </AdminLayout>
     );
@@ -205,8 +202,8 @@ const VerificationManagement: React.FC = () => {
                         {verification.properties?.title || 'Property Title'}
                       </CardTitle>
                       <p className="text-sm text-gray-600">
-                        {verification.properties?.profile?.email || 'No email'} • 
-                        {verification.properties?.property_category || 'Unknown'} • 
+                        Owner: {verification.properties?.owner_id || 'Unknown'} •
+                        {verification.properties?.property_category || 'Unknown'} •
                         {verification.verification_type}
                       </p>
                     </div>
@@ -242,7 +239,7 @@ const VerificationManagement: React.FC = () => {
                         <h4 className="font-medium text-sm text-gray-700 mb-2">Property Details</h4>
                         <div className="space-y-1 text-sm">
                           <p><span className="text-gray-500">Category:</span> {verification.properties?.property_category}</p>
-                          <p><span className="text-gray-500">Owner:</span> {verification.properties?.profile?.first_name} {verification.properties?.profile?.last_name}</p>
+                          <p><span className="text-gray-500">Owner ID:</span> {verification.properties?.owner_id}</p>
                         </div>
                       </div>
                     </div>
@@ -309,7 +306,7 @@ const VerificationManagement: React.FC = () => {
                   </TabsContent>
 
                   <TabsContent value="actions" className="space-y-4">
-                    {verification.status === 'pending' && (
+                    {String(verification.status || '').toLowerCase() === 'pending' && (
                       <div className="space-y-4">
                         <div>
                           <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -370,7 +367,7 @@ const VerificationManagement: React.FC = () => {
                       </div>
                     )}
 
-                    {verification.status !== 'pending' && (
+                    {String(verification.status || '').toLowerCase() !== 'pending' && (
                       <div className="text-center py-6">
                         <p className="text-sm text-gray-500">
                           This verification has been {verification.status}.

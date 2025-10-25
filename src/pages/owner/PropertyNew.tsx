@@ -90,8 +90,8 @@ const PropertyNew: React.FC = () => {
             <CardContent>
               <p className="text-sm text-gray-600">{pipelineStatus.message}</p>
               {result.success && (
-                <div className="mt-2 text-xs text-green-600">
-                  ✅ Your property is now live and visible to students!
+                <div className="mt-2 text-xs text-blue-600">
+                  ✅ Submitted for review. You’ll get an email and in‑app notification within 24–48 hours once approved.
                 </div>
               )}
             </CardContent>

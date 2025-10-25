@@ -200,11 +200,7 @@ const AdminAuthGuard: React.FC<AdminAuthGuardProps> = ({
     );
   }
 
-  // TEMPORARY: Allow access in development mode if we're on admin routes
-  if (import.meta.env.DEV && location.pathname.startsWith('/admin/')) {
-    console.log('🚀 DEV MODE: Allowing admin access');
-    return <>{children}</>;
-  }
+
 
   // Not authenticated
   if (!isAuthenticated || !adminUser) {

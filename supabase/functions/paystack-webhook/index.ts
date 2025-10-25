@@ -4,7 +4,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-import { ErrorHandler } from '../../../src/utils/ErrorHandler'
+const ErrorHandler = { log: (...args: unknown[]) => console.log(...args) }
 
 interface MinimalSupabaseClient {
   from(tableName: string): any; // Simplified for common usage in this file
@@ -103,6 +103,27 @@ Deno.serve(async (req) => {
       payload: event,
       processed: false
     })
+
+    // Also write an audit snapshot including commission metadata (if provided)
+    try {
+      const meta = (event.data?.metadata ?? {}) as Record<string, unknown>
+      const commission = (meta as any)?.commission_breakdown ?? null
+      const rates = (meta as any)?.rates_snapshot ?? null
+      const version = (meta as any)?.commission_version ?? null
+
+      await supabase.from('payment_audit_log').insert({
+        booking_id: (meta as any)?.booking_id ?? null,
+        payment_reference: event.data.reference,
+        event_type: event.event,
+        commission_snapshot: commission,
+        rates_snapshot: rates,
+        metadata_valid: Boolean(commission && version),
+        discrepancy_notes: commission && version ? null : 'Missing commission snapshot or version in metadata',
+        paystack_response: event,
+      })
+    } catch (auditErr) {
+      console.error('payment_audit_log insert failed', auditErr)
+    }
 
     // Process different event types
     switch (event.event) {

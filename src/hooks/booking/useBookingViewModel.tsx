@@ -9,6 +9,9 @@ import { calculateTotalPrice } from './usePriceCalculation';
 import { BookingQueries } from '@/services/database/standardizedQueries';
 import { supabase } from '@/integrations/supabase/client';
 
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+import { useRealTimeCommissionConfig } from '@/hooks/useRealTimeCommissionConfig';
+
 export const STEP_LABELS = [
   'Room Type',
   'Duration',
@@ -31,10 +34,13 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
   const [numberOfRoommates, setNumberOfRoommates] = useState(1);
 
   // Payment integration state
+  // Subscribe to real-time commission rate changes to keep calculations fresh
+  const { rates } = useRealTimeCommissionConfig({ portal: 'student', autoSubscribe: true });
+
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isCreatingBooking, setIsCreatingBooking] = useState(false);
   const [bookingId, setBookingId] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useLocalStorage(`booking_form_${id}`, {
     roomType: '',
     duration: '',
@@ -52,42 +58,42 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
     idImage: null,
     termsAgreed: false
   });
-  
+
   // Form validation
   const { validateStep } = useFormValidation();
-  
+
   // Roommates management
-  const { 
-    roommatesInfo, 
-    handleRoommateChange 
+  const {
+    roommatesInfo,
+    handleRoommateChange
   } = useRoommatesManager(
-    splitPayment, 
-    numberOfRoommates, 
+    splitPayment,
+    numberOfRoommates,
     {
       fullName: formData.fullName,
       email: formData.email,
       phone: formData.phone
     }
   );
-  
+
   // Selected room type and price calculations
   const selectedRoomType = property?.buildings?.[0]?.floors?.[0]?.rooms?.find((r: Room) => r.name === formData.roomType);
   const selectedPrice = selectedRoomType?.price || property?.price?.amount || 0;
   const selectedUnit = property?.price?.period || 'semester';
-  
+
   // Calculate total price based on duration
   const totalPrice = calculateTotalPrice(
-    selectedPrice, 
-    formData.duration, 
-    formData.durationType, 
+    selectedPrice,
+    formData.duration,
+    formData.durationType,
     selectedUnit
   );
-  
+
   // Calculate individual price if split payment
-  const individualPrice = splitPayment && numberOfRoommates > 1 
-    ? totalPrice / numberOfRoommates 
+  const individualPrice = splitPayment && numberOfRoommates > 1
+    ? totalPrice / numberOfRoommates
     : totalPrice;
-  
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({
@@ -95,7 +101,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
       [name]: value
     });
   };
-  
+
   const handleCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, checked } = e.target;
     setFormData({
@@ -103,16 +109,16 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
       [name]: checked
     });
   };
-  
+
   const handleSplitPaymentChange = (checked: boolean) => {
     setSplitPayment(checked);
   };
-  
+
   const handleNext = () => {
     // Validate current step
     if (!validateStep(
-      currentStep, 
-      formData, 
+      currentStep,
+      formData,
       {
         splitPayment,
         numberOfRoommates,
@@ -121,7 +127,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
         propertyCategory: property?.type
       }
     )) return;
-    
+
     if (currentStep < 7) {
       setCurrentStep(currentStep + 1);
       window.scrollTo(0, 0);
@@ -130,7 +136,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
       processPayment();
     }
   };
-  
+
   const handleBack = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
@@ -139,29 +145,20 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
       navigate(`/student/property/${id}`);
     }
   };
-  
-  // Business model configuration
-  const BUSINESS_MODEL = {
-    platformCommissionRate: 0.05,  // 5%
-    platformFixedFee: 100,         // 100 GHS
-    paystackFeeRate: 0.0195        // 1.95%
-  };
 
+  // Dynamic commission engine hookup (no hardcoded rates)
   const calculatePaymentDistribution = (basePrice: number) => {
-    const platformCommission = basePrice * BUSINESS_MODEL.platformCommissionRate;
-    const platformFee = BUSINESS_MODEL.platformFixedFee;
-    const subtotal = basePrice + platformCommission + platformFee;
-    const paystackFee = subtotal * BUSINESS_MODEL.paystackFeeRate;
-    const totalAmount = subtotal + paystackFee;
+    const includeAgent = Boolean(property?.agent_id);
+    const breakdown = centralizedCommissionEngine.calculateCommissions(basePrice, includeAgent);
 
     return {
-      basePrice,
-      platformCommission,
-      platformFee,
-      paystackFee,
-      totalAmount,
-      propertyOwnerAmount: basePrice,
-      roomiAmount: platformCommission + platformFee
+      basePrice: breakdown.baseAmount,
+      platformCommission: breakdown.platformCommission,
+      platformFee: breakdown.platformFixedFee,
+      paystackFee: breakdown.paystackFee,
+      totalAmount: breakdown.totalAmount,
+      propertyOwnerAmount: breakdown.ownerReceives,
+      roomiAmount: breakdown.platformCommission + breakdown.platformFixedFee
     };
   };
 
@@ -284,7 +281,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
       });
     }
   };
-  
+
   return {
     property,
     currentStep,
