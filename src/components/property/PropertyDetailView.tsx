@@ -1,7 +1,9 @@
 
 import React from 'react';
 import { Property } from '@/types/property';
-import PropertyImageGallery from './PropertyImageGallery';
+import ImageWithFallback from '@/components/common/ImageWithFallback';
+import { deriveCoverImageFromProperty } from '@/utils/propertyPreviewCache';
+import { IMAGE_URLS } from '@/constants/images';
 import PropertyTabs from './PropertyTabs';
 import PropertyBookingCard from './PropertyBookingCard';
 import PropertyOwnerCard from './PropertyOwnerCard';
@@ -102,6 +104,24 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
       responseRate: getOwnerResponseRate()
     } : undefined
   };
+  // Extract gallery images preferring explicit images; fallback to media array (cover first)
+  const computePropertyImages = (p: Property): string[] => {
+    const imgs = Array.isArray((p as any).images) ? (p as any).images as string[] : [];
+    const validImgs = imgs.filter((u) => typeof u === 'string' && u.trim());
+    if (validImgs.length > 0) return validImgs;
+
+    const media = Array.isArray((p as any).media) ? (p as any).media : [];
+    const imageItems = media
+      .filter((m: any) => m && m.type === 'image' && typeof m.url === 'string' && m.url.trim())
+      .sort((a: any, b: any) => Number(b?.isCover) - Number(a?.isCover)); // cover first
+    const urls = imageItems.map((m: any) => m.url as string);
+    return urls.length > 0 ? urls : [];
+  };
+
+  // Single cover image derived from property
+  const coverImage = deriveCoverImageFromProperty(property);
+
+
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-4">
@@ -120,8 +140,14 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
         <div className="lg:col-span-2 space-y-4">
           {/* ✅ IMAGE GALLERY with COVER OVERLAY */}
           <div className="relative">
-            <PropertyImageGallery images={property.images} title={property.title} />
-            {/* ✅ PRODUCTION-GRADE: Cover Image Overlay */}
+            <div className="rounded-lg overflow-hidden h-48 sm:h-64 md:h-80 bg-gray-100">
+              <ImageWithFallback
+                src={coverImage || IMAGE_URLS.DEFAULT}
+                alt={`${property.title} - Cover`}
+                className="w-full h-full object-cover"
+              />
+            </div>
+            {/* ✅ Cover-only: overlay preserved */}
             <PropertyDetailCoverOverlay propertyId={property.id} />
           </div>
 
@@ -150,7 +176,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             propertyCategory={property.property_category || property.propertyCategory}
           />
         </div>
-        
+
         {/* ✅ STREAMLINED SIDEBAR - Essential Components Only */}
         <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
           {/* Booking Card */}
