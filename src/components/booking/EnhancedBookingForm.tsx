@@ -4,20 +4,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '@/types/property';
-import { RoommateInfo } from '@/types/BookingTypes';
 import { useEnhancedBooking } from '@/hooks/booking/useEnhancedBooking';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Calendar, Users, CreditCard, CheckCircle, ArrowLeft, ArrowRight } from 'lucide-react';
 
-// Import step components
-import PersonalInfoStep from './steps/PersonalInfoStep';
+import { Separator } from '@/components/ui/separator';
+import { Calendar, Users, CreditCard, CheckCircle, ArrowLeft } from 'lucide-react';
+
+// Import step components (mobile-first)
+import StudentInfoStep from './steps/mobile/StudentInfoStep';
 import DateSelectionStep from './steps/DateSelectionStep';
-import RoomSelectionStep from './steps/RoomSelectionStep';
-import RoommatesStep from './steps/RoommatesStep';
-import EmergencyContactStep from './steps/EmergencyContactStep';
+import RoomAndPreferencesStep from './steps/mobile/RoomAndPreferencesStep';
 import VerificationStep from './steps/VerificationStep';
 import PaymentStep from './PaymentStep';
 import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
@@ -33,13 +30,11 @@ interface EnhancedBookingFormProps {
 // Interface moved to useEnhancedBooking hook
 
 const STEPS = [
-  { id: 1, title: 'Personal Info', icon: Users },
-  { id: 2, title: 'Dates', icon: Calendar },
-  { id: 3, title: 'Room Selection', icon: Users },
-  { id: 4, title: 'Roommates', icon: Users },
-  { id: 5, title: 'Emergency Contact', icon: Users },
-  { id: 6, title: 'Verification', icon: CheckCircle },
-  { id: 7, title: 'Payment', icon: CreditCard }
+  { id: 1, title: 'Your Info', icon: Users },
+  { id: 2, title: 'Stay Details', icon: Calendar },
+  { id: 3, title: 'Room & Preferences', icon: Users },
+  { id: 4, title: 'Verification', icon: CheckCircle },
+  { id: 5, title: 'Payment', icon: CreditCard }
 ];
 
 const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
@@ -53,17 +48,15 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
   const {
     formData,
     currentStep,
-    loading,
-    error,
+
     pricing,
     updateFormData,
+    recomputePricing,
     nextStep,
     previousStep,
-    addRoommate,
-    removeRoommate,
-    updateRoommate,
     validateStep,
-    createBooking
+    createBooking,
+    createBookingWithPayment
   } = useEnhancedBooking(property);
   const { rates, config } = useRealTimeCommissionConfig({ portal: 'student' });
 
@@ -71,10 +64,6 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
   const [isVerifying, setIsVerifying] = useState(false);
 
   // Handler functions
-  const handlePersonalInfoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    updateFormData(name, value);
-  };
 
   const handleDateChange = (field: string, value: Date | string) => {
     updateFormData(field, value);
@@ -84,13 +73,12 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
     updateFormData(field, value);
   };
 
-  const handleRoommateChange = (roommates: RoommateInfo[]) => {
-    updateFormData('roommates', roommates);
+  const handleRoomTypeSelect = (value: string, price: number) => {
+    updateFormData('roomType', value);
+    recomputePricing(price);
   };
 
-  const handleEmergencyContactChange = (field: string, value: string) => {
-    updateFormData(field, value);
-  };
+
 
   const handleVerificationChange = (field: string, value: string | File | boolean) => {
     updateFormData(field, value);
@@ -133,17 +121,32 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
     }
   };
 
+  const handlePaymentVerified = async (payment: { reference: string; channel?: string; id?: number; metadata?: Record<string, unknown> }) => {
+    const bookingId = await createBookingWithPayment(payment);
+    if (bookingId) {
+      if (onSuccess) {
+        onSuccess(bookingId);
+      } else {
+        navigate(`/student/booking-confirmation?id=${bookingId}`);
+      }
+    }
+  };
+
   const renderStep = () => {
     switch (currentStep) {
       case 1:
         return (
-          <PersonalInfoStep
+          <StudentInfoStep
             firstName={formData.firstName}
             lastName={formData.lastName}
             email={formData.email}
             phone={formData.phone}
-            onInputChange={handlePersonalInfoChange}
+            emergencyName={formData.emergencyName}
+            emergencyPhone={formData.emergencyPhone}
+            emergencyRelationship={formData.emergencyRelationship}
+            onFieldChange={(field, value) => updateFormData(field as any, value as any)}
             onNext={handleNext}
+            onPrevious={handlePrevious}
           />
         );
       case 2:
@@ -161,41 +164,30 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
         );
       case 3:
         return (
-          <RoomSelectionStep
+          <RoomAndPreferencesStep
             selectedRoomType={formData.roomType}
-            selectedFloor={formData.floor}
             extraRequests={formData.extraRequests}
-            onRoomTypeChange={(value) => handleRoomOptionChange('roomType', value)}
-            onFloorChange={(value) => handleRoomOptionChange('floor', value)}
-            onRequestsChange={(value) => handleRoomOptionChange('extraRequests', value)}
+            onRoomTypeChange={(value: string) => handleRoomOptionChange('roomType', value)}
+            onRoomTypeSelect={handleRoomTypeSelect}
+            onRequestsChange={(value: string) => handleRoomOptionChange('extraRequests', value)}
+            preferences={{
+              studyHabits: formData.studyHabits,
+              sleepSchedule: formData.sleepSchedule,
+              cleanliness: formData.cleanliness,
+              socialPreference: formData.socialPreference,
+              hobbies: formData.hobbies,
+              dietary: formData.dietary,
+              smoking: formData.smoking,
+              noiseSensitivity: formData.noiseSensitivity
+            }}
+            onPreferenceChange={(field, value) => updateFormData(field as any, value as any)}
             onPrevious={handlePrevious}
             onNext={handleNext}
-            // ✅ PRODUCTION-GRADE: Dynamic room types from owner configuration
             propertyId={property.id}
-            propertyCategory={property.property_category || property.propertyCategory}
+            propertyCategory={property.property_category}
           />
         );
       case 4:
-        return (
-          <RoommatesStep
-            roommates={formData.roommates}
-            onRoommatesChange={handleRoommateChange}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
-          />
-        );
-      case 5:
-        return (
-          <EmergencyContactStep
-            name={formData.emergencyName}
-            phone={formData.emergencyPhone}
-            relationship={formData.emergencyRelationship}
-            onInputChange={handleEmergencyContactChange}
-            onPrevious={handlePrevious}
-            onNext={handleNext}
-          />
-        );
-      case 6:
         return (
           <VerificationStep
             idType={formData.idType}
@@ -211,7 +203,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
             onNext={handleNext}
           />
         );
-      case 7:
+      case 5:
         return (
           <PaymentStep
             totalAmount={pricing.totalAmount}
@@ -219,6 +211,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
             termsAgreed={formData.termsAgreed}
             onTermsChange={(agreed) => updateFormData('termsAgreed', agreed)}
             onPaymentProceed={handlePaymentProceed}
+            onPaymentVerified={handlePaymentVerified}
             onPrevious={handlePrevious}
             paystackMetadata={{
               commission_breakdown: centralizedCommissionEngine.calculateCommissions(
@@ -230,7 +223,23 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
               platform_fee_ghs: pricing.platformCommission + pricing.platformFixedFee,
               agent_fee_ghs: pricing.agentFee,
               commission_version: centralizedCommissionEngine.getConfigurationInfo().version,
-              property_id: property.id
+              property_id: property.id,
+              propertyTitle: property.title || property.name,
+              propertyCoverImage: (() => {
+                // Prefer cover media marked as cover
+                const media = Array.isArray(property.media) ? property.media : [];
+                const cover = media.find((m: any) => m && m.isCover && m.type === 'image' && typeof m.url === 'string' && m.url.trim());
+                if (cover?.url) return cover.url as string;
+                // Then try a direct image_url field if present
+                const direct = (property as any).image_url;
+                if (typeof direct === 'string' && direct.trim()) return direct;
+                // Finally, fallback to first valid string in images array
+                const imgs = Array.isArray(property.images)
+                  ? property.images
+                  : (typeof (property as any).images === 'string' ? [(property as any).images] : []);
+                const valid = imgs.find((img: any) => typeof img === 'string' && img.trim() && !img.includes('blob:') && !img.includes('localhost'));
+                return valid || '';
+              })()
             }}
           />
         );
@@ -240,9 +249,9 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      {/* Header */}
-      <div className="mb-8">
+    <div className="mx-auto md:px-4 md:py-4 md:max-w-xl">
+      {/* Header (desktop only) */}
+      <div className="hidden md:block mb-6">
         <div className="flex items-center gap-4 mb-4">
           {onCancel && (
             <Button variant="outline" size="sm" onClick={onCancel}>
@@ -284,15 +293,22 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Form */}
         <div className="lg:col-span-2">
-          <Card>
-            <CardContent className="p-6">
-              {renderStep()}
-            </CardContent>
-          </Card>
+          {/* Mobile: render step edge-to-edge without Card */}
+          <div className="md:hidden">
+            {renderStep()}
+          </div>
+          {/* Desktop: render inside Card */}
+          <div className="hidden md:block">
+            <Card>
+              <CardContent className="p-6">
+                {renderStep()}
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* Booking Summary */}
-        <div className="lg:col-span-1">
+        {/* Booking Summary (hidden on mobile) */}
+        <div className="hidden lg:block lg:col-span-1">
           <Card className="sticky top-6">
             <CardHeader>
               <CardTitle>Booking Summary</CardTitle>

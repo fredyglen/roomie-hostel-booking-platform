@@ -33,23 +33,23 @@ const AdminSidebar: React.FC = () => {
   const isActive = (path?: string) => !!path && location.pathname === path;
 
   const navItems: NavItem[] = [
-    { label: 'Dashboard', to: '/admin/dashboard', icon: <LayoutDashboard size={20} color="#E5E7EB"/> },
-    { label: 'Users', to: '/admin/users', icon: <Users size={20} color="#E5E7EB"/> },
-    { label: 'Properties', to: '/admin/properties', icon: <Building size={20} color="#E5E7EB"/> },
-    { label: 'Bookings', to: '/admin/bookings', icon: <Calendar size={20} color="#E5E7EB"/> },
-    { label: 'Financials', to: '/admin/finance', icon: <DollarSign size={20} color="#E5E7EB"/> },
-    { label: 'Verification', to: '/admin/verification', icon: <FileCheck size={20} color="#E5E7EB"/> },
+    { label: 'Dashboard', to: '/admin/dashboard', icon: <LayoutDashboard size={20} /> },
+    { label: 'Users', to: '/admin/users', icon: <Users size={20} /> },
+    { label: 'Properties', to: '/admin/properties', icon: <Building size={20} /> },
+    { label: 'Bookings', to: '/admin/bookings', icon: <Calendar size={20} /> },
+    { label: 'Financials', to: '/admin/finance', icon: <DollarSign size={20} /> },
+    { label: 'Verification', to: '/admin/verification', icon: <FileCheck size={20} /> },
     // Optional/placeholder items (kept disabled to avoid broken routes)
-    { label: 'Reviews', icon: <Star size={20} color="#9CA3AF"/>, disabled: true },
-    { label: 'Analytics', icon: <Activity size={20} color="#9CA3AF"/>, disabled: true },
-    { label: 'Global', to: '/admin/global', icon: <Globe size={20} color="#E5E7EB"/>, requireSupreme: true },
-    { label: 'Settings', to: '/admin/settings', icon: <Settings size={20} color="#E5E7EB"/> },
-    { label: 'Security', icon: <Shield size={20} color="#9CA3AF"/>, disabled: true },
+    { label: 'Reviews', icon: <Star size={20} />, disabled: true },
+    { label: 'Analytics', icon: <Activity size={20} />, disabled: true },
+    { label: 'Global', to: '/admin/global', icon: <Globe size={20} />, requireSupreme: true },
+    { label: 'Settings', to: '/admin/settings', icon: <Settings size={20} /> },
+    { label: 'Security', icon: <Shield size={20} />, disabled: true },
   ];
 
   return (
-    <aside className="hidden md:flex h-screen w-64 shrink-0 flex-col bg-[#0B1220] text-gray-200 border-r border-[#101826] sticky top-0">
-      <div className="h-14 flex items-center px-4 border-b border-[#101826] font-semibold tracking-wide">
+    <aside className="hidden md:flex h-screen w-64 shrink-0 flex-col bg-white text-slate-700 border-r border-gray-200 sticky top-0">
+      <div className="h-14 flex items-center px-4 border-b border-gray-200 font-semibold tracking-wide text-slate-900">
         ROOMi Admin
       </div>
       <nav className="flex-1 overflow-y-auto py-4">
@@ -66,8 +66,8 @@ const AdminSidebar: React.FC = () => {
                   to={item.to!}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-md text-sm transition-colors duration-150 focus-visible:ring-2 focus-visible:ring-indigo-500 ${
                     isActive(item.to)
-                      ? 'bg-[#111827] text-white'
-                      : 'text-gray-300 hover:bg-[#0F172A] hover:text-white'
+                      ? 'bg-gray-100 text-slate-900'
+                      : 'text-slate-700 hover:bg-gray-50 hover:text-slate-900'
                   }`}
                 >
                   <span>{item.icon}</span>
@@ -78,12 +78,12 @@ const AdminSidebar: React.FC = () => {
           ))}
         </ul>
       </nav>
-      <div className="px-2 py-3 border-t border-[#101826]">
+      <div className="px-2 py-3 border-t border-gray-200">
         <button
           onClick={async () => { await signOutAdmin(); navigate('/login'); }}
-          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-gray-300 hover:bg-[#0F172A] hover:text-white transition-colors duration-150"
+          className="w-full flex items-center gap-3 px-3 py-2.5 rounded-md text-sm text-slate-700 hover:bg-gray-50 hover:text-slate-900 transition-colors duration-150"
         >
-          <LogOut size={20} color="#E5E7EB"/>
+          <LogOut size={20} />
           <span>Log out</span>
         </button>
       </div>

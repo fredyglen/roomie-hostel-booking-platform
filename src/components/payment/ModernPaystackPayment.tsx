@@ -21,6 +21,10 @@ interface PaystackConfig {
   amount: number;
   currency: string;
   ref: string;
+  firstName?: string;
+  lastName?: string;
+  phone?: string;
+  channels?: string[];
   metadata?: Record<string, unknown>;
   onSuccess: (transaction: PaystackTransaction) => void;
   onCancel: () => void;
@@ -62,6 +66,7 @@ interface ModernPaystackPaymentProps {
   title?: string;
   description?: string;
   disabled?: boolean;
+  reference?: string;
   // Optional metadata to be attached to Paystack transaction
   metadata?: Record<string, unknown>;
   // New split payment support
@@ -89,6 +94,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
   title = 'Complete Payment',
   description = 'Secure payment processing',
   disabled = false,
+  reference,
   metadata = {},
   splitCode,
   split,
@@ -139,7 +145,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
     setIsProcessing(true);
 
     try {
-      const reference = `roomi_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+      const refToUse = reference ?? `roomi_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
 
       // Create PaystackPop instance (V2 approach)
       const popup = new window.PaystackPop();
@@ -150,7 +156,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
         email: email,
         amount: amount * 100, // Paystack expects amount in pesewas (GHS subunit)
         currency: 'GHS',
-        ref: reference,
+        ref: refToUse,
         firstName: firstName,
         lastName: lastName,
         phone: phone,
@@ -208,7 +214,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
       } else if (split) {
         transactionConfig.split = split;
       } else if (subaccountCode) {
-        transactionConfig.subaccountCode = subaccountCode;
+        transactionConfig.subaccount = subaccountCode;
         transactionConfig.bearer = bearer;
         if (transactionCharge) {
           transactionConfig.transactionCharge = transactionCharge;

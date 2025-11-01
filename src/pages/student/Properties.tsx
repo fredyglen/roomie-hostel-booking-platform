@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { useDynamicProperties } from '@/hooks/property/useDynamicProperties';
 import PropertyListContainer from '@/components/properties/PropertyListContainer';
+import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { BaseLoading } from '@/components/ui/BaseLoading';
 import { BaseError } from '@/components/ui/BaseError';
 import { Property } from '@/types/property';
@@ -46,14 +47,17 @@ const Properties: React.FC = () => {
   }
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">Available Properties</h1>
-        <div className="text-sm text-gray-600">
-          {totalCount} {totalCount === 1 ? 'property' : 'properties'} available
+    <div className="min-h-screen bg-gray-50">
+      <div className="container mx-auto p-4 pb-16">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold">Available Properties</h1>
+          <div className="text-sm text-gray-600">
+            {totalCount} {totalCount === 1 ? 'property' : 'properties'} available
+          </div>
         </div>
+        <PropertyListContainer properties={properties} />
       </div>
-      <PropertyListContainer properties={properties} />
+      <StudentNavBar />
     </div>
   );
 };

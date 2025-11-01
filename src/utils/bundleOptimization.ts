@@ -24,33 +24,11 @@ export const dynamicImport = async <T>(
   }
 };
 
-// Preload critical resources
+// Preload critical resources (disabled to avoid browser preload warnings)
+// We already import index.css in main.tsx and fonts via @import in index.css.
+// Use only preconnect/dns-prefetch hints (see addResourceHints) to improve performance without warnings.
 export const preloadCriticalResources = () => {
-  // Preload critical CSS
-  const criticalCSS = [
-    '/src/index.css',
-  ];
-
-  criticalCSS.forEach(href => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'style';
-    link.href = href;
-    document.head.appendChild(link);
-  });
-
-  // Preload critical fonts
-  const criticalFonts = [
-    'https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&display=swap',
-  ];
-
-  criticalFonts.forEach(href => {
-    const link = document.createElement('link');
-    link.rel = 'preload';
-    link.as = 'style';
-    link.href = href;
-    document.head.appendChild(link);
-  });
+  // Intentionally left as no-op
 };
 
 // Lazy load non-critical dependencies
@@ -167,6 +145,7 @@ export const addResourceHints = () => {
   // Preconnect to critical external resources
   const criticalDomains = [
     'fonts.googleapis.com',
+    'fonts.gstatic.com', // important for font files
   ];
 
   criticalDomains.forEach(domain => {

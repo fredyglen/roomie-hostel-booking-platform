@@ -1,8 +1,8 @@
 # 🔧 ROOMi Platform Hardcoded Values Inventory
 
-**Date**: 2025-01-05  
-**Branch**: `fix/typescript-errors`  
-**Purpose**: Complete inventory of hardcoded values requiring centralization  
+**Date**: 2025-01-05
+**Branch**: `fix/typescript-errors`
+**Purpose**: Complete inventory of hardcoded values requiring centralization
 
 ---
 
@@ -268,3 +268,98 @@ images: ['/images/hostels/kitatsu-exterior.jpg'], // ❌ Hardcoded image paths
 - **Environment-Specific Overrides** for all settings
 - **Runtime Configuration Validation** for all critical values
 - **Documentation** for all configuration options
+
+
+---
+
+## Merge note (2025-10-31)
+The following excerpt (lines 1–80) was merged from root PAYMENT-LOGIC.md to consolidate the Hardcoded Values Inventory in one canonical location.
+
+# 🔧 ROOMi Platform Hardcoded Values Inventory
+
+**Date**: 2025-01-05
+**Branch**: `fix/typescript-errors`
+**Purpose**: Complete inventory of hardcoded values requiring centralization
+
+---
+
+## 🚨 **CRITICAL HARDCODED VALUES**
+
+### **💰 Payment & Business Logic**
+
+#### **Commission Rates (RESOLVED)**
+```typescript
+// src/config/index.ts
+platformCommissionRate: 0.05, // 5% ✅
+
+// src/constants/payment.ts
+PLATFORM_COMMISSION_RATE: 0.05, // 5% ✅ RESOLVED
+
+// src/BE CONSCIOUS/platform-definitions.ts
+platform_commission_rate: 0.05; // 5% ✅
+
+// PAYMENT-LOGIC.md
+platformCommissionRate: 0.05, // 5% ✅
+
+// src/types/platform-core.ts
+PLATFORM_COMMISSION_RATE: 0.05, // 5% ✅
+PLATFORM_FIXED_FEE: 100, // GHS 100 ✅
+
+// src/utils/paymentCalculations.ts
+platformFeePercentage: 0.05, // 5% ✅
+platformFixedFee: 100, // GHS 100 ✅
+```
+**Status**: ✅ RESOLVED - All files now use 5% + GHS 100 platform fee structure
+
+#### **Platform Fees**
+```typescript
+// Database schema
+platform_fee DECIMAL(10, 2) NOT NULL DEFAULT 100.00, // Fixed 100 GHS
+
+// src/config/environment.ts
+platformFee: Number(import.meta.env.VITE_PLATFORM_FEE) || 100,
+
+// src/constants/payment.ts
+AGENT_MINIMUM_FEE: 100, // GHS 100 minimum
+```
+
+#### **Paystack Configuration**
+```typescript
+// src/config/index.ts
+currency: 'GHS', // ❌ Hardcoded currency
+channels: ['card', 'mobile_money', 'bank', 'ussd', 'qr'], // ❌ Hardcoded channels
+paystackFeeRate: 0.0195, // 1.95% ❌ Should be configurable
+```
+
+### **🏫 University & Location Data**
+
+#### **University List (Hardcoded)**
+```typescript
+// src/components/owner/property-form/BasicInfoFields.tsx
+const UNIVERSITIES = [
+  { label: "University of Ghana", value: "university_of_ghana" },
+  { label: "Kwame Nkrumah University of Science and Technology", value: "knust" },
+  { label: "University of Cape Coast", value: "ucc" },
+  // ... 7 more hardcoded universities
+];
+```
+
+#### **Default Location Values**
+```typescript
+// src/utils/data-seeder.ts
+currency: 'GHS', // ❌ Hardcoded currency
+university_name: 'UPSA', // ❌ Hardcoded university
+default_state: 'Greater Accra', // ❌ Hardcoded state
+```
+
+### **⏱️ Time & Duration Values**
+
+#### **Anonymous User Time Limits**
+```typescript
+// src/hooks/useAnonymousTimeLimit.ts
+const TIME_LIMIT = 30000; // 30 seconds ❌ Hardcoded
+const messages = {
+  navigation: 'Your 30-second preview has expired...', // ❌ Hardcoded message
+  property_view: 'Time limit reached...', // ❌ Hardcoded message
+};
+```

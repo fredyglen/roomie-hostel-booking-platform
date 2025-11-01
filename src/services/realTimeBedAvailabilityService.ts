@@ -45,24 +45,54 @@ export async function getRealTimeBedAvailability(propertyId: string): Promise<Pr
     logger.info('Fetching real-time bed availability', { propertyId });
 
     // Fetch rooms with bed counts and current occupancy
-    const { data: rooms, error: roomsError } = await supabase
-      .from('rooms')
-      .select(`
-        id,
-        room_type,
-        bed_count,
-        beds_available
-      `)
+    let rooms: Array<{ id: string; room_type: string; bed_count: number; beds_available: number; floor_id?: string }> = [];
+
+    // Traverse via buildings -> floors -> rooms (avoid direct property_id on rooms to prevent 400s on schemas without that column)
+    const { data: buildings, error: buildingsError } = await supabase
+      .from('buildings')
+      .select('id')
       .eq('property_id', propertyId);
 
-    if (roomsError) {
-      logger.error('Failed to fetch rooms data', { propertyId, error: roomsError });
-      throw new Error(`Failed to fetch rooms data: ${roomsError.message}`);
+    if (buildingsError) {
+      logger.error('Failed to fetch buildings for property', { propertyId, error: buildingsError });
+      throw new Error(`Failed to fetch buildings: ${buildingsError.message}`);
+    }
+
+    const buildingIds = (buildings || []).map((b: any) => b.id);
+    if (buildingIds.length === 0) {
+      rooms = [];
+    } else {
+      const { data: floors, error: floorsError } = await supabase
+        .from('floors')
+        .select('id')
+        .in('building_id', buildingIds);
+
+      if (floorsError) {
+        logger.error('Failed to fetch floors for buildings', { propertyId, error: floorsError });
+        throw new Error(`Failed to fetch floors: ${floorsError.message}`);
+      }
+
+      const floorIds = (floors || []).map((f: any) => f.id);
+      if (floorIds.length === 0) {
+        rooms = [];
+      } else {
+        const { data: roomsByFloor, error: roomsByFloorError } = await supabase
+          .from('rooms')
+          .select('id, room_type, bed_count, beds_available, floor_id')
+          .in('floor_id', floorIds);
+
+        if (roomsByFloorError) {
+          logger.error('Failed to fetch rooms via floor_id', { propertyId, error: roomsByFloorError });
+          throw new Error(`Failed to fetch rooms via floors: ${roomsByFloorError.message}`);
+        }
+
+        rooms = roomsByFloor || [];
+      }
     }
 
     // Fetch pending bookings that affect availability
     const { data: pendingBookings, error: bookingsError } = await supabase
-      .from('bookings')
+      .from('bookings_enhanced')
       .select(`
         id,
         room_type,
@@ -251,24 +281,75 @@ export function subscribeToRealTimeBedAvailability(
 ): () => void {
   logger.info('Setting up real-time bed availability subscription', { propertyId });
 
-  // Subscribe to rooms table changes
-  const roomsSubscription = supabase
-    .channel(`rooms_${propertyId}`)
-    .on(
-      'postgres_changes',
-      {
-        event: '*',
-        schema: 'public',
-        table: 'rooms',
-        filter: `property_id=eq.${propertyId}`
-      },
-      async () => {
-        logger.info('Rooms data changed, updating availability', { propertyId });
-        const updatedAvailability = await getRealTimeBedAvailability(propertyId);
-        onUpdate(updatedAvailability);
+  // Subscribe to rooms changes via floor_id (handles deployments where rooms has no property_id)
+  const roomChannels: any[] = [];
+
+  (async () => {
+    try {
+      const { data: buildings } = await supabase
+        .from('buildings')
+        .select('id')
+        .eq('property_id', propertyId);
+
+      const buildingIds = (buildings || []).map((b: any) => b.id);
+      let floorIds: string[] = [];
+      if (buildingIds.length > 0) {
+        const { data: floors } = await supabase
+          .from('floors')
+          .select('id')
+          .in('building_id', buildingIds);
+        floorIds = (floors || []).map((f: any) => f.id);
       }
-    )
-    .subscribe();
+
+      if (floorIds.length === 0) {
+        // Fall back: attempt a broad rooms subscription when schema is unknown
+        const fallbackChannel = supabase
+          .channel(`rooms_${propertyId}`)
+          .on(
+            'postgres_changes',
+            { event: '*', schema: 'public', table: 'rooms' },
+            async () => {
+              logger.info('Rooms data changed (fallback), updating availability', { propertyId });
+              const updatedAvailability = await getRealTimeBedAvailability(propertyId);
+              onUpdate(updatedAvailability);
+            }
+          )
+          .subscribe();
+        roomChannels.push(fallbackChannel);
+      } else {
+        floorIds.forEach((fid: string) => {
+          const ch = supabase
+            .channel(`rooms_${propertyId}_${fid}`)
+            .on(
+              'postgres_changes',
+              { event: '*', schema: 'public', table: 'rooms', filter: `floor_id=eq.${fid}` },
+              async () => {
+                logger.info('Rooms data changed (by floor)', { propertyId, floorId: fid });
+                const updatedAvailability = await getRealTimeBedAvailability(propertyId);
+                onUpdate(updatedAvailability);
+              }
+            )
+            .subscribe();
+          roomChannels.push(ch);
+        });
+      }
+    } catch (e) {
+      logger.warn('Failed to set up floor-based rooms subscription; using unfiltered rooms fallback', { propertyId, error: e });
+      const fallbackChannel = supabase
+        .channel(`rooms_${propertyId}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'rooms' },
+          async () => {
+            logger.info('Rooms data changed (fallback-global), updating availability', { propertyId });
+            const updatedAvailability = await getRealTimeBedAvailability(propertyId);
+            onUpdate(updatedAvailability);
+          }
+        )
+        .subscribe();
+      roomChannels.push(fallbackChannel);
+    }
+  })();
 
   // Subscribe to bookings table changes
   const bookingsSubscription = supabase
@@ -278,7 +359,7 @@ export function subscribeToRealTimeBedAvailability(
       {
         event: '*',
         schema: 'public',
-        table: 'bookings',
+        table: 'bookings_enhanced',
         filter: `property_id=eq.${propertyId}`
       },
       async () => {
@@ -292,7 +373,7 @@ export function subscribeToRealTimeBedAvailability(
   // Return cleanup function
   return () => {
     logger.info('Cleaning up real-time bed availability subscription', { propertyId });
-    supabase.removeChannel(roomsSubscription);
+    roomChannels.forEach(ch => supabase.removeChannel(ch));
     supabase.removeChannel(bookingsSubscription);
   };
 }

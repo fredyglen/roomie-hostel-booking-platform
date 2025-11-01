@@ -1,24 +1,24 @@
 /**
  * Ghana Jurisdiction Configuration
  * Apple-Grade implementation following BE CONSCIOUS standards
- * 
+ *
  * Business Purpose: Provides comprehensive jurisdiction management for Ghana
  * covering all regions, universities, and educational institutions to support
  * scalable campus admin assignments across the entire country
- * 
+ *
  * Technical Implementation: Defines hierarchical jurisdiction structure with
  * regions, cities, and institutions using branded types for compile-time safety
- * 
+ *
  * @author ROOMi Platform Team
  * @version 1.0.0
  * @compliance BE CONSCIOUS Apple-Grade Standards
  */
 
-import { 
-  CampusJurisdiction, 
+import {
+  CampusJurisdiction,
   CountryJurisdiction,
   createCampusJurisdiction,
-  createCountryJurisdiction 
+  createCountryJurisdiction
 } from '@/types/auth';
 
 // ============================================================================
@@ -426,6 +426,128 @@ export const GHANA_JURISDICTION_HIERARCHY: JurisdictionHierarchy = {
 };
 
 // ============================================================================
+// PREFERRED UNIVERSITIES (ROOMie student verification UI)
+// ============================================================================
+
+export const PREFERRED_UNIVERSITY_DISPLAY: ReadonlyArray<{ code: GhanaUniversityCode; label: string }>= [
+  { code: 'upsa-accra', label: 'UPSA' },
+  { code: 'knust-kumasi', label: 'KNUST' },
+  { code: 'ug-legon', label: 'UG LEGON' },
+  { code: 'ucc-cape-coast', label: 'UCC' },
+  { code: 'uew-winneba', label: 'UEW (WINNEBA)' },
+  { code: 'uds-tamale', label: 'UDS' },
+  { code: 'gimpa-accra', label: 'GIMPA' },
+  { code: 'umat-tarkwa', label: 'UMaT' },
+  { code: 'ashesi-berekuso', label: 'ASHESI' },
+] as const;
+
+// Specific program lists per preferred university (non-generic)
+export const SPECIFIC_PROGRAMS_BY_UNI: Readonly<Record<GhanaUniversityCode, readonly string[]>> = {
+  // Public
+  'knust-kumasi': [
+    'BSc Computer Engineering',
+    'BSc Electrical/Electronic Engineering',
+    'BSc Civil Engineering',
+    'BSc Mechanical Engineering',
+    'BSc Materials Engineering',
+    'BSc Petroleum Engineering',
+    'BSc Aerospace Engineering',
+    'BSc Architecture',
+    'BSc Computer Science',
+    'BSc Information Technology',
+  ],
+  'ug-legon': [
+    'Bachelor of Medicine and Surgery (MBChB)',
+    'Bachelor of Dental Surgery (BDS)',
+    'Bachelor of Pharmacy (BPharm)',
+    'BSc Nursing',
+    'Bachelor of Laws (LLB)',
+    'BSc Computer Science',
+    'BSc Biomedical Engineering',
+    'BSc Administration (Accounting)',
+    'BSc Administration (Marketing)',
+    'BA Economics',
+  ],
+  'ucc-cape-coast': [
+    'BEd Basic Education',
+    'BEd Mathematics Education',
+    'BEd Science Education',
+    'BEd English Education',
+    'BCom Accounting',
+    'BSc Information Technology',
+    'BSc Nursing',
+    'LLB (Law)',
+    'BSc Fisheries and Aquatic Science',
+    'BSc Economics',
+  ],
+  'uew-winneba': [
+    'BEd Early Grade Education',
+    'BEd Special Education',
+    'BEd Mathematics Education',
+    'BEd Science Education',
+    'BEd ICT Education',
+    'BEd English Education',
+    'BBA Accounting',
+    'BSc Information Technology Education',
+  ],
+  'uds-tamale': [
+    'BSc Development Planning',
+    'BSc Community Nutrition',
+    'BSc Agriculture Technology',
+    'MBChB Medicine',
+    'BSc Nursing',
+    'BSc Public Health',
+    'BSc Biochemistry',
+    'BSc Renewable Natural Resources',
+    'BSc Computer Science',
+  ],
+  'gimpa-accra': [
+    'BSc Business Administration (Accounting)',
+    'BSc Public Administration',
+    'BSc Information Technology',
+    'LLB (Law)',
+    'BSc Project Management',
+    'BSc Procurement and Supply Chain Management',
+    'BSc Human Resource Management',
+    'BSc Finance',
+  ],
+  'umat-tarkwa': [
+    'BSc Mining Engineering',
+    'BSc Mineral Engineering',
+    'BSc Geological Engineering',
+    'BSc Petroleum Engineering',
+    'BSc Environmental and Safety Engineering',
+    'BSc Electrical and Electronic Engineering',
+    'BSc Computer Science and Engineering',
+    'BSc Mechanical Engineering',
+  ],
+  // Private
+  'ashesi-berekuso': [
+    'BSc Computer Science',
+    'BSc Management Information Systems',
+    'BSc Business Administration',
+    'BSc Mechanical Engineering',
+    'BSc Electrical and Electronic Engineering',
+    'BSc Computer Engineering',
+    'BA Economics',
+  ],
+  // Non-preferred universities keep empty arrays to preserve type safety
+  'upsa-accra': [
+    'BSc Accounting',
+    'BSc Banking and Finance',
+    'BSc Marketing',
+    'BSc Business Administration',
+    'BSc Information Technology Management',
+    'BSc Public Relations Management',
+    'BSc Human Resource Management',
+    'LLB (Law)'
+  ],
+  'central-university': [],
+  'valley-view-university': [],
+};
+
+
+// ============================================================================
 // HELPER FUNCTIONS
 // ============================================================================
 
@@ -485,23 +607,23 @@ export const validateJurisdictionAssignment = (
   if (adminRole === 'supreme_admin') {
     return { valid: true }; // Supreme admin can access all
   }
-  
+
   if (adminRole === 'campus_admin') {
     if (universities.length === 0) {
       return { valid: false, reason: 'Campus admin must have at least one university assignment' };
     }
-    
+
     // Validate all universities exist
     const invalidUniversities = universities.filter(code => !GHANA_UNIVERSITIES[code]);
     if (invalidUniversities.length > 0) {
-      return { 
-        valid: false, 
-        reason: `Invalid university codes: ${invalidUniversities.join(', ')}` 
+      return {
+        valid: false,
+        reason: `Invalid university codes: ${invalidUniversities.join(', ')}`
       };
     }
-    
+
     return { valid: true };
   }
-  
+
   return { valid: false, reason: 'Invalid admin role' };
 };

@@ -16,7 +16,7 @@ export const usePropertyFilters = (properties: Property[], initialFilters: Filte
     searchQuery: initialSearchQuery = '',
     propertyType: initialPropertyType = '',
     genderType: initialGenderType = '',
-    priceRange: initialPriceRange = [0, 20000],
+    priceRange: initialPriceRange = [0, 50000],
     maxDistance: initialMaxDistance = 15
   } = initialFilters;
   
@@ -33,7 +33,7 @@ export const usePropertyFilters = (properties: Property[], initialFilters: Filte
     setSearchQuery('');
     setSelectedPropertyType('');
     setSelectedGenderType('');
-    setPriceRange([0, 20000]);
+    setPriceRange([0, 50000]);
     setMaxDistance(15);
     setShowFilters(false);
   };

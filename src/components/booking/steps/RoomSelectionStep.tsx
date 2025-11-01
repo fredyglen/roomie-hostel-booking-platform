@@ -9,10 +9,9 @@ import { usePropertyRoomTypes, useRoomTypeSelection, getRoomTypeAvailabilityStat
 
 interface RoomSelectionStepProps {
   selectedRoomType: string;
-  selectedFloor: string;
   extraRequests: string;
   onRoomTypeChange: (value: string) => void;
-  onFloorChange: (value: string) => void;
+  onRoomTypeSelect?: (value: string, price: number) => void;
   onRequestsChange: (value: string) => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -23,10 +22,9 @@ interface RoomSelectionStepProps {
 
 const RoomSelectionStep: React.FC<RoomSelectionStepProps> = ({
   selectedRoomType,
-  selectedFloor,
   extraRequests,
   onRoomTypeChange,
-  onFloorChange,
+  onRoomTypeSelect,
   onRequestsChange,
   onPrevious,
   onNext,
@@ -76,7 +74,7 @@ const RoomSelectionStep: React.FC<RoomSelectionStepProps> = ({
 
       <div>
         <Label htmlFor="roomType">Room Type</Label>
-        <Select value={selectedRoomType} onValueChange={onRoomTypeChange}>
+        <Select value={selectedRoomType} onValueChange={(value) => { onRoomTypeChange(value); const rt = roomTypes.find(r => r.value === value); if (rt && onRoomTypeSelect) onRoomTypeSelect(value, rt.price); }}>
           <SelectTrigger>
             <SelectValue placeholder="Select room type" />
           </SelectTrigger>
@@ -108,7 +106,7 @@ const RoomSelectionStep: React.FC<RoomSelectionStepProps> = ({
                 );
               })
             ) : (
-              <SelectItem value="" disabled>No room types available</SelectItem>
+              <SelectItem value="none" disabled>No room types available</SelectItem>
             )}
           </SelectContent>
         </Select>
@@ -117,21 +115,7 @@ const RoomSelectionStep: React.FC<RoomSelectionStepProps> = ({
       {/* ✅ REMOVED: Furnishing selection removed as per Ghana hostel standards */}
       {/* Students will see owner-provided furnishing details as read-only information */}
       
-      <div>
-        <Label htmlFor="floor">Preferred Floor</Label>
-        <Select value={selectedFloor} onValueChange={onFloorChange}>
-          <SelectTrigger>
-            <SelectValue placeholder="Select preferred floor" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="ground">Ground Floor</SelectItem>
-            <SelectItem value="first">First Floor</SelectItem>
-            <SelectItem value="second">Second Floor</SelectItem>
-            <SelectItem value="third">Third Floor</SelectItem>
-            <SelectItem value="any">Any Floor</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+
       
       <div>
         <Label htmlFor="extraRequests">Special Requests (Optional)</Label>

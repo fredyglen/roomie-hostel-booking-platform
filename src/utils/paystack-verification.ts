@@ -67,10 +67,17 @@ export const verifyPaystackPayment = async (reference: string): Promise<PaymentV
         return { success: false, message: 'Incomplete data from payment provider.' };
       }
 
-      // Return essential verification data
+      // Return essential verification data (including metadata when available)
       return {
         success: true,
-        data: { reference, amount, customer, channel, id },
+        data: {
+          reference,
+          amount,
+          customer,
+          channel,
+          id,
+          metadata: (paystackData.metadata as Record<string, unknown> | undefined)
+        },
         message: 'Payment verified successfully.'
       };
     } else {

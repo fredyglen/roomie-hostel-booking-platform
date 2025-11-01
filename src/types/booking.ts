@@ -22,18 +22,18 @@ export interface Booking {
   notes?: string;
 }
 
-export type BookingStatus = 
-  | 'PENDING' 
-  | 'CONFIRMED' 
-  | 'CANCELLED' 
-  | 'COMPLETED' 
+export type BookingStatus =
+  | 'PENDING'
+  | 'CONFIRMED'
+  | 'CANCELLED'
+  | 'COMPLETED'
   | 'REJECTED';
 
-export type PaymentStatus = 
-  | 'PENDING' 
-  | 'PARTIAL' 
-  | 'PAID' 
-  | 'REFUNDED' 
+export type PaymentStatus =
+  | 'PENDING'
+  | 'PARTIAL'
+  | 'PAID'
+  | 'REFUNDED'
   | 'FAILED';
 
 export interface PaymentDetails {
@@ -45,11 +45,11 @@ export interface PaymentDetails {
   receiptUrl?: string;
 }
 
-export type PaymentMethod = 
-  | 'card' 
-  | 'mobile_money' 
-  | 'bank_transfer' 
-  | 'ussd' 
+export type PaymentMethod =
+  | 'card'
+  | 'mobile_money'
+  | 'bank_transfer'
+  | 'ussd'
   | 'qr';
 
 export interface EmergencyContact {
@@ -69,3 +69,37 @@ export interface BookingFormValues {
 }
 
 export type BookingInsert = Omit<Booking, 'id' | 'createdAt' | 'updatedAt' | 'property' | 'student'>;
+
+
+// -- Payment flow shared types --
+export interface PaystackVerificationData {
+  reference: string;
+  amount: number;
+  customer: Record<string, unknown>;
+  channel: string;
+  id: number;
+  metadata?: Record<string, unknown>;
+}
+
+export interface ModernPaymentSuccessResult {
+  reference: string;
+  status: 'success' | 'failed' | 'pending' | string;
+  amount?: number;
+  transaction: {
+    reference: string;
+    amount: number;
+    status: 'success' | 'failed' | 'pending' | string;
+  };
+  verification?: PaystackVerificationData;
+}
+
+export interface ConfirmedBookingData {
+  id: string;
+  booking_reference: string;
+  payment_reference: string;
+  total_amount: number;
+  status: 'confirmed' | 'pending' | 'failed' | string;
+  package_type?: string;
+  start_date?: string;
+  end_date?: string;
+}

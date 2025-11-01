@@ -22,6 +22,8 @@ const PropertyDetail: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // No-flicker booking hydration: cache minimal preview for booking route
+  // We import lazily to avoid SSR/lint issues when localStorage is unavailable
   useEffect(() => {
     const loadProperty = async () => {
       if (!id) {
@@ -33,13 +35,21 @@ const PropertyDetail: React.FC = () => {
       try {
         setLoading(true);
         setError(null);
-        
+
         const propertyData = await getPropertyById(id);
-        
+
         if (!propertyData) {
           setError('Property not found');
         } else {
           setProperty(propertyData);
+          // Cache preview for instant booking hydration
+          try {
+            const { setPropertyPreviewFromProperty } = await import('@/utils/propertyPreviewCache');
+            setPropertyPreviewFromProperty(propertyData);
+          } catch (e) {
+            // non-fatal
+            console.warn('Preview cache set failed', e);
+          }
         }
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : 'Failed to load property';

@@ -1,6 +1,6 @@
 
 import React from 'react';
-import PropertyCard from './PropertyCard';
+import PremiumPropertyCard from './PremiumPropertyCard';
 import EmptyState from '@/components/common/EmptyState';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import { Property } from '@/types/property';
@@ -38,7 +38,7 @@ const PropertyList: React.FC<PropertyListProps> = ({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
       {properties.map((property) => (
-        <PropertyCard
+        <PremiumPropertyCard
           key={String(property.id)}
           id={property.id}
           title={property.title || property.name}

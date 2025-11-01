@@ -152,7 +152,7 @@ export interface Property {
   readonly advance_payment_months?: number;
   readonly allow_bill_sharing?: boolean;
   readonly property_category?: string;
-  readonly gender_type?: string;
+  readonly gender_restriction?: string;
   readonly max_occupancy?: number;
   readonly current_occupancy?: number;
   readonly total_beds?: number;

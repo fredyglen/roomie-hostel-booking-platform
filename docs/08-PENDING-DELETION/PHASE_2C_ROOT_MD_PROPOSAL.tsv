@@ -1,0 +1,8 @@
+FILE	HEAD	PROPOSED_DEST	JUSTIFICATION
+BRUTAL_TRUTH_DEEP_SCAN_RESULTS.md	# 🚨 BRUTAL TRUTH: DEEP CODEBASE SCAN RESULTS	docs/06-MAINTENANCE/	Audit + deep scan results belong under maintenance/audit reports
+database_schema.md	# ROOMi Database Schema Analysis	docs/02-ARCHITECTURE/	Heuristic mapping based on filename and first heading keywords
+DDD.MD	ULTIMATELY! NOTHING IS CONFLICING THE DATABASE AND THE BACKEND SCHEMAS. I DON'T HAVE TO VENT ABOUT THIS, WHAT WE HAVE AT THE OWNER PORTALS AND THE DATABASE SCHEMAS IS WHAT WE'RE PROJECTING UNTO THE STUDENT PORTAS. THERE FORE THE DATABASE SCHEMASA AND THE OWNER PORTAL IS OUR BENCHMARK. WE DON'T HAV TO BE THGE OTHERWISE! AND MESS THINGKS AROUND.	docs/02-ARCHITECTURE/	Heuristic mapping based on filename and first heading keywords
+EMERGENCY_FIX_SUPABASE_AND_REBRAND.md	# 🔥 EMERGENCY FIX: SUPABASE CONNECTION + REBRAND TO ROOMIE	docs/06-MAINTENANCE/	Heuristic mapping based on filename and first heading keywords
+hardcoded_inventory.md	# ROOMi Platform Hardcoded Data Inventory	docs/to be deleted/	Heuristic mapping based on filename and first heading keywords
+ROOMI_ERROR_TRACKING.md	# 🚨 ROOMi Platform Error Tracking & Resolution Log	docs/06-MAINTENANCE/	Heuristic mapping based on filename and first heading keywords
+SHIP_ROOMI_NOW.md	# 🚀 SHIP ROOMi NOW - 7-DAY EXECUTION PLAN	docs/05-PROJECT-MANAGEMENT/planning/	Heuristic mapping based on filename and first heading keywords

@@ -38,7 +38,7 @@ interface PropertyUpdateMapping {
   amenities?: string[];
   images?: string[];
   base_price_per_semester?: number;
-  gender_type?: string;
+  gender_restriction?: string;
   max_occupants?: number;
   current_occupancy?: number;
   verification_status?: string;
@@ -64,7 +64,7 @@ export const propertyService = {
           base_price_per_semester,
           currency,
           is_available,
-          gender_restriction:gender_type,
+          gender_restriction,
           max_occupants,
           amenities,
           images,
@@ -107,7 +107,7 @@ export const propertyService = {
 
         // Property category and occupancy
         property_category: property.property_category,
-        gender_type: property.gender_type,
+        gender_restriction: (property as any).gender_restriction,
         max_occupancy: property.max_occupants,
         current_occupancy: 0,
 
@@ -233,8 +233,8 @@ export const propertyService = {
     if (updates.property_category !== undefined) {
       dbUpdates.property_category = updates.property_category;
     }
-    if (updates.gender_type !== undefined) {
-      dbUpdates.gender_type = updates.gender_type;
+    if (updates.gender_restriction !== undefined) {
+      dbUpdates.gender_restriction = updates.gender_restriction as string;
     }
     if (updates.max_occupancy !== undefined) {
       dbUpdates.max_occupants = updates.max_occupancy;

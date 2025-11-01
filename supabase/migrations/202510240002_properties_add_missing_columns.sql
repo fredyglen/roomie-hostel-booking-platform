@@ -11,7 +11,7 @@ alter table if exists public.properties
   add column if not exists property_type text,
   add column if not exists property_category text,
   add column if not exists cover_image_url text,
-  add column if not exists gender_type text default 'mixed';
+  add column if not exists gender_restriction text default 'mixed';
 
 -- Pricing fields (align with BE CONSCIOUS definitions)
 -- 'currency' column already introduced in earlier migration; ensure it exists

@@ -1,6 +1,6 @@
 /**
  * usePropertyRoomTypes Hook - Dynamic Room Types Loading
- * 
+ *
  * Replaces hardcoded room types with dynamic loading from owner configuration.
  * Provides real-time room availability and pricing data.
  */
@@ -8,6 +8,9 @@
 import { useState, useEffect } from 'react';
 import { fetchPropertyRoomTypes, getFallbackRoomTypes, type PropertyRoomTypes, type RoomTypeOption } from '@/services/roomTypesService';
 import { logger } from '@/utils/enhanced-logger';
+
+// Track properties we've already warned for to prevent noisy repeat logs when navigating back/forth
+const warnedFallbackForProperty = new Set<string>();
 
 interface UsePropertyRoomTypesOptions {
   readonly propertyId: string;
@@ -61,11 +64,14 @@ export function usePropertyRoomTypes(options: UsePropertyRoomTypesOptions): UseP
         const fallbackTypes = getFallbackRoomTypes(propertyCategory);
         setRoomTypes(fallbackTypes);
         setHasRoomTypes(fallbackTypes.length > 0);
-        logger.warn('Using fallback room types for property', { 
-          propertyId, 
-          propertyCategory, 
-          fallbackTypesCount: fallbackTypes.length 
-        });
+        if (!warnedFallbackForProperty.has(propertyId)) {
+          warnedFallbackForProperty.add(propertyId);
+          logger.warn('Using fallback room types for property', {
+            propertyId,
+            propertyCategory,
+            fallbackTypesCount: fallbackTypes.length
+          });
+        }
       } else {
         setRoomTypes([]);
         setHasRoomTypes(false);
@@ -132,10 +138,12 @@ export function useRoomTypeSelection(roomTypes: readonly RoomTypeOption[]) {
  * ✅ HELPER: Get room type availability status
  */
 export function getRoomTypeAvailabilityStatus(roomType: RoomTypeOption): 'free' | 'moderate' | 'filling_up' | 'full' {
-  if (roomType.bedsAvailable === 0) return 'full';
-  
+  // Treat unknown availability (fallback types) as available to avoid blocking checkout
+  if (!roomType.totalBeds || roomType.totalBeds <= 0) return 'free';
+  if (roomType.bedsAvailable <= 0) return 'full';
+
   const occupancyRate = (roomType.totalBeds - roomType.bedsAvailable) / roomType.totalBeds;
-  
+
   if (occupancyRate < 0.3) return 'free';
   if (occupancyRate < 0.7) return 'moderate';
   return 'filling_up';

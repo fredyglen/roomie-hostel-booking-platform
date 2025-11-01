@@ -164,6 +164,7 @@ export class BookingService {
     bookingId: string,
     paymentData: {
       payment_status?: string;
+      status?: string;
       paystack_reference?: string;
       paystack_access_code?: string;
       payment_reference?: string;

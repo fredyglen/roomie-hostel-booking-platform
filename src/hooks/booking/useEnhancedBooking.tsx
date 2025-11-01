@@ -13,26 +13,36 @@ export interface BookingFormState {
   lastName: string;
   email: string;
   phone: string;
-  
+
   // Dates
   startDate: Date;
   endDate: Date;
   duration: string;
-  
+
   // Room Selection
   roomType: string;
   furnishing: string;
   floor: string;
   extraRequests: string;
-  
+
+  // Optional roommate preferences (mobile flow)
+  studyHabits?: string;
+  sleepSchedule?: string;
+  cleanliness?: string;
+  socialPreference?: string;
+  hobbies?: string[];
+  dietary?: string;
+  smoking?: string;
+  noiseSensitivity?: string;
+
   // Roommates
   roommates: RoommateData[];
-  
+
   // Emergency Contact
   emergencyName: string;
   emergencyPhone: string;
   emergencyRelationship: string;
-  
+
   // Verification
   idType: string;
   studentId: string;
@@ -40,7 +50,7 @@ export interface BookingFormState {
   program: string;
   idImage: File | null;
   verified: boolean;
-  
+
   // Payment
   paymentMethod: string;
   termsAgreed: boolean;
@@ -75,11 +85,20 @@ export const useEnhancedBooking = (property: Property) => {
       phone: user?.user_metadata?.phone || '',
       startDate: new Date(),
       endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000), // 4 months later
-      duration: 'semester',
+      duration: 'one_semester',
       roomType: '',
       furnishing: '',
       floor: '',
       extraRequests: '',
+      // Mobile preferences (optional)
+      studyHabits: '',
+      sleepSchedule: '',
+      cleanliness: '',
+      socialPreference: '',
+      hobbies: [],
+      dietary: '',
+      smoking: '',
+      noiseSensitivity: '',
       roommates: [],
       emergencyName: '',
       emergencyPhone: '',
@@ -101,7 +120,7 @@ export const useEnhancedBooking = (property: Property) => {
   });
 
   // Update form data
-  const updateFormData = useCallback((field: string, value: string | Date | RoommateData[]) => {
+  const updateFormData = useCallback((field: string, value: string | Date | boolean | File | RoommateData[]) => {
     setState(prev => ({
       ...prev,
       formData: {
@@ -122,11 +141,20 @@ export const useEnhancedBooking = (property: Property) => {
     }));
   }, []);
 
+  // Recompute pricing when base amount changes (e.g., selected room type price)
+  const recomputePricing = useCallback((baseAmount: number) => {
+    setState(prev => ({
+      ...prev,
+      pricing: BookingService.calculateBookingPricing(baseAmount, !!property.agent_id)
+    }));
+  }, [property.agent_id]);
+
+
   // Navigation
   const nextStep = useCallback(() => {
     setState(prev => ({
       ...prev,
-      currentStep: Math.min(prev.currentStep + 1, 7)
+      currentStep: Math.min(prev.currentStep + 1, 5)
     }));
   }, []);
 
@@ -140,7 +168,7 @@ export const useEnhancedBooking = (property: Property) => {
   const goToStep = useCallback((step: number) => {
     setState(prev => ({
       ...prev,
-      currentStep: Math.max(1, Math.min(step, 7))
+      currentStep: Math.max(1, Math.min(step, 5))
     }));
   }, []);
 
@@ -153,7 +181,7 @@ export const useEnhancedBooking = (property: Property) => {
       is_primary_booker: false,
       payment_responsibility: 'individual'
     };
-    
+
     setState(prev => ({
       ...prev,
       formData: {
@@ -180,7 +208,7 @@ export const useEnhancedBooking = (property: Property) => {
         ...updatedRoommates[index],
         [field]: value
       };
-      
+
       return {
         ...prev,
         formData: {
@@ -194,21 +222,25 @@ export const useEnhancedBooking = (property: Property) => {
   // Validation
   const validateStep = useCallback((step: number): boolean => {
     const { formData } = state;
-    
+
     switch (step) {
-      case 1: // Personal Info
-        return !!(formData.firstName && formData.lastName && formData.email && formData.phone);
-      case 2: // Dates
+      case 1: // Student Info (Personal + Emergency)
+        return !!(
+          formData.firstName && formData.lastName && formData.email && formData.phone &&
+          formData.emergencyName && formData.emergencyPhone && formData.emergencyRelationship
+        );
+      case 2: // Stay Details
         return !!(formData.startDate && formData.endDate && formData.duration);
-      case 3: // Room Selection
+      case 3: // Room & Preferences (only room type required)
         return !!formData.roomType;
-      case 4: // Roommates (optional)
-        return true;
-      case 5: // Emergency Contact
-        return !!(formData.emergencyName && formData.emergencyPhone && formData.emergencyRelationship);
-      case 6: // Verification
-        return !!(formData.studentId && formData.university && formData.program);
-      case 7: // Payment
+      case 4: // Verification
+        // In development, allow skipping verification to test payments unless explicitly required via env
+        {
+          const verificationRequired = import.meta.env.PROD && import.meta.env.VITE_REQUIRE_VERIFICATION !== 'false';
+          if (!verificationRequired) return true;
+        }
+        return !!(formData.idType && formData.studentId && formData.university && formData.program && formData.verified);
+      case 5: // Payment
         return !!(formData.paymentMethod && formData.termsAgreed);
       default:
         return false;
@@ -230,7 +262,7 @@ export const useEnhancedBooking = (property: Property) => {
 
     try {
       const { formData, pricing } = state;
-      
+
       const bookingData: CreateBookingData = {
         property_id: property.id,
         student_id: user.id,
@@ -258,16 +290,26 @@ export const useEnhancedBooking = (property: Property) => {
           property_title: property.title,
           student_verification_status: formData.verified ? 'verified' : 'pending',
           furnishing: formData.furnishing,
-          floor: formData.floor
+          floor: formData.floor,
+          preferences: {
+            studyHabits: formData.studyHabits,
+            sleepSchedule: formData.sleepSchedule,
+            cleanliness: formData.cleanliness,
+            socialPreference: formData.socialPreference,
+            hobbies: formData.hobbies,
+            dietary: formData.dietary,
+            smoking: formData.smoking,
+            noiseSensitivity: formData.noiseSensitivity
+          }
         }
       };
 
       const { booking_id } = await BookingService.createBooking(bookingData, formData.roommates);
-      
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        bookingId: booking_id 
+
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        bookingId: booking_id
       }));
 
       toast({
@@ -278,10 +320,10 @@ export const useEnhancedBooking = (property: Property) => {
       return booking_id;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to create booking';
-      setState(prev => ({ 
-        ...prev, 
-        loading: false, 
-        error: errorMessage 
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: errorMessage
       }));
 
       toast({
@@ -293,6 +335,111 @@ export const useEnhancedBooking = (property: Property) => {
       return null;
     }
   }, [user, state, property, toast]);
+  // Create booking AFTER successful payment verification
+  const createBookingWithPayment = useCallback(async (
+    payment: { reference: string; channel?: string; id?: number | string; metadata?: Record<string, unknown> }
+  ): Promise<string | null> => {
+    if (!user) {
+      toast({
+        title: "Authentication Required",
+        description: "Please log in to complete your booking.",
+        variant: "destructive",
+      });
+      return null;
+    }
+
+    setState(prev => ({ ...prev, loading: true, error: null }));
+
+    try {
+      const { formData, pricing } = state;
+
+      const bookingData: CreateBookingData = {
+        property_id: property.id,
+        student_id: user.id,
+        property_owner_id: property.owner_id,
+        agent_id: property.agent_id,
+        check_in_date: formData.startDate.toISOString().split('T')[0],
+        check_out_date: formData.endDate.toISOString().split('T')[0],
+        semester_period: formData.duration,
+        room_type: formData.roomType,
+        roommates_count: formData.roommates.length + 1,
+        total_amount: pricing.totalAmount,
+        property_rent: pricing.propertyRent,
+        platform_fee: pricing.totalPlatformFee,
+        agent_fee: pricing.agentFee,
+        emergency_contact_name: formData.emergencyName,
+        emergency_contact_phone: formData.emergencyPhone,
+        emergency_contact_relationship: formData.emergencyRelationship,
+        student_id_number: formData.studentId,
+        university: formData.university,
+        program: formData.program,
+        payment_method: formData.paymentMethod || payment.channel || 'paystack',
+        special_requests: formData.extraRequests,
+        metadata: {
+          booking_source: 'web',
+          property_title: property.title,
+          student_verification_status: formData.verified ? 'verified' : 'pending',
+          furnishing: formData.furnishing,
+          floor: formData.floor,
+          preferences: {
+            studyHabits: formData.studyHabits,
+            sleepSchedule: formData.sleepSchedule,
+            cleanliness: formData.cleanliness,
+            socialPreference: formData.socialPreference,
+            hobbies: formData.hobbies,
+            dietary: formData.dietary,
+            smoking: formData.smoking,
+            noiseSensitivity: formData.noiseSensitivity
+          },
+          payment_reference: payment.reference
+        }
+      };
+
+      const { booking_id } = await BookingService.createBooking(bookingData, formData.roommates);
+
+      // Immediately mark as paid and confirmed using payment reference
+      await BookingService.updateBookingPayment(booking_id, {
+        payment_status: 'paid',
+        status: 'confirmed',
+        transaction_reference: payment.reference,
+        paystack_reference: payment.id ? String(payment.id) : undefined,
+        payment_reference: payment.reference,
+        metadata: {
+          ...(bookingData.metadata || {}),
+          paystack_verification: payment.metadata || {}
+        }
+      });
+
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        bookingId: booking_id
+      }));
+
+      toast({
+        title: 'Booking Confirmed',
+        description: 'Your booking has been created and payment verified.',
+      });
+
+      return booking_id;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create booking after payment';
+      setState(prev => ({
+        ...prev,
+        loading: false,
+        error: errorMessage
+      }));
+
+      toast({
+        title: 'Booking Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+
+      return null;
+    }
+  }, [user, state, property, toast]);
+
 
   // Reset form
   const resetForm = useCallback(() => {
@@ -305,11 +452,20 @@ export const useEnhancedBooking = (property: Property) => {
         phone: user?.user_metadata?.phone || '',
         startDate: new Date(),
         endDate: new Date(Date.now() + 120 * 24 * 60 * 60 * 1000),
-        duration: 'semester',
+        duration: 'one_semester',
         roomType: '',
         furnishing: '',
         floor: '',
         extraRequests: '',
+        // Mobile preferences (optional)
+        studyHabits: '',
+        sleepSchedule: '',
+        cleanliness: '',
+        socialPreference: '',
+        hobbies: [],
+        dietary: '',
+        smoking: '',
+        noiseSensitivity: '',
         roommates: [],
         emergencyName: '',
         emergencyPhone: '',
@@ -333,26 +489,28 @@ export const useEnhancedBooking = (property: Property) => {
   return {
     // State
     ...state,
-    
+
     // Form updates
     updateFormData,
     updateFormFields,
-    
+    recomputePricing,
+
     // Navigation
     nextStep,
     previousStep,
     goToStep,
-    
+
     // Roommate management
     addRoommate,
     removeRoommate,
     updateRoommate,
-    
+
     // Validation
     validateStep,
-    
+
     // Actions
     createBooking,
+    createBookingWithPayment,
     resetForm
   };
 };

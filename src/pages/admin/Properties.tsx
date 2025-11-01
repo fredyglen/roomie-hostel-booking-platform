@@ -19,6 +19,15 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
 
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Switch } from '@/components/ui/switch';
+import { Button } from '@/components/ui/button';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { propertyService } from '@/services/propertyService';
 
 const AdminProperties: React.FC = () => {
   const { data: properties = [], isLoading, error, refetch } = useQuery<AdminPropertyDisplayData[]>({
@@ -54,21 +63,84 @@ const AdminProperties: React.FC = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Edit modal state and form setup
+  const [editOpen, setEditOpen] = React.useState(false);
+  const [editing, setEditing] = React.useState<AdminPropertyDisplayData | null>(null);
+
+  const EditSchema = z.object({
+    title: z.string().min(2, 'Title is required'),
+    location: z.string().optional().default(''),
+    price: z.coerce.number().min(0).default(0),
+    is_available: z.boolean().default(true),
+  });
+
+  const form = useForm<z.infer<typeof EditSchema>>({
+    resolver: zodResolver(EditSchema),
+    defaultValues: { title: '', location: '', price: 0, is_available: true },
+  });
+
+  React.useEffect(() => {
+    if (editing) {
+      form.reset({
+        title: editing.title || '',
+        location: editing.location || '',
+        price: Number(editing.price || 0),
+        is_available: editing.status !== 'Unavailable',
+      });
+    }
+  }, [editing]);
+
+  const updateMutation = useMutation({
+    mutationFn: async (values: z.infer<typeof EditSchema>) => {
+      if (!editing) return;
+      await propertyService.updateProperty(String(editing.id), {
+        title: values.title,
+        address: values.location,
+        rent: values.price,
+        is_available: values.is_available,
+      } as any);
+    },
+    onSuccess: () => {
+      toast({ title: 'Property updated' });
+      setEditOpen(false);
+      setEditing(null);
+      queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
+    },
+    onError: (err: unknown) => {
+      toast({
+        title: 'Update failed',
+        description: err instanceof Error ? err.message : 'Unknown error',
+        variant: 'destructive',
+      });
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: async (id: string | number) => {
       const { error } = await supabase.from('properties').delete().eq('id', id);
       if (error) throw error;
     },
-    onSuccess: () => {
-      toast({ title: 'Property deleted' });
-      queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
+    onMutate: async (id: string | number) => {
+      await queryClient.cancelQueries({ queryKey: ['admin-properties'] });
+      const previous = queryClient.getQueryData<AdminPropertyDisplayData[]>(['admin-properties']);
+      queryClient.setQueryData<AdminPropertyDisplayData[]>(['admin-properties'], (old) => (old || []).filter(p => p.id !== id));
+      return { previous } as { previous?: AdminPropertyDisplayData[] };
     },
-    onError: (err: unknown) => {
+    onError: (err: unknown, _id, context) => {
+      if (context?.previous) {
+        queryClient.setQueryData(['admin-properties'], context.previous);
+      }
       toast({
         title: 'Delete failed',
         description: err instanceof Error ? err.message : 'Unknown error',
         variant: 'destructive'
       });
+    },
+    onSuccess: () => {
+      toast({ title: 'Property deleted' });
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-properties'] });
     }
   });
 
@@ -152,7 +224,7 @@ const AdminProperties: React.FC = () => {
                   <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                     <button
                       className="text-roomi-blue hover:text-roomi-blue-dark mr-3"
-                      onClick={() => alert('Edit in Admin coming soon')}
+                      onClick={() => { setEditing(property); setEditOpen(true); }}
                     >
                       Edit
                     </button>
@@ -174,6 +246,80 @@ const AdminProperties: React.FC = () => {
           </table>
         </div>
       </div>
+      <Dialog open={editOpen} onOpenChange={(o) => { setEditOpen(o); if (!o) setEditing(null); }}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Property</DialogTitle>
+          </DialogHeader>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit((values) => updateMutation.mutate(values))} className="space-y-4">
+              <FormField
+                control={form.control}
+                name="title"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Title</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="location"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Input {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="price"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Price per semester</FormLabel>
+                    <FormControl>
+                      <Input type="number" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="is_available"
+                render={({ field }) => (
+                  <FormItem className="flex items-center justify-between space-y-0">
+                    <FormLabel>Available</FormLabel>
+                    <FormControl>
+                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setEditOpen(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={updateMutation.isPending}>
+                  Save
+                </Button>
+              </DialogFooter>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

@@ -10,7 +10,7 @@ export const usePropertiesFilter = ({ properties }: UsePropertiesFilterProps) =>
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedPropertyType, setSelectedPropertyType] = useState('');
   const [selectedGenderType, setSelectedGenderType] = useState('');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 5000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 50000]);
   const [maxDistance, setMaxDistance] = useState(10);
   const [showFilters, setShowFilters] = useState(false);
 
@@ -61,7 +61,7 @@ export const usePropertiesFilter = ({ properties }: UsePropertiesFilterProps) =>
     setSearchQuery('');
     setSelectedPropertyType('');
     setSelectedGenderType('');
-    setPriceRange([0, 5000]);
+    setPriceRange([0, 50000]);
     setMaxDistance(10);
   };
 

@@ -79,10 +79,10 @@ const PropertyFilters: React.FC<PropertyFiltersProps> = ({
           <Label className="block text-sm font-medium text-gray-700 mb-1">Price Range</Label>
           <div className="flex items-center gap-2">
             <div className="text-sm">₵{priceRange[0]}</div>
-            <Slider 
-              value={[priceRange[0], priceRange[1]]} 
+            <Slider
+              value={[priceRange[0], priceRange[1]]}
               min={0}
-              max={20000}
+              max={50000}
               step={500}
               onValueChange={(values) => onPriceRangeChange([values[0], values[1]])}
               className="flex-grow mx-2"

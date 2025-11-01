@@ -180,8 +180,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       logger.info('User profile combined successfully', { role: combinedUser.role, email: combinedUser.email });
       return combinedUser;
-    } catch (error) {
-      logger.error('Error in performProfileFetch', { error });
+    } catch (error: any) {
+      const message = error?.message || String(error);
+      if (message.includes('Profile fetch timeout')) {
+        logger.warn('Profile fetch timed out, using fallback user if available', { error: message, userId });
+      } else {
+        logger.error('Error in performProfileFetch', { error: message, userId });
+      }
 
       // Return fallback user if we have auth user data
       if (providedAuthUser) {

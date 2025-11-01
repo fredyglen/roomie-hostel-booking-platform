@@ -119,8 +119,16 @@ export function calculateIntelligentBookingDuration(
         semesterType = 'full_academic_year';
         description = 'Full Academic Year (8 months)';
       }
+    } else if (preferredDuration === 'one_semester') {
+      // Always provide approximately 4 months from move-in date
+      moveOutDate = new Date(moveInDate);
+      moveOutDate.setMonth(moveOutDate.getMonth() + 4);
+      semesterType = currentSemester.type === 'first_semester' ? 'first_semester'
+        : currentSemester.type === 'second_semester' ? 'second_semester'
+        : 'custom';
+      description = `One Semester (${currentSemester.name})`;
     } else {
-      // Single semester or auto-detect
+      // Auto-detect: align with current semester end
       if (currentSemester.type === 'first_semester') {
         moveOutDate = currentSemester.endDate;
         semesterType = 'first_semester';

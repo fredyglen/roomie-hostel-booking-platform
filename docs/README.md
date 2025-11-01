@@ -32,6 +32,13 @@ Development guidelines, coding standards, and implementation guides
 - Configuration management
 - Implementation roadmaps and refactoring plans
 
+### **📁 [05-PROJECT-MANAGEMENT](./05-PROJECT-MANAGEMENT/)**
+Planning, progress tracking, and program management
+- Business planning and strategic briefs (business/)
+- Technical specs and migration plans (technical/)
+- Roadmaps, status, and operations (planning/)
+- Archived project materials (archived/)
+
 ### **📁 [05-DEPLOYMENT](./05-DEPLOYMENT/)**
 Deployment procedures, environment setup, and CI/CD pipelines
 - Production deployment guides
@@ -56,7 +63,20 @@ Files staged for deletion pending approval
 - Outdated implementation guides
 - Conflicting information sources
 
+## 🗄️ Historical Archives
+- [07-LEGACY](./07-LEGACY/) — Retained historical materials and deprecated docs for reference
+- [to be deleted](./to%20be%20deleted/) — Quarantine area — files marked for potential deletion. Do not rely on content here for current development.
+
 ---
+
+## 🛡️ Authoritative Standards
+- The directory `src/BE CONSCIOUS/` contains the platform’s Apple‑grade standards and protocols. Do not modify these files. Treat them as the single source of truth for business rules and development workflows.
+
+## 📌 Key Canonical Docs
+- Payment System: [docs/03-BUSINESS-LOGIC/PAYMENT-LOGIC.md](./03-BUSINESS-LOGIC/PAYMENT-LOGIC.md)
+- Booking Flow: [docs/04-DEVELOPMENT/BOOKINGFLOW.MD](./04-DEVELOPMENT/BOOKINGFLOW.MD)
+- Hardcoded Values Inventory: [docs/04-DEVELOPMENT/HARDCODED_VALUES_INVENTORY.md](./04-DEVELOPMENT/HARDCODED_VALUES_INVENTORY.md)
+
 
 ## 🎯 **QUICK NAVIGATION**
 
@@ -108,6 +128,6 @@ Files staged for deletion pending approval
 
 ---
 
-**Last Updated**: 2025-01-06  
-**Documentation Version**: 2.0  
+**Last Updated**: 2025-01-06
+**Documentation Version**: 2.0
 **Platform Version**: Production Ready

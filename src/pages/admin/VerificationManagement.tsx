@@ -22,37 +22,69 @@ const VerificationManagement: React.FC = () => {
   const { data: verifications, isLoading, isError, error } = useQuery({
     queryKey: ['admin-verifications'],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('property_verifications')
+      // Primary source: property_verifications table
+      try {
+        const { data } = await supabase
+          .from('property_verifications')
+          .select(`
+            id, status, verification_type, priority_level, verification_deadline, resubmission_count, notes, admin_notes, rejection_reason, created_at,
+            properties!inner (
+              id,
+              title,
+              property_category,
+              owner_id
+            )
+          `)
+          .order('created_at', { ascending: false });
+
+        if (data && data.length > 0) return data;
+      } catch (err) {
+        // If RLS blocks this (403) or any error occurs, fall through to fallback
+        console.warn('[Verification] property_verifications query failed; using fallback', err);
+      }
+
+      // Fallback: derive from properties when verification rows are missing or blocked by RLS
+      const { data: props, error: propsErr } = await supabase
+        .from('properties')
         .select(`
-          id, status, verification_type, priority_level, verification_deadline, resubmission_count, notes, admin_notes, rejection_reason, created_at,
-          properties!inner (
-            id,
-            title,
-            property_category,
-            owner_id
-          )
+          id, title, property_category, owner_id, verification_status, created_at
         `)
+        .in('verification_status', ['pending','rejected'])
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-      return data || [];
+      if (propsErr) throw propsErr;
+      return (props || []).map((p: any) => ({
+        id: p.id, // Note: this is the property id (no PV row yet)
+        property_id: p.id,
+        status: p.verification_status || 'pending',
+        verification_type: 'standard',
+        created_at: p.created_at,
+        properties: {
+          id: p.id,
+          title: p.title,
+          property_category: p.property_category,
+          owner_id: p.owner_id,
+        },
+      }));
     },
   });
 
   const updateVerificationMutation = useMutation({
     mutationFn: async ({
       id,
+      propertyId,
       status,
       adminNotes,
       rejectionReason
     }: {
-      id: string;
+      id: string; // may be PV row id or a property id when in fallback mode
+      propertyId?: string;
       status: string;
       adminNotes?: string;
       rejectionReason?: string;
     }) => {
-      const { data, error } = await supabase
+      // 1) Try updating an existing property_verifications row by its id
+      const { data: pvRow, error: updateErr } = await supabase
         .from('property_verifications')
         .update({
           status,
@@ -62,10 +94,57 @@ const VerificationManagement: React.FC = () => {
         })
         .eq('id', id)
         .select()
-        .single();
+        .maybeSingle();
 
-      if (error) throw error;
-      return data;
+      // 2) If no row exists (fallback path), create/update by propertyId and sync properties
+      if (updateErr || !pvRow) {
+        const pid = propertyId || id; // when id is actually a property id
+
+        // Check if a PV row exists for this property
+        const { data: existing, error: findErr } = await supabase
+          .from('property_verifications')
+          .select('id')
+          .eq('property_id', pid)
+          .maybeSingle();
+
+        if (findErr) throw findErr;
+
+        if (!existing) {
+          const { error: insErr } = await supabase
+            .from('property_verifications')
+            .insert({
+              property_id: pid,
+              status,
+              verification_type: 'standard',
+              admin_notes: adminNotes,
+              rejection_reason: rejectionReason,
+              verification_date: status === 'verified' ? new Date().toISOString() : null,
+            });
+          if (insErr) throw insErr;
+        } else {
+          const { error: updErr } = await supabase
+            .from('property_verifications')
+            .update({
+              status,
+              admin_notes: adminNotes,
+              rejection_reason: rejectionReason,
+              verification_date: status === 'verified' ? new Date().toISOString() : null,
+            })
+            .eq('property_id', pid);
+          if (updErr) throw updErr;
+        }
+
+        // Ensure properties table reflects the status immediately
+        const { error: propErr } = await supabase
+          .from('properties')
+          .update({ verification_status: status })
+          .eq('id', pid);
+        if (propErr) throw propErr;
+
+        return { id: existing?.id || pid } as any;
+      }
+
+      return pvRow;
     },
     onSuccess: () => {
       toast({
@@ -75,11 +154,14 @@ const VerificationManagement: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['admin-verifications'] });
     },
     onError: (error) => {
+      const e: any = error;
+      const details = e?.message || e?.error?.message || e?.details || e?.hint || e?.code || JSON.stringify(e);
       toast({
         title: 'Update Failed',
-        description: `Failed to update verification: ${error instanceof Error ? error.message : 'Unknown error'}`,
+        description: `Failed to update verification: ${details}`,
         variant: 'destructive',
       });
+      console.error('[Verification] Update failed', e);
     },
   });
 
@@ -336,6 +418,7 @@ const VerificationManagement: React.FC = () => {
                               const adminNotes = (document.getElementById(`admin-notes-${verification.id}`) as HTMLTextAreaElement)?.value;
                               updateVerificationMutation.mutate({
                                 id: verification.id,
+                                propertyId: verification.properties?.id,
                                 status: 'verified',
                                 adminNotes,
                               });
@@ -353,6 +436,7 @@ const VerificationManagement: React.FC = () => {
                               const rejectionReason = (document.getElementById(`rejection-reason-${verification.id}`) as HTMLTextAreaElement)?.value;
                               updateVerificationMutation.mutate({
                                 id: verification.id,
+                                propertyId: verification.properties?.id,
                                 status: 'rejected',
                                 adminNotes,
                                 rejectionReason,

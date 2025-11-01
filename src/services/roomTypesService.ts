@@ -30,17 +30,10 @@ export async function fetchPropertyRoomTypes(propertyId: string): Promise<Proper
   try {
     logger.info('Fetching room types for property', { propertyId });
 
-    // Fetch property with room configuration
+    // Fetch property record (select all to avoid 400s from non-existent columns on some deployments)
     const { data: property, error: propertyError } = await supabase
       .from('properties')
-      .select(`
-        id,
-        property_type,
-        property_category,
-        base_price_per_semester,
-        room_types,
-        room_type_pricing
-      `)
+      .select('*')
       .eq('id', propertyId)
       .single();
 
@@ -53,20 +46,45 @@ export async function fetchPropertyRoomTypes(propertyId: string): Promise<Proper
       };
     }
 
-    // Fetch rooms data for availability and pricing
-    const { data: rooms, error: roomsError } = await supabase
-      .from('rooms')
-      .select(`
-        id,
-        room_type,
-        bed_count,
-        rent_amount,
-        beds_available
-      `)
-      .eq('property_id', propertyId);
+    // Fetch rooms data for availability and pricing (via buildings -> floors -> rooms)
+    let rooms: any[] = [];
+    try {
+      const { data: buildings, error: buildingsError } = await supabase
+        .from('buildings')
+        .select('id')
+        .eq('property_id', propertyId);
 
-    if (roomsError) {
-      logger.warn('Failed to fetch rooms data, using property-level data', { propertyId, error: roomsError });
+      if (buildingsError) {
+        logger.warn('Failed to fetch buildings for property', { propertyId, error: buildingsError });
+      }
+
+      const buildingIds = (buildings || []).map((b: any) => b.id);
+      if (buildingIds.length > 0) {
+        const { data: floors, error: floorsError } = await supabase
+          .from('floors')
+          .select('id')
+          .in('building_id', buildingIds);
+
+        if (floorsError) {
+          logger.warn('Failed to fetch floors for buildings', { propertyId, error: floorsError });
+        }
+
+        const floorIds = (floors || []).map((f: any) => f.id);
+        if (floorIds.length > 0) {
+          const { data: roomsRes, error: roomsErr } = await supabase
+            .from('rooms')
+            .select('id, room_type, bed_count, rent_amount, beds_available, floor_id')
+            .in('floor_id', floorIds);
+
+          if (roomsErr) {
+            logger.warn('Failed to fetch rooms via floor_id, using property-level data', { propertyId, error: roomsErr });
+          } else {
+            rooms = roomsRes || [];
+          }
+        }
+      }
+    } catch (e) {
+      logger.error('Error fetching rooms hierarchy for property', { propertyId, error: e });
     }
 
     // Transform to room type options
@@ -99,21 +117,26 @@ function transformToRoomTypeOptions(property: any, rooms: any[]): RoomTypeOption
     const roomTypeGroups = groupRoomsByType(rooms);
     
     for (const [roomType, roomGroup] of Object.entries(roomTypeGroups)) {
-      const totalBeds = roomGroup.reduce((sum: number, room: any) => sum + room.bed_count, 0);
-      const availableBeds = roomGroup.reduce((sum: number, room: any) => sum + room.beds_available, 0);
-      const avgPrice = roomGroup.reduce((sum: number, room: any) => sum + (room.rent_amount || 0), 0) / roomGroup.length;
+      const totalBeds = roomGroup.reduce((sum: number, room: any) => sum + (room.bed_count || 0), 0);
+      const availableBeds = roomGroup.reduce((sum: number, room: any) => sum + (room.beds_available || 0), 0);
+      const avgPrice = roomGroup.reduce((sum: number, room: any) => sum + (room.rent_amount || 0), 0) / Math.max(1, roomGroup.length);
+
+      // Normalize labels to strict "X in a Room" regardless of upstream naming like "Single Room"/"Shared Room"
+      const occupants = Math.max(1, Number(roomGroup[0]?.bed_count) || extractOccupantsFromRoomType(String(roomType)) || 1);
+      const normalizedValue = `${occupants}_in_a_room`;
+      const normalizedLabel = `${occupants} in a Room`;
 
       roomTypes.push({
-        value: roomType.toLowerCase().replace(/\s+/g, '_'),
-        label: roomType,
+        value: normalizedValue,
+        label: normalizedLabel,
         price: avgPrice,
         bedsAvailable: availableBeds,
         totalBeds: totalBeds,
-        occupants: roomGroup[0]?.bed_count || 1
+        occupants
       });
     }
   } 
-  // Fallback to property-level room types
+  // Fallback to property-level room types (explicit array)
   else if (property.room_types && Array.isArray(property.room_types)) {
     for (const roomType of property.room_types) {
       const price = property.room_type_pricing?.[roomType] || property.base_price_per_semester || 0;
@@ -126,6 +149,23 @@ function transformToRoomTypeOptions(property: any, rooms: any[]): RoomTypeOption
         bedsAvailable: 0, // Unknown without rooms data
         totalBeds: 0, // Unknown without rooms data
         occupants: occupants
+      });
+    }
+  }
+  // Fallback to property-level pricing object keys if room_types array is missing
+  else if (property.room_type_pricing && typeof property.room_type_pricing === 'object') {
+    const keys = Object.keys(property.room_type_pricing);
+    for (const roomType of keys) {
+      const price = property.room_type_pricing?.[roomType] || property.base_price_per_semester || 0;
+      const occupants = extractOccupantsFromRoomType(roomType);
+
+      roomTypes.push({
+        value: roomType,
+        label: formatRoomTypeLabel(roomType),
+        price: price,
+        bedsAvailable: 0,
+        totalBeds: 0,
+        occupants
       });
     }
   }
@@ -170,7 +210,16 @@ function extractOccupantsFromRoomType(roomType: string): number {
  * ✅ HELPER: Format room type for display
  */
 function formatRoomTypeLabel(roomType: string): string {
-  // Convert snake_case to readable format
+  // Prefer strict "X in a Room" where we can infer occupants
+  const match = roomType.match(/(\d+)_in_a_room/);
+  if (match) {
+    return `${match[1]} in a Room`;
+  }
+  const occ = extractOccupantsFromRoomType(roomType);
+  if (occ && /single|shared|room/i.test(roomType)) {
+    return `${occ} in a Room`;
+  }
+  // Fallback: title-case
   return roomType
     .replace(/_/g, ' ')
     .replace(/\b\w/g, l => l.toUpperCase())
@@ -194,8 +243,8 @@ export function getFallbackRoomTypes(propertyCategory: string): RoomTypeOption[]
       ];
     case 'homestel':
       return [
-        { value: 'single_room', label: 'Single Room', price: basePrice * 1.3, bedsAvailable: 0, totalBeds: 0, occupants: 1 },
-        { value: 'shared_room', label: 'Shared Room', price: basePrice, bedsAvailable: 0, totalBeds: 0, occupants: 2 }
+        { value: '1_in_a_room', label: '1 in a Room', price: basePrice * 1.3, bedsAvailable: 0, totalBeds: 0, occupants: 1 },
+        { value: '2_in_a_room', label: '2 in a Room', price: basePrice, bedsAvailable: 0, totalBeds: 0, occupants: 2 }
       ];
     case 'apartment':
       return [

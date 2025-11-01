@@ -39,10 +39,9 @@ CREATE TABLE IF NOT EXISTS notifications (
 
     -- Notification state
     read BOOLEAN NOT NULL DEFAULT FALSE,
-    data JSONB DEFAULT '{}',
+    data JSONB DEFAULT '{}'
 
     -- Indexes for performance
-    CONSTRAINT notifications_user_id_fkey FOREIGN KEY (user_id) REFERENCES profiles(id) ON DELETE CASCADE
 );
 
 -- Create indexes for notifications

@@ -5,6 +5,17 @@ import { Icon } from '@iconify/react';
 import { formatCurrency } from '@/utils/currency';
 import { Property } from '@/types/property';
 
+// Prefetch booking flow chunks to eliminate initial flicker on navigation
+const prefetchBookingFlowChunks = () => {
+  // Fire-and-forget dynamic imports; Vite will cache the chunks
+  // These paths must match the lazy imports declared in App.tsx and components
+  void import('@/components/booking/BookingStepsContainer');
+  void import('@/components/booking/EnhancedBookingForm');
+  void import('@/components/booking/steps/DateSelectionStep');
+  void import('@/components/booking/steps/VerificationStep');
+  void import('@/components/booking/PaymentStep');
+};
+
 interface PropertyBookingCardProps {
   property: Property;
   onBook?: () => void;
@@ -16,7 +27,7 @@ const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
 }) => {
   const price = property.price || property.rent;
   const priceUnit = property.priceUnit || property.price_unit || 'month';
-  
+
   return (
     <div className="bg-white/95 backdrop-blur-sm rounded-lg shadow-lg p-4 sticky top-4 z-30 border border-gray-200">
       <div className="flex justify-between items-center mb-3">
@@ -39,7 +50,9 @@ const PropertyBookingCard: React.FC<PropertyBookingCardProps> = ({
       <Button
         variant="default"
         className="w-full mb-3 bg-blue-500 hover:bg-blue-600 text-white"
-        onClick={onBook}
+        onMouseEnter={prefetchBookingFlowChunks}
+        onFocus={prefetchBookingFlowChunks}
+        onClick={(e) => { prefetchBookingFlowChunks(); onBook?.(); }}
       >
         Book Now
       </Button>

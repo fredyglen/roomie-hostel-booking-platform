@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
 
     if (paystackResult.data.status === 'success' && paystackResult.data.metadata?.booking_id) {
       const { error: bookingError } = await supabase
-        .from('bookings')
+        .from('bookings_enhanced')
         .update({
           payment_status: 'paid',
           status: 'confirmed',
