@@ -23,11 +23,9 @@ import {
   TrendingUpIcon,
   CalendarIcon,
   BedroomIcon,
-  PlusIcon,
-  DownloadIcon,
-  EditIcon,
   ArrowLeftIcon,
 } from '@/components/ui/SolarIcons';
+import { Plus as PlusIcon, Download as DownloadIcon, Edit as EditIcon } from 'lucide-react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { logger } from '@/utils/enhanced-logger';
 
