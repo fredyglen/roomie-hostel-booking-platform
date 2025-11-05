@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Property } from '@/types/property';
+import { PRICE_FILTER_DEFAULTS, DISTANCE_FILTER_DEFAULTS } from '@/config/constants';
 
 interface FilterOptions {
   searchQuery?: string;
@@ -16,8 +17,8 @@ export const usePropertyFilters = (properties: Property[], initialFilters: Filte
     searchQuery: initialSearchQuery = '',
     propertyType: initialPropertyType = '',
     genderType: initialGenderType = '',
-    priceRange: initialPriceRange = [0, 50000],
-    maxDistance: initialMaxDistance = 15
+    priceRange: initialPriceRange = [PRICE_FILTER_DEFAULTS.MIN, PRICE_FILTER_DEFAULTS.MAX],
+    maxDistance: initialMaxDistance = DISTANCE_FILTER_DEFAULTS.DEFAULT
   } = initialFilters;
   
   // States for filters
@@ -33,8 +34,8 @@ export const usePropertyFilters = (properties: Property[], initialFilters: Filte
     setSearchQuery('');
     setSelectedPropertyType('');
     setSelectedGenderType('');
-    setPriceRange([0, 50000]);
-    setMaxDistance(15);
+    setPriceRange([PRICE_FILTER_DEFAULTS.MIN, PRICE_FILTER_DEFAULTS.MAX]);
+    setMaxDistance(DISTANCE_FILTER_DEFAULTS.DEFAULT);
     setShowFilters(false);
   };
   

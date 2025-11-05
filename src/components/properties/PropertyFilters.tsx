@@ -4,6 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
+import { PRICE_FILTER_DEFAULTS, DISTANCE_FILTER_DEFAULTS } from '@/config/constants';
 
 interface PropertyFiltersProps {
   propertyType: string;
@@ -81,9 +82,9 @@ const PropertyFilters: React.FC<PropertyFiltersProps> = ({
             <div className="text-sm">₵{priceRange[0]}</div>
             <Slider
               value={[priceRange[0], priceRange[1]]}
-              min={0}
-              max={50000}
-              step={500}
+              min={PRICE_FILTER_DEFAULTS.MIN}
+              max={PRICE_FILTER_DEFAULTS.MAX}
+              step={PRICE_FILTER_DEFAULTS.STEP}
               onValueChange={(values) => onPriceRangeChange([values[0], values[1]])}
               className="flex-grow mx-2"
             />
@@ -94,10 +95,10 @@ const PropertyFilters: React.FC<PropertyFiltersProps> = ({
         <div>
           <Label className="block text-sm font-medium text-gray-700 mb-1">Max Distance (min)</Label>
           <div className="flex items-center gap-2">
-            <Slider 
-              value={[maxDistance]} 
-              min={1}
-              max={30}
+            <Slider
+              value={[maxDistance]}
+              min={DISTANCE_FILTER_DEFAULTS.MIN}
+              max={DISTANCE_FILTER_DEFAULTS.MAX}
               step={1}
               onValueChange={(values) => onMaxDistanceChange(values[0])}
               className="flex-grow mx-2"

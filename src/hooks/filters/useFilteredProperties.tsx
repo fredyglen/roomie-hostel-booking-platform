@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Property, Location } from '@/types/property';
+import { PRICE_FILTER_DEFAULTS } from '@/config/constants';
 
 interface PropertyFilters {
   gender: string;
@@ -23,7 +24,7 @@ export const useFilteredProperties = (properties: Property[], filters: PropertyF
       }
 
       // Price range filter
-      if (filters.priceRange.min > 0 || filters.priceRange.max < 10000) {
+      if (filters.priceRange.min > 0 || filters.priceRange.max < PRICE_FILTER_DEFAULTS.MAX) {
         const price = property.price || property.rent || 0;
         if (price < filters.priceRange.min || price > filters.priceRange.max) {
           return false;

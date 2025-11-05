@@ -2,6 +2,7 @@
 import { useState } from 'react';
 import { useFilteredProperties } from './useFilteredProperties';
 import { Property } from '@/types/property';
+import { PRICE_FILTER_DEFAULTS } from '@/config/constants';
 
 interface FilterOptions {
   search?: string;
@@ -18,9 +19,9 @@ export const useFilters = (properties: Property[]) => {
   // Transform FilterOptions to PropertyFilters for useFilteredProperties
   const propertyFilters = {
     gender: filters.genderType || 'any',
-    priceRange: { 
-      min: filters.priceRange?.[0] || 0, 
-      max: filters.priceRange?.[1] || 10000 
+    priceRange: {
+      min: filters.priceRange?.[0] || PRICE_FILTER_DEFAULTS.MIN,
+      max: filters.priceRange?.[1] || PRICE_FILTER_DEFAULTS.MAX
     },
     location: filters.location || '',
     amenities: filters.amenities || [],
