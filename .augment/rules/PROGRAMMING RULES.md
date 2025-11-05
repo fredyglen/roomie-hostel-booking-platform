@@ -21,7 +21,7 @@ type: "always_apply"
 * Assess potential breaking changes to existing functionality
 * Justify why new code is needed vs extending existing code
 
-## ROOMI-SPECIFIC TECHNICAL STACK
+## ROOMIe-SPECIFIC TECHNICAL STACK
 
 * Use React 18 with TypeScript and Vite for all frontend development
 * Implement UI components using shadcn/ui, Tailwind CSS, and Radix UI
@@ -136,6 +136,7 @@ type: "always_apply"
 - ❌ Creating duplicate tables that conflict with existing ones
 - ❌ Using wrong column names (check actual schema first)
 - ❌ Rushing to "fix" things without understanding current state
+-    
 
 **See DATABASE_MIGRATION_PROTOCOL.md for complete protocol.**
 
