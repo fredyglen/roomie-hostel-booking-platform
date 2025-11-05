@@ -377,6 +377,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     form.setValue('type', propertyType);
     form.setValue('propertyCategory', propertyCategory as any);
 
+    // ✅ SAVE STRUCTURE TYPE TO FORM (will be persisted to database)
+    form.setValue('structure_type' as any, result.structureType);
+
     // Set structure requirements
     if (result.structureType === 'building') {
       setRequiresStructure(true);

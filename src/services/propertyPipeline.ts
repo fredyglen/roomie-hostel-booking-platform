@@ -329,18 +329,74 @@ export class PropertyPipelineService {
         }));
 
         if (roomRows.length > 0) {
-          const { error: roomsErr } = await supabase
+          const { data: insertedRooms, error: roomsErr } = await supabase
             .from('rooms')
-            .insert(roomRows);
+            .insert(roomRows)
+            .select('id, room_number, bed_count');
 
           if (roomsErr) {
             logger.warn('Failed to insert rooms batch', { roomsErr, floorId, count: roomRows.length });
+          } else if (insertedRooms) {
+            // ✅ CREATE BED RECORDS FOR EACH ROOM
+            await this.createBedsForRooms(propertyId, insertedRooms, floor.floorName);
           }
         }
       }
     }
 
     logger.info('Completed persistence of building structure for property', { propertyId });
+  }
+
+  /**
+   * ✅ CREATE INDIVIDUAL BED RECORDS FOR ROOMS
+   * This enables bed-level occupancy tracking
+   */
+  private static async createBedsForRooms(
+    propertyId: string,
+    rooms: Array<{ id: string; room_number: string; bed_count: number }>,
+    floorName: string
+  ): Promise<void> {
+    try {
+      const bedRows: Array<{
+        room_id: string;
+        property_id: string;
+        bed_number: number;
+        bed_identifier: string;
+        is_occupied: boolean;
+        is_reserved: boolean;
+        created_at: string;
+        updated_at: string;
+      }> = [];
+
+      for (const room of rooms) {
+        for (let bedNum = 1; bedNum <= room.bed_count; bedNum++) {
+          bedRows.push({
+            room_id: room.id,
+            property_id: propertyId,
+            bed_number: bedNum,
+            bed_identifier: `${floorName} Room ${room.room_number} Bed ${bedNum}`,
+            is_occupied: false,
+            is_reserved: false,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          });
+        }
+      }
+
+      if (bedRows.length > 0) {
+        const { error: bedsErr } = await supabase
+          .from('beds')
+          .insert(bedRows);
+
+        if (bedsErr) {
+          logger.error('Failed to create bed records', { bedsErr, propertyId, bedCount: bedRows.length });
+        } else {
+          logger.info('Successfully created bed records', { propertyId, bedCount: bedRows.length });
+        }
+      }
+    } catch (error) {
+      logger.error('Exception creating beds for rooms', { error, propertyId });
+    }
   }
 
 
@@ -458,9 +514,16 @@ export class PropertyPipelineService {
       }
 
       if (roomRows.length > 0) {
-        const { error: roomsErr } = await supabase.from('rooms').insert(roomRows);
+        const { data: insertedRooms, error: roomsErr } = await supabase
+          .from('rooms')
+          .insert(roomRows)
+          .select('id, room_number, bed_count');
+
         if (roomsErr) {
           logger.warn('Failed to insert auto-generated rooms batch', { roomsErr, floorId, count: roomRows.length });
+        } else if (insertedRooms) {
+          // ✅ CREATE BED RECORDS FOR AUTO-GENERATED ROOMS
+          await this.createBedsForRooms(propertyId, insertedRooms, 'Ground');
         }
       }
 

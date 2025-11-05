@@ -25,6 +25,7 @@ export const useFormTransformation = () => {
       title: formData.title || '',
       property_type: formData.type || '',
       property_category: formData.propertyCategory || 'Hostel',
+      structure_type: formData.structure_type || 'simple', // ✅ ADDED: Persist router decision
       address: formData.address || '',
       city: formData.city || '',
       state: formData.region || 'Greater Accra', // Map region to state

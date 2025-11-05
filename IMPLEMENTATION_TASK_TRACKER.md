@@ -8,11 +8,11 @@
 
 ## 📊 PROGRESS OVERVIEW
 
-**Total Tasks:** 47
-**Completed:** 28
+**Total Tasks:** 51 (47 original + 4 critical database fixes)
+**Completed:** 32
 **In Progress:** 0
 **Remaining:** 19
-**Completion:** 59.6%
+**Completion:** 62.7%
 
 ---
 
@@ -255,7 +255,7 @@
 
 ---
 
-## 🧠 CATEGORY 6: INTELLIGENT ROUTER INTEGRATION (3 TASKS) ✅ COMPLETE
+## 🧠 CATEGORY 6: INTELLIGENT ROUTER INTEGRATION + DATABASE FIXES (7 TASKS) ✅ COMPLETE
 
 ### Task 6.1: Import IntelligentPropertyRouter in PropertyForm ✅
 - [x] **File:** `src/components/owner/property-form/PropertyForm.tsx`
@@ -302,7 +302,71 @@
 - [x] Lazy loaded CompoundNew component
 - [x] TypeScript compilation verified (no errors)
 
-**Category 6 Total Time:** ~40 minutes (ACTUAL: 45 minutes with bonus compound page)
+### Task 6.4: Add Database Integration to CompoundNew.tsx ✅
+- [x] **File:** `src/pages/owner/CompoundNew.tsx`
+- [x] **Action:** Add Supabase client, mutations, form state, and validation
+- [x] **Changes:**
+  - Added imports: `useMutation`, `useQueryClient`, `supabase`, `Input`, `Textarea`, `Label`
+  - Created `CompoundFormData` interface with all required fields
+  - Added form state with `useState<CompoundFormData>`
+  - Created `createCompoundMutation` with Supabase insert to `compounds` table
+  - Added validation in `handleStepComplete` for each step
+  - Created `handleCreateCompound` function with final validation
+  - Implemented 4-step form with real inputs:
+    - Step 1: Compound name, description, business registration
+    - Step 2: Address, city, state, country
+    - Step 3: Shared amenities (checkboxes)
+    - Step 4: Review and confirmation
+  - Connected button to mutation with loading state
+  - Added success/error toasts and navigation
+  - Query invalidation after successful creation
+- [x] **Result:** Compound creation now ACTUALLY WORKS with database writes
+- [x] **Estimated Time:** 2-3 hours
+- [x] **COMPLETED:** 2025-11-05
+
+### Task 6.5: Create structure_type Migration ✅
+- [x] **File:** `supabase/migrations/20251105_add_structure_type_to_properties.sql`
+- [x] **Action:** Add `structure_type` column to properties table
+- [x] **Changes:**
+  - Added column with CHECK constraint ('simple', 'building', 'compound')
+  - Set default to 'simple' for existing properties
+  - Created index `idx_properties_structure_type`
+  - Added documentation comments
+- [x] **Result:** Router decisions can now be persisted to database
+- [x] **Estimated Time:** 30 minutes
+- [x] **COMPLETED:** 2025-11-05
+
+### Task 6.6: Update useFormTransformation to Persist structure_type ✅
+- [x] **File:** `src/hooks/forms/useFormTransformation.tsx`
+- [x] **Action:** Add `structure_type` field to database transformation
+- [x] **Changes:**
+  - Added line 28: `structure_type: formData.structure_type || 'simple'`
+  - Field is now included in all property inserts/updates
+- [x] **File:** `src/components/owner/property-form/PropertyForm.tsx`
+- [x] **Action:** Save router result structure_type to form
+- [x] **Changes:**
+  - Added line 379: `form.setValue('structure_type' as any, result.structureType)`
+  - Router decision is now saved to form and persisted to database
+- [x] **Result:** Structure type is no longer lost after form submission
+- [x] **Estimated Time:** 1 hour
+- [x] **COMPLETED:** 2025-11-05
+
+### Task 6.7: Add Bed Creation System to PropertyPipelineService ✅
+- [x] **File:** `src/services/propertyPipeline.ts`
+- [x] **Action:** Create individual bed records when rooms are created
+- [x] **Changes:**
+  - Created `createBedsForRooms()` private method (lines 403-467)
+  - Generates bed records with unique identifiers (e.g., "Ground Room R001 Bed 1")
+  - Inserts beds with `is_occupied: false`, `is_reserved: false`
+  - Logs success/failure for debugging
+  - Integrated into `persistBuildingStructure()` (line 340)
+  - Integrated into `insertDefaultStructureFromFlatFields()` (line 527)
+  - Both explicit structure creation AND fallback generation now create beds
+- [x] **Result:** Bed availability tracking now works - beds are created automatically
+- [x] **Estimated Time:** 3-4 hours
+- [x] **COMPLETED:** 2025-11-05
+
+**Category 6 Total Time:** ~40 minutes ORIGINAL + 6-9 hours DATABASE FIXES = ~7-10 hours TOTAL
 
 ---
 

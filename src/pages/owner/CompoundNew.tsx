@@ -15,18 +15,23 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Building2, 
-  Home, 
-  MapPin, 
-  FileText, 
-  CheckCircle2, 
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Building2,
+  Home,
+  MapPin,
+  FileText,
+  CheckCircle2,
   ArrowRight,
   ArrowLeft,
   Info,
@@ -41,18 +46,48 @@ interface CompoundCreationStep {
   completed: boolean;
 }
 
+interface CompoundFormData {
+  name: string;
+  description: string;
+  business_registration_number: string;
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  shared_amenities: string[];
+  house_rules: string[];
+  cover_image_url: string;
+  images: string[];
+}
+
 const CompoundNew: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+  const queryClient = useQueryClient();
+
   // Get router result from navigation state
   const routerResult = location.state?.routerResult;
-  
+
   // Walkthrough state
   const [showWalkthrough, setShowWalkthrough] = useState(true);
   const [walkthroughStep, setWalkthroughStep] = useState(0);
+
+  // Form data state
+  const [formData, setFormData] = useState<CompoundFormData>({
+    name: '',
+    description: '',
+    business_registration_number: '',
+    address: '',
+    city: 'Accra',
+    state: 'Greater Accra',
+    country: 'Ghana',
+    shared_amenities: [],
+    house_rules: [],
+    cover_image_url: '',
+    images: []
+  });
   
   // Creation steps
   const [currentStep, setCurrentStep] = useState(1);
@@ -111,6 +146,54 @@ const CompoundNew: React.FC = () => {
     }
   ];
   
+  // ✅ DATABASE MUTATION: Create compound
+  const createCompoundMutation = useMutation({
+    mutationFn: async (data: CompoundFormData) => {
+      if (!user?.id) throw new Error('User not authenticated');
+
+      const { data: compound, error } = await supabase
+        .from('compounds')
+        .insert({
+          owner_id: user.id,
+          name: data.name,
+          description: data.description,
+          business_registration_number: data.business_registration_number || null,
+          address: data.address,
+          city: data.city,
+          state: data.state,
+          country: data.country,
+          shared_amenities: data.shared_amenities,
+          house_rules: data.house_rules,
+          cover_image_url: data.cover_image_url || null,
+          images: data.images,
+          total_properties: 0,
+          total_rooms: 0,
+          total_beds: 0,
+          occupancy_rate: 0
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+      return compound;
+    },
+    onSuccess: (compound) => {
+      toast({
+        title: "Compound Created!",
+        description: `${compound.name} has been created successfully.`,
+      });
+      queryClient.invalidateQueries({ queryKey: ['compounds'] });
+      navigate('/owner/properties');
+    },
+    onError: (error) => {
+      toast({
+        title: "Creation Failed",
+        description: error instanceof Error ? error.message : 'Failed to create compound',
+        variant: "destructive"
+      });
+    }
+  });
+
   useEffect(() => {
     // Verify user is authenticated
     if (!user) {
@@ -136,13 +219,51 @@ const CompoundNew: React.FC = () => {
   };
   
   const handleStepComplete = (stepId: number) => {
-    setSteps(steps.map(step => 
+    // Validate current step before proceeding
+    if (stepId === 1) {
+      if (!formData.name || !formData.description) {
+        toast({
+          title: "Incomplete Information",
+          description: "Please fill in compound name and description.",
+          variant: "destructive"
+        });
+        return;
+      }
+    } else if (stepId === 2) {
+      if (!formData.address || !formData.city) {
+        toast({
+          title: "Incomplete Location",
+          description: "Please fill in address and city.",
+          variant: "destructive"
+        });
+        return;
+      }
+    }
+
+    setSteps(steps.map(step =>
       step.id === stepId ? { ...step, completed: true } : step
     ));
-    
+
     if (stepId < steps.length) {
       setCurrentStep(stepId + 1);
+    } else {
+      // Final step - create compound
+      handleCreateCompound();
     }
+  };
+
+  const handleCreateCompound = () => {
+    // Validate all required fields
+    if (!formData.name || !formData.description || !formData.address || !formData.city) {
+      toast({
+        title: "Incomplete Form",
+        description: "Please complete all required fields.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    createCompoundMutation.mutate(formData);
   };
   
   const handleBack = () => {
@@ -313,18 +434,160 @@ const CompoundNew: React.FC = () => {
           </CardHeader>
           
           <CardContent className="min-h-[400px]">
-            {/* TODO: Add step-specific forms here */}
-            <div className="flex items-center justify-center h-full">
-              <div className="text-center">
-                <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                <p className="text-gray-600">
-                  Step {currentStep} form will be implemented here
-                </p>
-                <p className="text-sm text-gray-500 mt-2">
-                  This is a placeholder for the compound creation form
-                </p>
+            {/* ✅ STEP 1: Compound Information */}
+            {currentStep === 1 && (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="name">Compound Name *</Label>
+                  <Input
+                    id="name"
+                    placeholder="e.g., Legon Hills Compound"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="description">Description *</Label>
+                  <Textarea
+                    id="description"
+                    placeholder="Describe your compound and its features..."
+                    value={formData.description}
+                    onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                    rows={4}
+                    required
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="business_registration">Business Registration Number (Optional)</Label>
+                  <Input
+                    id="business_registration"
+                    placeholder="e.g., BN12345678"
+                    value={formData.business_registration_number}
+                    onChange={(e) => setFormData({ ...formData, business_registration_number: e.target.value })}
+                  />
+                  <p className="text-sm text-gray-500">
+                    Required for commercial property management
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* ✅ STEP 2: Location & Address */}
+            {currentStep === 2 && (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label htmlFor="address">Full Address *</Label>
+                  <Input
+                    id="address"
+                    placeholder="e.g., Plot 123, University Road"
+                    value={formData.address}
+                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                    required
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="city">City *</Label>
+                    <Input
+                      id="city"
+                      placeholder="e.g., Accra"
+                      value={formData.city}
+                      onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="state">State/Region *</Label>
+                    <Input
+                      id="state"
+                      placeholder="e.g., Greater Accra"
+                      value={formData.state}
+                      onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                      required
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country">Country</Label>
+                  <Input
+                    id="country"
+                    value={formData.country}
+                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    disabled
+                  />
+                  <p className="text-sm text-gray-500">
+                    Currently only available in Ghana
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* ✅ STEP 3: Shared Amenities */}
+            {currentStep === 3 && (
+              <div className="space-y-6">
+                <div className="space-y-2">
+                  <Label>Shared Amenities</Label>
+                  <p className="text-sm text-gray-500 mb-4">
+                    Select amenities available to all properties in this compound
+                  </p>
+                  <div className="grid grid-cols-2 gap-3">
+                    {['WiFi', 'Security', 'Parking', 'Generator', 'Water Supply', 'Gym', 'Laundry', 'Common Area'].map((amenity) => (
+                      <label key={amenity} className="flex items-center space-x-2 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.shared_amenities.includes(amenity)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData({
+                                ...formData,
+                                shared_amenities: [...formData.shared_amenities, amenity]
+                              });
+                            } else {
+                              setFormData({
+                                ...formData,
+                                shared_amenities: formData.shared_amenities.filter(a => a !== amenity)
+                              });
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span>{amenity}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* ✅ STEP 4: Documentation */}
+            {currentStep === 4 && (
+              <div className="space-y-6">
+                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-blue-900 mb-2">Review Your Information</h4>
+                  <div className="space-y-2 text-sm">
+                    <p><strong>Name:</strong> {formData.name}</p>
+                    <p><strong>Address:</strong> {formData.address}, {formData.city}</p>
+                    <p><strong>Amenities:</strong> {formData.shared_amenities.length} selected</p>
+                  </div>
+                </div>
+
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <h4 className="font-semibold text-yellow-900 mb-2">Next Steps</h4>
+                  <ul className="list-disc list-inside text-sm text-yellow-800 space-y-1">
+                    <li>Your compound will be created</li>
+                    <li>You can add properties to this compound</li>
+                    <li>Track occupancy across all buildings</li>
+                    <li>Manage bookings from one dashboard</li>
+                  </ul>
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
         
@@ -340,10 +603,15 @@ const CompoundNew: React.FC = () => {
           
           <Button
             onClick={() => handleStepComplete(currentStep)}
-            disabled={currentStep === steps.length && !steps[currentStep - 1].completed}
+            disabled={createCompoundMutation.isPending}
           >
-            {currentStep === steps.length ? 'Create Compound' : 'Continue'}
-            <ArrowRight className="ml-2 h-4 w-4" />
+            {createCompoundMutation.isPending ? (
+              <>Creating...</>
+            ) : currentStep === steps.length ? (
+              <>Create Compound <CheckCircle2 className="ml-2 h-4 w-4" /></>
+            ) : (
+              <>Continue <ArrowRight className="ml-2 h-4 w-4" /></>
+            )}
           </Button>
         </div>
       </div>
