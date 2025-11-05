@@ -67,6 +67,8 @@ const PropertyNewSimple = React.lazy(() => import('@/pages/owner/PropertyNewSimp
 const PropertyEdit = React.lazy(() => import('@/pages/owner/PropertyEdit'));
 const PropertyView = React.lazy(() => import('@/pages/owner/PropertyView'));
 const CompoundNew = React.lazy(() => import('@/pages/owner/CompoundNew'));
+const CompoundsList = React.lazy(() => import('@/pages/owner/CompoundsList'));
+const CompoundDashboard = React.lazy(() => import('@/pages/owner/CompoundDashboard'));
 const OwnerBookings = React.lazy(() => import('@/pages/owner/Bookings'));
 const OwnerProfile = React.lazy(() => import('@/pages/owner/Profile'));
 const OwnerSettings = React.lazy(() => import('@/pages/owner/Settings'));
@@ -347,9 +349,19 @@ function App() {
                     <SafeRoute element={<PropertyNewSimple />} />
                   </ProtectedRoute>
                 } />
+                <Route path="/owner/compounds" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<CompoundsList />} />
+                  </ProtectedRoute>
+                } />
                 <Route path="/owner/compounds/new" element={
                   <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
                     <SafeRoute element={<CompoundNew />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/compounds/:id" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<CompoundDashboard />} />
                   </ProtectedRoute>
                 } />
                 <Route path="/owner/properties/:id/edit" element={

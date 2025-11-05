@@ -44,6 +44,7 @@ const OwnerLayout: React.FC<OwnerLayoutProps> = ({
     { title: 'Dashboard', path: '/owner/dashboard', icon: <DashboardIcon /> },
     { title: 'Analytics', path: '/owner/analytics', icon: <TrendingUpIcon /> },
     { title: 'Properties', path: '/owner/properties', icon: <BuildingIcon /> },
+    { title: 'Compounds', path: '/owner/compounds', icon: <BuildingIcon /> }, // Using BuildingIcon for compounds
     { title: 'Bookings', path: '/owner/bookings', icon: <CalendarIcon /> },
     { title: 'Profile', path: '/owner/profile', icon: <UserCircleIcon /> },
     { title: 'Settings', path: '/owner/settings', icon: <SettingsIcon /> },
