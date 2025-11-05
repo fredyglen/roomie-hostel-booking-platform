@@ -20,7 +20,8 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BuildingIcon, PlusIcon, SearchIcon, TrendingUpIcon, UsersIcon, BedroomIcon } from '@/components/ui/SolarIcons';
+import { BuildingIcon, SearchIcon, TrendingUpIcon, UsersIcon, BedroomIcon } from '@/components/ui/SolarIcons';
+import { Plus } from 'lucide-react';
 import { logger } from '@/utils/enhanced-logger';
 
 interface Compound {
@@ -119,7 +120,7 @@ const CompoundsList: React.FC = () => {
             onClick={handleCreateCompound}
             className="bg-[#3B82F6] hover:bg-[#2563EB] text-white"
           >
-            <PlusIcon className="mr-2 h-4 w-4" />
+            <Plus className="mr-2 h-4 w-4" />
             Create Compound
           </Button>
         </div>
@@ -198,7 +199,7 @@ const CompoundsList: React.FC = () => {
                 </p>
                 {!searchQuery && filterOccupancy === 'all' && (
                   <Button onClick={handleCreateCompound} className="mt-6 bg-[#3B82F6] hover:bg-[#2563EB]">
-                    <PlusIcon className="mr-2 h-4 w-4" />
+                    <Plus className="mr-2 h-4 w-4" />
                     Create Your First Compound
                   </Button>
                 )}
