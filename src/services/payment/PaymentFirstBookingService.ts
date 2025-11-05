@@ -188,10 +188,15 @@ export class PaymentFirstBookingService {
   ): Promise<PaymentResult> {
     try {
       const paymentReference = generatePaymentReference();
-      
+
+      // ✅ NEW API: Determine if property has an agent
+      const hasAgent = Boolean(data.property.agent_id || data.property.owner?.id);
+
       logger.info('Initiating payment processing', {
         reference: paymentReference,
-        amount: data.pricing.totalAmount,
+        baseAmount: data.pricing.propertyRent,
+        hasAgent,
+        totalAmount: data.pricing.totalAmount,
         studentEmail: data.student.email
       });
 
@@ -201,14 +206,15 @@ export class PaymentFirstBookingService {
         {
           body: {
             email: data.student.email,
-            amount: data.pricing.totalAmount,
+            base_amount: data.pricing.propertyRent, // ✅ NEW API: Use base_amount instead of amount
+            has_agent: hasAgent,                     // ✅ NEW API: Pass agent involvement flag
             currency: 'GHS',
             reference: paymentReference,
             metadata: {
               student_id: data.student.id,
               property_id: data.property.id,
               property_owner_id: data.property.ownerId,
-              agent_id: data.property.owner?.id || null,
+              agent_id: data.property.agent_id || data.property.owner?.id || null,
               booking_type: 'semester_accommodation',
               platform: 'roomi_ghana'
             }

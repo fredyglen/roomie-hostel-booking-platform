@@ -52,7 +52,10 @@ export const useBusinessPaymentFlow = () => {
         luxury: 2500
       };
 
-      const totalAmount = packagePrices[data.packageType];
+      const baseAmount = packagePrices[data.packageType];
+
+      // ✅ NEW API: Determine if property has an agent
+      const hasAgent = Boolean(data.agentId);
 
       // Create booking record first - using correct field names for the database
       const { data: booking, error: bookingError } = await supabase
@@ -63,7 +66,7 @@ export const useBusinessPaymentFlow = () => {
           agent_id: data.agentId,
           check_in_date: data.startDate,  // Using check_in_date instead of start_date
           check_out_date: data.endDate,   // Using check_out_date instead of end_date
-          total_amount: totalAmount,
+          total_amount: baseAmount,
           package_type: data.packageType,
           payment_status: 'pending',
           status: 'pending',
@@ -81,7 +84,8 @@ export const useBusinessPaymentFlow = () => {
       const { data: paymentInit, error: paymentError } = await supabase.functions.invoke('initialize-payment', {
         body: {
           email: data.studentEmail,
-          amount: totalAmount,
+          base_amount: baseAmount,  // ✅ NEW API: Use base_amount instead of amount
+          has_agent: hasAgent,      // ✅ NEW API: Pass agent involvement flag
           currency: 'GHS',
           metadata: {
             booking_id: booking.id,

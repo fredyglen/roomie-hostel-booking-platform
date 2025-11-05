@@ -9,6 +9,10 @@ const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')!
 
+// ✅ SECURITY: Block legacy payment API in production
+// Set ALLOW_LEGACY_PAYMENTS=true in development/testing only
+const ALLOW_LEGACY_PAYMENTS = Deno.env.get('ALLOW_LEGACY_PAYMENTS') === 'true';
+
 // Define schema for incoming payment initialization request
 // ✅ SUPPORTS BOTH NEW API (base_amount + has_agent) AND LEGACY API (amount)
 const PaymentInitRequestSchema = z.object({
@@ -167,9 +171,28 @@ Deno.serve(async (req) => {
     } else if (paymentData.amount) {
       // ⚠️ LEGACY API: Client provided total amount
       isLegacyApi = true;
+
+      // ✅ SECURITY: Block legacy API in production
+      if (!ALLOW_LEGACY_PAYMENTS) {
+        console.error('❌ Legacy payment API blocked in production', {
+          userId: user.id,
+          email: paymentData.email,
+          amount: paymentData.amount
+        });
+        return new Response(JSON.stringify({
+          status: false,
+          message: 'Legacy payment API is deprecated. Please update your client to use base_amount + has_agent parameters.',
+          error_code: 'LEGACY_API_BLOCKED'
+        }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
       console.warn('⚠️  Using legacy API: amount provided without base_amount');
       console.warn('   This bypasses server-side commission validation!');
       console.warn('   User:', user.id, 'Email:', paymentData.email);
+      console.warn('   Set ALLOW_LEGACY_PAYMENTS=false to block this in production');
 
       // For backward compatibility, treat amount as total and skip validation
       // This maintains existing booking flow while we migrate clients

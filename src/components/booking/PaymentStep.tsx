@@ -182,10 +182,16 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
     try {
       setInitializingPayment(true);
+
+      // ✅ NEW API: Extract base amount and agent status from commission breakdown
+      const baseAmount = commission?.baseAmount || totalAmount;
+      const hasAgent = Boolean((paystackMetadata as any)?.agent_id);
+
       const { data, error } = await supabase.functions.invoke<InitPaymentResponse>('initialize-payment', {
         body: {
           email: user?.email || '',
-          amount: totalAmount,
+          base_amount: baseAmount, // ✅ NEW API: Use base_amount instead of amount
+          has_agent: hasAgent,      // ✅ NEW API: Pass agent involvement flag
           currency: 'GHS',
           metadata: paystackMetadata,
           channels: ['card', 'mobile_money', 'bank', 'ussd'],
