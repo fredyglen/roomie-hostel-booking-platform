@@ -6,6 +6,8 @@ import React, { useState } from 'react';
 import { MapPin, Wifi, Car, Shield, AlertTriangle, Star, ThumbsUp, ThumbsDown, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { usePropertyReviews } from '@/hooks/usePropertyReviews';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Flexible property interface for backward compatibility
 interface PropertyDetailData {
@@ -190,6 +192,9 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
   activeTab,
   onTabChange
 }) => {
+  // Fetch real reviews from database
+  const propertyId = typeof property.id === 'string' ? property.id : String(property.id);
+  const { data: reviews = [], isLoading: reviewsLoading } = usePropertyReviews(propertyId);
   // Helper functions for safe data access
   const getLocationText = (): string => {
     // Use address field from Property type
@@ -242,12 +247,7 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
     ];
   };
 
-  // ✅ REAL REVIEWS - No mock data
-  // TODO: Implement real reviews API when review system is built
-  const getReviews = () => {
-    // Return empty array until review system is implemented
-    return [];
-  };
+  // Reviews are now fetched via usePropertyReviews hook above
 
   const tabs = [
     { id: 'description', label: 'About' },
@@ -425,24 +425,55 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
             <div>
               <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
                 <Star size={20} className="text-yellow-500" />
-                Reviews
+                Reviews {reviews.length > 0 && `(${reviews.length})`}
               </h3>
               <div className="space-y-4">
-                {getReviews().length > 0 ? (
-                  getReviews().map((review) => (
+                {reviewsLoading ? (
+                  // Loading skeleton
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="p-4 bg-gray-50 rounded-lg">
+                        <div className="flex items-center justify-between mb-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-20" />
+                        </div>
+                        <Skeleton className="h-16 w-full" />
+                      </div>
+                    ))}
+                  </div>
+                ) : reviews.length > 0 ? (
+                  reviews.map((review) => (
                     <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
-                          <span className="font-medium text-gray-800">{review.author}</span>
+                          <span className="font-medium text-gray-800">
+                            {review.is_anonymous ? 'Anonymous' : 'Student'}
+                          </span>
                           <div className="flex items-center gap-1">
                             {Array.from({ length: review.rating }).map((_, i) => (
                               <Star key={i} size={12} className="text-yellow-500 fill-current" />
                             ))}
                           </div>
+                          {review.is_verified && (
+                            <Badge variant="secondary" className="text-xs">Verified</Badge>
+                          )}
                         </div>
-                        <span className="text-xs text-gray-500">{review.date}</span>
+                        <span className="text-xs text-gray-500">
+                          {new Date(review.created_at).toLocaleDateString()}
+                        </span>
                       </div>
-                      <p className="text-gray-700 text-sm">{review.comment}</p>
+                      {review.title && (
+                        <h4 className="font-medium text-gray-900 mb-1">{review.title}</h4>
+                      )}
+                      {review.review_text && (
+                        <p className="text-gray-700 text-sm">{review.review_text}</p>
+                      )}
+                      {review.helpful_count > 0 && (
+                        <div className="mt-2 flex items-center gap-1 text-xs text-gray-500">
+                          <ThumbsUp size={12} />
+                          <span>{review.helpful_count} found this helpful</span>
+                        </div>
+                      )}
                     </div>
                   ))
                 ) : (
