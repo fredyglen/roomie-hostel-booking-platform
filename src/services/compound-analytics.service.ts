@@ -12,7 +12,7 @@
  */
 
 import { supabase } from '@/lib/supabase';
-import { enhancedLogger as logger } from '@/services/monitoring/enhanced-logger';
+import { logger } from '@/utils/enhanced-logger';
 
 // =====================================================
 // TYPESCRIPT INTERFACES

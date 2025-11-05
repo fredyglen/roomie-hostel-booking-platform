@@ -29,7 +29,7 @@ import {
   ArrowLeftIcon,
 } from '@/components/ui/SolarIcons';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { enhancedLogger as logger } from '@/services/monitoring/enhanced-logger';
+import { logger } from '@/utils/enhanced-logger';
 
 const CompoundDashboard: React.FC = () => {
   const { id: compoundId } = useParams<{ id: string }>();

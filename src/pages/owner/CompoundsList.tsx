@@ -21,7 +21,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BuildingIcon, PlusIcon, SearchIcon, TrendingUpIcon, UsersIcon, BedIcon } from '@/components/ui/SolarIcons';
-import { enhancedLogger as logger } from '@/services/monitoring/enhanced-logger';
+import { logger } from '@/utils/enhanced-logger';
 
 interface Compound {
   id: string;
