@@ -10,6 +10,7 @@ import PropertyDetailTabs from './PropertyDetailTabs';
 import PropertyDetailCoverOverlay from './PropertyDetailCoverOverlay';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
+import { useTrackPropertyView } from '@/hooks/usePropertyViews';
 import { cn } from '@/lib/utils';
 
 // Property interface for detail components
@@ -64,6 +65,9 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   const propertyId = typeof property.id === 'string' ? property.id : String(property.id);
   const { data: isFavorite, isLoading: isFavoriteLoading } = useIsFavorite(propertyId, user?.id);
   const toggleFavorite = useToggleFavorite();
+
+  // Track property view (Phase 7)
+  useTrackPropertyView(propertyId, user?.id);
 
   const handleFavoriteClick = () => {
     if (!user) {

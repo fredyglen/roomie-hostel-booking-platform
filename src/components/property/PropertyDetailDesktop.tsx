@@ -9,6 +9,7 @@ import PropertyDetailTabs from './PropertyDetailTabs';
 import { useRealTimeBedAvailability } from '@/hooks/useRealTimeBedAvailability';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
+import { useTrackPropertyView } from '@/hooks/usePropertyViews';
 import { cn } from '@/lib/utils';
 
 import { Property, PropertyId, PropertyPrice } from '@/types/property';
@@ -124,6 +125,9 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
   const propertyId = typeof property.id === 'string' ? property.id : String(property.id);
   const { data: isFavorite, isLoading: isFavoriteLoading } = useIsFavorite(propertyId, user?.id);
   const toggleFavorite = useToggleFavorite();
+
+  // Track property view (Phase 7)
+  useTrackPropertyView(propertyId, user?.id);
 
   const handleFavoriteClick = () => {
     if (!user) {
