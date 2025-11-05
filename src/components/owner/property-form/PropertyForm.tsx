@@ -15,12 +15,10 @@ import { propertyFormSchema, PropertyFormValues } from './PropertyFormSchema';
 import PropertyInfoFields from './PropertyInfoFields';
 import RoomConfigurationFields from './RoomConfigurationFields';
 import AmenitiesSelector from './AmenitiesSelector';
-import BuildingStructureFields from './BuildingStructureFields';
 import { MediaUploadFields } from './MediaUploadFields';
 import FormSubmissionModal from './FormSubmissionModal';
-import BuildingStructureManager from '../BuildingStructureManager';
-import StructureTabModal from '../StructureTabModal';
-import BuildingCreatorGatingModal from './BuildingCreatorGatingModal';
+// ✅ REMOVED: BuildingStructureFields, BuildingStructureManager, StructureTabModal, BuildingCreatorGatingModal
+// Structure type is now determined by IntelligentPropertyRouter only
 // Intelligent Property Router
 import { IntelligentPropertyRouter } from '@/components/owner/IntelligentPropertyRouter';
 // Enhanced toast utilities
@@ -57,9 +55,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
-  const [showStructureModal, setShowStructureModal] = useState(false);
-  const [gatingOpen, setGatingOpen] = useState(false);
-  const [requiresStructure, setRequiresStructure] = useState<boolean | null>(null);
+  // ✅ REMOVED: showStructureModal, gatingOpen, requiresStructure - no longer needed
 
   // ✅ INTELLIGENT ROUTER STATE
   const [showRouter, setShowRouter] = useState(!isEdit); // Show router for new properties only
@@ -159,12 +155,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   // Watch all form values for auto-save
   const formValues = form.watch();
 
-  // Show structure modal when switching to structure tab
-  useEffect(() => {
-    if (activeTab === 'structure' && !showStructureModal) {
-      setShowStructureModal(true);
-    }
-  }, [activeTab]);
+  // ✅ REMOVED: Structure modal useEffect - no longer needed
 
   // Auto-save form data to localStorage (only for new properties, not edits)
   useEffect(() => {
@@ -380,17 +371,6 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     // ✅ SAVE STRUCTURE TYPE TO FORM (will be persisted to database)
     form.setValue('structure_type' as any, result.structureType);
 
-    // Set structure requirements
-    if (result.structureType === 'building') {
-      setRequiresStructure(true);
-      toast({
-        title: "Building Structure Enabled",
-        description: "You'll be able to add floors, rooms, and beds in the Structure tab.",
-      });
-    } else {
-      setRequiresStructure(false);
-    }
-
     // Close router and show form
     setShowRouter(false);
 
@@ -465,21 +445,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
           </div>
 
-          <Tabs value={activeTab} onValueChange={(val) => {
-              if (val === 'structure' && requiresStructure === null) {
-                setGatingOpen(true);
-                return;
-              }
-              if (requiresStructure && (form.watch('buildings') || []).length === 0 && val !== 'structure') {
-                setGatingOpen(true);
-                setActiveTab('structure');
-                return;
-              }
-              setActiveTab(val);
-            }} className="w-full">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             <div className="flex border-b border-[#dbe0e6] px-1 md:px-2 gap-6 md:gap-8">
-              {(['info','rooms','amenities','structure','media'] as const).map((tab) => {
-                const disabled = requiresStructure === true && (form.watch('buildings') || []).length === 0 && (tab === 'rooms' || tab === 'amenities' || tab === 'media');
+              {/* ✅ REMOVED 'structure' TAB - Structure type is determined by IntelligentPropertyRouter */}
+              {(['info','rooms','amenities','media'] as const).map((tab) => {
                 const hasError = tab === 'info'
                   ? (form.formState.errors.title || form.formState.errors.address || form.formState.errors.description || (form.formState.errors as any).nearest_university)
                   : tab === 'rooms'
@@ -489,22 +458,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <button
                     key={tab}
                     type="button"
-                    disabled={disabled}
-                    onClick={() => {
-                      if (tab === 'structure' && requiresStructure === null) {
-                        setGatingOpen(true);
-                        return;
-                      }
-                      if (requiresStructure && (form.watch('buildings') || []).length === 0 && tab !== 'structure') {
-                        setGatingOpen(true);
-                        setActiveTab('structure');
-                        return;
-                      }
-                      setActiveTab(tab);
-                    }}
+                    onClick={() => setActiveTab(tab)}
                     className={`relative -mb-[1px] pb-3 text-sm font-semibold border-b-[3px] ${
                       activeTab === tab ? 'border-b-primary text-primary' : 'border-b-transparent text-[#617589] hover:text-gray-900'
-                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    }`}
                   >
                     {tab === 'info' ? 'Property Info' : tab === 'rooms' ? 'Room Config' : tab.charAt(0).toUpperCase() + tab.slice(1)}
                     {hasError && (
@@ -600,19 +557,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
 
 
-            <TabsContent value="structure" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Building Structure</CardTitle>
-                  <p className="text-sm text-gray-600">
-                    Create detailed building layouts with multiple floors and rooms (Premium Feature)
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  <BuildingStructureManager form={form} />
-                </CardContent>
-              </Card>
-            </TabsContent>
+            {/* ✅ REMOVED Structure TabsContent - Structure type determined by IntelligentPropertyRouter */}
 
             <TabsContent value="media" className="space-y-6">
               <MediaUploadFields form={form} />
@@ -629,9 +574,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 type="button"
                 variant="outline"
                 onClick={() => {
-                  const currentIndex = ['info', 'rooms', 'amenities', 'structure', 'media'].indexOf(activeTab);
+                  const tabs = ['info', 'rooms', 'amenities', 'media'] as const;
+                  const currentIndex = tabs.indexOf(activeTab as any);
                   if (currentIndex > 0) {
-                    setActiveTab(['info', 'rooms', 'amenities', 'structure', 'media'][currentIndex - 1]);
+                    setActiveTab(tabs[currentIndex - 1]);
                   }
                 }}
                 disabled={activeTab === 'info'}
@@ -647,15 +593,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                   <Button
                     type="button"
                     onClick={() => {
-                      const tabs = ['info', 'rooms', 'amenities', 'structure', 'media'] as const;
+                      const tabs = ['info', 'rooms', 'amenities', 'media'] as const;
                       const currentIndex = tabs.indexOf(activeTab as any);
                       const next = tabs[currentIndex + 1];
-                      if (requiresStructure && (form.watch('buildings') || []).length === 0 && next !== 'structure') {
-                        setGatingOpen(true);
-                        setActiveTab('structure');
-                        return;
-                      }
-                      if (currentIndex < 4) {
+                      if (currentIndex < tabs.length - 1) {
                         setActiveTab(next);
                       }
                     }}
@@ -721,22 +662,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
         isEdit={isEdit}
       />
 
-      <StructureTabModal
-        isOpen={showStructureModal}
-        onClose={() => setShowStructureModal(false)}
-      />
-
-      <BuildingCreatorGatingModal
-        isOpen={gatingOpen}
-        onClose={() => setGatingOpen(false)}
-        onConfirm={(decision) => {
-          setRequiresStructure(decision);
-          setGatingOpen(false);
-          if (decision) {
-            setActiveTab('structure');
-          }
-        }}
-      />
+      {/* ✅ REMOVED: StructureTabModal and BuildingCreatorGatingModal - no longer needed */}
     </>
   );
 };
