@@ -20,7 +20,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BuildingIcon, PlusIcon, SearchIcon, TrendingUpIcon, UsersIcon, BedIcon } from '@/components/ui/SolarIcons';
+import { BuildingIcon, PlusIcon, SearchIcon, TrendingUpIcon, UsersIcon, BedroomIcon } from '@/components/ui/SolarIcons';
 import { logger } from '@/utils/enhanced-logger';
 
 interface Compound {
@@ -251,7 +251,7 @@ const CompoundsList: React.FC = () => {
                       {/* Total Beds */}
                       <div className="flex items-center justify-between text-sm">
                         <div className="flex items-center text-gray-600">
-                          <BedIcon className="h-4 w-4 mr-2" />
+                          <BedroomIcon className="h-4 w-4 mr-2" />
                           <span>Total Beds</span>
                         </div>
                         <span className="font-medium text-gray-900">{compound.total_beds || 0}</span>

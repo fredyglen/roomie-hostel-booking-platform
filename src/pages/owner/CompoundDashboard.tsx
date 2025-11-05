@@ -22,7 +22,7 @@ import {
   BuildingIcon,
   TrendingUpIcon,
   CalendarIcon,
-  BedIcon,
+  BedroomIcon,
   PlusIcon,
   DownloadIcon,
   EditIcon,
@@ -259,7 +259,7 @@ const CompoundDashboard: React.FC = () => {
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-sm font-medium text-gray-600">Occupancy Rate</CardTitle>
-                <BedIcon className="h-4 w-4 text-gray-400" />
+                <BedroomIcon className="h-4 w-4 text-gray-400" />
               </div>
             </CardHeader>
             <CardContent>
