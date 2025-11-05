@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import AdminLayout from '@/components/layout/AdminLayout';
 import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 import { useRealTimeCommissionConfig } from '@/hooks/useRealTimeCommissionConfig';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/context/EnhancedAuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
