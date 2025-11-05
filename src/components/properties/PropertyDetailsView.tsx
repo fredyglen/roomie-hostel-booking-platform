@@ -44,10 +44,18 @@ const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back to Properties
         </Button>
-        <div className="flex items-center space-x-2">
-          <Star className="h-4 w-4 text-yellow-500 fill-current" />
-          <span className="text-sm font-medium">{property.rating || 4.5}</span>
-        </div>
+        {property.rating ? (
+          <div className="flex items-center space-x-2">
+            <Star className="h-4 w-4 text-yellow-500 fill-current" />
+            <span className="text-sm font-medium">{property.rating.toFixed(1)}</span>
+            <span className="text-xs text-gray-500">({property.reviewCount || 0})</span>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-2">
+            <Star className="h-4 w-4 text-gray-400" />
+            <span className="text-sm text-gray-500">No reviews yet</span>
+          </div>
+        )}
       </div>
 
       {/* Main Content */}

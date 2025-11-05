@@ -292,11 +292,20 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
               </div>
 
               <div className="text-right">
-                <div className="flex items-center gap-2 mb-2 bg-yellow-50 px-3 py-2 rounded-full">
-                  <Star size={18} className="text-yellow-500 fill-current" />
-                  <span className="font-bold text-gray-900">{property.rating || '4.5'}</span>
-                </div>
-                <div className="text-sm text-gray-600 font-medium">(24 reviews)</div>
+                {property.rating ? (
+                  <>
+                    <div className="flex items-center gap-2 mb-2 bg-yellow-50 px-3 py-2 rounded-full">
+                      <Star size={18} className="text-yellow-500 fill-current" />
+                      <span className="font-bold text-gray-900">{property.rating.toFixed(1)}</span>
+                    </div>
+                    <div className="text-sm text-gray-600 font-medium">({property.reviewCount || 0} reviews)</div>
+                  </>
+                ) : (
+                  <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-full">
+                    <Star size={18} className="text-gray-400" />
+                    <span className="text-sm text-gray-500 font-medium">No reviews yet</span>
+                  </div>
+                )}
               </div>
             </div>
 

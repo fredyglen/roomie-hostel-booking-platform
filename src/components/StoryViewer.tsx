@@ -285,10 +285,17 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
               <span className="font-bold text-xl" style={{ color: '#0f68fd' }}>₵{propertyDetails.price}</span>
               <span className="text-gray-500">/{propertyDetails.priceUnit}</span>
             </div>
-            <div className="flex items-center">
-              <Icon icon="solar:star-bold" className="h-4 w-4 text-yellow-400" />
-              <span className="ml-1">{propertyDetails.rating} ({propertyDetails.reviewCount} reviews)</span>
-            </div>
+            {propertyDetails.rating ? (
+              <div className="flex items-center">
+                <Icon icon="solar:star-bold" className="h-4 w-4 text-yellow-400" />
+                <span className="ml-1">{propertyDetails.rating.toFixed(1)} ({propertyDetails.reviewCount || 0} reviews)</span>
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <Icon icon="solar:star-bold" className="h-4 w-4 text-gray-400" />
+                <span className="ml-1 text-gray-500">No reviews yet</span>
+              </div>
+            )}
           </div>
           
           <div className="mb-4">

@@ -251,11 +251,18 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
         <div className="px-4 pb-4 h-full overflow-hidden flex flex-col">
           {/* Compact rating header */}
           <div className="flex justify-center mb-4">
-            <div className="flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-full">
-              <Star size={18} className="text-yellow-500 fill-current" />
-              <span className="font-bold text-gray-900">{property.rating || '4.5'}</span>
-              <span className="text-gray-600 text-sm font-medium">(24 reviews)</span>
-            </div>
+            {property.rating ? (
+              <div className="flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-full">
+                <Star size={18} className="text-yellow-500 fill-current" />
+                <span className="font-bold text-gray-900">{property.rating.toFixed(1)}</span>
+                <span className="text-gray-600 text-sm font-medium">({property.reviewCount || 0} reviews)</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full">
+                <Star size={18} className="text-gray-400" />
+                <span className="text-gray-500 text-sm font-medium">No reviews yet</span>
+              </div>
+            )}
           </div>
 
           {/* Tab content */}
