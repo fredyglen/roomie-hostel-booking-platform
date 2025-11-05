@@ -8,6 +8,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PropertyDetailTabs from './PropertyDetailTabs';
 import PropertyDetailCoverOverlay from './PropertyDetailCoverOverlay';
+import { useAuth } from '@/context/EnhancedAuthContext';
+import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
+import { cn } from '@/lib/utils';
 
 // Property interface for detail components
 interface PropertyDetailData {
@@ -55,6 +58,20 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
   const cardRef = useRef<HTMLDivElement>(null);
   const lastTouchTime = useRef<number>(0);
   const lastTouchY = useRef<number>(0);
+
+  // Favorites functionality
+  const { user } = useAuth();
+  const propertyId = typeof property.id === 'string' ? property.id : String(property.id);
+  const { data: isFavorite, isLoading: isFavoriteLoading } = useIsFavorite(propertyId, user?.id);
+  const toggleFavorite = useToggleFavorite();
+
+  const handleFavoriteClick = () => {
+    if (!user) {
+      // TODO: Show login prompt
+      return;
+    }
+    toggleFavorite.mutate(propertyId);
+  };
 
   // Handle modal open/close animations
   useEffect(() => {
@@ -188,8 +205,19 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
           </button>
 
           <div className="flex gap-3">
-            <button className="w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl hover:bg-white transition-all duration-200">
-              <Heart size={20} className="text-gray-900" />
+            <button
+              onClick={handleFavoriteClick}
+              disabled={isFavoriteLoading || toggleFavorite.isPending}
+              className={cn(
+                "w-12 h-12 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl transition-all duration-200",
+                isFavorite
+                  ? "bg-red-50/95 hover:bg-red-100/95 text-red-500"
+                  : "bg-white/95 hover:bg-white text-gray-900",
+                (isFavoriteLoading || toggleFavorite.isPending) && "opacity-50 cursor-not-allowed"
+              )}
+              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Heart size={20} className={cn(isFavorite && "fill-current")} />
             </button>
             <button className="w-12 h-12 bg-white/95 backdrop-blur-md rounded-full flex items-center justify-center shadow-xl hover:bg-white transition-all duration-200">
               <Share2 size={20} className="text-gray-900" />

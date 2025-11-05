@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import PropertyDetailTabs from './PropertyDetailTabs';
 import { useRealTimeBedAvailability } from '@/hooks/useRealTimeBedAvailability';
+import { useAuth } from '@/context/EnhancedAuthContext';
+import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
+import { cn } from '@/lib/utils';
 
 import { Property, PropertyId, PropertyPrice } from '@/types/property';
 
@@ -116,6 +119,20 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
   const [activeTab, setActiveTab] = useState<'description' | 'amenities' | 'location'>('description');
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
 
+  // Favorites functionality
+  const { user } = useAuth();
+  const propertyId = typeof property.id === 'string' ? property.id : String(property.id);
+  const { data: isFavorite, isLoading: isFavoriteLoading } = useIsFavorite(propertyId, user?.id);
+  const toggleFavorite = useToggleFavorite();
+
+  const handleFavoriteClick = () => {
+    if (!user) {
+      // TODO: Show login prompt
+      return;
+    }
+    toggleFavorite.mutate(propertyId);
+  };
+
   // Helper functions for safe data access
   const getLocationText = (): string => {
     if (typeof property.location === 'string') {
@@ -182,8 +199,19 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
           </div>
 
           <div className="flex items-center gap-3">
-            <button className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
-              <Heart size={18} className="text-gray-700" />
+            <button
+              onClick={handleFavoriteClick}
+              disabled={isFavoriteLoading || toggleFavorite.isPending}
+              className={cn(
+                "w-10 h-10 rounded-full flex items-center justify-center transition-colors",
+                isFavorite
+                  ? "bg-red-50 hover:bg-red-100 text-red-500"
+                  : "bg-gray-100 hover:bg-gray-200 text-gray-700",
+                (isFavoriteLoading || toggleFavorite.isPending) && "opacity-50 cursor-not-allowed"
+              )}
+              aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
+            >
+              <Heart size={18} className={cn(isFavorite && "fill-current")} />
             </button>
             <button className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-full flex items-center justify-center transition-colors">
               <Share2 size={18} className="text-gray-700" />

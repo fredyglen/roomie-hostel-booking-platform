@@ -8,6 +8,8 @@ import OptimizedImage from '@/components/common/OptimizedImage';
 import { formatCurrency } from '@/utils/formatters';
 import { cn } from '@/lib/utils';
 import type { Property } from '@/types/property';
+import { useAuth } from '@/context/EnhancedAuthContext';
+import { useIsFavorite, useToggleFavorite } from '@/hooks/useFavorites';
 
 interface PropertyCardProps {
   property: Property;
@@ -19,7 +21,7 @@ interface PropertyCardProps {
 const PropertyCard: React.FC<PropertyCardProps> = ({
   property,
   onFavoriteToggle,
-  isFavorite = false,
+  isFavorite: isFavoriteProp,
   className,
 }) => {
   const {
@@ -35,10 +37,28 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     isAvailable,
   } = property;
 
+  const { user } = useAuth();
+  const { data: isFavoriteFromDB, isLoading: isFavoriteLoading } = useIsFavorite(id, user?.id);
+  const toggleFavorite = useToggleFavorite();
+
+  // Use database value if available, otherwise fall back to prop
+  const isFavorite = isFavoriteFromDB ?? isFavoriteProp ?? false;
+
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    // TODO: Implement favorite functionality
+
+    if (!user) {
+      // TODO: Show login prompt
+      return;
+    }
+
+    toggleFavorite.mutate(id, {
+      onSuccess: (newStatus) => {
+        // Call optional callback if provided
+        onFavoriteToggle?.(id, newStatus);
+      }
+    });
   };
 
   return (
@@ -51,9 +71,17 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
         />
         <button
           onClick={handleFavoriteClick}
-          className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-md hover:bg-gray-50"
+          disabled={isFavoriteLoading || toggleFavorite.isPending}
+          className={cn(
+            "absolute top-2 right-2 p-2 bg-white rounded-full shadow-md transition-all",
+            isFavorite ? "text-red-500" : "text-gray-600 hover:bg-gray-50",
+            (isFavoriteLoading || toggleFavorite.isPending) && "opacity-50 cursor-not-allowed"
+          )}
+          aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
         >
-          <span className="text-gray-600">♡</span>
+          <Heart
+            className={cn("w-5 h-5", isFavorite && "fill-current")}
+          />
         </button>
       </div>
 
