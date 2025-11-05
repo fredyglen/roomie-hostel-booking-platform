@@ -2,9 +2,9 @@
 import React from 'react';
 import { FormField, FormItem, FormLabel, FormControl, FormMessage, FormDescription } from '@/components/ui/form';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Building, Home, Users } from 'lucide-react';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
+import { getPropertyTypeOptions, categoryToType, getPropertyTypeConfig } from '@/config/property-types.config';
 
 interface PropertyTypeFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -12,6 +12,8 @@ interface PropertyTypeFieldsProps {
 }
 
 const PropertyTypeFields: React.FC<PropertyTypeFieldsProps> = ({ form, propertyCategory }) => {
+  const propertyTypeOptions = getPropertyTypeOptions();
+
   return (
     <>
       <FormField
@@ -20,23 +22,16 @@ const PropertyTypeFields: React.FC<PropertyTypeFieldsProps> = ({ form, propertyC
         render={({ field }) => (
           <FormItem>
             <FormLabel>Property Category</FormLabel>
-            <Select 
+            <Select
               onValueChange={(value) => {
                 field.onChange(value);
-                // Set appropriate type when category changes
-                if (value === "Hostel") {
-                  form.setValue("type", "hostel");
-                  form.setValue("price_unit", "semester");
-                  form.setValue("occupancy_type", "beds");
-                } else if (value === "Homestel") {
-                  form.setValue("type", "homestel");
-                  form.setValue("price_unit", "week");
-                  form.setValue("occupancy_type", "rooms");
-                } else {
-                  form.setValue("type", "apartment");
-                  form.setValue("price_unit", "week");
-                  form.setValue("occupancy_type", "units");
-                }
+                // Use centralized config to set appropriate values
+                const propertyType = categoryToType(value as any);
+                const config = getPropertyTypeConfig(propertyType);
+
+                form.setValue("type", config.type);
+                form.setValue("price_unit", config.defaultPricingUnit);
+                form.setValue("occupancy_type", config.occupancyType);
               }}
               defaultValue={field.value}
             >
@@ -46,24 +41,17 @@ const PropertyTypeFields: React.FC<PropertyTypeFieldsProps> = ({ form, propertyC
                 </SelectTrigger>
               </FormControl>
               <SelectContent>
-                <SelectItem value="Hostel">
-                  <div className="flex items-center">
-                    <Building className="mr-2 h-4 w-4" />
-                    <span>Hostel</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="Homestel">
-                  <div className="flex items-center">
-                    <Home className="mr-2 h-4 w-4" />
-                    <span>Homestel</span>
-                  </div>
-                </SelectItem>
-                <SelectItem value="Apartment">
-                  <div className="flex items-center">
-                    <Users className="mr-2 h-4 w-4" />
-                    <span>Apartment</span>
-                  </div>
-                </SelectItem>
+                {propertyTypeOptions.map((option) => {
+                  const Icon = option.icon;
+                  return (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center">
+                        <Icon className="mr-2 h-4 w-4" />
+                        <span>{option.label}</span>
+                      </div>
+                    </SelectItem>
+                  );
+                })}
               </SelectContent>
             </Select>
             <FormDescription>

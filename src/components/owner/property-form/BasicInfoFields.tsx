@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Combobox } from "@/components/ui/combobox";
 import { FormSection } from "./FormSection";
 import { PropertyFormValues } from "./PropertyFormSchema";
+import { getPropertyTypeOptions } from '@/config/property-types.config';
 
 // Mock data for universities - replace with actual API data
 const UNIVERSITIES = [
@@ -112,24 +113,30 @@ export function BasicInfoFields({ form }: { form: UseFormReturn<PropertyFormValu
           <FormField
             control={form.control}
             name="property_category"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Property Category</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select property type" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="hostel">Hostel</SelectItem>
-                    <SelectItem value="apartment">Apartment</SelectItem>
-                    <SelectItem value="homestel">Homestel</SelectItem>
-                  </SelectContent>
-                </Select>
-                <FormDescription>Type of student accommodation</FormDescription>
-              </FormItem>
-            )}
+            render={({ field }) => {
+              const propertyTypeOptions = getPropertyTypeOptions();
+
+              return (
+                <FormItem>
+                  <FormLabel>Property Category</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select property type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {propertyTypeOptions.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormDescription>Type of student accommodation</FormDescription>
+                </FormItem>
+              );
+            }}
           />
         </div>
         

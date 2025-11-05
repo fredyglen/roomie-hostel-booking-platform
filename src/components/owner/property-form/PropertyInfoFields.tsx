@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
+import { getPropertyTypeOptions, categoryToType } from '@/config/property-types.config';
 
 interface PropertyInfoFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -62,39 +63,41 @@ const PropertyInfoFields: React.FC<PropertyInfoFieldsProps> = ({ form }) => {
         <FormField
           control={form.control}
           name="propertyCategory"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Property Category <span className="text-red-500">*</span></FormLabel>
-              <FormDescription>
-                The building type - determines room configuration options
-              </FormDescription>
-              <Select
-                onValueChange={(value) => {
-                  field.onChange(value);
-                  // Auto-set property type based on category for most common cases
-                  if (value === "Hostel") {
-                    form.setValue("type", "hostel");
-                  } else if (value === "Apartment") {
-                    form.setValue("type", "apartment");
-                  }
-                  // For Homestel, let user choose between hostel or homestel operation
-                }}
-                defaultValue={field.value}
-              >
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select category" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="Hostel">Hostel (Purpose-built student accommodation)</SelectItem>
-                  <SelectItem value="Homestel">Homestel (Converted home for students)</SelectItem>
-                  <SelectItem value="Apartment">Apartment (Self-contained units)</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
+          render={({ field }) => {
+            const propertyTypeOptions = getPropertyTypeOptions();
+
+            return (
+              <FormItem>
+                <FormLabel>Property Category <span className="text-red-500">*</span></FormLabel>
+                <FormDescription>
+                  The building type - determines room configuration options
+                </FormDescription>
+                <Select
+                  onValueChange={(value) => {
+                    field.onChange(value);
+                    // Auto-set property type based on category using centralized config
+                    const propertyType = categoryToType(value as any);
+                    form.setValue("type", propertyType);
+                  }}
+                  defaultValue={field.value}
+                >
+                  <FormControl>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select category" />
+                    </SelectTrigger>
+                  </FormControl>
+                  <SelectContent>
+                    {propertyTypeOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label} ({option.description})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <FormMessage />
+              </FormItem>
+            );
+          }}
         />
 
         <FormField
