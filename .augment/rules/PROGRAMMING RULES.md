@@ -106,6 +106,41 @@ type: "always_apply"
 * Explain business impact of technical decisions
 * Include rollback plans for database schema changes
 
+## DATABASE MIGRATION PROTOCOL (MANDATORY - NEVER SKIP)
+
+**BEFORE ANY DATABASE MIGRATION OR SCHEMA CHANGE:**
+
+1. **STOP AND VERIFY** - Create schema verification SQL queries for:
+   - Table existence check
+   - Column names and data types
+   - Foreign key constraints
+   - Existing RLS policies
+
+2. **WAIT FOR USER** - Have user run verification queries in Supabase SQL Editor and provide ACTUAL output
+
+3. **DOCUMENT FINDINGS** - Create analysis file showing:
+   - What exists in database (tables, columns, constraints)
+   - What needs to be created
+   - Potential conflicts or naming issues
+   - All dependencies
+
+4. **USE EXACT NAMES** - Use EXACT column/table names from actual database output (e.g., `properties.id` not `property_id`)
+
+5. **NEVER ASSUME** - If you don't have actual database output proving something exists/doesn't exist, STOP and ask user to verify
+
+6. **CHECK FOR DUPLICATES** - Before creating tables, verify they don't already exist with different structure
+
+**CRITICAL MISTAKES TO AVOID:**
+- ❌ Creating migrations based on assumptions about schema
+- ❌ Removing dependencies thinking they don't exist without checking
+- ❌ Creating duplicate tables that conflict with existing ones
+- ❌ Using wrong column names (check actual schema first)
+- ❌ Rushing to "fix" things without understanding current state
+
+**See DATABASE_MIGRATION_PROTOCOL.md for complete protocol.**
+
+**This protocol exists because an AI agent nearly destroyed the production database by making assumptions instead of checking the actual schema. DO NOT SKIP THIS PROTOCOL.**
+
 ## OUTPUT FORMAT REQUIREMENTS
 
 * Start every response with analysis of existing code from be_conscious folder
