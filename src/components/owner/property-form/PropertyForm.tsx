@@ -2,6 +2,8 @@
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom';
+import { useToast } from '@/hooks/use-toast';
 import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -19,6 +21,8 @@ import FormSubmissionModal from './FormSubmissionModal';
 import BuildingStructureManager from '../BuildingStructureManager';
 import StructureTabModal from '../StructureTabModal';
 import BuildingCreatorGatingModal from './BuildingCreatorGatingModal';
+// Intelligent Property Router
+import { IntelligentPropertyRouter } from '@/components/owner/IntelligentPropertyRouter';
 // Enhanced toast utilities
 import { showValidationErrorToast, showPropertyFormToasts } from '@/utils/toast';
 
@@ -56,6 +60,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   const [showStructureModal, setShowStructureModal] = useState(false);
   const [gatingOpen, setGatingOpen] = useState(false);
   const [requiresStructure, setRequiresStructure] = useState<boolean | null>(null);
+
+  // ✅ INTELLIGENT ROUTER STATE
+  const [showRouter, setShowRouter] = useState(!isEdit); // Show router for new properties only
+  const [routerResult, setRouterResult] = useState<any>(null);
+
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   const form = useForm<PropertyFormValues>({
     resolver: zodResolver(propertyFormSchema),
@@ -338,6 +349,54 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     setShowPreview(false);
   };
 
+  // ✅ INTELLIGENT ROUTER HANDLER
+  const handleRouterComplete = (result: any) => {
+    console.log('🧠 Router Result:', result);
+
+    // Store router result
+    setRouterResult(result);
+
+    // ✅ COMPOUND ROUTING: Redirect to dedicated compound creation page
+    if (result.structureType === 'compound') {
+      toast({
+        title: "Compound Management",
+        description: "Redirecting to compound creation workflow...",
+      });
+
+      // Navigate to compound creation page (will be created next)
+      navigate('/owner/compounds/new', {
+        state: { routerResult: result }
+      });
+      return;
+    }
+
+    // Auto-fill form based on router result
+    const propertyType = result.propertyType as 'hostel' | 'homestel' | 'apartment';
+    const propertyCategory = propertyType.charAt(0).toUpperCase() + propertyType.slice(1);
+
+    form.setValue('type', propertyType);
+    form.setValue('propertyCategory', propertyCategory as any);
+
+    // Set structure requirements
+    if (result.structureType === 'building') {
+      setRequiresStructure(true);
+      toast({
+        title: "Building Structure Enabled",
+        description: "You'll be able to add floors, rooms, and beds in the Structure tab.",
+      });
+    } else {
+      setRequiresStructure(false);
+    }
+
+    // Close router and show form
+    setShowRouter(false);
+
+    toast({
+      title: "Setup Complete",
+      description: result.recommendedSetup,
+    });
+  };
+
   const getCurrentStepCount = () => {
     const formData = form.getValues();
     let completedSteps = 0;
@@ -361,6 +420,13 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
   return (
     <>
+      {/* ✅ INTELLIGENT PROPERTY ROUTER */}
+      <IntelligentPropertyRouter
+        isOpen={showRouter}
+        onClose={() => setShowRouter(false)}
+        onComplete={handleRouterComplete}
+      />
+
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
           <div className="mx-auto max-w-[794px] px-4 sm:px-6 md:px-8 lg:px-12">

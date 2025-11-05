@@ -66,6 +66,7 @@ const PropertyNew = React.lazy(() => import('@/pages/owner/PropertyNew'));
 const PropertyNewSimple = React.lazy(() => import('@/pages/owner/PropertyNewSimple'));
 const PropertyEdit = React.lazy(() => import('@/pages/owner/PropertyEdit'));
 const PropertyView = React.lazy(() => import('@/pages/owner/PropertyView'));
+const CompoundNew = React.lazy(() => import('@/pages/owner/CompoundNew'));
 const OwnerBookings = React.lazy(() => import('@/pages/owner/Bookings'));
 const OwnerProfile = React.lazy(() => import('@/pages/owner/Profile'));
 const OwnerSettings = React.lazy(() => import('@/pages/owner/Settings'));
@@ -344,6 +345,11 @@ function App() {
                 <Route path="/owner/property/new-simple" element={
                   <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
                     <SafeRoute element={<PropertyNewSimple />} />
+                  </ProtectedRoute>
+                } />
+                <Route path="/owner/compounds/new" element={
+                  <ProtectedRoute allowedRoles={[UserRole.OWNER, UserRole.AGENT]}>
+                    <SafeRoute element={<CompoundNew />} />
                   </ProtectedRoute>
                 } />
                 <Route path="/owner/properties/:id/edit" element={
