@@ -24,6 +24,7 @@ const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
               <ul className="flex space-x-8">
                 <li><Link to="/properties" className="hover:text-roomi-blue transition-colors">Properties</Link></li>
                 <li><Link to="/about" className="hover:text-roomi-blue transition-colors">About Us</Link></li>
+                <li><Link to="/trust-safety" className="hover:text-roomi-blue transition-colors">Trust & Safety</Link></li>
                 <li><Link to="/contact" className="hover:text-roomi-blue transition-colors">Contact</Link></li>
               </ul>
             </nav>
@@ -67,6 +68,7 @@ const Header: React.FC<HeaderProps> = ({ transparent = false }) => {
             <nav className="flex flex-col space-y-4">
               <Link to="/properties" className="px-4 py-2 hover:bg-gray-100 rounded-md">Properties</Link>
               <Link to="/about" className="px-4 py-2 hover:bg-gray-100 rounded-md">About Us</Link>
+              <Link to="/trust-safety" className="px-4 py-2 hover:bg-gray-100 rounded-md">Trust & Safety</Link>
               <Link to="/contact" className="px-4 py-2 hover:bg-gray-100 rounded-md">Contact</Link>
               <hr className="my-2" />
               {!loading && !user && (

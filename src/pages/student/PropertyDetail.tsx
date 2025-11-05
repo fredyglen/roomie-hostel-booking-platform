@@ -121,7 +121,7 @@ const PropertyDetail: React.FC = () => {
         <meta name="description" content={property?.description || 'View property details on ROOMi'} />
       </Helmet>
       
-      <div className="min-h-screen flex flex-col pb-16">
+      <div className="min-h-screen flex flex-col pb-32">
         <Header />
         <main className="flex-grow">
           {property ? (
@@ -142,6 +142,8 @@ const PropertyDetail: React.FC = () => {
             </div>
           )}
         </main>
+
+
         {/* ✅ REMOVED: Footer removed from property detail page as requested */}
         <StudentNavBar />
       </div>

@@ -96,6 +96,7 @@ export async function fetchProperties(options: PropertyQueryOptions = {}): Promi
         )
       `, { count: 'exact' })
       .eq('is_available', true)
+      .eq('verification_status', 'verified')
       .order('created_at', { ascending: false })
       .limit(options.limit || 10);
 

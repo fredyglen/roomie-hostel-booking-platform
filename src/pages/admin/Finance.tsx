@@ -239,20 +239,30 @@ const Finance: React.FC = () => {
 
   return (
     <AdminLayout pageTitle="Finance" allowedRoles={['supreme_admin', 'campus_admin']}>
-      <div className="container mx-auto p-4 space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold">Finance Dashboard</h1>
-            <p className="text-sm text-gray-500">
+      <div className="container mx-auto p-10 space-y-6">
+        {/* Header - CommeLab Style */}
+        <div className="flex flex-wrap justify-between gap-4 items-start">
+          <div className="flex min-w-72 flex-col gap-2">
+            <h1 className="text-3xl font-black leading-tight tracking-[-0.033em] text-gray-900">
+              Finance Dashboard
+            </h1>
+            <p className="text-base font-normal leading-normal text-gray-600">
               Real-time revenue and payouts. Intelligence-ready for B2B insights.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <div className="rounded border p-1 bg-white">
+
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Date Range Filter */}
+            <div className="rounded-lg border border-gray-200 p-1 bg-white shadow-sm">
               <div className="flex">
                 {(['7d','30d','90d'] as const).map((r) => (
-                  <Button key={r} size="sm" variant={range === r ? 'default' : 'ghost'} onClick={() => setRange(r)}>
+                  <Button
+                    key={r}
+                    size="sm"
+                    variant={range === r ? 'default' : 'ghost'}
+                    onClick={() => setRange(r)}
+                    className={range === r ? 'bg-[#3B82F6] hover:bg-[#2563EB]' : ''}
+                  >
                     {r.toUpperCase()}
                   </Button>
                 ))}
@@ -261,12 +271,11 @@ const Finance: React.FC = () => {
 
             {/* Campus filter */}
             <Select value={selectedCampus} onValueChange={setSelectedCampus}>
-              <SelectTrigger className="w-40">
-                <SelectValue placeholder="Campus" />
-
+              <SelectTrigger className="w-40 h-10 border-gray-200 shadow-sm">
+                <SelectValue placeholder="All Campuses" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All campuses</SelectItem>
+                <SelectItem value="all">All Campuses</SelectItem>
                 {Array.from(new Set((props || []).map((p: PropertyLite) => p.city).filter(Boolean))).map((c) => (
                   <SelectItem key={String(c)} value={String((c as string).toLowerCase())}>{String(c)}</SelectItem>
                 ))}
@@ -275,21 +284,29 @@ const Finance: React.FC = () => {
 
             {/* Property filter */}
             <Select value={selectedProperty} onValueChange={setSelectedProperty}>
-              <SelectTrigger className="w-56">
-                <SelectValue placeholder="Property" />
+              <SelectTrigger className="w-56 h-10 border-gray-200 shadow-sm">
+                <SelectValue placeholder="All Properties" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All properties</SelectItem>
+                <SelectItem value="all">All Properties</SelectItem>
                 {(props || []).map((p: PropertyLite) => (
                   <SelectItem key={p.id} value={p.id}>{p.title || p.id}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            <Button variant="outline" onClick={() => refetch()}>
+            <Button
+              variant="outline"
+              onClick={() => refetch()}
+              className="h-10 border-gray-200 shadow-sm hover:bg-gray-50"
+            >
               Refresh
             </Button>
-            <Button variant="outline" onClick={exportCSV}>
+            <Button
+              variant="outline"
+              onClick={exportCSV}
+              className="h-10 border-gray-200 shadow-sm hover:bg-gray-50"
+            >
               <Download className="h-4 w-4 mr-2" /> Export CSV
             </Button>
           </div>
@@ -307,107 +324,225 @@ const Finance: React.FC = () => {
           </Alert>
         )}
 
-        {/* Metrics */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Total Processed</CardTitle></CardHeader>
-            <CardContent className="text-2xl font-semibold flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-emerald-600" /> {formatCurrency(metrics.totalProcessed || 0)}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Platform Revenue (Gross)</CardTitle></CardHeader>
-            <CardContent className="text-2xl font-semibold flex items-center gap-2">
-              <TrendingUp className="h-5 w-5 text-indigo-600" /> {formatCurrency(metrics.platformRevenue || 0)}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Processor Costs (Paystack + VAT est.)</CardTitle></CardHeader>
-            <CardContent className="text-2xl font-semibold flex items-center gap-2">
-              <Activity className="h-5 w-5 text-rose-600" /> {formatCurrency(metrics.processorCosts || 0)}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Net Platform Revenue</CardTitle></CardHeader>
-            <CardContent className="text-2xl font-semibold flex items-center gap-2">
-              <Wallet className="h-5 w-5 text-teal-600" /> {formatCurrency(metrics.netPlatform || 0)}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Owner Payouts (Base Rent)</CardTitle></CardHeader>
-            <CardContent className="text-2xl font-semibold flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-amber-600" /> {formatCurrency(metrics.ownerBase || 0)}
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="pb-2"><CardTitle className="text-sm text-gray-500">Agent Commissions</CardTitle></CardHeader>
-            <CardContent className="text-2xl font-semibold flex items-center gap-2">
-              <DollarSign className="h-5 w-5 text-sky-600" /> {formatCurrency(metrics.agentCommissions || 0)}
+        {/* Metrics - CommeLab Style Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium leading-normal text-gray-700">
+                Total Processed
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+                {formatCurrency(metrics.totalProcessed || 0)}
+              </p>
+              <p className="text-sm font-medium leading-normal text-green-600">
+                {metrics.count} bookings
+              </p>
             </CardContent>
           </Card>
 
+          <Card className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium leading-normal text-gray-700">
+                Platform Revenue (Gross)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+                {formatCurrency(metrics.platformRevenue || 0)}
+              </p>
+              <p className="text-sm font-medium leading-normal text-green-600">
+                +{((metrics.platformRevenue / (metrics.totalProcessed || 1)) * 100).toFixed(1)}% of total
+              </p>
+            </CardContent>
+          </Card>
 
-        {/* Revenue over time */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-gray-500">Daily Processed Volume</CardTitle>
+          <Card className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium leading-normal text-gray-700">
+                Net Platform Revenue
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+                {formatCurrency(metrics.netPlatform || 0)}
+              </p>
+              <p className="text-sm font-medium leading-normal text-gray-600">
+                After processor costs
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium leading-normal text-gray-700">
+                Owner Payouts
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+                {formatCurrency(metrics.ownerBase || 0)}
+              </p>
+              <p className="text-sm font-medium leading-normal text-gray-600">
+                Base rent total
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Additional Metrics Row */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Card className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium leading-normal text-gray-700">
+                Agent Commissions
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+                {formatCurrency(metrics.agentCommissions || 0)}
+              </p>
+              <p className="text-sm font-medium leading-normal text-gray-600">
+                Total agent earnings
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card className="rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-base font-medium leading-normal text-gray-700">
+                Processor Costs
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-2">
+              <p className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
+                {formatCurrency(metrics.processorCosts || 0)}
+              </p>
+              <p className="text-sm font-medium leading-normal text-red-600">
+                Paystack + VAT estimate
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+
+
+        {/* Charts Section - CommeLab Style Grid Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Revenue Breakdown - Stacked Bar Chart */}
+          <Card className="rounded-xl border border-gray-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-medium leading-normal text-gray-900">
+                Revenue Breakdown
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                Daily platform, owner, and agent distribution
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RBarChart data={stackedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      tickFormatter={(value) => new Date(value).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
+                    <RTooltip
+                      formatter={(value: any) => formatCurrency(Number(value || 0))}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <Legend
+                      wrapperStyle={{ fontSize: '12px', paddingTop: '10px' }}
+                      iconType="circle"
+                    />
+                    <RBar dataKey="platform" stackId="a" fill="#3B82F6" name="Platform" radius={[4,4,0,0]} />
+                    <RBar dataKey="owner" stackId="a" fill="#10B981" name="Owner" radius={[4,4,0,0]} />
+                    <RBar dataKey="agent" stackId="a" fill="#F59E0B" name="Agent" radius={[4,4,0,0]} />
+                  </RBarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Campus Revenue - Bar Chart */}
+          <Card className="rounded-xl border border-gray-200 shadow-sm">
+            <CardHeader className="pb-4">
+              <CardTitle className="text-base font-medium leading-normal text-gray-900">
+                Revenue by Campus
+              </CardTitle>
+              <p className="text-sm text-gray-600 mt-1">
+                Total revenue distribution across campuses
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <RBarChart data={campusData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                    <XAxis
+                      dataKey="name"
+                      tick={{ fontSize: 12, fill: '#6b7280' }}
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis tick={{ fontSize: 12, fill: '#6b7280' }} />
+                    <RTooltip
+                      formatter={(value: any) => formatCurrency(Number(value || 0))}
+                      contentStyle={{
+                        backgroundColor: 'white',
+                        border: '1px solid #e5e7eb',
+                        borderRadius: '6px',
+                        fontSize: '12px'
+                      }}
+                    />
+                    <RBar dataKey="total" fill="#3B82F6" radius={[4,4,0,0]} name="Total Revenue" />
+                  </RBarChart>
+                </ResponsiveContainer>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Daily Processed Volume - Full Width Line Chart */}
+        <Card className="rounded-xl border border-gray-200 shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-base font-medium leading-normal text-gray-900">
+                  Daily Processed Volume
+                </CardTitle>
+                <p className="text-sm text-gray-600 mt-1">
+                  Total transaction volume over time
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-gray-600">Last {range === '7d' ? '7 days' : range === '30d' ? '30 days' : '90 days'}</p>
+                <p className="text-sm font-medium text-green-600">
+                  {metrics.count > 0 ? `+${((metrics.totalProcessed / metrics.count)).toFixed(0)} avg` : 'No data'}
+                </p>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <div className="h-64">
-              <RoomiLineChart data={chartData} lineColor="#3b82f6" />
+              <RoomiLineChart data={chartData} lineColor="#3B82F6" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Stacked breakdown over time */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-gray-500">Daily Platform vs Owner vs Agent</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <RBarChart data={stackedData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <RTooltip formatter={(value: any) => formatCurrency(Number(value || 0))} />
-                  <Legend />
-                  <RBar dataKey="platform" stackId="a" fill="#6366F1" name="Platform" radius={[4,4,0,0]} />
-                  <RBar dataKey="owner" stackId="a" fill="#34D399" name="Owner" radius={[4,4,0,0]} />
-                  <RBar dataKey="agent" stackId="a" fill="#60A5FA" name="Agent" radius={[4,4,0,0]} />
-                </RBarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Revenue by campus */}
-        <Card>
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm text-gray-500">Revenue by Campus (City)</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="h-72">
-              <ResponsiveContainer width="100%" height="100%">
-                <RBarChart data={campusData} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                  <XAxis dataKey="name" tick={{ fontSize: 12 }} />
-                  <YAxis tick={{ fontSize: 12 }} />
-                  <RTooltip formatter={(value: any) => formatCurrency(Number(value || 0))} />
-                  <RBar dataKey="total" fill="#10B981" radius={[4,4,0,0]} />
-                </RBarChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
-
-        </div>
-
-        {/* Data note for B2B intelligence */}
-        <Alert className="border-indigo-200 bg-indigo-50">
-          <AlertDescription>
-            Intelligence-ready: metrics are derived from bookings_enhanced with the centralized commission engine.
+        {/* Data note for B2B intelligence - CommeLab Style */}
+        <Alert className="border-blue-200 bg-blue-50 rounded-xl">
+          <AlertDescription className="text-sm text-gray-700">
+            <span className="font-semibold text-[#3B82F6]">Intelligence-ready:</span> Metrics are derived from bookings_enhanced with the centralized commission engine.
             Snapshots will be stored per-transaction in the upcoming Audit Ledger so you can sell accurate insights to B2B customers.
           </AlertDescription>
         </Alert>

@@ -124,14 +124,14 @@ export const useFormTransformation = () => {
       // Room types - set default based on property category
       room_types: Array.isArray(dbData.room_types) ? dbData.room_types :
         dbData.property_category === 'Apartment' ? ['1_bedroom_apartment'] :
-        dbData.property_category === 'Homestel' ? ['single_room'] :
+        dbData.property_category === 'Homestel' ? ['1_in_a_room'] :
         ['1_in_a_room'],
 
       // Room type pricing - create default pricing object
       room_type_pricing: typeof dbData.room_type_pricing === 'object' && dbData.room_type_pricing ?
         dbData.room_type_pricing :
         dbData.property_category === 'Apartment' ? { '1_bedroom_apartment': dbData.rent || 0 } :
-        dbData.property_category === 'Homestel' ? { 'single_room': dbData.rent || 0 } :
+        dbData.property_category === 'Homestel' ? { '1_in_a_room': dbData.rent || 0 } :
         { '1_in_a_room': dbData.rent || 0 },
 
       // Enhanced property features (remove duplicates)

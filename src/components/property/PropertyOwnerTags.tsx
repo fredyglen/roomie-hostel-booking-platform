@@ -46,27 +46,6 @@ const PropertyOwnerTags: React.FC<PropertyOwnerTagsProps> = ({
     type: 'info' | 'feature' | 'policy' | 'location';
   }> = [];
 
-  // ✅ INTERNET SPEED
-  if (property.internet_speed) {
-    tags.push({
-      label: 'Internet',
-      value: formatInternetSpeed(property.internet_speed),
-      icon: <Wifi className="h-3 w-3" />,
-      color: 'bg-blue-100 text-blue-800',
-      type: 'feature'
-    });
-  }
-
-  // ✅ PET POLICY
-  if (property.pet_policy) {
-    tags.push({
-      label: 'Pets',
-      value: formatPetPolicy(property.pet_policy),
-      icon: <Dog className="h-3 w-3" />,
-      color: 'bg-orange-100 text-orange-800',
-      type: 'policy'
-    });
-  }
 
   // ✅ ACCESSIBILITY FEATURES
   if (property.has_accessibility_features) {

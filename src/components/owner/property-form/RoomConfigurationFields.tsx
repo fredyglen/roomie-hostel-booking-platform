@@ -19,23 +19,55 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
   const roomTypes = form.watch('room_types') || [];
 
   useEffect(() => {
-    if (roomTypes.length > 0 && totalRooms > 0) {
-      // Calculate based on room types
-      const maxOccupantsPerRoom = Math.max(...roomTypes.map(type => {
-        const occupancyMap = {
-          '1_in_a_room': 1, '2_in_a_room': 2, '3_in_a_room': 3, '4_in_a_room': 4, '5_in_a_room': 5, '6_in_a_room': 6,
-          'single_room': 1, 'shared_room': 2,
-          '1_bedroom_apartment': 0, '2_bedroom_apartment': 0, '3_bedroom_apartment': 0 // Apartments have flexible occupancy
-        };
-        return occupancyMap[type as keyof typeof occupancyMap] || 1;
-      }));
-
-      const totalCapacity = totalRooms * maxOccupantsPerRoom;
-      form.setValue('max_occupants', totalCapacity);
+    // Prefer structure-aware capacity when buildings/floors/rooms are provided
+    const buildings = form.getValues('buildings') as any[] | undefined;
+    if (Array.isArray(buildings) && buildings.length > 0) {
+      let sum = 0;
+      for (const b of buildings) {
+        for (const f of (b?.floors ?? [])) {
+          for (const r of (f?.rooms ?? [])) {
+            // Use explicit per-room max when available, else bedCount, else infer from roomType
+            const inferFromType = (rt?: string) => {
+              const m = rt?.match(/(\d+)_in_a_room/);
+              return m ? Number(m[1]) : 0;
+            };
+            const occ = Number(r?.maxOccupants ?? r?.bedCount ?? inferFromType(r?.roomType)) || 0;
+            sum += occ;
+          }
+        }
+      }
+      if (sum > 0) {
+        form.setValue('max_occupants', sum);
+        return;
+      }
     }
-  }, [roomTypes, totalRooms, form]);
+
+    // Distribution-aware fallback when no detailed structure exists
+    if (roomTypes.length > 0 && totalRooms > 0) {
+      const occFromType = (type: string) => {
+        const m = type.match(/(\d+)_in_a_room/);
+        if (m) return Number(m[1]);
+        // Apartment room types are flexible units; treat as 0 for capacity calc here
+        if (/_bedroom_apartment$/.test(type)) return 0;
+        return 1;
+      };
+
+      const types = roomTypes;
+      const base = Math.floor(totalRooms / types.length);
+      let remainder = totalRooms % types.length;
+      let total = 0;
+      types.forEach((t, idx) => {
+        const count = base + (idx < remainder ? 1 : 0);
+        total += count * occFromType(t);
+      });
+
+      form.setValue('max_occupants', total);
+    }
+  }, [form, roomTypes, totalRooms, watchBuildings]);
   const watchMeterType = form.watch('meter_type');
   const watchRoomTypes = form.watch('room_types') || [];
+  const watchBuildings = form.watch('buildings') || [];
+
 
   // Ghana hostel room types based on category
   const getRoomTypeOptions = () => {
@@ -51,8 +83,12 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
         ];
       case 'Homestel':
         return [
-          { value: 'single_room', label: 'Single room' },
-          { value: 'shared_room', label: 'Shared room' }
+          { value: '1_in_a_room', label: '1 in a room' },
+          { value: '2_in_a_room', label: '2 in a room' },
+          { value: '3_in_a_room', label: '3 in a room' },
+          { value: '4_in_a_room', label: '4 in a room' },
+          { value: '5_in_a_room', label: '5 in a room' },
+          { value: '6_in_a_room', label: '6 in a room' }
         ];
       case 'Apartment':
         return [
@@ -79,42 +115,34 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
             <FormDescription>
               Select all room types available in your {propertyCategory.toLowerCase()}
             </FormDescription>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-2">
-              {getRoomTypeOptions().map((option) => (
-                <div key={option.value} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={option.value}
-                    checked={field.value?.includes(option.value)}
-                    onCheckedChange={(checked) => {
+            <div className="flex flex-wrap gap-3 mt-2">
+              {getRoomTypeOptions().map((option) => {
+                const selected = (field.value || []).includes(option.value);
+                return (
+                  <button
+                    type="button"
+                    key={option.value}
+                    onClick={() => {
                       const currentValue = field.value || [];
-                      let newValue;
-
-                      if (checked) {
-                        newValue = [...currentValue, option.value];
-                        field.onChange(newValue);
-
-                        // Show smart configuration toast for single room selection
-                        if (option.value === 'single_room' && propertyCategory === 'Homestel') {
-                          showPropertyFormToasts.smartConfigurationApplied('single room');
-                        }
+                      let newValue: string[];
+                      if (selected) {
+                        newValue = currentValue.filter((v: string) => v !== option.value);
                       } else {
-                        newValue = currentValue.filter((val) => val !== option.value);
-                        field.onChange(newValue);
-
-                        // Validate that at least one room type is selected
-                        if (newValue.length === 0) {
-                          showValidationErrorToast("Room Types", "Please select at least one room type for your property.");
-                        }
+                        newValue = [...currentValue, option.value];
                       }
-
-                      // BE CONSCIOUS: Room type changes will auto-update max occupants in DynamicPricingMatrix
+                      field.onChange(newValue);
+                      if (newValue.length === 0) {
+                        showValidationErrorToast("Room Types", "Please select at least one room type for your property.");
+                      }
                     }}
-                  />
-                  <label htmlFor={option.value} className="text-sm font-medium">
+                    className={`py-2 px-4 rounded-full border text-sm font-medium ${
+                      selected ? 'border-primary bg-primary/20 text-primary' : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-100'
+                    }`}
+                  >
                     {option.label}
-                  </label>
-                </div>
-              ))}
+                  </button>
+                );
+              })}
             </div>
             <FormMessage />
           </FormItem>
@@ -136,7 +164,7 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="10"
+                  placeholder="e.g. 50"
                   value={field.value ?? ''}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -158,7 +186,7 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
               <FormControl>
                 <Input
                   type="number"
-                  placeholder="5"
+                  placeholder="e.g. 25"
                   value={field.value ?? ''}
                   onChange={(e) => {
                     const val = e.target.value;
@@ -178,25 +206,33 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
       {/* BE CONSCIOUS: Utility Configuration */}
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Utility Configuration</h3>
-        
+
         <FormField
           control={form.control}
           name="meter_type"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Utility Meter Setup *</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select meter configuration" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="shared">Shared Meter (Bills split among tenants)</SelectItem>
-                  <SelectItem value="individual">Individual Meters (Each room pays separately)</SelectItem>
-                  <SelectItem value="all_inclusive">All Inclusive (Utilities included in rent)</SelectItem>
-                </SelectContent>
-              </Select>
+              <div className="flex flex-col sm:flex-row gap-4">
+                {[
+                  { value: 'shared', label: 'Shared' },
+                  { value: 'individual', label: 'Individual' },
+                  { value: 'all_inclusive', label: 'All Inclusive' }
+                ].map((opt) => (
+                  <button
+                    type="button"
+                    key={opt.value}
+                    className={`flex-1 text-center py-2 px-4 rounded-lg border font-semibold ${
+                      field.value === opt.value
+                        ? 'border-primary bg-primary/20 text-primary'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                    }`}
+                    onClick={() => field.onChange(opt.value as any)}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
               <FormDescription>
                 How are utilities (electricity, water) managed in your property?
               </FormDescription>

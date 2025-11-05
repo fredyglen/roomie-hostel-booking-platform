@@ -17,7 +17,7 @@ import {
 
 // Ghana regions enum
 export const ghanaRegions = [
-  'Greater Accra', 'Ashanti', 'Western', 'Eastern', 'Central', 
+  'Greater Accra', 'Ashanti', 'Western', 'Eastern', 'Central',
   'Northern', 'Upper East', 'Upper West', 'Volta', 'Brong-Ahafo',
   'Western North', 'Ahafo', 'Bono East', 'North East', 'Savannah', 'Oti'
 ] as const;
@@ -32,13 +32,9 @@ const sanitizeString = (val: unknown) => typeof val === 'string' ? val.trim().re
 const propertyTypeSchema = z.enum(['hostel', 'homestel', 'apartment'] as const);
 const propertyCategorySchema = z.enum(['Hostel', 'Homestel', 'Apartment'] as const);
 
-// Room types - Comprehensive for all property categories
+// Room types - Comprehensive for all property categories (Hostel & Homestel share the same X-in-a-Room taxonomy)
 const roomTypeSchema = z.enum([
-  // Hostel room types - Ghana standard "X in a room" system
   '1_in_a_room', '2_in_a_room', '3_in_a_room', '4_in_a_room', '5_in_a_room', '6_in_a_room',
-  // Homestel room types
-  'single_room', 'shared_room',
-  // Apartment room types - bedroom-based units
   '1_bedroom_apartment', '2_bedroom_apartment', '3_bedroom_apartment'
 ] as const);
 
@@ -91,6 +87,11 @@ export const propertyFormSchema = z.object({
   // Dynamic pricing matrix based on room types and duration
   price: z.number().min(1, 'Price must be greater than 0').transform(createPropertyPrice),
   room_type_pricing: z.record(z.string(), z.number()).optional(), // Dynamic pricing per room type
+  beds_available_by_room_type: z.record(z.string(), z.number()).optional(), // Optional UI helper to capture beds per room type
+  // Homestel flexible duration pricing (non-breaking optional)
+  homestel_pricing_matrix: z.record(z.string(), z.record(z.string(), z.number())).optional(),
+  homestel_advance: z.object({ enabled: z.boolean().optional(), months: z.number().optional() }).optional(),
+
   rent: z.number().min(1, 'Rent must be greater than 0').optional(),
   price_unit: bookingDurationSchema.default('semester'), // Aligned with booking_duration
 
@@ -99,26 +100,26 @@ export const propertyFormSchema = z.object({
   distance_to_campus: z.string().optional(),
   amenities: z.array(z.string()).optional(),
   house_rules: z.string().optional(),
-  
+
   // Basic property stats - Apple-grade branded types
   bedrooms: z.number().min(1, "Must have at least 1 room").transform(createBedroomCount),
   bathrooms: z.number().min(1, "Must have at least 1 washroom").transform(createWashroomCount),
 
   // Room types - Comprehensive for all property categories
   room_types: z.array(roomTypeSchema).min(1, 'Select at least one room type'),
-  
+
   // Enhanced occupancy fields
   occupancy_type: z.enum(['beds', 'rooms', 'units']).optional(),
   occupancy_available: z.number().optional(),
   occupancy_total: z.number().optional(),
-  
+
   // Room management fields
   total_rooms: z.number().optional(),
   rooms_available: z.number().optional(),
   beds_per_room: z.number().min(1, "Please select beds per room based on your room types").optional(),
   beds_available: z.number().optional(),
   max_occupants: z.number().min(1, "Must specify how many students can stay").transform(createMaxOccupants).optional(),
-  
+
   // Enhanced facility features
   has_bedframes: z.boolean().optional(),
   has_mattresses: z.boolean().optional(),
@@ -126,14 +127,14 @@ export const propertyFormSchema = z.object({
   has_fan: z.boolean().optional(),
   has_tiled_room: z.boolean().optional(),
   has_individual_meters: z.boolean().optional(),
-  
+
   // BE CONSCIOUS: Redesigned washroom configuration system
   washroom_location: washroomLocationSchema.optional(),
   washroom_sharing: washroomSharingSchema.optional(),
   people_per_washroom: z.number().optional(),
   meter_type: z.enum(['shared', 'individual', 'all_inclusive']).optional(),
   shared_meter_count: z.number().optional(),
-  
+
   // Payment and occupancy details
   advance_payment_months: z.number().optional(),
   allow_bill_sharing: z.boolean().optional(),
@@ -148,7 +149,7 @@ export const propertyFormSchema = z.object({
   // Media fields
   image_url: z.preprocess(sanitizeString, z.string().optional()),
   images: z.array(z.preprocess(sanitizeString, z.string())).optional(),
-  
+
   // Enhanced fields for verification and features
   verification_status: verificationStatusSchema.optional(),
   emergency_contact_name: z.string().optional(),
@@ -164,7 +165,7 @@ export const propertyFormSchema = z.object({
   semester_availability: z.array(z.enum(['semester_1', 'semester_2', 'year_round'])).default(['semester_1', 'semester_2']),
   cancellation_policy: z.enum(['flexible', 'moderate', 'strict']).optional(),
   virtual_tour_url: z.string().optional(),
-  
+
   // Building structure fields (optional for non-subscription users)
   buildings: z.array(z.object({
     id: z.string(),

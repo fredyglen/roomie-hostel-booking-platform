@@ -4,8 +4,7 @@ import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/comp
 import { SupabaseImageUpload } from './SupabaseImageUpload';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+
 
 interface MediaUploadFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -44,75 +43,77 @@ export const MediaUploadFields: React.FC<MediaUploadFieldsProps> = ({
   };
 
   return (
-    <div className="space-y-6">
-      <Tabs defaultValue="cover" className="w-full">
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="cover">Cover Image</TabsTrigger>
-          <TabsTrigger value="property">Property Images</TabsTrigger>
-          <TabsTrigger value="environment">Environment</TabsTrigger>
-        </TabsList>
+    <div className="space-y-10">
+      {/* Cover Image Section */}
+      <section className="space-y-3">
+        <header>
+          <h2 className="text-neutral-900 dark:text-white text-lg font-bold tracking-[-0.01em]">Cover Image</h2>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">This is the main image for your listing card. It's the first thing students will see.</p>
+        </header>
+        <SupabaseImageUpload
+          images={cover}
+          maxImages={1}
+          propertyId={propertyId}
+          variant="htmlMock"
+          inputId="cover-upload"
+          uploadLabel="Click to upload"
+          uploadHelp="or drag and drop"
+          note="JPG, PNG, up to 5MB, max 1 image"
+          onImagesChange={(imgs) => {
+            const nextCover = imgs.slice(0, 1);
+            setCover(nextCover);
+            pushToForm(nextCover, propertyImages, environmentImages);
+          }}
+        />
+      </section>
 
-        <TabsContent value="cover" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Cover Image</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SupabaseImageUpload
-                images={cover}
-                maxImages={1}
-                propertyId={propertyId}
-                onImagesChange={(imgs) => {
-                  const nextCover = imgs.slice(0, 1);
-                  setCover(nextCover);
-                  pushToForm(nextCover, propertyImages, environmentImages);
-                }}
-              />
-              <p className="text-xs text-gray-500 mt-2">This image appears on the card thumbnail and listing cover.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+      {/* Property Images & Videos Section */}
+      <section className="space-y-3">
+        <header>
+          <h2 className="text-neutral-900 dark:text-white text-lg font-bold tracking-[-0.01em]">Property Images & Videos</h2>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">Showcase the property's interior, rooms, and key features. Videos are highly encouraged.</p>
+        </header>
+        <SupabaseImageUpload
+          images={propertyImages}
+          propertyId={propertyId}
+          maxImages={20}
+          variant="htmlMock"
+          hideDropArea
+          inputId="property-upload"
+          allowedMimeTypes={['image/jpeg','image/png','image/webp','video/mp4']}
+          maxFileSizeMB={10}
+          uploadLabel="Add files"
+          uploadHelp="or drag and drop"
+          note="Upload up to 20 images/videos (JPG, PNG, MP4, up to 10MB each)."
+          onImagesChange={(imgs) => {
+            setPropertyImages(imgs);
+            pushToForm(cover, imgs, environmentImages);
+          }}
+        />
+      </section>
 
-        <TabsContent value="property" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Property Images</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SupabaseImageUpload
-                images={propertyImages}
-                propertyId={propertyId}
-                maxImages={12}
-                onImagesChange={(imgs) => {
-                  setPropertyImages(imgs);
-                  pushToForm(cover, imgs, environmentImages);
-                }}
-              />
-              <p className="text-xs text-gray-500 mt-2">Show rooms, corridors, kitchens, washrooms, study areas, etc.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="environment" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Environment</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <SupabaseImageUpload
-                images={environmentImages}
-                propertyId={propertyId}
-                maxImages={12}
-                onImagesChange={(imgs) => {
-                  setEnvironmentImages(imgs);
-                  pushToForm(cover, propertyImages, imgs);
-                }}
-              />
-              <p className="text-xs text-gray-500 mt-2">Show surroundings: neighborhood, campus proximity, landmarks.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      {/* Environment & Surroundings Section */}
+      <section className="space-y-3">
+        <header>
+          <h2 className="text-neutral-900 dark:text-white text-lg font-bold tracking-[-0.01em]">Environment & Surroundings</h2>
+          <p className="text-sm text-neutral-600 dark:text-neutral-400">Upload photos of the neighborhood, building exterior, or nearby landmarks.</p>
+        </header>
+        <SupabaseImageUpload
+          images={environmentImages}
+          propertyId={propertyId}
+          maxImages={5}
+          variant="htmlMock"
+          hideDropArea
+          inputId="environment-upload"
+          uploadLabel="Add files"
+          uploadHelp="or drag and drop"
+          note="Upload up to 5 images (JPG, PNG, up to 5MB each)."
+          onImagesChange={(imgs) => {
+            setEnvironmentImages(imgs);
+            pushToForm(cover, propertyImages, imgs);
+          }}
+        />
+      </section>
 
       {/* Keep a hidden field binding so RHF tracks validation messages if any */}
       <FormField

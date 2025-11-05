@@ -36,12 +36,12 @@ const PropertyDetailCoverOverlay: React.FC<PropertyDetailCoverOverlayProps> = ({
   const { overall } = availability;
   const occupancyPercentage = Math.round(overall.occupancyRate * 100);
 
-  // Get availability status color for percentage background
-  const getAvailabilityColor = () => {
-    if (overall.availableBeds === 0) return 'bg-red-500';
-    if (occupancyPercentage > 80) return 'bg-orange-500';
-    if (occupancyPercentage > 60) return 'bg-yellow-500';
-    return 'bg-green-500';
+  // Color interpolation: 0% (green) -> 100% (red)
+  const getOccupancyColor = () => {
+    if (overall.totalBeds === 0) return 'hsl(0 0% 40%)'; // neutral when unknown
+    const pct = Math.max(0, Math.min(100, occupancyPercentage));
+    const hue = Math.round(120 - (pct * 1.2)); // 120 (green) -> 0 (red)
+    return `hsl(${hue} 85% 45%)`;
   };
 
   return (
@@ -66,8 +66,11 @@ const PropertyDetailCoverOverlay: React.FC<PropertyDetailCoverOverlayProps> = ({
           </div>
 
           {/* ✅ BOTTOM-RIGHT: Percentage with Real-time Availability Color */}
-          <div className={`w-12 h-12 md:w-14 md:h-14 ${getAvailabilityColor()} rounded-full flex items-center justify-center shadow-lg`}>
-            <span className="text-white font-bold text-sm md:text-base drop-shadow-lg">
+          <div
+            className="w-6 h-6 md:w-7 md:h-7 rounded-full flex items-center justify-center shadow-lg"
+            style={{ backgroundColor: getOccupancyColor() }}
+          >
+            <span className="text-white font-bold text-[10px] md:text-xs drop-shadow-lg">
               {occupancyPercentage}%
             </span>
           </div>

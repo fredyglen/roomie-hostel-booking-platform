@@ -2,10 +2,10 @@
 import React, { useState, useEffect } from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { Form } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
 import { propertyFormSchema, PropertyFormValues } from './PropertyFormSchema';
@@ -34,6 +34,7 @@ import PropertySubmissionWorkflow from './PropertySubmissionWorkflow';
 import HostelFields from './HostelFields';
 import HomestelFields from './HomestelFields';
 import ApartmentFields from './ApartmentFields';
+import { Textarea } from '@/components/ui/textarea';
 
 interface PropertyFormProps {
   onSubmit: (data: PropertyFormValues) => void;
@@ -43,12 +44,12 @@ interface PropertyFormProps {
   isEdit?: boolean;
 }
 
-const PropertyForm: React.FC<PropertyFormProps> = ({ 
-  onSubmit, 
-  onCancel, 
+const PropertyForm: React.FC<PropertyFormProps> = ({
+  onSubmit,
+  onCancel,
   isLoading = false,
   initialData,
-  isEdit = false 
+  isEdit = false
 }) => {
   const [showPreview, setShowPreview] = useState(false);
   const [activeTab, setActiveTab] = useState('info');
@@ -107,6 +108,25 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   const propertyCategory = form.watch('propertyCategory');
 
   // Form persistence constants
+  // Ensure booking_duration defaults match category without overriding user choice
+  useEffect(() => {
+    const current = form.getValues('booking_duration') as any;
+    // RHF dirty check – avoid overriding explicit user selections
+    const dirty = (form.formState?.dirtyFields as any)?.booking_duration;
+
+    if (propertyCategory === 'Homestel') {
+      if (!current || (!dirty && current === 'semester')) {
+        form.setValue('booking_duration', 'month' as any, { shouldDirty: false, shouldValidate: true });
+        form.setValue('price_unit', 'month' as any, { shouldDirty: false });
+      }
+    } else if (propertyCategory === 'Hostel') {
+      if (!current || (!dirty && current === 'month')) {
+        form.setValue('booking_duration', 'semester' as any, { shouldDirty: false, shouldValidate: true });
+        form.setValue('price_unit', 'semester' as any, { shouldDirty: false });
+      }
+    }
+  }, [propertyCategory]);
+
   const FORM_STORAGE_KEY = 'roomi_property_form_draft';
 
   // BE CONSCIOUS: Clear any legacy localStorage data with invalid status values
@@ -188,9 +208,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     const roomsAvailable = form.getValues("rooms_available") || 0;
     const bedsPerRoom = form.getValues("beds_per_room") || 0;
     const bedsAvailable = form.getValues("beds_available") || 0;
-    
+
     let occupancyText = "";
-    
+
     if (category === "Hostel") {
       occupancyText = `${bedsAvailable}/${totalRooms * bedsPerRoom} beds`;
     } else if (category === "Homestel") {
@@ -199,7 +219,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
       // Apartment
       occupancyText = `${form.getValues("max_occupants") || 0} max occupants`;
     }
-    
+
     return occupancyText;
   };
 
@@ -321,19 +341,19 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
   const getCurrentStepCount = () => {
     const formData = form.getValues();
     let completedSteps = 0;
-    
+
     // Basic Info
     if (formData.title && formData.propertyCategory && formData.type) completedSteps++;
-    
+
     // Location
     if (formData.address && formData.city && formData.region) completedSteps++;
-    
+
     // Details & Pricing
     if (formData.price > 0 && formData.price_unit && formData.bedrooms && formData.bathrooms) completedSteps++;
-    
+
     // Description
     if (formData.description && formData.description.length >= 10) completedSteps++;
-    
+
     return { completed: completedSteps, total: 5 };
   };
 
@@ -343,7 +363,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     <>
       <Form {...form}>
         <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
-          <div className="flex items-center justify-between mb-6">
+          <div className="mx-auto max-w-[794px] px-4 sm:px-6 md:px-8 lg:px-12">
+          <div className="flex items-center justify-between mb-6 sticky top-0 z-20 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 border-b py-4 px-1">
             <div>
               <h2 className="text-2xl font-bold">{isEdit ? 'Edit Property' : 'Add New Property'}</h2>
               <p className="text-gray-600">Create a comprehensive listing for your {propertyCategory.toLowerCase()}</p>
@@ -356,11 +377,23 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 {stepProgress.completed >= 4 ? "Ready to Submit" : "In Progress"}
               </Badge>
               {!isEdit && (
-                <Badge variant="outline" className="text-green-600 border-green-200">
-                  📝 Auto-saving
+                <Badge variant="outline" className="text-green-600 border-green-200 flex items-center gap-1">
+                  <span className="material-symbols-outlined text-[18px]">check_circle</span>
+                  All changes saved
                 </Badge>
               )}
             </div>
+
+	          {/* Progress bar */}
+	          <div className="mt-2">
+	            <div className="w-full h-2 rounded-full bg-neutral-200">
+	              <div
+	                className="h-2 rounded-full bg-primary"
+	                style={{ width: `${Math.round((stepProgress.completed / stepProgress.total) * 100)}%` }}
+	              />
+	            </div>
+	          </div>
+
           </div>
 
           <Tabs value={activeTab} onValueChange={(val) => {
@@ -375,29 +408,43 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               }
               setActiveTab(val);
             }} className="w-full">
-            <TabsList className="grid w-full grid-cols-5">
-              <TabsTrigger value="info" className={`relative ${
-                form.formState.errors.title || form.formState.errors.address || form.formState.errors.description || form.formState.errors.nearest_university
-                  ? 'text-red-600 border-red-300' : ''
-              }`}>
-                Property Info
-                {(form.formState.errors.title || form.formState.errors.address || form.formState.errors.description || form.formState.errors.nearest_university) && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="rooms" disabled={requiresStructure === true && (form.watch('buildings') || []).length === 0} className={`relative ${
-                form.formState.errors.room_types || form.formState.errors.bedrooms || form.formState.errors.bathrooms || form.formState.errors.washroom_location || form.formState.errors.washroom_sharing
-                  ? 'text-red-600 border-red-300' : ''
-              }`}>
-                Room Config
-                {(form.formState.errors.room_types || form.formState.errors.bedrooms || form.formState.errors.bathrooms || form.formState.errors.washroom_location || form.formState.errors.washroom_sharing) && (
-                  <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
-                )}
-              </TabsTrigger>
-              <TabsTrigger value="amenities" disabled={requiresStructure === true && (form.watch('buildings') || []).length === 0}>Amenities</TabsTrigger>
-              <TabsTrigger value="structure">Structure</TabsTrigger>
-              <TabsTrigger value="media" disabled={requiresStructure === true && (form.watch('buildings') || []).length === 0}>Media</TabsTrigger>
-            </TabsList>
+            <div className="flex border-b border-[#dbe0e6] px-1 md:px-2 gap-6 md:gap-8">
+              {(['info','rooms','amenities','structure','media'] as const).map((tab) => {
+                const disabled = requiresStructure === true && (form.watch('buildings') || []).length === 0 && (tab === 'rooms' || tab === 'amenities' || tab === 'media');
+                const hasError = tab === 'info'
+                  ? (form.formState.errors.title || form.formState.errors.address || form.formState.errors.description || (form.formState.errors as any).nearest_university)
+                  : tab === 'rooms'
+                    ? (form.formState.errors.room_types || form.formState.errors.bedrooms || form.formState.errors.bathrooms || form.formState.errors.washroom_location || form.formState.errors.washroom_sharing)
+                    : false;
+                return (
+                  <button
+                    key={tab}
+                    type="button"
+                    disabled={disabled}
+                    onClick={() => {
+                      if (tab === 'structure' && requiresStructure === null) {
+                        setGatingOpen(true);
+                        return;
+                      }
+                      if (requiresStructure && (form.watch('buildings') || []).length === 0 && tab !== 'structure') {
+                        setGatingOpen(true);
+                        setActiveTab('structure');
+                        return;
+                      }
+                      setActiveTab(tab);
+                    }}
+                    className={`relative -mb-[1px] pb-3 text-sm font-semibold border-b-[3px] ${
+                      activeTab === tab ? 'border-b-primary text-primary' : 'border-b-transparent text-[#617589] hover:text-gray-900'
+                    } ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  >
+                    {tab === 'info' ? 'Property Info' : tab === 'rooms' ? 'Room Config' : tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    {hasError && (
+                      <span className="absolute -top-1 -right-1 h-2 w-2 bg-red-500 rounded-full"></span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
 
             <TabsContent value="info" className="space-y-6">
               <Card>
@@ -454,6 +501,32 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             <TabsContent value="amenities" className="space-y-6">
               {/* BE CONSCIOUS: Tag-Based Amenities System */}
               <TagBasedAmenitiesSelector form={form} propertyCategory={propertyCategory} />
+
+              {/* House Rules Field (owners often missed this) */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>House Rules</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <FormField
+                    control={form.control}
+                    name="house_rules"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Rules and guidelines</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            placeholder="e.g., No loud music after 10pm; Visitors must leave by 9pm; Keep shared areas clean"
+                            rows={4}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
             </TabsContent>
 
 
@@ -473,23 +546,16 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
             </TabsContent>
 
             <TabsContent value="media" className="space-y-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Property Media</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <MediaUploadFields form={form} />
-                </CardContent>
-              </Card>
+              <MediaUploadFields form={form} />
             </TabsContent>
           </Tabs>
 
-          <div className="flex items-center justify-between pt-6 border-t">
-            <Button type="button" variant="outline" onClick={onCancel}>
-              Cancel
-            </Button>
-            
-            <div className="flex items-center space-x-3">
+          <div className="border-t sticky bottom-0 z-20 bg-white/80 backdrop-blur supports-[backdrop-filter]:bg-white/60 py-4">
+            <div className="mx-auto max-w-[794px] px-4 sm:px-6 md:px-8 lg:px-12 flex items-center justify-between gap-4 flex-wrap">
+            <div className="flex items-center gap-3">
+              <Button type="button" variant="outline" onClick={onCancel}>
+                Cancel
+              </Button>
               <Button
                 type="button"
                 variant="outline"
@@ -503,7 +569,10 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
               >
                 Previous
               </Button>
-              
+            </div>
+
+            <div className="flex items-center space-x-3">
+
               {activeTab !== 'media' ? (
                 <>
                   <Button
@@ -568,6 +637,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                 </Button>
               )}
             </div>
+          </div>
+          </div>
           </div>
         </form>
       </Form>

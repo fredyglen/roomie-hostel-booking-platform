@@ -11,16 +11,20 @@ interface HomestelFieldsProps {
 }
 
 const HomestelFields: React.FC<HomestelFieldsProps> = ({ form, updateOccupancyDetails }) => {
-  // Watch room types to implement smart conditional logic
-  const watchRoomTypes = form.watch('room_types') || [];
-  const hasSingleRoom = watchRoomTypes.includes('single_room');
-  const hasSharedRoom = watchRoomTypes.includes('shared_room');
+  // Watch room types to implement smart conditional logic (canonical X_in_a_room)
+  const watchRoomTypes: string[] = form.watch('room_types') || [];
+  const getOccupantsFromRt = (rt: string) => {
+    const m = rt?.match(/(\d+)_in_a_room/);
+    return m ? Number(m[1]) : 1;
+  };
+  const hasSingleRoom = watchRoomTypes.some((rt) => getOccupantsFromRt(rt) === 1);
+  const hasSharedRoom = watchRoomTypes.some((rt) => getOccupantsFromRt(rt) > 1);
   const hasOnlySingleRooms = hasSingleRoom && !hasSharedRoom;
 
-  // Auto-set max occupants when single room is selected
+  // Auto-set max occupants when only single rooms are selected
   React.useEffect(() => {
     if (hasOnlySingleRooms) {
-      // For single rooms only, automatically set max occupants to 1
+      // Automatically set max occupants to 1 for single rooms only
       form.setValue('max_occupants', 1);
     }
   }, [hasOnlySingleRooms, form]);
@@ -98,7 +102,7 @@ const HomestelFields: React.FC<HomestelFieldsProps> = ({ form, updateOccupancyDe
       {hasOnlySingleRooms && (
         <div className="p-3 bg-green-50 border border-green-200 rounded-lg">
           <p className="text-sm text-green-700">
-            ✅ <strong>Smart Configuration:</strong> Since you selected "Single room" only,
+            ✅ <strong>Smart Configuration:</strong> Since you selected "1 in a room" only,
             max occupants per room is automatically set to 1 person.
           </p>
         </div>

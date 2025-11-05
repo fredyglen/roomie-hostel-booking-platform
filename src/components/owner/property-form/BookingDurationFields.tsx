@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
-import { Clock, Info } from 'lucide-react';
+
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface BookingDurationFieldsProps {
@@ -64,66 +64,111 @@ const BookingDurationFields: React.FC<BookingDurationFieldsProps> = ({
     <div className="space-y-6">
 
       {/* Booking Duration Selection */}
-      <FormField
-        control={form.control}
-        name="booking_duration"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel className="flex items-center gap-2">
-              <Clock className="h-4 w-4" />
-              Booking Duration <span className="text-red-500">*</span>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button type="button" aria-label="What is a semester?" className="text-gray-500 hover:text-gray-700">
-                      <Info className="h-4 w-4" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    A semester is approximately 4 months.
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-            </FormLabel>
-            <Select
-              onValueChange={(value) => {
-                field.onChange(value);
-                // BE CONSCIOUS: Auto-update price_unit to match booking_duration
-                form.setValue('price_unit', value as any);
-                
-                // Clear custom duration when not needed
-                if (value !== 'custom') {
-                  form.setValue('custom_duration_weeks', undefined);
-                }
-              }} 
-              defaultValue={field.value}
-            >
-              <FormControl>
-                <SelectTrigger>
-                  <SelectValue placeholder="Select booking duration" />
-                </SelectTrigger>
-              </FormControl>
-              <SelectContent>
-                {getAvailableDurations().map((duration) => (
-                  <SelectItem key={duration.value} value={duration.value}>
-                    <div className="flex flex-col">
-                      <span className="font-medium">{duration.label}</span>
-                      <span className="text-xs text-gray-500">{duration.description}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <FormDescription>
-              {propertyCategory === 'Hostel' 
-                ? 'Hostels follow Ghana university semester system (4 months)'
-                : 'Choose the booking duration that works best for your property'
-              }
-            </FormDescription>
-            <FormMessage />
-          </FormItem>
-        )}
-      />
+      {propertyCategory === 'Hostel' ? (
+        <FormField
+          control={form.control}
+          name="booking_duration"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">schedule</span>
+                Booking Duration <span className="text-red-500">*</span>
+              </FormLabel>
+              <div className="flex flex-col gap-3">
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <button
+                    type="button"
+                    className={`flex-1 text-center py-2 px-4 rounded-lg border font-semibold ${
+                      field.value === 'semester'
+                        ? 'border-primary bg-primary/20 text-primary'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                    }`}
+                    onClick={() => {
+                      field.onChange('semester');
+                      form.setValue('price_unit', 'semester' as any);
+                      form.setValue('custom_duration_weeks', undefined);
+                    }}
+                  >
+                    4 Months
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex-1 text-center py-2 px-4 rounded-lg border font-semibold ${
+                      field.value === 'academic_year'
+                        ? 'border-primary bg-primary/20 text-primary'
+                        : 'border-gray-300 text-gray-700 hover:bg-gray-100'
+                    }`}
+                    onClick={() => {
+                      field.onChange('academic_year');
+                      form.setValue('price_unit', 'academic_year' as any);
+                      form.setValue('custom_duration_weeks', undefined);
+                    }}
+                  >
+                    8 Months
+                  </button>
+                </div>
+                <p className="text-sm text-gray-500">Note: Most universities in Ghana operate on a 4-month semester system.</p>
+              </div>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      ) : (
+        <FormField
+          control={form.control}
+          name="booking_duration"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className="flex items-center gap-2">
+                <span className="material-symbols-outlined text-[18px]">schedule</span>
+                Booking Duration <span className="text-red-500">*</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" aria-label="What is a semester?" className="text-gray-500 hover:text-gray-700">
+                        <span className="material-symbols-outlined text-[18px]">info</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      A semester is approximately 4 months.
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              </FormLabel>
+              <Select
+                onValueChange={(value) => {
+                  field.onChange(value);
+                  form.setValue('price_unit', value as any);
+                  if (value !== 'custom') {
+                    form.setValue('custom_duration_weeks', undefined);
+                  }
+                }}
+                defaultValue={field.value}
+              >
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select booking duration" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {getAvailableDurations().map((duration) => (
+                    <SelectItem key={duration.value} value={duration.value}>
+                      <div className="flex flex-col">
+                        <span className="font-medium">{duration.label}</span>
+                        <span className="text-xs text-gray-500">{duration.description}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormDescription>
+                Choose the booking duration that works best for your property
+              </FormDescription>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+      )}
 
       {/* Custom Duration Input - Only for Homestels & Apartments */}
       {bookingDuration === 'custom' && propertyCategory !== 'Hostel' && (

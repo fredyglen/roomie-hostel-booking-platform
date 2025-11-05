@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { serverCommissionEngine } from '../_shared/commission-engine.ts'
 // Using console-based logging within Edge Function; cannot import app-level utilities
 
 import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
@@ -9,11 +10,41 @@ const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')!
 
 // Define schema for incoming payment initialization request
+// ✅ SUPPORTS BOTH NEW API (base_amount + has_agent) AND LEGACY API (amount)
 const PaymentInitRequestSchema = z.object({
   email: z.string().email('Invalid email format'),
-  amount: z.number().positive('Amount must be a positive number'),
+
+  // ✅ NEW API: Base amount (property rent) - preferred
+  base_amount: z.number().positive('Base amount must be positive').optional(),
+
+  // ✅ NEW API: Agent involvement flag
+  has_agent: z.boolean().optional().default(false),
+
+  // ⚠️ LEGACY API: Client-provided total (for backward compatibility)
+  amount: z.number().positive('Amount must be a positive number').optional(),
+
   currency: z.string().optional().default('GHS'),
-  metadata: z.record(z.unknown()).optional(),
+
+  // ✅ ENHANCED: Metadata with optional commission breakdown for validation
+  metadata: z.object({
+    booking_id: z.string().uuid().optional(),
+    student_id: z.string().uuid().optional(),
+    property_id: z.string().uuid().optional(),
+    property_owner_id: z.string().uuid().optional(),
+    agent_id: z.string().uuid().optional(),
+
+    // ✅ NEW: Client-calculated commission breakdown (for validation)
+    commission_breakdown: z.object({
+      baseAmount: z.number().optional(),
+      platformCommission: z.number().optional(),
+      platformFixedFee: z.number().optional(),
+      agentCommission: z.number().optional(),
+      paystackFee: z.number().optional(),
+      vatAmount: z.number().optional(),
+      totalAmount: z.number().optional(),
+    }).optional(),
+  }).passthrough().optional(), // Allow additional metadata fields
+
   callback_url: z.string().url('Invalid callback URL format').optional(),
   channels: z.array(z.string()).optional(),
 });
@@ -100,6 +131,136 @@ Deno.serve(async (req) => {
        });
     }
 
+    // ============================================================================
+    // ✅ STEP 1: LOAD COMMISSION RATES FROM DATABASE
+    // ============================================================================
+    try {
+      await serverCommissionEngine.loadRates(supabase);
+      console.log('✅ Commission rates loaded successfully');
+    } catch (error) {
+      console.error('❌ Failed to load commission rates:', error);
+      return new Response(JSON.stringify({
+        status: false,
+        message: 'Server configuration error: unable to load commission rates'
+      }), {
+        status: 500,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // ============================================================================
+    // ✅ STEP 2: DETERMINE BASE AMOUNT AND AGENT INVOLVEMENT
+    // ============================================================================
+    let baseAmount: number;
+    let hasAgent: boolean;
+    let isLegacyApi = false;
+
+    if (paymentData.base_amount) {
+      // ✅ NEW API: Use base_amount from client
+      baseAmount = paymentData.base_amount;
+      hasAgent = paymentData.has_agent || false;
+      console.log('✅ Using new API: base_amount provided', {
+        baseAmount,
+        hasAgent,
+        userId: user.id
+      });
+    } else if (paymentData.amount) {
+      // ⚠️ LEGACY API: Client provided total amount
+      isLegacyApi = true;
+      console.warn('⚠️  Using legacy API: amount provided without base_amount');
+      console.warn('   This bypasses server-side commission validation!');
+      console.warn('   User:', user.id, 'Email:', paymentData.email);
+
+      // For backward compatibility, treat amount as total and skip validation
+      // This maintains existing booking flow while we migrate clients
+      baseAmount = paymentData.amount;
+      hasAgent = false; // Cannot determine agent involvement from legacy API
+    } else {
+      return new Response(JSON.stringify({
+        status: false,
+        message: 'Missing required field: base_amount or amount must be provided'
+      }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      });
+    }
+
+    // ============================================================================
+    // ✅ STEP 3: CALCULATE SERVER-SIDE COMMISSIONS
+    // ============================================================================
+    let serverCommissions;
+    let finalAmount: number;
+
+    if (isLegacyApi) {
+      // Legacy API: Use client-provided amount directly (no validation)
+      finalAmount = baseAmount;
+      console.log('⚠️  Legacy API: Using client amount without validation:', finalAmount);
+    } else {
+      // New API: Calculate server-side commissions
+      try {
+        serverCommissions = serverCommissionEngine.calculateCommissions(baseAmount, hasAgent);
+
+        console.log('✅ Server-side commission calculation:', {
+          baseAmount: serverCommissions.baseAmount,
+          platformCommission: serverCommissions.platformCommission,
+          platformFixedFee: serverCommissions.platformFixedFee,
+          agentCommission: serverCommissions.agentCommission,
+          paystackFee: serverCommissions.paystackFee,
+          vatAmount: serverCommissions.vatAmount,
+          totalAmount: serverCommissions.totalAmount,
+          ownerReceives: serverCommissions.ownerReceives
+        });
+
+        finalAmount = serverCommissions.totalAmount;
+      } catch (error) {
+        console.error('❌ Commission calculation failed:', error);
+        return new Response(JSON.stringify({
+          status: false,
+          message: error instanceof Error ? error.message : 'Failed to calculate commission breakdown'
+        }), {
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        });
+      }
+
+      // ============================================================================
+      // ✅ STEP 4: VALIDATE CLIENT-PROVIDED COMMISSION BREAKDOWN (if present)
+      // ============================================================================
+      if (paymentData.metadata?.commission_breakdown) {
+        const validation = serverCommissionEngine.validateCommissionBreakdown(
+          serverCommissions,
+          paymentData.metadata.commission_breakdown
+        );
+
+        if (!validation.valid) {
+          console.error('❌ Commission validation FAILED:', validation.errors);
+
+          // 🚨 SECURITY ALERT: Log detailed mismatch for audit
+          console.error('🚨 SECURITY ALERT: Commission mismatch detected', {
+            userId: user.id,
+            userEmail: paymentData.email,
+            userRole: profile.role,
+            serverCalculated: serverCommissions,
+            clientProvided: paymentData.metadata.commission_breakdown,
+            errors: validation.errors,
+            timestamp: new Date().toISOString()
+          });
+
+          return new Response(JSON.stringify({
+            status: false,
+            message: 'Commission validation failed. Please refresh the page and try again.',
+            // Include errors in development for debugging (remove in production if needed)
+            errors: validation.errors
+          }), {
+            status: 400,
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+          });
+        }
+
+        console.log('✅ Commission validation PASSED');
+      }
+    }
+
     // Generate unique reference with business context (ensure uniqueness in DB)
     // Consider adding a check against existing references if collisions are a concern
     const reference = `ROOMI_${Date.now()}_${Math.random().toString(36).substring(7)}`;
@@ -108,12 +269,22 @@ Deno.serve(async (req) => {
     const callbackUrl = paymentData.callback_url ||
       `${supabaseUrl.replace('/supabase', '')}/payment-success`;
 
-    console.log('Payment initialization requested:', JSON.stringify({ userId: user?.id, amount: paymentData.amount, currency: paymentData.currency }));
+    console.log('Payment initialization requested:', JSON.stringify({
+      userId: user?.id,
+      baseAmount: isLegacyApi ? 'N/A (legacy)' : baseAmount,
+      totalAmount: finalAmount,
+      currency: paymentData.currency,
+      hasAgent: isLegacyApi ? 'N/A (legacy)' : hasAgent,
+      isLegacyApi,
+      commissionVersion: serverCommissionEngine.getCurrentRates().version
+    }));
 
-    // Prepare Paystack payload
+    // ============================================================================
+    // ✅ STEP 5: PREPARE PAYSTACK PAYLOAD WITH SERVER-CALCULATED AMOUNT
+    // ============================================================================
     const paystackPayload = {
       email: paymentData.email,
-      amount: Math.round(paymentData.amount * 100), // Convert to pesewas
+      amount: Math.round(finalAmount * 100), // ✅ SERVER-CALCULATED OR LEGACY AMOUNT (in pesewas)
       currency: paymentData.currency || 'GHS',
       reference,
       callback_url: callbackUrl,
@@ -122,7 +293,27 @@ Deno.serve(async (req) => {
         user_id: user.id,
         reference,
         platform: 'roomi',
-        payment_type: 'booking'
+        payment_type: 'booking',
+
+        // ✅ NEW: Store server-calculated commission snapshot (if not legacy)
+        ...(serverCommissions && {
+          commission_snapshot: {
+            baseAmount: serverCommissions.baseAmount,
+            platformCommission: serverCommissions.platformCommission,
+            platformFixedFee: serverCommissions.platformFixedFee,
+            agentCommission: serverCommissions.agentCommission,
+            paystackFee: serverCommissions.paystackFee,
+            vatAmount: serverCommissions.vatAmount,
+            totalAmount: serverCommissions.totalAmount,
+            ownerReceives: serverCommissions.ownerReceives,
+            hasAgent,
+            calculatedAt: new Date().toISOString(),
+            rates: serverCommissionEngine.getCurrentRates()
+          }
+        }),
+
+        // Mark legacy API usage for tracking
+        isLegacyApi
       },
       channels: paymentData.channels || ['card', 'mobile_money', 'bank']
     };
@@ -153,15 +344,24 @@ Deno.serve(async (req) => {
 
     console.log(`Paystack initialization successful: ${paystackResult.data?.reference}`);
 
-    // Store transaction in database
+    // ============================================================================
+    // ✅ STEP 6: STORE TRANSACTION WITH COMMISSION SNAPSHOT
+    // ============================================================================
     const { error: dbError } = await supabase.from('transactions').insert({
       reference,
-      amount: paymentData.amount,
+      amount: finalAmount, // ✅ SERVER-CALCULATED OR LEGACY AMOUNT
       currency: paymentData.currency || 'GHS',
       status: 'pending',
       customer_email: paymentData.email,
       customer_id: user.id,
-      metadata: paymentData.metadata,
+      metadata: {
+        ...paymentData.metadata,
+        // ✅ Include commission snapshot for audit trail
+        ...(serverCommissions && {
+          commission_snapshot: paystackPayload.metadata.commission_snapshot
+        }),
+        isLegacyApi
+      },
       paystack_reference: paystackResult.data?.reference,
       paystack_response: paystackResult,
       created_at: new Date().toISOString()

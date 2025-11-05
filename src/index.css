@@ -1,10 +1,41 @@
+/* Import optimized fonts from Google Fonts with font-display: swap for faster loading */
+@import url('https://fonts.googleapis.com/css2?family=Work+Sans:wght@200;300;400;500;600;700&family=Manrope:wght@400;500;600;700;800&family=DM+Sans:wght@400;500;600;700&display=swap');
 
-/* Import Bricolage Grotesque from Google Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200;12..96,300;12..96,400;12..96,500;12..96,600;12..96,700&display=swap');
+/* Import Material Symbols Outlined icons */
+@import url('https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Hide scrollbar for horizontal scroll sections */
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Material Symbols Outlined Icon Styling */
+.material-symbols-outlined {
+  font-family: 'Material Symbols Outlined';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  display: inline-block;
+  white-space: nowrap;
+  word-wrap: normal;
+  direction: ltr;
+  -webkit-font-feature-settings: 'liga';
+  -webkit-font-smoothing: antialiased;
+}
 
 @layer base {
   :root {
@@ -14,36 +45,67 @@
     --card-foreground: 222.2 84% 4.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
-    --primary: 221.2 83.2% 53.3%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 210 85% 50%;  /* Primary #137FEC */
+    --primary-foreground: 0 0% 100%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --accent: 190 100% 50%;  /* Vibrant Cyan #00D9FF */
+    --accent-foreground: 0 0% 100%;
+    --destructive: 4 90% 58%;  /* Vibrant Red #FF3B30 */
+    --destructive-foreground: 0 0% 100%;
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
-    --ring: 221.2 83.2% 53.3%;
-    --radius: 0.25rem; /* Reduced from 0.5rem for minimal rounding */
+    --ring: 210 85% 50%;
+    --radius: 0.25rem;
 
-    /* ROOMi Premium Brand Colors */
-    --roomi-blue-50: 240 249 255;
-    --roomi-blue-100: 224 242 254;
-    --roomi-blue-500: 59 130 246;
-    --roomi-blue-600: 37 99 235;
-    --roomi-blue-700: 29 78 216;
-    --roomi-blue-900: 30 58 138;
+    /* ROOMie Vibrant & Saturated Brand Colors */
+    /* Primary - Vibrant Blue */
+    --roomi-primary: #137FEC;
+    --roomi-primary-hover: #0F6ECC;
+    --roomi-primary-light: #E6F2FF;
 
-    --roomi-teal-50: 240 253 250;
-    --roomi-teal-500: 20 184 166;
-    --roomi-teal-600: 13 148 136;
+    /* Accent - Vibrant Cyan/Teal */
+    --roomi-accent: #00D9FF;
+    --roomi-accent-hover: #00B8DB;
+    --roomi-accent-light: #E6FAFF;
 
-    --roomi-orange-50: 255 247 237;
-    --roomi-orange-500: 249 115 22;
-    --roomi-orange-600: 234 88 12;
+    /* Success - Vibrant Green */
+    --roomi-success: #00C853;
+    --roomi-success-light: #E6F9EE;
+
+    /* Warning - Vibrant Orange */
+    --roomi-warning: #FF9500;
+    --roomi-warning-light: #FFF4E6;
+
+    /* Error - Vibrant Red */
+    --roomi-error: #FF3B30;
+    --roomi-error-light: #FFE6E6;
+
+    /* Neutral Colors */
+    --roomi-dark: #1C1C1E;
+    --roomi-gray-dark: #3A3A3C;
+    --roomi-gray: #8E8E93;
+    --roomi-gray-light: #C7C7CC;
+    --roomi-background: #F2F2F7;
+    --roomi-card: #FFFFFF;
+
+    /* Legacy HSL format for Tailwind */
+    --roomi-blue-50: 211 100% 97%;
+    --roomi-blue-100: 211 100% 92%;
+    --roomi-blue-500: 210 85% 50%;  /* #137FEC */
+    --roomi-blue-600: 210 85% 42%;
+    --roomi-blue-700: 210 85% 35%;
+    --roomi-blue-900: 211 100% 25%;
+
+    --roomi-teal-50: 190 100% 97%;
+    --roomi-teal-500: 190 100% 50%;  /* #00D9FF */
+    --roomi-teal-600: 190 100% 43%;
+
+    --roomi-orange-50: 32 100% 97%;
+    --roomi-orange-500: 32 100% 50%;  /* #FF9500 */
+    --roomi-orange-600: 32 100% 43%;
 
     /* Premium Spacing System (4px grid - Standard Tailwind Scale) */
     --space-1: 0.25rem;  /* 4px */
@@ -94,7 +156,15 @@
     @apply border-border;
   }
   body {
-    @apply bg-background text-foreground font-bricolage;
+    @apply bg-background text-foreground;
+    font-family: 'Manrope', sans-serif;
+    font-weight: 400;
+  }
+
+  /* Headings use Manrope Bold */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
   }
 }
 

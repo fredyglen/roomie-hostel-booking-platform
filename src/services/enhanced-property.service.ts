@@ -111,7 +111,7 @@ class EnhancedPropertyService {
   /**
    * Get property by ID with comprehensive error handling
    */
-  async getPropertyById(propertyId: PropertyId): Promise<Result<Property, Error>> {
+  async getPropertyById(propertyId: PropertyId): Promise<Result<any>> {
     try {
       enhancedLogger.info('Fetching property by ID', { propertyId });
 
@@ -127,6 +127,7 @@ class EnhancedPropertyService {
         .select(`*`)
         .eq('id', propertyId)
         .eq('is_available', true)
+        .eq('verification_status', 'verified')
         .single();
 
       if (error) {
@@ -154,7 +155,7 @@ class EnhancedPropertyService {
   /**
    * Search properties with advanced filtering and pagination
    */
-  async searchProperties(options: PropertySearchOptions = {}): Promise<Result<PropertySearchResult, Error>> {
+  async searchProperties(options: PropertySearchOptions = {}): Promise<Result<any>> {
     try {
       enhancedLogger.info('Searching properties', { options });
 
@@ -184,11 +185,13 @@ class EnhancedPropertyService {
       }
 
       if (filters.minPrice !== undefined) {
-        queryBuilder = queryBuilder.gte('price', filters.minPrice);
+        // Support both legacy price and rent columns
+        queryBuilder = queryBuilder.or(`price.gte.${filters.minPrice},rent.gte.${filters.minPrice}`);
       }
 
       if (filters.maxPrice !== undefined) {
-        queryBuilder = queryBuilder.lte('price', filters.maxPrice);
+        // Support both legacy price and rent columns
+        queryBuilder = queryBuilder.or(`price.lte.${filters.maxPrice},rent.lte.${filters.maxPrice}`);
       }
 
       if (filters.bedrooms !== undefined) {
@@ -203,7 +206,10 @@ class EnhancedPropertyService {
         queryBuilder = queryBuilder.eq('is_available', filters.isAvailable);
       }
 
-      if (filters.verified !== undefined) {
+      // Student-facing default: only show verified unless caller explicitly requests otherwise
+      if (filters.verified === undefined) {
+        queryBuilder = queryBuilder.eq('verification_status', 'verified');
+      } else {
         queryBuilder = queryBuilder.eq('verification_status', filters.verified ? 'verified' : 'pending');
       }
 
@@ -261,7 +267,7 @@ class EnhancedPropertyService {
   /**
    * Get featured properties for homepage
    */
-  async getFeaturedProperties(limit: PropertyLimit = createPropertyLimit(6)): Promise<Result<readonly Property[], Error>> {
+  async getFeaturedProperties(limit: PropertyLimit = createPropertyLimit(6)): Promise<Result<any>> {
     try {
       enhancedLogger.info('Fetching featured properties', { limit });
 
@@ -304,7 +310,7 @@ class EnhancedPropertyService {
   /**
    * Transform database property to application Property type
    */
-  private transformDatabaseProperty(data: any): Property {
+  private transformDatabaseProperty(data: any): any {
     return {
       id: data.id,
       name: data.title || data.name,
@@ -312,20 +318,17 @@ class EnhancedPropertyService {
       description: data.description,
       price: data.price,
       rent: data.rent || data.price,
-      location: data.address || `${data.city}, ${data.state}`,
       address: data.address,
       city: data.city,
       state: data.state,
       zip: data.zip || '00000',
       type: data.type,
-      propertyCategory: data.property_category,
       property_category: data.property_category,
       bedrooms: data.bedrooms,
       bathrooms: data.bathrooms,
       max_occupants: data.max_occupants,
       images: data.images || [],
       amenities: data.amenities || [],
-      verified: data.verified,
       verification_status: data.verification_status || 'pending',
       available_from: data.available_from,
       is_available: data.is_available,
@@ -338,10 +341,8 @@ class EnhancedPropertyService {
         last_name: data.owner.last_name,
         email: data.owner.email,
         phone: data.owner.phone,
-        role: 'owner',
-        verified: true
+        role: 'owner'
       } : undefined,
-      rating: 4.5, // Default rating - will be calculated from reviews
       house_rules: data.house_rules || '',
       stories: [],
       features: data.features || []

@@ -19,17 +19,21 @@ const PricingFields: React.FC<PricingFieldsProps> = ({ form, propertyCategory })
         name="price"
         render={({ field }) => (
           <FormItem>
-            <FormLabel>Price (₵ Ghana Cedis)</FormLabel>
+            <FormLabel>Price (GHS)</FormLabel>
             <FormControl>
-              <Input 
-                type="number" 
-                placeholder="e.g. 1500" 
-                {...field}
-                onChange={(e) => field.onChange(e.target.valueAsNumber)} 
-              />
+              <div className="relative">
+                <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">GHS</span>
+                <Input
+                  type="number"
+                  placeholder="e.g. 1500"
+                  className="pl-12 pr-2 text-right tabular-nums"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                />
+              </div>
             </FormControl>
             <FormDescription>
-              Enter the price in Ghana Cedis (₵)
+              Enter the price in Ghana Cedis (GHS)
             </FormDescription>
             <FormMessage />
           </FormItem>

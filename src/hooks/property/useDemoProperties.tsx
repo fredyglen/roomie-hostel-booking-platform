@@ -25,6 +25,7 @@ export const useDemoProperties = () => {
           .from('properties')
           .select('*')
           .eq('is_available', true)
+          .eq('verification_status', 'verified')
           .order('created_at', { ascending: false });
 
         if (error) {

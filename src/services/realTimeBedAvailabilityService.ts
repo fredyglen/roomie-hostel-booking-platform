@@ -1,6 +1,6 @@
 /**
  * Real-Time Bed Availability Service
- * 
+ *
  * PRODUCTION-GRADE real-time bed availability tracking system.
  * Provides accurate, live updates on bed occupancy status.
  * Critical for preventing overbooking and providing accurate availability.
@@ -89,6 +89,20 @@ export async function getRealTimeBedAvailability(propertyId: string): Promise<Pr
         rooms = roomsByFloor || [];
       }
     }
+    // Fallback: handle properties without floors (rooms directly under property)
+    if (rooms.length === 0) {
+      const { data: roomsDirect, error: roomsDirectError } = await supabase
+        .from('rooms')
+        .select('id, room_type, bed_count, beds_available, property_id')
+        .eq('property_id', propertyId);
+
+      if (roomsDirectError) {
+        logger.warn('Failed to fetch rooms directly via property_id', { propertyId, error: roomsDirectError });
+      } else if (roomsDirect && roomsDirect.length > 0) {
+        rooms = roomsDirect;
+      }
+    }
+
 
     // Fetch pending bookings that affect availability
     const { data: pendingBookings, error: bookingsError } = await supabase
@@ -195,7 +209,7 @@ export async function getRealTimeBedAvailability(propertyId: string): Promise<Pr
 
   } catch (error) {
     logger.error('Error fetching real-time bed availability', { propertyId, error });
-    
+
     // Return fallback data
     return {
       propertyId,
@@ -219,7 +233,7 @@ export async function getRealTimeBedAvailability(propertyId: string): Promise<Pr
  * ✅ PRODUCTION-GRADE: Calculate availability status based on occupancy
  */
 function calculateAvailabilityStatus(
-  occupancyRate: number, 
+  occupancyRate: number,
   availableBeds: number
 ): 'free' | 'moderate' | 'filling_up' | 'full' {
   if (availableBeds === 0) return 'full';
@@ -383,7 +397,7 @@ export function subscribeToRealTimeBedAvailability(
  */
 export function formatAvailabilityMessage(availability: BedAvailabilityStatus): string {
   const { availableBeds, totalBeds, status } = availability;
-  
+
   switch (status) {
     case 'free':
       return `${availableBeds} of ${totalBeds} beds available`;

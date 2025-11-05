@@ -73,6 +73,7 @@ export const propertyService = {
           updated_at
         `)
         .eq('is_available', true)
+        .eq('verification_status', 'verified')
         .order('created_at', { ascending: false })
         .limit(50);
 

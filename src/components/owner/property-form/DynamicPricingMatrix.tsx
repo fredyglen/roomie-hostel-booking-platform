@@ -5,7 +5,9 @@ import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Calculator, Users, DollarSign } from 'lucide-react';
+import HomestelPricingMatrix from './HomestelPricingMatrix';
+
+
 
 interface DynamicPricingMatrixProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -14,20 +16,25 @@ interface DynamicPricingMatrixProps {
 
 /**
  * BE CONSCIOUS: Dynamic Pricing Matrix Component
- * 
+ *
  * Implements Ghana hostel pricing standards:
  * - Room type-based pricing (1_in_a_room, 2_in_a_room, etc.)
  * - Smart max occupants calculation
  * - Duration-aware pricing display
  * - Removes redundant "Beds Per Room" selector
  */
-const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({ 
-  form, 
-  propertyCategory 
+const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
+  form,
+  propertyCategory
 }) => {
   const roomTypes = form.watch('room_types') || [];
   const bookingDuration = form.watch('booking_duration') || 'semester';
   const roomTypePricing = form.watch('room_type_pricing') || {};
+
+  // For Homestel, render the flexible duration grid exactly as per mock
+  if (propertyCategory === 'Homestel') {
+    return <HomestelPricingMatrix form={form} />;
+  }
 
   // BE CONSCIOUS: Room type configurations for all property categories
   const getRoomTypeConfig = (roomType: string) => {
@@ -69,19 +76,7 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
         description: 'Six occupancy - most affordable',
         icon: '👨‍👩‍👧‍👦‍👶‍👧'
       },
-      // Homestel room types
-      'single_room': {
-        label: 'Single Room',
-        occupants: 1,
-        description: 'Private room in family home',
-        icon: '🏡'
-      },
-      'shared_room': {
-        label: 'Shared Room',
-        occupants: 2,
-        description: 'Shared room in family home',
-        icon: '👫'
-      },
+
       // Apartment room types - owner decides occupancy
       '1_bedroom_apartment': {
         label: '1 Bedroom Apartment',
@@ -109,15 +104,15 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
   useEffect(() => {
     if (roomTypes.length > 0) {
       const totalRooms = form.getValues('bedrooms') || 1;
-      
+
       // Calculate max occupants based on room types
       const maxOccupantsPerRoom = Math.max(...roomTypes.map(type => {
         const config = getRoomTypeConfig(type);
         return config ? config.occupants : 1;
       }));
-      
+
       const calculatedMaxOccupants = totalRooms * maxOccupantsPerRoom;
-      
+
       // Auto-update max occupants
       form.setValue('max_occupants', calculatedMaxOccupants);
     }
@@ -144,7 +139,7 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
       [roomType]: price
     };
     form.setValue('room_type_pricing', updatedPricing);
-    
+
     // Update main price field with the first room type price for compatibility
     if (roomTypes[0] === roomType) {
       form.setValue('price', price);
@@ -160,7 +155,7 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Calculator className="h-5 w-5" />
+            <span className="material-symbols-outlined text-[20px]">calculate</span>
             Pricing Matrix - {getDurationLabel()}
           </CardTitle>
           <p className="text-sm text-gray-600">
@@ -191,41 +186,70 @@ const DynamicPricingMatrix: React.FC<DynamicPricingMatrixProps> = ({
                     )}
                   </div>
 
-                  <FormField
-                    control={form.control}
-                    name={`room_type_pricing.${roomType}` as any}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="flex items-center gap-2">
-                          <DollarSign className="h-4 w-4" />
-                          Price per {getDurationLabel()} <span className="text-red-500">*</span>
-                        </FormLabel>
-                        <FormControl>
-                          <Input
-                            type="number"
-                            min="1"
-                            placeholder={`e.g. ${config.occupants === 1 ? '3000' : config.occupants === 2 ? '2500' : config.occupants === 3 ? '2000' : '1500'}`}
-                            value={roomTypePricing[roomType] ?? ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              if (val === '') {
-                                updateRoomTypePrice(roomType, undefined as any);
-                                field.onChange(undefined);
-                              } else {
-                                const price = Number(val);
-                                updateRoomTypePrice(roomType, price);
-                                field.onChange(price);
-                              }
-                            }}
-                          />
-                        </FormControl>
-                        <FormDescription>
-                          Price in Ghana Cedis (GH₵) for {config.label.toLowerCase()} per {getDurationLabel().toLowerCase()}
-                        </FormDescription>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <FormField
+                      control={form.control}
+                      name={`room_type_pricing.${roomType}` as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[18px]">payments</span>
+                            Price per {getDurationLabel()} <span className="text-red-500">*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className="relative">
+                              <span className="absolute inset-y-0 left-0 flex items-center pl-3 text-gray-500">GHS</span>
+                              <Input
+                                className="pl-12 pr-2 text-right tabular-nums"
+                                type="number"
+                                min="1"
+                                placeholder={`e.g. ${config.occupants === 1 ? '3000' : config.occupants === 2 ? '2500' : config.occupants === 3 ? '2000' : '1500'}`}
+                                value={roomTypePricing[roomType] ?? ''}
+                                onChange={(e) => {
+                                  const val = e.target.value;
+                                  if (val === '') {
+                                    updateRoomTypePrice(roomType, undefined as any);
+                                    field.onChange(undefined);
+                                  } else {
+                                    const price = Number(val);
+                                    updateRoomTypePrice(roomType, price);
+                                    field.onChange(price);
+                                  }
+                                }}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormDescription>
+                            Price in Ghana Cedis (GHS) for {config.label.toLowerCase()} per {getDurationLabel().toLowerCase()}
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name={`beds_available_by_room_type.${roomType}` as any}
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Beds Available for Booking</FormLabel>
+                          <FormControl>
+                            <Input
+                              type="number"
+                              min="0"
+                              placeholder="e.g. 10"
+                              value={(field.value as any) ?? ''}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                field.onChange(val === '' ? undefined : Number(val));
+                              }}
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
                 </div>
               );
             })}

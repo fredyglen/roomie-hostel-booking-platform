@@ -64,6 +64,10 @@ const DesktopCoverImageOverlay: React.FC<DesktopCoverImageOverlayProps> = ({ pro
 
   const { overall } = availability;
   const occupancyPercentage = Math.round(overall.occupancyRate * 100);
+  const pct = Math.max(0, Math.min(100, occupancyPercentage));
+  const hue = Math.round(120 - (pct * 1.2));
+  const occupancyColor = `hsl(${hue} 85% 45%)`;
+
 
   return (
     <>
@@ -91,8 +95,11 @@ const DesktopCoverImageOverlay: React.FC<DesktopCoverImageOverlayProps> = ({ pro
 
       {/* ✅ BOTTOM-RIGHT: Occupancy Percentage Badge */}
       <div className="absolute bottom-4 right-4 z-10">
-        <div className="w-14 h-14 bg-black/70 backdrop-blur-sm rounded-full flex items-center justify-center border-2 border-white/20">
-          <span className="text-white font-bold">{occupancyPercentage}%</span>
+        <div
+          className="w-7 h-7 md:w-8 md:h-8 rounded-full flex items-center justify-center border border-white/20 shadow-lg"
+          style={{ backgroundColor: occupancyColor }}
+        >
+          <span className="text-white font-bold text-[10px] md:text-xs">{occupancyPercentage}%</span>
         </div>
       </div>
     </>

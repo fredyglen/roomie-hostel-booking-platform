@@ -220,6 +220,13 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
     return 'MIXED';
   }, [genderRestriction]);
 
+  const genderBadgeClass = useMemo(() => {
+    if (!genderLabel) return 'bg-gray-600';
+    if (genderLabel === 'BOYS') return 'bg-blue-600';
+    if (genderLabel === 'GIRLS') return 'bg-pink-600';
+    return 'bg-purple-600';
+  }, [genderLabel]);
+
   return (
     <Card
       className="overflow-hidden card-premium animate-fade-in-up flex flex-col cursor-pointer hover:shadow-lg transition-shadow duration-200 w-full"
@@ -249,7 +256,7 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
 
         {/* Gender badge (top-left text) */}
         {genderLabel && (
-          <div className="absolute top-2 left-2 bg-blue-600 text-white text-xs font-bold px-3 py-1 tracking-wider">
+          <div className={`absolute top-2 left-2 ${genderBadgeClass} text-white text-xs font-bold px-3 py-1 tracking-wider`}>
             {genderLabel}
           </div>
         )}

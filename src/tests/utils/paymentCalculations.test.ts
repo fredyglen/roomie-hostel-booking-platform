@@ -5,7 +5,6 @@ import {
   calculatePlatformRevenue,
   calculateOwnerEarnings,
   calculateRefund,
-  calculatePaymentDistribution,
 } from '@/utils/paymentCalculations';
 import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 
@@ -73,20 +72,6 @@ describe('paymentCalculations', () => {
     expect(strict).toBe(0);
     expect(moderate).toBeGreaterThan(0);
     expect(flexible).toBeGreaterThan(moderate);
-  });
-
-  it('calculatePaymentDistribution returns non-negative amounts and includes agent when provided', () => {
-    const total = 5000;
-    const ownerId = 'owner_1';
-
-    const noAgent = calculatePaymentDistribution(total, ownerId);
-    expect(noAgent.ownerAmount).toBeGreaterThan(0);
-    expect(noAgent.agentAmount).toBe(0);
-    expect(noAgent.platformAmount).toBeGreaterThan(0);
-    expect(noAgent.processorFee).toBeGreaterThan(0);
-
-    const withAgent = calculatePaymentDistribution(total, ownerId, 'agent_1');
-    expect(withAgent.agentAmount).toBeGreaterThan(0);
   });
 });
 

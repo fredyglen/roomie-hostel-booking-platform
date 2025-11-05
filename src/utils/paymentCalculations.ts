@@ -153,32 +153,4 @@ export const convertCurrency = (
   return amount * exchangeRate;
 };
 
-// Payment distribution for multi-party transactions
-export const calculatePaymentDistribution = (
-  totalAmount: number,
-  ownerId: string,
-  agentId?: string
-): {
-  ownerAmount: number;
-  agentAmount: number;
-  platformAmount: number;
-  processorFee: number;
-} => {
-  const rates = centralizedCommissionEngine.getCommissionRates();
-  const fees = centralizedCommissionEngine.getPlatformFees();
-  const processorFee = totalAmount * rates.paystack;
-  const platformFee = (totalAmount * rates.platform) + fees.fixed;
-  const agentFee = agentId ? totalAmount * rates.agent : 0;
-
-  // Property owner gets 88% as per BE CONSCIOUS
-  const ownerAmount = totalAmount * 0.88;
-  
-  return {
-    ownerAmount: Math.max(0, ownerAmount),
-    agentAmount: agentFee,
-    platformAmount: platformFee,
-    processorFee
-  };
-};
-
 

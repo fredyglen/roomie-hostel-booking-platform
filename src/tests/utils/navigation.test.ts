@@ -34,7 +34,7 @@ describe('Navigation Utilities', () => {
   describe('navigateToBooking', () => {
     it('should navigate to the booking page when given a valid property ID', () => {
       navigateToBooking(mockNavigate, '123');
-      expect(mockNavigate).toHaveBeenCalledWith('/student/property/123/book', { state: undefined });
+      expect(mockNavigate).toHaveBeenCalledWith('/student/book/123', { state: undefined });
     });
     
     it('should not navigate when given an empty property ID', () => {

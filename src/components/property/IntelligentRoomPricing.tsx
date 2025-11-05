@@ -1,19 +1,21 @@
 /**
  * Intelligent Room Pricing Component
- * 
+ *
  * PRODUCTION-GRADE room pricing display that intelligently shows
  * room types and pricing in a compact, scannable format.
  * Replaces giant cards with smart, mobile-optimized design.
  */
 
 import React from 'react';
-import { usePropertyRoomTypes } from '@/hooks/usePropertyRoomTypes';
-import { Badge } from '@/components/ui/badge';
-import { Bed, Users } from 'lucide-react';
+import { usePropertyRoomTypes, useRoomTypeSelection } from '@/hooks/usePropertyRoomTypes';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { type RoomTypeOption } from '@/services/roomTypesService';
 
 interface IntelligentRoomPricingProps {
   readonly propertyId: string;
+  readonly propertyCategory?: string;
   readonly className?: string;
+  readonly onRoomTypeSelect?: (roomType: RoomTypeOption) => void;
 }
 
 /**
@@ -21,9 +23,19 @@ interface IntelligentRoomPricingProps {
  */
 const IntelligentRoomPricing: React.FC<IntelligentRoomPricingProps> = ({
   propertyId,
-  className = ''
+  propertyCategory,
+  className = '',
+  onRoomTypeSelect
 }) => {
-  const { roomTypes, isLoading, error } = usePropertyRoomTypes(propertyId);
+  const { roomTypes, isLoading, error } = usePropertyRoomTypes({ propertyId, propertyCategory, enableFallback: true });
+  const { selectedRoomType, selectedRoomTypeData, handleRoomTypeChange } = useRoomTypeSelection(roomTypes);
+
+  // Emit selected room type to parent when it changes (initial and subsequent)
+  React.useEffect(() => {
+    if (selectedRoomTypeData && onRoomTypeSelect) {
+      onRoomTypeSelect(selectedRoomTypeData);
+    }
+  }, [selectedRoomTypeData, onRoomTypeSelect]);
 
   // Loading state
   if (isLoading) {
@@ -60,7 +72,7 @@ const IntelligentRoomPricing: React.FC<IntelligentRoomPricingProps> = ({
     if (occupancyNumbers.length === 0) return "Room options available";
 
     // Check if it's sequential (1,2,3,4,5,6)
-    const isSequential = occupancyNumbers.every((num, index) => 
+    const isSequential = occupancyNumbers.every((num, index) =>
       index === 0 || num === occupancyNumbers[index - 1] + 1
     );
 
@@ -92,65 +104,27 @@ const IntelligentRoomPricing: React.FC<IntelligentRoomPricingProps> = ({
 
   return (
     <div className={`space-y-4 ${className}`}>
-      {/* Smart Room Display Header */}
-      <div className="flex items-center gap-2">
-        <Bed className="h-4 w-4 text-gray-600" />
-        <span className="text-sm font-medium text-gray-700">
-          {getSmartRoomDisplay()}
-        </span>
-      </div>
-
-      {/* Compact Pricing Grid */}
       <div className="space-y-2">
-        {roomTypes.map((room, index) => {
-          const occupants = (() => {
-            const match = room.label.match(/(\d+)\s+in\s+a\s+room/i);
-            return match ? parseInt(match[1]) : 1;
-          })();
-
-          return (
-            <div 
-              key={index}
-              className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              {/* Left side: Room info */}
-              <div className="flex items-center gap-3">
-                {/* Room type icon */}
-                <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                  <span className="text-sm">
-                    {getRoomTypeIcon(occupants)}
-                  </span>
-                </div>
-
-                {/* Room details */}
-                <div>
-                  <span className="font-medium text-gray-900 text-sm">
-                    {room.label}
-                  </span>
-                  <div className="flex items-center gap-2 text-xs text-gray-500">
-                    <Users className="h-3 w-3" />
-                    <span>{room.bedsAvailable} beds available</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right side: Price */}
-              <div className="text-right">
-                <div className="font-bold text-primary text-sm">
-                  {formatPrice(room.price)}
-                </div>
-                <div className="text-xs text-gray-500">
-                  per semester
-                </div>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Additional Info */}
-      <div className="text-xs text-gray-500 text-center">
-        Prices shown are per student per semester
+        <label className="block text-sm font-medium text-gray-700">Select room type</label>
+        <Select
+          value={selectedRoomType}
+          onValueChange={(value) => {
+            handleRoomTypeChange(value);
+            const selected = roomTypes.find((rt) => rt.value === value);
+            if (selected && onRoomTypeSelect) onRoomTypeSelect(selected);
+          }}
+        >
+          <SelectTrigger className="w-full max-w-xs">
+            <SelectValue placeholder="Choose type" />
+          </SelectTrigger>
+          <SelectContent>
+            {roomTypes.map((rt) => (
+              <SelectItem key={rt.value} value={rt.value}>
+                {rt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </div>
     </div>
   );

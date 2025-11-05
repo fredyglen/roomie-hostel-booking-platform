@@ -23,6 +23,10 @@ interface PropertyTabsProps {
   // ✅ NEW: Pricing matrix props
   propertyId?: string;
   propertyCategory?: string;
+  // ✅ Title for About heading
+  propertyTitle?: string;
+  // ✅ Emit selected room price up to parent
+  onRoomPriceChange?: (price: number) => void;
 }
 
 const PropertyTabs: React.FC<PropertyTabsProps> = ({
@@ -39,7 +43,9 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
   nearestUniversity,
   onTabChange,
   propertyId,
-  propertyCategory
+  propertyCategory,
+  propertyTitle,
+  onRoomPriceChange
 }) => {
   const [activeTab, setActiveTab] = useState('about');
   
@@ -62,7 +68,7 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
       <TabsContent value="about" className="space-y-6">
         {/* Smart Description with Character Limits */}
         <div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-3">About this property</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-3">{propertyTitle ? `About ${propertyTitle}` : 'About this property'}</h3>
           <SmartPropertyDescription
             description={description}
             characterLimit={400}
@@ -73,16 +79,20 @@ const PropertyTabs: React.FC<PropertyTabsProps> = ({
         {propertyId && (
           <div>
             <h3 className="text-lg font-semibold text-gray-900 mb-3">Room options & pricing</h3>
-            <IntelligentRoomPricing propertyId={propertyId} />
+            <IntelligentRoomPricing
+              propertyId={propertyId}
+              propertyCategory={propertyCategory}
+              onRoomTypeSelect={(rt) => onRoomPriceChange?.(rt.price)}
+            />
           </div>
         )}
 
-        {/* Things to Consider Section */}
+        {/* Must know information Section */}
         {goodToKnow && (
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-3">Things to consider</h3>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-blue-800 text-sm leading-relaxed">{goodToKnow}</p>
+            <h3 className="text-lg font-semibold text-gray-900 mb-3">Must know information</h3>
+            <div className="bg-amber-50 border border-amber-300 rounded-lg p-4">
+              <p className="text-amber-900 text-sm leading-relaxed font-medium">{goodToKnow}</p>
             </div>
           </div>
         )}

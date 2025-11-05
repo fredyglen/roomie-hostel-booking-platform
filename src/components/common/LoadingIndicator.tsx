@@ -7,6 +7,7 @@ interface LoadingIndicatorProps {
   size?: 'sm' | 'md' | 'lg';
   message?: string;
   className?: string;
+  'data-testid'?: string;
 }
 
 /**
@@ -16,6 +17,7 @@ const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   size = 'md',
   message,
   className,
+  'data-testid': testId,
 }) => {
   const sizeMap = {
     sm: 'w-4 h-4',
@@ -24,7 +26,10 @@ const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
   };
 
   return (
-    <div className={cn("flex flex-col items-center justify-center p-4", className)}>
+    <div
+      className={cn("flex flex-col items-center justify-center p-4", className)}
+      data-testid={testId}
+    >
       <Loader className={cn("animate-spin text-primary", sizeMap[size])} />
       {message && (
         <p className="text-muted-foreground mt-2 text-sm">{message}</p>

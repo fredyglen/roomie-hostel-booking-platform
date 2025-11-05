@@ -35,9 +35,11 @@ const SmartWashroomConfig: React.FC<SmartWashroomConfigProps> = ({
       '1_in_a_room': 1,
       '2_in_a_room': 2,
       '3_in_a_room': 3,
-      '4_in_a_room': 4
-    };
-    return occupancyMap[roomType as keyof typeof occupancyMap] || 1;
+      '4_in_a_room': 4,
+      '5_in_a_room': 5,
+      '6_in_a_room': 6
+    } as const;
+    return (occupancyMap as any)[roomType] ?? (Number(roomType.match(/^(\d+)_in_a_room$/)?.[1]) || 1);
   };
 
   return (
@@ -157,21 +159,35 @@ const SmartWashroomConfig: React.FC<SmartWashroomConfigProps> = ({
 
             {/* Room Type Sharing Tags */}
             {roomTypes.length > 0 && (
-              <div>
-                <h5 className="text-sm font-medium mb-2">Sharing by Room Type:</h5>
-                <div className="flex flex-wrap gap-2">
-                  {roomTypes.map((roomType) => {
-                    const occupancy = getRoomTypeOccupancy(roomType);
-                    const peoplePerWashroom = form.watch('people_per_washroom') || 4;
-                    const washroomsNeeded = Math.ceil(occupancy / peoplePerWashroom);
-
-                    return (
-                      <Badge key={roomType} variant="outline" className="text-xs">
-                        {roomType.replace('_', ' ')}: {occupancy} people → {washroomsNeeded} washroom{washroomsNeeded > 1 ? 's' : ''}
-                      </Badge>
-                    );
-                  })}
-                </div>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-700">Sharing details</span>
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button type="button" aria-label="Show washroom sharing details"
+                        className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-blue-50 text-blue-500 hover:text-blue-600 hover:bg-blue-100 transition"
+                      >
+                        <span className="material-symbols-outlined text-[16px] leading-none">info</span>
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <div className="text-xs text-gray-800 space-y-1">
+                        {roomTypes.map((roomType) => {
+                          const occupancy = getRoomTypeOccupancy(roomType);
+                          const peoplePerWashroom = form.watch('people_per_washroom') || 4;
+                          const washroomsNeeded = Math.ceil(occupancy / peoplePerWashroom);
+                          const label = roomType.replaceAll('_', ' ');
+                          return (
+                            <div key={roomType} className="flex items-center justify-between gap-2">
+                              <span className="font-medium capitalize">{label}</span>
+                              <span className="tabular-nums text-gray-600">{occupancy} people → {washroomsNeeded} washroom{washroomsNeeded > 1 ? 's' : ''}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               </div>
             )}
           </div>

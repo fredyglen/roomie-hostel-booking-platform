@@ -12,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle, XCircle, Clock, Eye, FileText, Search } from 'lucide-react';
+import { deriveCoverImageFromProperty } from '@/utils/propertyPreviewCache';
 
 const VerificationManagement: React.FC = () => {
   const { toast } = useToast();
@@ -24,7 +25,7 @@ const VerificationManagement: React.FC = () => {
     queryFn: async () => {
       // Primary source: property_verifications table
       try {
-        const { data } = await supabase
+        const { data, error: pvError } = await supabase
           .from('property_verifications')
           .select(`
             id, status, verification_type, priority_level, verification_deadline, resubmission_count, notes, admin_notes, rejection_reason, created_at,
@@ -37,7 +38,16 @@ const VerificationManagement: React.FC = () => {
           `)
           .order('created_at', { ascending: false });
 
-        if (data && data.length > 0) return data;
+        if (!pvError && data && data.length > 0) {
+          console.debug('[Admin/Verification] property_verifications count:', data.length);
+          return data;
+        } else {
+          if (pvError) {
+            console.warn('[Verification] property_verifications query error; using fallback', pvError);
+          } else {
+            console.debug('[Verification] property_verifications empty; using fallback');
+          }
+        }
       } catch (err) {
         // If RLS blocks this (403) or any error occurs, fall through to fallback
         console.warn('[Verification] property_verifications query failed; using fallback', err);
@@ -49,11 +59,12 @@ const VerificationManagement: React.FC = () => {
         .select(`
           id, title, property_category, owner_id, verification_status, created_at
         `)
-        .in('verification_status', ['pending','rejected'])
+        // Include rows where verification_status is NULL (treat as pending)
+        .or('verification_status.is.null,verification_status.eq.pending,verification_status.eq.rejected')
         .order('created_at', { ascending: false });
 
       if (propsErr) throw propsErr;
-      return (props || []).map((p: any) => ({
+      const mapped = (props || []).map((p: any) => ({
         id: p.id, // Note: this is the property id (no PV row yet)
         property_id: p.id,
         status: p.verification_status || 'pending',
@@ -66,6 +77,8 @@ const VerificationManagement: React.FC = () => {
           owner_id: p.owner_id,
         },
       }));
+      console.debug('[Admin/Verification] fallback count:', mapped.length);
+      return mapped;
     },
   });
 
@@ -278,6 +291,15 @@ const VerificationManagement: React.FC = () => {
               <CardHeader>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-3">
+                    {/* Thumbnail */}
+                    {(() => {
+                      const img = deriveCoverImageFromProperty(verification.properties || {});
+                      return img ? (
+                        <img src={img} alt="cover" className="h-10 w-10 rounded object-cover bg-gray-100" onError={(e) => { (e.currentTarget as HTMLImageElement).style.display = 'none'; }} />
+                      ) : (
+                        <div className="h-10 w-10 rounded bg-gray-200" />
+                      );
+                    })()}
                     {getStatusIcon(verification.status)}
                     <div>
                       <CardTitle className="text-lg">

@@ -21,36 +21,44 @@ describe('ImageWithFallback', () => {
   });
   
   it('renders fallback when primary image fails to load', () => {
+    const fallbackSrc = '/placeholder.svg';
     render(
-      <ImageWithFallback 
+      <ImageWithFallback
         src="https://example.com/invalid-image.jpg"
         alt="Test image"
         className="test-image"
+        fallbackSrc={fallbackSrc}
       />
     );
-    
-    const image = screen.getByAltText('Test image');
-    
+
+    const image = screen.getByAltText('Test image') as HTMLImageElement;
+
+    // Initially shows the provided src
+    expect(image.src).toContain('invalid-image.jpg');
+
     // Simulate image load error
     fireEvent.error(image);
-    
-    // Check that fallback content is displayed
-    const fallbackContent = screen.getByText('Image not available');
-    expect(fallbackContent).toBeInTheDocument();
+
+    // After error, should show fallback image
+    expect(image.src).toContain('placeholder.svg');
   });
-  
-  it('shows loading state initially', () => {
+
+  it('renders image with correct attributes', () => {
     render(
-      <ImageWithFallback 
+      <ImageWithFallback
         src="https://example.com/image.jpg"
         alt="Test image"
         className="test-image"
+        priority={true}
       />
     );
-    
-    // Check for loading state (image should be hidden initially)
-    const image = screen.getByAltText('Test image');
-    expect(image).toHaveStyle({ display: 'none' });
+
+    const image = screen.getByAltText('Test image') as HTMLImageElement;
+
+    // Check that image is rendered with correct attributes
+    expect(image).toBeInTheDocument();
+    expect(image).toHaveClass('test-image');
+    expect(image).toHaveAttribute('loading', 'eager'); // priority=true sets eager loading
   });
 
   it('calls onError callback when image fails to load', () => {

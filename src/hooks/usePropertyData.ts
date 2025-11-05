@@ -173,6 +173,7 @@ export const usePropertyData = (): [Property[], boolean, string | null] => {
           )
         `)
         .eq('is_available', true)
+        .eq('verification_status', 'verified')
         .order('created_at', { ascending: false });
 
       if (fetchError) {

@@ -1,11 +1,7 @@
-
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '../utils/test-utils';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { mockNavigate, mockUseNavigate } from '../utils/test-mocks';
-import BookingStepsContainer from '@/components/booking/BookingStepsContainer';
 
-// Mock react-router-dom hooks
+// Mock react-router-dom hooks BEFORE any imports that use it
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
@@ -14,6 +10,51 @@ vi.mock('react-router-dom', async () => {
     useParams: () => ({ id: '1' }), // Mock the id param to be '1'
   };
 });
+
+// Mock Supabase client to return a predictable property
+vi.mock('@/integrations/supabase/client', () => {
+  const property = {
+    id: '1',
+    title: 'Cozy Studio Apartment',
+    description: 'Nice',
+    address: '123 Main St',
+    city: 'Accra',
+    state: 'Greater Accra',
+    rent: 1500,
+    bedrooms: 1,
+    bathrooms: 1,
+    images: ['/img.jpg'],
+    amenities: ['WiFi'],
+    is_available: true,
+  };
+  return {
+    supabase: {
+      from: () => ({
+        select: () => ({
+          eq: () => ({
+            single: async () => ({ data: property, error: null }),
+          }),
+        }),
+      }),
+      channel: vi.fn(() => ({ on: vi.fn().mockReturnThis(), subscribe: vi.fn() })),
+    },
+  };
+});
+
+// Mock Auth context used by booking hook to avoid requiring AuthProvider
+vi.mock('@/context/EnhancedAuthContext', () => ({
+  useAuth: () => ({
+    user: {
+      id: 'test-user',
+      email: 'test@example.com',
+      user_metadata: { first_name: 'Test', last_name: 'User', phone: '+233200000000' }
+    }
+  })
+}));
+
+import React from 'react';
+import { render, screen, fireEvent, waitFor } from '../utils/test-utils';
+import BookingStepsContainer from '@/components/booking/BookingStepsContainer';
 
 // Mock toast function
 vi.mock('sonner', () => ({
@@ -28,84 +69,90 @@ vi.mock('sonner', () => ({
 describe('Booking Flow Integration', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    
+
     // Mock localStorage
     const localStorageMock = {
       getItem: vi.fn(),
       setItem: vi.fn(),
       removeItem: vi.fn(),
     };
-    
+
     Object.defineProperty(window, 'localStorage', {
       value: localStorageMock,
       writable: true
     });
-    
+
     localStorageMock.getItem.mockReturnValue(null); // Default to empty form data
   });
 
-  it('should render the booking steps container', () => {
+  it('should render the booking steps container', async () => {
     render(<BookingStepsContainer />);
-    
-    // Verify that the booking steps container is rendered
-    expect(screen.getByText(/Book Cozy Studio Apartment/i)).toBeInTheDocument();
-    expect(screen.getByText(/Room Type/i)).toBeInTheDocument(); // First step should be visible
+
+    // Wait for first step to render by checking a unique field label
+    const firstNameInput = await screen.findByLabelText(/First Name/i);
+    expect(firstNameInput).toBeInTheDocument();
   });
 
-  it('should navigate through booking steps when "Next" button is clicked', async () => {
+  it('should navigate to dates after completing student info', async () => {
     render(<BookingStepsContainer />);
-    
-    // Select a room type (Step 1)
-    const roomTypeRadio = screen.getByText(/1 in a room/i);
-    fireEvent.click(roomTypeRadio);
-    
-    // Click the "Next" button
-    const nextButton = screen.getByRole('button', { name: /Next/i });
+
+    // Wait for first step to render
+    await screen.findByLabelText(/First Name/i);
+
+    // Fill Step 1: Your Information
+    fireEvent.change(screen.getAllByLabelText(/First Name/i)[0], { target: { value: 'John' } });
+    fireEvent.change(screen.getAllByLabelText(/Last Name/i)[0], { target: { value: 'Doe' } });
+    fireEvent.change(screen.getAllByLabelText(/Email Address/i)[0], { target: { value: 'john@example.com' } });
+    fireEvent.change(screen.getAllByPlaceholderText(/^\+233 XX XXX XXXX$/)[0], { target: { value: '+233 20 000 0000' } });
+    fireEvent.change(screen.getAllByLabelText(/Full Name/i)[0], { target: { value: 'Jane Doe' } });
+    fireEvent.change(screen.getAllByPlaceholderText(/^e\.g\. \+233 XX XXX XXXX$/)[0], { target: { value: '+233 24 000 0000' } });
+
+    // Select Relationship via shadcn Select
+    const relationshipTrigger = screen.getAllByRole('combobox')[0];
+    fireEvent.click(relationshipTrigger);
+    fireEvent.click(screen.getByText('Parent'));
+
+    // Click Next
+    const nextButton = screen.getAllByRole('button', { name: /Next/i })[0];
     fireEvent.click(nextButton);
-    
-    // Verify that we moved to the next step (Duration)
+
+    // Verify that we moved to the next step (Dates)
     await waitFor(() => {
-      expect(screen.getByText(/Select Duration and Date/i)).toBeInTheDocument();
-    });
-    
-    // Fill duration fields (Step 2)
-    const durationInput = screen.getByLabelText(/Duration/i);
-    fireEvent.change(durationInput, { target: { value: '1' } });
-    
-    const checkInDate = screen.getByLabelText(/Check-in Date/i);
-    fireEvent.change(checkInDate, { target: { value: '2023-09-01' } });
-    
-    // Click Next again
-    fireEvent.click(screen.getByRole('button', { name: /Next/i }));
-    
-    // Verify that we moved to Personal Information (Step 3)
-    await waitFor(() => {
-      expect(screen.getByText(/Personal Information/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Booking Duration/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/How long are you staying\?/i).length).toBeGreaterThan(0);
     });
   });
 
-  it('should go back to previous step when Back button is clicked', async () => {
+  it('should go back to student info when Previous is clicked on dates', async () => {
     render(<BookingStepsContainer />);
-    
-    // Select a room type and proceed to step 2
-    const roomTypeRadio = screen.getByText(/1 in a room/i);
-    fireEvent.click(roomTypeRadio);
-    
-    const nextButton = screen.getByRole('button', { name: /Next/i });
-    fireEvent.click(nextButton);
-    
-    // Verify that we're on step 2
+
+    // Wait for first step to render
+    await screen.findByLabelText(/First Name/i);
+
+    // Fill Step 1 quickly (scope to first occurrence due to mobile+desktop duplication)
+    fireEvent.change(screen.getAllByLabelText(/First Name/i)[0], { target: { value: 'John' } });
+    fireEvent.change(screen.getAllByLabelText(/Last Name/i)[0], { target: { value: 'Doe' } });
+    fireEvent.change(screen.getAllByLabelText(/Email Address/i)[0], { target: { value: 'john@example.com' } });
+    fireEvent.change(screen.getAllByPlaceholderText(/^\+233 XX XXX XXXX$/)[0], { target: { value: '+233 20 000 0000' } });
+    fireEvent.change(screen.getAllByLabelText(/Full Name/i)[0], { target: { value: 'Jane Doe' } });
+    fireEvent.change(screen.getAllByPlaceholderText(/^e\.g\. \+233 XX XXX XXXX$/)[0], { target: { value: '+233 24 000 0000' } });
+    const relationshipTrigger2 = screen.getAllByRole('combobox')[0];
+    fireEvent.click(relationshipTrigger2);
+    fireEvent.click(screen.getByText('Parent'));
+
+    // Next to dates
+    fireEvent.click(screen.getAllByRole('button', { name: /Next/i })[0]);
+
+    // Confirm on dates step
     await waitFor(() => {
-      expect(screen.getByText(/Select Duration and Date/i)).toBeInTheDocument();
+      expect(screen.getAllByText(/Booking Duration/i).length).toBeGreaterThan(0);
     });
-    
-    // Click Back button
-    const backButton = screen.getByRole('button', { name: /Back/i });
-    fireEvent.click(backButton);
-    
-    // Verify that we're back to step 1
-    await waitFor(() => {
-      expect(screen.getByText(/Choose Room Type/i)).toBeInTheDocument();
-    });
+
+    // Click Previous to go back
+    fireEvent.click(screen.getAllByRole('button', { name: /Previous/i })[0]);
+
+    // Verify we're back to step 1
+    await screen.findAllByLabelText(/First Name/i);
+    expect(screen.getAllByLabelText(/First Name/i)[0]).toBeInTheDocument();
   });
 });

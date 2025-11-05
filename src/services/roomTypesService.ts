@@ -1,6 +1,6 @@
 /**
  * Room Types Service - Dynamic Loading from Owner Configuration
- * 
+ *
  * Loads room types and pricing from owner-configured data instead of hardcoded values.
  * Follows Ghana hostel standards and BE CONSCIOUS principles.
  */
@@ -86,6 +86,23 @@ export async function fetchPropertyRoomTypes(propertyId: string): Promise<Proper
     } catch (e) {
       logger.error('Error fetching rooms hierarchy for property', { propertyId, error: e });
     }
+    // Fallback: if no rooms via floors, attempt property-level rooms fetch
+    if (!rooms || rooms.length === 0) {
+      try {
+        const { data: roomsDirect, error: roomsDirectErr } = await supabase
+          .from('rooms')
+          .select('id, room_type, bed_count, rent_amount, beds_available, property_id')
+          .eq('property_id', propertyId);
+        if (roomsDirectErr) {
+          logger.warn('Failed to fetch rooms directly via property_id', { propertyId, error: roomsDirectErr });
+        } else if (roomsDirect && roomsDirect.length > 0) {
+          rooms = roomsDirect;
+        }
+      } catch (e) {
+        logger.error('Error in property-level rooms fallback', { propertyId, error: e });
+      }
+    }
+
 
     // Transform to room type options
     const roomTypes = transformToRoomTypeOptions(property, rooms || []);
@@ -115,7 +132,7 @@ function transformToRoomTypeOptions(property: any, rooms: any[]): RoomTypeOption
   // If we have rooms data, use it for accurate pricing and availability
   if (rooms.length > 0) {
     const roomTypeGroups = groupRoomsByType(rooms);
-    
+
     for (const [roomType, roomGroup] of Object.entries(roomTypeGroups)) {
       const totalBeds = roomGroup.reduce((sum: number, room: any) => sum + (room.bed_count || 0), 0);
       const availableBeds = roomGroup.reduce((sum: number, room: any) => sum + (room.beds_available || 0), 0);
@@ -135,7 +152,7 @@ function transformToRoomTypeOptions(property: any, rooms: any[]): RoomTypeOption
         occupants
       });
     }
-  } 
+  }
   // Fallback to property-level room types (explicit array)
   else if (property.room_types && Array.isArray(property.room_types)) {
     for (const roomType of property.room_types) {
@@ -170,8 +187,25 @@ function transformToRoomTypeOptions(property: any, rooms: any[]): RoomTypeOption
     }
   }
 
-  return roomTypes.sort((a, b) => a.occupants - b.occupants); // Sort by occupancy
+  return dedupeRoomTypes(roomTypes).sort((a, b) => a.occupants - b.occupants); // Sort by occupancy
 }
+
+/**
+ * ✅ HELPER: Remove duplicate room types by label/value pair
+ */
+function dedupeRoomTypes(items: RoomTypeOption[]): RoomTypeOption[] {
+  const seen = new Set<string>();
+  const result: RoomTypeOption[] = [];
+  for (const it of items) {
+    const key = `${it.value}|${it.label}`;
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(it);
+    }
+  }
+  return result;
+}
+
 
 /**
  * ✅ HELPER: Group rooms by type
@@ -195,14 +229,14 @@ function extractOccupantsFromRoomType(roomType: string): number {
   if (match) {
     return parseInt(match[1], 10);
   }
-  
+
   // Handle other formats
   if (roomType.includes('single')) return 1;
   if (roomType.includes('shared')) return 2;
   if (roomType.includes('1_bedroom')) return 2;
   if (roomType.includes('2_bedroom')) return 4;
   if (roomType.includes('3_bedroom')) return 6;
-  
+
   return 1; // Default
 }
 
@@ -243,8 +277,12 @@ export function getFallbackRoomTypes(propertyCategory: string): RoomTypeOption[]
       ];
     case 'homestel':
       return [
-        { value: '1_in_a_room', label: '1 in a Room', price: basePrice * 1.3, bedsAvailable: 0, totalBeds: 0, occupants: 1 },
-        { value: '2_in_a_room', label: '2 in a Room', price: basePrice, bedsAvailable: 0, totalBeds: 0, occupants: 2 }
+        { value: '1_in_a_room', label: '1 in a Room', price: basePrice * 1.5, bedsAvailable: 0, totalBeds: 0, occupants: 1 },
+        { value: '2_in_a_room', label: '2 in a Room', price: basePrice * 1.2, bedsAvailable: 0, totalBeds: 0, occupants: 2 },
+        { value: '3_in_a_room', label: '3 in a Room', price: basePrice, bedsAvailable: 0, totalBeds: 0, occupants: 3 },
+        { value: '4_in_a_room', label: '4 in a Room', price: basePrice * 0.8, bedsAvailable: 0, totalBeds: 0, occupants: 4 },
+        { value: '5_in_a_room', label: '5 in a Room', price: basePrice * 0.7, bedsAvailable: 0, totalBeds: 0, occupants: 5 },
+        { value: '6_in_a_room', label: '6 in a Room', price: basePrice * 0.6, bedsAvailable: 0, totalBeds: 0, occupants: 6 }
       ];
     case 'apartment':
       return [

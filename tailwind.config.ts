@@ -20,9 +20,13 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        'bricolage': ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
-        'sans': ['Bricolage Grotesque', 'system-ui', 'sans-serif'],
-        'space-grotesk': ['Space Grotesk', 'sans-serif'], // Keep for backward compatibility
+        'display': ['Lexend', 'system-ui', 'sans-serif'], // Primary display font
+        'sans': ['Lexend', 'system-ui', 'sans-serif'], // Body text
+        'heading': ['Lexend', 'system-ui', 'sans-serif'], // Headings
+        'body': ['Lexend', 'system-ui', 'sans-serif'], // Body text alternative
+        // Legacy fonts for backward compatibility
+        'bricolage': ['Lexend', 'system-ui', 'sans-serif'],
+        'space-grotesk': ['Lexend', 'system-ui', 'sans-serif'],
       },
       spacing: {
         // Use standard Tailwind spacing scale for proper responsive design

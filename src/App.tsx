@@ -24,11 +24,18 @@ import { showAuthError } from './components/auth/AuthFeedback';
 // Lazy load all pages for better performance
 const Index = React.lazy(() => import('@/pages/Index'));
 const Landing = React.lazy(() => import('@/pages/Landing'));
+const OwnerLanding = React.lazy(() => import('@/pages/OwnerLanding'));
 const Welcome = React.lazy(() => import('@/pages/Welcome'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
 const PaymentSuccess = React.lazy(() => import('@/pages/PaymentSuccess'));
 const TestPayment = React.lazy(() => import('@/pages/TestPayment'));
 const TestAuth = React.lazy(() => import('@/pages/TestAuth'));
+const AboutUs = React.lazy(() => import('@/pages/AboutUs'));
+const TrustSafety = React.lazy(() => import('@/pages/TrustSafety'));
+const Contact = React.lazy(() => import('@/pages/Contact'));
+const AmbassadorRegistration = React.lazy(() => import('@/pages/AmbassadorRegistration'));
+const Pricing = React.lazy(() => import('@/pages/Pricing'));
+const HelpFAQ = React.lazy(() => import('@/pages/HelpFAQ'));
 
 // Auth Pages
 const Login = React.lazy(() => import('@/pages/auth/Login'));
@@ -171,6 +178,7 @@ function App() {
                 {/* Public Routes */}
                 <Route path="/" element={<SafeRoute element={<AuthRedirect />} />} />
                 <Route path="/landing" element={<SafeRoute element={<Landing />} />} />
+                <Route path="/owner-landing" element={<SafeRoute element={<OwnerLanding />} />} />
                 <Route path="/welcome" element={<SafeRoute element={<Welcome />} />} />
                 <Route path="/login" element={<SafeRoute element={<Login />} />} />
                 <Route path="/register" element={<SafeRoute element={<Register />} />} />
@@ -178,6 +186,12 @@ function App() {
                 <Route path="/payment-success" element={<SafeRoute element={<PaymentSuccess />} />} />
                 <Route path="/test-payment" element={<SafeRoute element={<TestPayment />} />} />
                 <Route path="/test-auth" element={<SafeRoute element={<TestAuth />} />} />
+                <Route path="/about" element={<SafeRoute element={<AboutUs />} />} />
+                <Route path="/trust-safety" element={<SafeRoute element={<TrustSafety />} />} />
+                <Route path="/contact" element={<SafeRoute element={<Contact />} />} />
+                <Route path="/ambassador" element={<SafeRoute element={<AmbassadorRegistration />} />} />
+                <Route path="/pricing" element={<SafeRoute element={<Pricing />} />} />
+                <Route path="/help-faq" element={<SafeRoute element={<HelpFAQ />} />} />
 
                 {/* Test Route for Flow Verification */}
                 <Route path="/test-flow" element={

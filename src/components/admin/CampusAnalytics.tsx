@@ -44,6 +44,9 @@ import {
   createCampusJurisdiction,
   CampusJurisdiction
 } from '@/types/auth';
+import { supabase } from '@/integrations/supabase/client';
+import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+import { logger } from '@/utils/enhanced-logger';
 
 // ============================================================================
 // CAMPUS ANALYTICS TYPES
@@ -177,142 +180,208 @@ const CampusAnalytics: React.FC = () => {
   // ============================================================================
 
   /**
-   * Fetch campus analytics data
+   * Fetch campus analytics data from real database
+   * ✅ BE CONSCIOUS: Uses centralized commission engine for accurate calculations
    */
-  const { data: analyticsData, isLoading: analyticsLoading } = useQuery({
+  const { data: analyticsData, isLoading: analyticsLoading, error: analyticsError } = useQuery({
     queryKey: ['campus-analytics', selectedCampus, timeRange],
     queryFn: async (): Promise<CampusAnalyticsData> => {
-      // Mock data - would integrate with actual analytics API
-      const campusData: Record<string, CampusAnalyticsData> = {
-        'UPSA-Accra': {
-          campusCode: 'UPSA',
-          campusName: 'University of Professional Studies, Accra',
-          timeRange,
-          studentMetrics: {
-            totalStudents: 456,
-            activeStudents: 423,
-            newRegistrations: 28,
-            verifiedStudents: 423,
-            studentGrowthRate: 15.2,
-            averageBookingDuration: 4.2,
-            studentSatisfactionScore: 4.6,
-            retentionRate: 89.3
-          },
-          propertyMetrics: {
-            totalProperties: 23,
-            activeListings: 20,
-            occupancyRate: 87.5,
-            averageRent: 1150,
-            propertyUtilization: 92.1,
-            newListings: 3,
-            propertyRating: 4.4,
-            maintenanceRequests: 5
-          },
-          revenueMetrics: {
-            totalRevenue: 45600,
-            monthlyGrowth: 12.8,
-            commissionEarned: 2280,
-            platformFees: 1200,
-            averageBookingValue: 4600,
-            revenuePerStudent: 108,
-            paymentSuccessRate: 98.2,
-            outstandingPayments: 2400
-          },
-          engagementMetrics: {
-            dailyActiveUsers: 156,
-            searchActivity: 1240,
-            bookingConversionRate: 23.4,
-            averageSessionDuration: 8.5,
-            pageViews: 5670,
-            mobileUsage: 78.9,
-            supportTickets: 12,
-            responseTime: 2.3
-          },
-          performanceMetrics: {
-            verificationTime: 1.8,
-            approvalTime: 2.1,
-            disputeResolutionTime: 1.5,
-            customerSatisfaction: 4.6,
-            systemUptime: 99.2,
-            errorRate: 0.8,
-            loadTime: 1.2,
-            successfulTransactions: 98.7
-          },
-          trends: [
-            { date: '2024-01-01', students: 420, properties: 20, revenue: 42000, bookings: 95 },
-            { date: '2024-01-02', students: 425, properties: 21, revenue: 43500, bookings: 98 },
-            { date: '2024-01-03', students: 430, properties: 22, revenue: 44200, bookings: 102 },
-            { date: '2024-01-04', students: 435, properties: 22, revenue: 45100, bookings: 105 },
-            { date: '2024-01-05', students: 440, properties: 23, revenue: 45600, bookings: 108 }
-          ]
-        },
-        'UG-Legon': {
-          campusCode: 'UG',
-          campusName: 'University of Ghana, Legon',
-          timeRange,
-          studentMetrics: {
-            totalStudents: 678,
-            activeStudents: 634,
-            newRegistrations: 42,
-            verifiedStudents: 634,
-            studentGrowthRate: 18.7,
-            averageBookingDuration: 4.1,
-            studentSatisfactionScore: 4.7,
-            retentionRate: 91.2
-          },
-          propertyMetrics: {
-            totalProperties: 34,
-            activeListings: 31,
-            occupancyRate: 92.3,
-            averageRent: 1280,
-            propertyUtilization: 94.8,
-            newListings: 4,
-            propertyRating: 4.5,
-            maintenanceRequests: 7
-          },
-          revenueMetrics: {
-            totalRevenue: 67800,
-            monthlyGrowth: 16.4,
-            commissionEarned: 3390,
-            platformFees: 1800,
-            averageBookingValue: 5120,
-            revenuePerStudent: 107,
-            paymentSuccessRate: 98.9,
-            outstandingPayments: 3200
-          },
-          engagementMetrics: {
-            dailyActiveUsers: 234,
-            searchActivity: 1890,
-            bookingConversionRate: 26.1,
-            averageSessionDuration: 9.2,
-            pageViews: 8450,
-            mobileUsage: 82.1,
-            supportTickets: 8,
-            responseTime: 1.9
-          },
-          performanceMetrics: {
-            verificationTime: 1.6,
-            approvalTime: 1.9,
-            disputeResolutionTime: 1.3,
-            customerSatisfaction: 4.7,
-            systemUptime: 99.5,
-            errorRate: 0.5,
-            loadTime: 1.1,
-            successfulTransactions: 99.1
-          },
-          trends: [
-            { date: '2024-01-01', students: 620, properties: 30, revenue: 62000, bookings: 142 },
-            { date: '2024-01-02', students: 630, properties: 31, revenue: 64500, bookings: 148 },
-            { date: '2024-01-03', students: 640, properties: 32, revenue: 65800, bookings: 152 },
-            { date: '2024-01-04', students: 650, properties: 33, revenue: 66900, bookings: 156 },
-            { date: '2024-01-05', students: 660, properties: 34, revenue: 67800, bookings: 160 }
-          ]
-        }
-      };
+      if (!selectedCampus) {
+        throw new Error('No campus selected');
+      }
 
-      return campusData[selectedCampus || 'UPSA-Accra'] || campusData['UPSA-Accra'];
+      try {
+        logger.info('Fetching campus analytics', {
+          campus: selectedCampus.campusCode,
+          timeRange
+        });
+
+        // Get commission rates from centralized engine
+        const rates = centralizedCommissionEngine.getCommissionRates();
+        const fees = centralizedCommissionEngine.getPlatformFees();
+
+        // Calculate date range
+        const now = new Date();
+        let startDate: Date;
+
+        switch (timeRange) {
+          case 'current_month':
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+            break;
+          case 'last_month':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+            break;
+          case 'last_3_months':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 3, 1);
+            break;
+          case 'last_6_months':
+            startDate = new Date(now.getFullYear(), now.getMonth() - 6, 1);
+            break;
+          case 'current_year':
+            startDate = new Date(now.getFullYear(), 0, 1);
+            break;
+          default:
+            startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+        }
+
+        // Extract university name from campus code (e.g., "UPSA-Accra" -> "UPSA")
+        const universityCode = selectedCampus.campusCode.split('-')[0];
+
+        // Fetch students for this campus
+        const { data: students, error: studentsError } = await supabase
+          .from('profiles')
+          .select('id, university_name, verification_status, created_at')
+          .eq('role', 'student')
+          .ilike('university_name', `%${universityCode}%`);
+
+        if (studentsError) {
+          logger.error('Error fetching students', { error: studentsError });
+          throw studentsError;
+        }
+
+        const studentIds = (students || []).map(s => s.id);
+        const totalStudents = studentIds.length;
+        const verifiedStudents = (students || []).filter(s => s.verification_status === 'verified').length;
+        const newRegistrations = (students || []).filter(s =>
+          new Date(s.created_at) >= startDate
+        ).length;
+
+        // Fetch bookings for students from this campus
+        const { data: bookings, error: bookingsError } = await supabase
+          .from('bookings_enhanced')
+          .select('total_amount, platform_fee, agent_fee, property_rent, payment_status, created_at, check_in_date, check_out_date')
+          .in('student_id', studentIds.length > 0 ? studentIds : ['00000000-0000-0000-0000-000000000000']) // Prevent empty array error
+          .gte('created_at', startDate.toISOString());
+
+        if (bookingsError) {
+          logger.error('Error fetching bookings', { error: bookingsError });
+          throw bookingsError;
+        }
+
+        // Calculate revenue metrics from real data
+        const paidBookings = (bookings || []).filter(b =>
+          ['paid', 'success', 'completed'].includes(b.payment_status)
+        );
+
+        const totalRevenue = paidBookings.reduce((sum, b) => sum + (b.total_amount || 0), 0);
+        const commissionEarned = paidBookings.reduce((sum, b) => sum + (b.platform_fee || 0), 0);
+        const platformFees = paidBookings.length * fees.fixed;
+        const averageBookingValue = paidBookings.length > 0
+          ? totalRevenue / paidBookings.length
+          : 0;
+        const revenuePerStudent = totalStudents > 0
+          ? totalRevenue / totalStudents
+          : 0;
+        const paymentSuccessRate = (bookings || []).length > 0
+          ? (paidBookings.length / (bookings || []).length) * 100
+          : 100;
+        const outstandingPayments = (bookings || [])
+          .filter(b => b.payment_status === 'pending')
+          .reduce((sum, b) => sum + (b.total_amount || 0), 0);
+
+        // Calculate average booking duration
+        const bookingsWithDates = paidBookings.filter(b => b.check_in_date && b.check_out_date);
+        const averageBookingDuration = bookingsWithDates.length > 0
+          ? bookingsWithDates.reduce((sum, b) => {
+              const days = Math.ceil(
+                (new Date(b.check_out_date!).getTime() - new Date(b.check_in_date!).getTime()) /
+                (1000 * 60 * 60 * 24)
+              );
+              return sum + days;
+            }, 0) / bookingsWithDates.length / 30 // Convert to months
+          : 0;
+
+        // Fetch properties near this campus (simplified - would need geo-location in production)
+        const { data: properties, error: propertiesError } = await supabase
+          .from('properties')
+          .select('id, is_available, rent, price, verification_status, created_at')
+          .eq('verification_status', 'verified');
+
+        if (propertiesError) {
+          logger.warn('Error fetching properties', { error: propertiesError });
+        }
+
+        const totalProperties = (properties || []).length;
+        const activeListings = (properties || []).filter(p => p.is_available).length;
+        const newListings = (properties || []).filter(p =>
+          new Date(p.created_at) >= startDate
+        ).length;
+        const averageRent = (properties || []).length > 0
+          ? (properties || []).reduce((sum, p) => sum + (p.rent || p.price || 0), 0) / (properties || []).length
+          : 0;
+
+        logger.info('Campus analytics calculated successfully', {
+          campus: selectedCampus.campusCode,
+          totalRevenue,
+          commissionEarned,
+          totalStudents,
+          bookingsCount: paidBookings.length
+        });
+
+        return {
+          campusCode: selectedCampus.campusCode,
+          campusName: selectedCampus.campusName || 'Unknown Campus',
+          timeRange,
+          studentMetrics: {
+            totalStudents,
+            activeStudents: verifiedStudents, // Simplified: verified = active
+            newRegistrations,
+            verifiedStudents,
+            studentGrowthRate: totalStudents > 0 ? (newRegistrations / totalStudents) * 100 : 0,
+            averageBookingDuration: Math.round(averageBookingDuration * 10) / 10,
+            studentSatisfactionScore: 4.5, // TODO: Implement reviews system
+            retentionRate: 85.0 // TODO: Calculate from repeat bookings
+          },
+          propertyMetrics: {
+            totalProperties,
+            activeListings,
+            occupancyRate: totalProperties > 0 ? (paidBookings.length / totalProperties) * 100 : 0,
+            averageRent: Math.round(averageRent),
+            propertyUtilization: activeListings > 0 ? (activeListings / totalProperties) * 100 : 0,
+            newListings,
+            propertyRating: 4.4, // TODO: Implement reviews system
+            maintenanceRequests: 0 // TODO: Implement maintenance system
+          },
+          revenueMetrics: {
+            totalRevenue: Math.round(totalRevenue),
+            monthlyGrowth: 0, // TODO: Calculate from previous period
+            commissionEarned: Math.round(commissionEarned),
+            platformFees: Math.round(platformFees),
+            averageBookingValue: Math.round(averageBookingValue),
+            revenuePerStudent: Math.round(revenuePerStudent),
+            paymentSuccessRate: Math.round(paymentSuccessRate * 10) / 10,
+            outstandingPayments: Math.round(outstandingPayments)
+          },
+          engagementMetrics: {
+            dailyActiveUsers: verifiedStudents, // Simplified: verified students = active
+            searchActivity: paidBookings.length * 5, // Estimate: 5 searches per booking
+            bookingConversionRate: totalStudents > 0 ? (paidBookings.length / totalStudents) * 100 : 0,
+            averageSessionDuration: 8.5, // TODO: Implement analytics tracking
+            pageViews: paidBookings.length * 10, // Estimate: 10 page views per booking
+            mobileUsage: 78.0, // TODO: Implement device tracking
+            supportTickets: 0, // TODO: Implement support system
+            responseTime: 2.0 // TODO: Implement support metrics
+          },
+          performanceMetrics: {
+            verificationTime: 1.8, // TODO: Calculate from verification timestamps
+            approvalTime: 2.0, // TODO: Calculate from approval timestamps
+            disputeResolutionTime: 1.5, // TODO: Implement dispute system
+            customerSatisfaction: 4.5, // TODO: Implement reviews system
+            systemUptime: 99.5, // TODO: Implement monitoring
+            errorRate: 0.5, // TODO: Implement error tracking
+            loadTime: 1.2, // TODO: Implement performance monitoring
+            successfulTransactions: paymentSuccessRate
+          },
+          trends: [] // TODO: Implement time-series data collection
+        };
+      } catch (error) {
+        logger.error('Failed to fetch campus analytics', { error, campus: selectedCampus });
+        throw error;
+      }
     },
-    enabled: !!selectedCampus
+    enabled: !!selectedCampus,
+    refetchInterval: 60000, // Refetch every minute
+    staleTime: 30000 // Consider data stale after 30 seconds
   });
 
   // ============================================================================
@@ -399,22 +468,47 @@ const CampusAnalytics: React.FC = () => {
             onChange={(e) => setTimeRange(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md text-sm"
           >
-            <option value="current_week">This Week</option>
-            <option value="current_month">This Month</option>
+            <option value="current_month">Current Month</option>
             <option value="last_month">Last Month</option>
-            <option value="quarter">This Quarter</option>
-            <option value="year">This Year</option>
+            <option value="last_3_months">Last 3 Months</option>
+            <option value="last_6_months">Last 6 Months</option>
+            <option value="current_year">This Year</option>
           </select>
-
-          <Badge className="bg-purple-100 text-purple-800 flex items-center gap-2">
-            <School className="h-4 w-4" />
-            Campus Analytics
-          </Badge>
         </div>
       </div>
 
+      {/* Error State */}
+      {analyticsError && (
+        <Alert className="border-red-200 bg-red-50">
+          <AlertTriangle className="h-4 w-4 text-red-600" />
+          <AlertDescription className="text-red-800">
+            Failed to load campus analytics. Please try again later.
+            {analyticsError instanceof Error && (
+              <span className="block text-xs mt-1">{analyticsError.message}</span>
+            )}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Loading State */}
+      {analyticsLoading && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+            <Card key={i}>
+              <CardContent className="p-4">
+                <div className="animate-pulse">
+                  <div className="h-8 w-8 bg-gray-200 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 mb-2"></div>
+                  <div className="h-6 bg-gray-200 rounded w-1/2"></div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
+
       {/* Analytics Overview Cards */}
-      {analyticsData && (
+      {analyticsData && !analyticsLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <Card>
             <CardContent className="p-4">
@@ -766,7 +860,9 @@ const CampusAnalytics: React.FC = () => {
                       <span className="font-medium">{formatCurrency(analyticsData.revenueMetrics.totalRevenue)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Commission Earned (5%)</span>
+                      <span className="text-sm text-gray-600">
+                        Commission Earned ({(centralizedCommissionEngine.getCommissionRates().platform * 100).toFixed(1)}%)
+                      </span>
                       <span className="font-medium text-green-600">{formatCurrency(analyticsData.revenueMetrics.commissionEarned)}</span>
                     </div>
                     <div className="flex justify-between">

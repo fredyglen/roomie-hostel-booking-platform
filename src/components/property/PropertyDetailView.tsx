@@ -72,13 +72,13 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
   };
 
   const getDistanceText = (): string => {
-    const distance = property.distance_to_campus || property.distanceToCampus;
+    const distance = (property as any).distance_to_campus || (property as any).distanceToCampus;
     if (distance === undefined || distance === null) return '';
     return String(distance);
   };
 
   const getOwnerResponseRate = (): string => {
-    const rate = property.owner?.responseRate;
+    const rate = (property.owner as any)?.responseRate;
     if (rate === undefined || rate === null) return 'N/A';
     return typeof rate === 'number' ? `${rate}%` : String(rate);
   };
@@ -93,35 +93,23 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
   // Safe data extraction
   const safeProperty = {
     ...property,
-    location: getLocationText(property.location),
+    location: getLocationText({ address: property.address as any, city: (property as any).city, state: (property as any).state }),
     amenities: property.amenities ? getAmenitiesArray(property.amenities) : [],
     price: getPriceNumber(),
     distance_to_campus: getDistanceText(),
-    price_unit: property.price_unit || property.priceUnit || 'month',
     house_rules: getHouseRulesArray().join(', '),
     owner: property.owner ? {
       ...property.owner,
       responseRate: getOwnerResponseRate()
     } : undefined
   };
-  // Extract gallery images preferring explicit images; fallback to media array (cover first)
-  const computePropertyImages = (p: Property): string[] => {
-    const imgs = Array.isArray((p as any).images) ? (p as any).images as string[] : [];
-    const validImgs = imgs.filter((u) => typeof u === 'string' && u.trim());
-    if (validImgs.length > 0) return validImgs;
 
-    const media = Array.isArray((p as any).media) ? (p as any).media : [];
-    const imageItems = media
-      .filter((m: any) => m && m.type === 'image' && typeof m.url === 'string' && m.url.trim())
-      .sort((a: any, b: any) => Number(b?.isCover) - Number(a?.isCover)); // cover first
-    const urls = imageItems.map((m: any) => m.url as string);
-    return urls.length > 0 ? urls : [];
-  };
 
   // Single cover image derived from property
   const coverImage = deriveCoverImageFromProperty(property);
 
-
+  // Selected room price from dropdown
+  const [selectedRoomPrice, setSelectedRoomPrice] = React.useState<number | undefined>(undefined);
 
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-4">
@@ -167,23 +155,26 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             amenities={safeProperty.amenities}
             type={property.type}
             location={safeProperty.location}
-            availableUnits={property.availableUnits}
-            goodToKnow={property.good_to_know}
-            roomTypes={property.room_types}
-            nearestUniversity={property.nearest_university}
+            availableUnits={(property as any).availableUnits}
+            goodToKnow={(property as any).good_to_know}
+            roomTypes={(property as any).room_types}
+            nearestUniversity={(property as any).nearest_university}
             // ✅ NEW: Pass pricing matrix data to tabs
             propertyId={property.id}
-            propertyCategory={property.property_category || property.propertyCategory}
+            propertyCategory={property.property_category}
+            propertyTitle={property.title || (property as any).name}
+            onRoomPriceChange={setSelectedRoomPrice}
           />
         </div>
 
         {/* ✅ STREAMLINED SIDEBAR - Essential Components Only */}
-        <div className="space-y-6 lg:sticky lg:top-4 lg:self-start">
+        <div className="space-y-6 lg:sticky lg:top-24">
           {/* Booking Card */}
           <PropertyBookingCard
             property={property}
             onBook={onBookNow}
             onViewStory={onViewStory}
+            selectedRoomPrice={selectedRoomPrice}
           />
 
           {/* ✅ REMOVED: Property Owner Card to prevent outside booking */}

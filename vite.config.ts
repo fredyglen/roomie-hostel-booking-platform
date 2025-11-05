@@ -111,5 +111,13 @@ export default defineConfig(({ mode }) => ({
     setupFiles: ['./src/tests/setup.ts'],
     globals: true,
     include: ['src/tests/**/*.{test,spec}.{ts,tsx}'],
+    exclude: [
+      'node_modules',
+      'dist',
+      '.idea',
+      '.git',
+      '.cache',
+      'src/tests/e2e/**', // Exclude Playwright E2E tests from Vitest
+    ],
   }
 }));

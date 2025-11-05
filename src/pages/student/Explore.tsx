@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import { Input } from '@/components/ui/input';
@@ -7,59 +7,86 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import { Icon } from '@iconify/react';
+import { useDynamicProperties } from '@/hooks/property/useDynamicProperties';
+import { useGeolocation } from '@/hooks/useGeolocation';
+import { rankByProximity } from '@/utils/proximityRanking';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import PremiumPropertyCard from '@/components/properties/PremiumPropertyCard';
+import { createPropertyLimit } from '@/services/enhanced-property.service';
 
-// Sample location data
-const popularLocations = [
-  { id: 1, name: 'East Legon', count: 42, image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80' },
-  { id: 2, name: 'Legon', count: 27, image: 'https://images.unsplash.com/photo-1721322800607-8c38375eef04?auto=format&fit=crop&q=80' },
-  { id: 3, name: 'Atomic', count: 15, image: 'https://images.unsplash.com/photo-1472396961693-142e6e269027?auto=format&fit=crop&q=80' },
-  { id: 4, name: 'Madina', count: 31, image: 'https://images.unsplash.com/photo-1649972904349-6e44c42644a7?auto=format&fit=crop&q=80' },
-];
 
-const universities = [
-  { id: 1, name: 'University of Ghana', acronym: 'UG' },
-  { id: 2, name: 'Ghana Institute of Management and Public Administration', acronym: 'GIMPA' },
-  { id: 3, name: 'University of Professional Studies, Accra', acronym: 'UPSA' },
-  { id: 4, name: 'Central University', acronym: 'CU' },
-  { id: 5, name: 'Accra Technical University', acronym: 'ATU' },
-];
 
-const recentSearches = ['East Legon hostels', 'UPSA 2 in a room', 'Legon apartments', 'Affordable hostels in Madina'];
 
-// ✅ BE CONSCIOUS: HARDCODED HOSTELS ELIMINATED - Students see only real owner properties
-const topRatedHostels: any[] = []; // Real data will come from owner properties
 
-// ✅ BE CONSCIOUS: HARDCODED HOSTELS ELIMINATED - Students see only real owner properties
-const allGirlsHostels: any[] = []; // Real data will come from owner properties
 
-// ✅ BE CONSCIOUS: HARDCODED HOSTELS ELIMINATED - Students see only real owner properties
-const nearUPSAHostels: any[] = []; // Real data will come from owner properties
 
 const Explore: React.FC = () => {
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  
+
   const handleSearch = () => {
-    if (searchQuery.trim()) {
-      navigate(`/student/properties?search=${encodeURIComponent(searchQuery)}`);
+    const q = searchQuery.trim();
+    if (q) {
+      navigate(`/student/properties?search=${encodeURIComponent(q)}`);
+      setRecentSearches((prev) => {
+        const next = [q, ...prev.filter((s) => s.toLowerCase() !== q.toLowerCase())].slice(0, 6);
+        localStorage.setItem('recent_searches', JSON.stringify(next));
+        return next;
+      });
+
     }
   };
-  
-  const handleLocationClick = (location: string) => {
-    navigate(`/student/properties?location=${encodeURIComponent(location)}`);
-  };
-  
-  const handleUniversityClick = (university: string) => {
-    navigate(`/student/properties?university=${encodeURIComponent(university)}`);
-  };
-  
+
+
   const handleRecentSearch = (search: string) => {
     navigate(`/student/properties?search=${encodeURIComponent(search)}`);
   };
 
-  const handleHostelClick = (id: string) => {
-    navigate(`/student/property/${id}`);
-  };
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('recent_searches');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
+
+
+  const { coords, permissionStatus, isLoading: isLocLoading, requestLocation } = useGeolocation();
+
+  const {
+    properties = [],
+    isLoading: isPropsLoading,
+    isError,
+  } = useDynamicProperties(
+    { filters: { isAvailable: true, verified: true, minPrice: 0, maxPrice: 50000 }, limit: createPropertyLimit(24) }
+  );
+
+  const userRegion = useMemo(() => {
+    if (!coords) return null as null | { city: string; state?: string };
+    const { latitude: lat, longitude: lng } = coords;
+    // Heuristic-only mapping for Phase A; Phase B uses DB-backed coordinates.
+    if (lat >= 5 && lat <= 6.2 && lng >= -1 && lng <= 0.5) {
+      return { city: 'Accra', state: 'Greater Accra' };
+    }
+    return null;
+  }, [coords]);
+
+  const nearestProperties = useMemo(
+    () => rankByProximity(properties, { userCity: userRegion?.city, userState: userRegion?.state }).slice(0, 8),
+    [properties, userRegion]
+  );
+
+  const femaleOnlyProperties = useMemo(
+    () => properties.filter((p: any) => (p.gender_restriction || p.gender_type) === 'female').slice(0, 8),
+    [properties]
+  );
+
+  const nearUPSAProperties = useMemo(
+    () => properties.filter((p: any) => String(p.city || '').toLowerCase().includes('accra')).slice(0, 8),
+    [properties]
+  );
 
   return (
     <div className="min-h-screen flex flex-col font-space-grotesk pb-16">
@@ -67,14 +94,14 @@ const Explore: React.FC = () => {
       <main className="flex-grow py-6 px-4">
         <div className="container mx-auto max-w-7xl">
           <h1 className="text-2xl md:text-3xl font-bold mb-6">Explore</h1>
-          
+
           {/* Search Box */}
           <div className="relative mb-8">
-            <Icon 
-              icon="solar:search-linear" 
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500" 
-              width={20} 
-              height={20} 
+            <Icon
+              icon="solar:search-linear"
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-blue-500"
+              width={20}
+              height={20}
             />
             <Input
               type="text"
@@ -86,222 +113,245 @@ const Explore: React.FC = () => {
                 if (e.key === 'Enter') handleSearch();
               }}
             />
-            <Button 
+            <Button
               onClick={handleSearch}
               className="absolute right-0 top-0 h-full rounded-l-none"
             >
               Search
             </Button>
           </div>
-          
+
           {/* Recent Searches */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-3">Recent Searches</h2>
-            <div className="flex flex-wrap gap-2">
-              {recentSearches.map((search, index) => (
-                <Button 
-                  key={index} 
-                  variant="outline" 
-                  size="sm"
-                  className="rounded-full flex items-center"
-                  onClick={() => handleRecentSearch(search)}
-                >
-                  <Icon icon="solar:clock-circle-linear" className="mr-1 text-blue-500" />
-                  {search}
-                </Button>
-              ))}
+          {recentSearches.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-semibold mb-3">Recent Searches</h2>
+              <div className="flex flex-wrap gap-2">
+                {recentSearches.map((search, index) => (
+                  <Button
+                    key={index}
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full flex items-center"
+                    onClick={() => handleRecentSearch(search)}
+                  >
+                    <Icon icon="solar:clock-circle-linear" className="mr-1 text-blue-500" />
+                    {search}
+                  </Button>
+                ))}
+              </div>
             </div>
-          </div>
-          
-          {/* Popular Locations */}
-          <div className="mb-8">
-            <h2 className="text-lg font-semibold mb-3">Popular Locations</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {popularLocations.map(location => (
-                <Card 
-                  key={location.id} 
-                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleLocationClick(location.name)}
-                >
-                  <div className="relative h-32">
-                    <img 
-                      src={location.image} 
-                      alt={location.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black bg-opacity-30 flex flex-col justify-end p-3">
-                      <p className="text-white font-semibold">{location.name}</p>
-                      <p className="text-white text-sm">{location.count} properties</p>
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          </div>
-          
-          {/* Top Rated Hostels */}
-          <div className="mb-8">
-            <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Top Rated Hostels</h2>
-              <Button 
-                variant="link" 
-                onClick={() => navigate('/student/properties?sort=rating')} 
-                className="text-blue-500 px-0"
-              >
-                See all
-                <Icon icon="solar:arrow-right-linear" className="ml-1" />
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {topRatedHostels.map(hostel => (
-                <Card 
-                  key={hostel.id} 
-                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleHostelClick(hostel.id)}
-                >
-                  <div className="relative h-40">
-                    <img 
-                      src={hostel.image} 
-                      alt={hostel.name}
-                      className="w-full h-full object-cover"
-                    />
-                    {hostel.tags && hostel.tags.includes('Girls Only') && (
-                      <div className="absolute top-2 right-2 bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">
-                        Girls Only
-                      </div>
+          )}
+
+          {/* Location access and status - minimal UI */}
+          <div className="mb-6">
+            <Card>
+              <CardContent className="p-4 flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold">Find homes near you</h2>
+                  <div className="text-sm text-gray-600 flex items-center gap-2">
+                    {permissionStatus === 'granted' && coords ? (
+                      <>
+                        <Icon icon="solar:check-circle-linear" className="text-green-600" />
+                        <span>Location enabled{userRegion?.city ? ` • ${userRegion.city}` : ''}</span>
+                      </>
+                    ) : permissionStatus === 'denied' ? (
+                      <>
+                        <Icon icon="solar:map-point-cross-linear" className="text-gray-500" />
+                        <span>Location access denied. Enable in browser settings to see nearby homes.</span>
+                      </>
+                    ) : permissionStatus === 'unavailable' ? (
+                      <>
+                        <Icon icon="solar:danger-triangle-linear" className="text-gray-500" />
+                        <span>Geolocation not available in this browser.</span>
+                      </>
+                    ) : (
+                      <>
+                        <Icon icon="solar:map-point-linear" className="text-blue-500" />
+                        <span>Enable location to see homes near you.</span>
+                      </>
                     )}
-                    <div className="absolute top-2 left-2 bg-white rounded-full px-2 py-1 flex items-center">
-                      <Icon icon="solar:star-bold" className="text-yellow-400 mr-1" width={14} height={14} />
-                      <span className="text-xs font-semibold">{hostel.rating}</span>
-                    </div>
                   </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-base mb-1">{hostel.name}</h3>
-                    <div className="flex items-center text-gray-600 text-sm mb-2">
-                      <Icon icon="solar:map-point-linear" className="mr-1 text-blue-500" width={14} height={14} />
-                      {hostel.location}
-                    </div>
-                    <p className="text-sm line-clamp-2 text-gray-600 mb-2">{hostel.description}</p>
-                    <p className="font-bold text-blue-600">${hostel.price}/month</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                </div>
+                {/* Subtle control — only show when not granted */}
+                {permissionStatus !== 'granted' && (
+                  <div className="flex items-center gap-2">
+                    <Badge variant="secondary" className="text-xs">{permissionStatus}</Badge>
+                    <Button
+                      onClick={requestLocation}
+                      disabled={isLocLoading}
+                      variant="ghost"
+                      size="sm"
+                      className="text-blue-600"
+                    >
+                      {isLocLoading ? 'Detecting…' : 'Enable'}
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
           </div>
-          
-          {/* All-Girls Hostels */}
+
+          {/* Nearest to You */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">All-Girls Hostels</h2>
-              <Button 
-                variant="link" 
-                onClick={() => navigate('/student/properties?tags=Girls Only')} 
+              <h2 className="text-lg font-semibold">Nearest to You</h2>
+              <Button
+                variant="link"
+                onClick={() => navigate('/student/properties')}
                 className="text-blue-500 px-0"
               >
                 See all
                 <Icon icon="solar:arrow-right-linear" className="ml-1" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {allGirlsHostels.map(hostel => (
-                <Card 
-                  key={hostel.id} 
-                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleHostelClick(hostel.id)}
-                >
-                  <div className="relative h-40">
-                    <img 
-                      src={hostel.image} 
-                      alt={hostel.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-2 right-2 bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">
-                      Girls Only
-                    </div>
-                    <div className="absolute top-2 left-2 bg-white rounded-full px-2 py-1 flex items-center">
-                      <Icon icon="solar:star-bold" className="text-yellow-400 mr-1" width={14} height={14} />
-                      <span className="text-xs font-semibold">{hostel.rating}</span>
-                    </div>
+            {isPropsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="border p-2">
+                    <Skeleton className="h-32 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/5 mb-1" />
+                    <Skeleton className="h-4 w-2/5" />
                   </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-base mb-1">{hostel.name}</h3>
-                    <div className="flex items-center text-gray-600 text-sm mb-2">
-                      <Icon icon="solar:map-point-linear" className="mr-1 text-blue-500" width={14} height={14} />
-                      {hostel.location}
-                    </div>
-                    <p className="text-sm line-clamp-2 text-gray-600 mb-2">{hostel.description}</p>
-                    <p className="font-bold text-blue-600">${hostel.price}/month</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : isError ? (
+              <div className="text-sm text-red-600">Failed to load properties.</div>
+            ) : nearestProperties.length === 0 ? (
+              <div className="text-sm text-gray-600">No nearby properties found.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {nearestProperties.map((property: any) => (
+                  <PremiumPropertyCard
+                    key={String(property.id)}
+                    id={property.id}
+                    title={property.title || property.name}
+                    rent={property.price || property.rent || 0}
+                    location={
+                      property.address
+                        ? `${property.address}, ${property.city || ''}`.trim()
+                        : `${property.city || ''}, ${property.state || ''}`.trim()
+                    }
+                    bedrooms={property.bedrooms || 1}
+                    bathrooms={property.bathrooms || 1}
+                    maxOccupants={property.max_occupants || property.maxOccupants || 1}
+                    images={Array.isArray(property.images) ? property.images : []}
+                    amenities={Array.isArray(property.amenities) ? property.amenities : []}
+                    propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
+                    genderRestriction={property.gender_restriction || property.gender_type}
+                    isAvailable={property.is_available ?? property.status === 'active'}
+                    onViewDetails={() => navigate(`/student/property/${String(property.id)}`)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-          
-          {/* Near UPSA */}
+
+          {/* Female-Only Properties */}
           <div className="mb-8">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="text-lg font-semibold">Near UPSA</h2>
-              <Button 
-                variant="link" 
-                onClick={() => navigate('/student/properties?university=UPSA')} 
+              <h2 className="text-lg font-semibold">Female-Only Properties</h2>
+              <Button
+                variant="link"
+                onClick={() => navigate('/student/properties?gender=female')}
                 className="text-blue-500 px-0"
               >
                 See all
                 <Icon icon="solar:arrow-right-linear" className="ml-1" />
               </Button>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              {nearUPSAHostels.map(hostel => (
-                <Card 
-                  key={hostel.id} 
-                  className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleHostelClick(hostel.id)}
-                >
-                  <div className="relative h-40">
-                    <img 
-                      src={hostel.image} 
-                      alt={hostel.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute top-2 left-2 bg-white rounded-full px-2 py-1 flex items-center">
-                      <Icon icon="solar:star-bold" className="text-yellow-400 mr-1" width={14} height={14} />
-                      <span className="text-xs font-semibold">{hostel.rating}</span>
-                    </div>
+            {isPropsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="border p-2">
+                    <Skeleton className="h-32 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/5 mb-1" />
+                    <Skeleton className="h-4 w-2/5" />
                   </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold text-base mb-1">{hostel.name}</h3>
-                    <div className="flex items-center text-gray-600 text-sm mb-2">
-                      <Icon icon="solar:map-point-linear" className="mr-1 text-blue-500" width={14} height={14} />
-                      {hostel.location}
-                    </div>
-                    <p className="text-sm line-clamp-2 text-gray-600 mb-2">{hostel.description}</p>
-                    <p className="font-bold text-blue-600">${hostel.price}/month</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : femaleOnlyProperties.length === 0 ? (
+              <div className="text-sm text-gray-600">No female-only properties at the moment.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {femaleOnlyProperties.map((property: any) => (
+                  <PremiumPropertyCard
+                    key={String(property.id)}
+                    id={property.id}
+                    title={property.title || property.name}
+                    rent={property.price || property.rent || 0}
+                    location={
+                      property.address
+                        ? `${property.address}, ${property.city || ''}`.trim()
+                        : `${property.city || ''}, ${property.state || ''}`.trim()
+                    }
+                    bedrooms={property.bedrooms || 1}
+                    bathrooms={property.bathrooms || 1}
+                    maxOccupants={property.max_occupants || property.maxOccupants || 1}
+                    images={Array.isArray(property.images) ? property.images : []}
+                    amenities={Array.isArray(property.amenities) ? property.amenities : []}
+                    propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
+                    genderRestriction={property.gender_restriction || property.gender_type}
+                    isAvailable={property.is_available ?? property.status === 'active'}
+                    onViewDetails={() => navigate(`/student/property/${String(property.id)}`)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
-          
-          {/* Universities */}
-          <div>
-            <h2 className="text-lg font-semibold mb-3">Universities</h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-              {universities.map(university => (
-                <Card 
-                  key={university.id}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                  onClick={() => handleUniversityClick(university.name)}
-                >
-                  <CardContent className="flex items-center p-4">
-                    <div className="w-12 h-12 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center text-lg font-bold mr-3">
-                      {university.acronym}
-                    </div>
-                    <span className="font-medium">{university.name}</span>
-                  </CardContent>
-                </Card>
-              ))}
+
+          {/* Properties in Accra */}
+          <div className="mb-8">
+            <div className="flex items-center justify-between mb-3">
+              <h2 className="text-lg font-semibold">Properties in Accra</h2>
+              <Button
+                variant="link"
+                onClick={() => navigate('/student/properties?city=Accra')}
+                className="text-blue-500 px-0"
+              >
+                See all
+                <Icon icon="solar:arrow-right-linear" className="ml-1" />
+              </Button>
             </div>
+            {isPropsLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {Array.from({ length: 8 }).map((_, i) => (
+                  <div key={i} className="border p-2">
+                    <Skeleton className="h-32 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/5 mb-1" />
+                    <Skeleton className="h-4 w-2/5" />
+                  </div>
+                ))}
+              </div>
+            ) : nearUPSAProperties.length === 0 ? (
+              <div className="text-sm text-gray-600">No Accra properties at the moment.</div>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+                {nearUPSAProperties.map((property: any) => (
+                  <PremiumPropertyCard
+                    key={String(property.id)}
+                    id={property.id}
+                    title={property.title || property.name}
+                    rent={property.price || property.rent || 0}
+                    location={
+                      property.address
+                        ? `${property.address}, ${property.city || ''}`.trim()
+                        : `${property.city || ''}, ${property.state || ''}`.trim()
+                    }
+                    bedrooms={property.bedrooms || 1}
+                    bathrooms={property.bathrooms || 1}
+                    maxOccupants={property.max_occupants || property.maxOccupants || 1}
+                    images={Array.isArray(property.images) ? property.images : []}
+                    amenities={Array.isArray(property.amenities) ? property.amenities : []}
+                    propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
+                    genderRestriction={property.gender_restriction || property.gender_type}
+                    isAvailable={property.is_available ?? property.status === 'active'}
+                    onViewDetails={() => navigate(`/student/property/${String(property.id)}`)}
+                  />
+                ))}
+              </div>
+            )}
           </div>
+
         </div>
       </main>
       <StudentNavBar />
