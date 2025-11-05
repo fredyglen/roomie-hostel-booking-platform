@@ -48,7 +48,7 @@ export class PropertyReviewService {
 
       // Check if student has completed booking for this property
       const { data: bookings, error: bookingError } = await supabase
-        .from('bookings')
+        .from('bookings_enhanced')
         .select('id, status, end_date')
         .eq('student_id', studentId)
         .eq('property_id', propertyId)

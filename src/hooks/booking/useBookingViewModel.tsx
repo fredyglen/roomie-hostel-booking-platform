@@ -170,7 +170,7 @@ export const useBookingViewModel = (property: Property | undefined, id: string) 
 
       // Update booking with payment information
       const { error } = await supabase
-        .from('bookings')
+        .from('bookings_enhanced')
         .update({
           payment_status: 'completed',
           status: 'confirmed',

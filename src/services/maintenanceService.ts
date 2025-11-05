@@ -365,7 +365,7 @@ export class MaintenanceRequestService {
   ): Promise<{ isValid: boolean; reason?: string }> {
     try {
       const { data, error } = await supabase
-        .from('bookings')
+        .from('bookings_enhanced')
         .select('id, status, start_date, end_date')
         .eq('student_id', studentId)
         .eq('property_id', propertyId)

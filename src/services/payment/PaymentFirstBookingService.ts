@@ -313,7 +313,7 @@ export class PaymentFirstBookingService {
 
       // Create booking with payment information
       const { data: booking, error: bookingError } = await supabase
-        .from('bookings')
+        .from('bookings_enhanced')
         .insert({
           property_id: data.property.id,
           student_id: data.student.id,

@@ -322,7 +322,7 @@ export class DataSeeder {
 
     // ✅ Skip if bookings already exist
     const { data: existingBookings } = await supabase
-      .from('bookings')
+      .from('bookings_enhanced')
       .select('id')
       .limit(1);
 
@@ -372,7 +372,7 @@ export class DataSeeder {
     }));
 
     const { error } = await supabase
-      .from('bookings')
+      .from('bookings_enhanced')
       .insert(bookingsToInsert);
 
     if (error) {
@@ -460,7 +460,7 @@ export class DataSeeder {
 
       // Delete in reverse order of dependencies
       await supabase.from('reviews').delete().neq('id', '');
-      await supabase.from('bookings').delete().neq('id', '');
+      await supabase.from('bookings_enhanced').delete().neq('id', '');
       await supabase.from('properties').delete().neq('id', '');
       
       // Note: We don't delete users as they might be real test accounts
@@ -554,7 +554,7 @@ export class DataSeeder {
     const [properties, users, bookings, reviews] = await Promise.all([
       supabase.from('properties').select('id', { count: 'exact' }),
       supabase.from('profiles').select('id', { count: 'exact' }),
-      supabase.from('bookings').select('id', { count: 'exact' }),
+      supabase.from('bookings_enhanced').select('id', { count: 'exact' }),
       supabase.from('reviews').select('id', { count: 'exact' }),
     ]);
 
