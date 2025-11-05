@@ -242,31 +242,11 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
     ];
   };
 
-  // Mock reviews data (in real app, this would come from reviews API)
+  // ✅ REAL REVIEWS - No mock data
+  // TODO: Implement real reviews API when review system is built
   const getReviews = () => {
-    return [
-      {
-        id: 1,
-        author: 'Sarah K.',
-        rating: 5,
-        comment: 'Great location, very close to campus. Clean facilities and friendly management.',
-        date: '2 weeks ago'
-      },
-      {
-        id: 2,
-        author: 'Michael A.',
-        rating: 4,
-        comment: 'Good value for money. The room was spacious and well-maintained.',
-        date: '1 month ago'
-      },
-      {
-        id: 3,
-        author: 'Grace M.',
-        rating: 4,
-        comment: 'Nice amenities and good security. Would recommend to other students.',
-        date: '2 months ago'
-      }
-    ];
+    // Return empty array until review system is implemented
+    return [];
   };
 
   const tabs = [
@@ -448,22 +428,30 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
                 Reviews
               </h3>
               <div className="space-y-4">
-                {getReviews().map((review) => (
-                  <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-gray-800">{review.author}</span>
-                        <div className="flex items-center gap-1">
-                          {Array.from({ length: review.rating }).map((_, i) => (
-                            <Star key={i} size={12} className="text-yellow-500 fill-current" />
-                          ))}
+                {getReviews().length > 0 ? (
+                  getReviews().map((review) => (
+                    <div key={review.id} className="p-4 bg-gray-50 rounded-lg">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <span className="font-medium text-gray-800">{review.author}</span>
+                          <div className="flex items-center gap-1">
+                            {Array.from({ length: review.rating }).map((_, i) => (
+                              <Star key={i} size={12} className="text-yellow-500 fill-current" />
+                            ))}
+                          </div>
                         </div>
+                        <span className="text-xs text-gray-500">{review.date}</span>
                       </div>
-                      <span className="text-xs text-gray-500">{review.date}</span>
+                      <p className="text-gray-700 text-sm">{review.comment}</p>
                     </div>
-                    <p className="text-gray-700 text-sm">{review.comment}</p>
+                  ))
+                ) : (
+                  <div className="p-6 bg-gray-50 rounded-lg text-center">
+                    <Star size={32} className="text-gray-300 mx-auto mb-2" />
+                    <p className="text-gray-500 text-sm">No reviews yet</p>
+                    <p className="text-gray-400 text-xs mt-1">Be the first to review this property</p>
                   </div>
-                ))}
+                )}
               </div>
             </div>
           </div>
