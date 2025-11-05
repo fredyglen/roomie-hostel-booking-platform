@@ -157,6 +157,10 @@ export interface Property {
   readonly current_occupancy?: number;
   readonly total_beds?: number;
 
+  // Reviews and ratings (added 2025-11-05)
+  readonly rating?: number | null; // Aggregated average rating (0.00-5.00), null = no reviews
+  readonly review_count?: number; // Total number of reviews, defaults to 0
+
   // Transparency and considerations
   readonly good_to_know?: string; // Important property considerations for students
 }
@@ -345,6 +349,8 @@ export interface LegacyProperty {
   readonly distanceToCampus?: number;
   readonly nearestUniversity?: string;
   readonly house_rules?: string[];
+  readonly rating?: number | null; // Added 2025-11-05
+  readonly reviewCount?: number; // Added 2025-11-05 (camelCase for legacy compatibility)
   readonly owner?: {
     readonly id: string;
     readonly name?: string;

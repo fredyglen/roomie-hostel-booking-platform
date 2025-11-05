@@ -329,8 +329,8 @@ const CampusAnalytics: React.FC = () => {
             verifiedStudents,
             studentGrowthRate: totalStudents > 0 ? (newRegistrations / totalStudents) * 100 : 0,
             averageBookingDuration: Math.round(averageBookingDuration * 10) / 10,
-            studentSatisfactionScore: 4.5, // TODO: Implement reviews system
-            retentionRate: 85.0 // TODO: Calculate from repeat bookings
+            studentSatisfactionScore: 0, // Will be calculated from property_reviews table (Phase 5)
+            retentionRate: 0 // Will be calculated from repeat bookings (Phase 7)
           },
           propertyMetrics: {
             totalProperties,
@@ -339,8 +339,8 @@ const CampusAnalytics: React.FC = () => {
             averageRent: Math.round(averageRent),
             propertyUtilization: activeListings > 0 ? (activeListings / totalProperties) * 100 : 0,
             newListings,
-            propertyRating: 4.4, // TODO: Implement reviews system
-            maintenanceRequests: 0 // TODO: Implement maintenance system
+            propertyRating: 0, // Will be calculated from property_reviews table (Phase 5)
+            maintenanceRequests: 0 // maintenance_requests table exists, needs connection (Phase 7)
           },
           revenueMetrics: {
             totalRevenue: Math.round(totalRevenue),
@@ -354,22 +354,22 @@ const CampusAnalytics: React.FC = () => {
           },
           engagementMetrics: {
             dailyActiveUsers: verifiedStudents, // Simplified: verified students = active
-            searchActivity: paidBookings.length * 5, // Estimate: 5 searches per booking
+            searchActivity: 0, // Will be tracked via property_views table (Phase 7)
             bookingConversionRate: totalStudents > 0 ? (paidBookings.length / totalStudents) * 100 : 0,
-            averageSessionDuration: 8.5, // TODO: Implement analytics tracking
-            pageViews: paidBookings.length * 10, // Estimate: 10 page views per booking
-            mobileUsage: 78.0, // TODO: Implement device tracking
-            supportTickets: 0, // TODO: Implement support system
-            responseTime: 2.0 // TODO: Implement support metrics
+            averageSessionDuration: 0, // Requires analytics integration (Phase 7)
+            pageViews: 0, // Will be tracked via property_views table (Phase 7)
+            mobileUsage: 0, // Requires device tracking (Phase 7)
+            supportTickets: 0, // Requires support system (Phase 7)
+            responseTime: 0 // Requires support metrics (Phase 7)
           },
           performanceMetrics: {
-            verificationTime: 1.8, // TODO: Calculate from verification timestamps
-            approvalTime: 2.0, // TODO: Calculate from approval timestamps
-            disputeResolutionTime: 1.5, // TODO: Implement dispute system
-            customerSatisfaction: 4.5, // TODO: Implement reviews system
-            systemUptime: 99.5, // TODO: Implement monitoring
-            errorRate: 0.5, // TODO: Implement error tracking
-            loadTime: 1.2, // TODO: Implement performance monitoring
+            verificationTime: 0, // Will be calculated from property_verifications table (Phase 7)
+            approvalTime: 0, // Will be calculated from property_verifications table (Phase 7)
+            disputeResolutionTime: 0, // Requires dispute system (Phase 7)
+            customerSatisfaction: 0, // Will be calculated from property_reviews table (Phase 5)
+            systemUptime: 0, // Requires monitoring integration (Phase 7)
+            errorRate: 0, // Requires error tracking (Phase 7)
+            loadTime: 0, // Requires performance monitoring (Phase 7)
             successfulTransactions: paymentSuccessRate
           },
           trends: [] // TODO: Implement time-series data collection

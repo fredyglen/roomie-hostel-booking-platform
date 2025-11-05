@@ -146,34 +146,35 @@ const StudentVerificationSystem: React.FC = () => {
 
   /**
    * Fetch verification statistics
+   * TODO: Connect to real student_verifications table (Phase 6)
    */
   const { data: verificationStats, isLoading: statsLoading } = useQuery({
     queryKey: ['verification-stats'],
     queryFn: async (): Promise<VerificationStats> => {
-      // Mock data - would integrate with actual verification API
+      // Return empty stats until connected to database
       return {
-        totalPending: 47,
-        totalApproved: 1234,
-        totalRejected: 23,
-        averageProcessingTime: 2.3, // days
-        verificationRate: 98.2, // percentage
-        campusBreakdown: {
-          'UPSA': 15,
-          'UG': 18,
-          'KNUST': 8,
-          'UCC': 6
-        }
+        totalPending: 0,
+        totalApproved: 0,
+        totalRejected: 0,
+        averageProcessingTime: 0,
+        verificationRate: 0,
+        campusBreakdown: {}
       };
     }
   });
 
   /**
    * Fetch student verifications with filtering
+   * TODO: Connect to real student_verifications table (Phase 6)
    */
   const { data: verifications, isLoading: verificationsLoading } = useQuery({
     queryKey: ['student-verifications', searchTerm, statusFilter, universityFilter],
     queryFn: async (): Promise<StudentVerification[]> => {
-      // Mock data - would integrate with actual verification API
+      // Return empty array until connected to database
+      // Real implementation will query: supabase.from('student_verifications').select('*')
+      return [];
+
+      /* REMOVED MOCK DATA - Will be replaced with real queries in Phase 6
       const mockVerifications: StudentVerification[] = [
         {
           id: '1',
@@ -247,7 +248,7 @@ const StudentVerificationSystem: React.FC = () => {
 
       // Apply filters
       return mockVerifications.filter(verification => {
-        const matchesSearch = searchTerm === '' || 
+        const matchesSearch = searchTerm === '' ||
           verification.firstName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           verification.lastName.toLowerCase().includes(searchTerm.toLowerCase()) ||
           verification.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -258,38 +259,29 @@ const StudentVerificationSystem: React.FC = () => {
 
         return matchesSearch && matchesStatus && matchesUniversity;
       });
+      */
     }
   });
 
   /**
    * Verify university enrollment
+   * TODO: Integrate with Ghana university APIs (Phase 6)
    */
   const verifyEnrollmentMutation = useMutation({
     mutationFn: async (studentIdNumber: string): Promise<UniversityEnrollmentData> => {
-      // Mock university API call - would integrate with actual university systems
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return {
-        studentId: studentIdNumber,
-        isEnrolled: true,
-        program: 'Business Administration',
-        yearOfStudy: 2,
-        enrollmentDate: new Date('2022-09-01'),
-        status: 'active',
-        gpa: 3.45,
-        lastUpdated: new Date()
-      };
+      // Placeholder until university API integration
+      throw new Error('University enrollment verification not yet connected. Coming soon in Phase 6.');
     }
   });
 
   /**
    * Approve student verification
+   * TODO: Connect to student_verifications table (Phase 6)
    */
   const approveVerificationMutation = useMutation({
     mutationFn: async ({ verificationId, notes }: { verificationId: string; notes?: string }) => {
-      // Mock API call - would integrate with actual verification API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { success: true };
+      // Placeholder until database integration
+      throw new Error('Student verification approval not yet connected. Coming soon in Phase 6.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['student-verifications'] });
@@ -300,12 +292,12 @@ const StudentVerificationSystem: React.FC = () => {
 
   /**
    * Reject student verification
+   * TODO: Connect to student_verifications table (Phase 6)
    */
   const rejectVerificationMutation = useMutation({
     mutationFn: async ({ verificationId, reason }: { verificationId: string; reason: string }) => {
-      // Mock API call - would integrate with actual verification API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return { success: true };
+      // Placeholder until database integration
+      throw new Error('Student verification rejection not yet connected. Coming soon in Phase 6.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['student-verifications'] });

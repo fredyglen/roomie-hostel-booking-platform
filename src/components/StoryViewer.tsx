@@ -71,8 +71,8 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
     distanceToCampus: property.distance_to_campus || 'Distance not specified',
     amenities: property.amenities || [],
     description: property.description || 'No description available',
-    rating: 4.5, // TODO: Get from reviews
-    reviewCount: 0 // TODO: Get from reviews
+    rating: property.rating ?? null, // Real rating from database or null
+    reviewCount: property.review_count ?? 0 // Real review count from database
   } : {
     id: propertyId,
     title: 'Loading...',
@@ -83,7 +83,7 @@ const StoryViewer: React.FC<StoryViewerProps> = ({ propertyId, onClose }) => {
     distanceToCampus: 'Loading...',
     amenities: [],
     description: 'Loading...',
-    rating: 0,
+    rating: null,
     reviewCount: 0
   };
 

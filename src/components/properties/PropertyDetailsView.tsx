@@ -48,7 +48,9 @@ const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
           <div className="flex items-center space-x-2">
             <Star className="h-4 w-4 text-yellow-500 fill-current" />
             <span className="text-sm font-medium">{property.rating.toFixed(1)}</span>
-            <span className="text-xs text-gray-500">({property.reviewCount || 0})</span>
+            <span className="text-xs text-gray-500">
+              ({property.review_count || property.reviewCount || 0} {(property.review_count || property.reviewCount || 0) === 1 ? 'review' : 'reviews'})
+            </span>
           </div>
         ) : (
           <div className="flex items-center space-x-2">

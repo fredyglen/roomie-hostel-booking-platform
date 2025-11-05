@@ -298,7 +298,9 @@ const PropertyDetailDesktop: React.FC<PropertyDetailDesktopProps> = ({
                       <Star size={18} className="text-yellow-500 fill-current" />
                       <span className="font-bold text-gray-900">{property.rating.toFixed(1)}</span>
                     </div>
-                    <div className="text-sm text-gray-600 font-medium">({property.reviewCount || 0} reviews)</div>
+                    <div className="text-sm text-gray-600 font-medium">
+                      ({property.review_count || property.reviewCount || 0} {(property.review_count || property.reviewCount || 0) === 1 ? 'review' : 'reviews'})
+                    </div>
                   </>
                 ) : (
                   <div className="flex items-center gap-2 bg-gray-50 px-3 py-2 rounded-full">

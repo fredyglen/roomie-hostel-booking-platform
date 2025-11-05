@@ -255,7 +255,9 @@ const PropertyDetailModal: React.FC<PropertyDetailModalProps> = ({
               <div className="flex items-center gap-2 bg-yellow-50 px-4 py-2 rounded-full">
                 <Star size={18} className="text-yellow-500 fill-current" />
                 <span className="font-bold text-gray-900">{property.rating.toFixed(1)}</span>
-                <span className="text-gray-600 text-sm font-medium">({property.reviewCount || 0} reviews)</span>
+                <span className="text-gray-600 text-sm font-medium">
+                  ({property.review_count || property.reviewCount || 0} {(property.review_count || property.reviewCount || 0) === 1 ? 'review' : 'reviews'})
+                </span>
               </div>
             ) : (
               <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-full">
