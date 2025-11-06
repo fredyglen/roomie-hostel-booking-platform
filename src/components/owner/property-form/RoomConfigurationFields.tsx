@@ -17,6 +17,9 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
   // Auto-calculate max occupants based on room types and total rooms
   const totalRooms = form.watch('bedrooms') || 0;
   const roomTypes = form.watch('room_types') || [];
+  const watchMeterType = form.watch('meter_type');
+  const watchRoomTypes = form.watch('room_types') || [];
+  const watchBuildings = form.watch('buildings') || [];
 
   useEffect(() => {
     // Prefer structure-aware capacity when buildings/floors/rooms are provided
@@ -64,9 +67,6 @@ const RoomConfigurationFields: React.FC<RoomConfigurationFieldsProps> = ({ form,
       form.setValue('max_occupants', total);
     }
   }, [form, roomTypes, totalRooms, watchBuildings]);
-  const watchMeterType = form.watch('meter_type');
-  const watchRoomTypes = form.watch('room_types') || [];
-  const watchBuildings = form.watch('buildings') || [];
 
 
   // Ghana hostel room types based on category

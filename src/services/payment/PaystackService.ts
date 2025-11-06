@@ -63,7 +63,8 @@ export interface PaystackWebhookEvent {
 export class PaystackService {
   private static baseUrl = config.paystack.baseUrl;
   private static publicKey = config.paystack.publicKey;
-  private static secretKey = import.meta.env.VITE_PAYSTACK_SECRET_KEY || '';
+  // ⚠️ SECRET KEY REMOVED - Move webhook validation to Supabase Edge Function
+  // private static secretKey = import.meta.env.VITE_PAYSTACK_SECRET_KEY || '';
   
   /**
    * Validates Paystack configuration
@@ -73,13 +74,9 @@ export class PaystackService {
     if (!this.publicKey || this.publicKey === 'pk_test_placeholder') {
       throw new Error('Paystack public key is not configured');
     }
-    
+
     if (!this.publicKey.startsWith('pk_test_') && !this.publicKey.startsWith('pk_live_')) {
       throw new Error('Invalid Paystack public key format');
-    }
-    
-    if (!this.secretKey && import.meta.env.PROD) {
-      logger.warn('Paystack secret key is not configured. Webhook validation will be disabled.');
     }
   }
   
@@ -101,7 +98,7 @@ export class PaystackService {
       const response = await fetch(`${this.baseUrl}/transaction/initialize`, {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${this.secretKey || this.publicKey}`,
+          'Authorization': `Bearer ${this.publicKey}`,
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
@@ -143,7 +140,7 @@ export class PaystackService {
       const response = await fetch(`${this.baseUrl}/transaction/verify/${reference}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${this.secretKey || this.publicKey}`,
+          'Authorization': `Bearer ${this.publicKey}`,
           'Content-Type': 'application/json'
         }
       });
@@ -171,20 +168,14 @@ export class PaystackService {
   }
   
   /**
-   * Validates a webhook signature from Paystack
+   * ⚠️ DEPRECATED: Webhook validation moved to Supabase Edge Function
+   * This method should not be used in frontend code
+   * @deprecated Use Supabase Edge Function for webhook validation
    */
   public static validateWebhookSignature(signature: string, payload: string): boolean {
-    if (!this.secretKey) {
-      logger.warn('Cannot validate webhook: Secret key not configured');
-      return false;
-    }
-    
-    const hash = crypto
-      .createHmac('sha512', this.secretKey)
-      .update(payload)
-      .digest('hex');
-      
-    return hash === signature;
+    logger.error('validateWebhookSignature called from frontend - this is a security issue!');
+    logger.warn('Webhook validation must be done in Supabase Edge Function with secret key');
+    return false;
   }
   
   /**

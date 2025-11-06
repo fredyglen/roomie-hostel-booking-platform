@@ -28,9 +28,10 @@ export const userService = {
   async createUser(user: Omit<User, 'id' | 'created_at'>): Promise<User> {
     // For creating users, we rely on Supabase auth trigger to handle profile creation
     // This method is primarily for direct profile updates if needed
+    const tempPassword = crypto.randomUUID(); // Generate secure random password
     const { data: { user: authUser }, error: authError } = await supabase.auth.signUp({
       email: user.email,
-      password: 'temp-password', // This should be handled properly in a real auth flow
+      password: tempPassword,
       options: {
         data: {
           first_name: user.firstName,

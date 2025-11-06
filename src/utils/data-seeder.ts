@@ -98,9 +98,10 @@ export class DataSeeder {
     for (const user of sampleUsers) {
       try {
         // Create auth user first
+        const tempPassword = crypto.randomUUID(); // Generate secure random password
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: user.email,
-          password: 'TempPassword123!', // Temporary password
+          password: tempPassword,
           options: {
             data: {
               first_name: user.firstName,
@@ -150,7 +151,7 @@ export class DataSeeder {
     logger.info('Ensuring demo admin user exists...');
 
     const adminEmail = 'admin@roomi.com';
-    const adminPassword = 'password123';
+    const adminPassword = crypto.randomUUID(); // Generate secure random password
 
     try {
       // Check if admin profile exists

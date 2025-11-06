@@ -20,7 +20,7 @@ export interface AdminSetupResult {
  */
 export async function ensureDemoAdminExists(): Promise<AdminSetupResult> {
   const adminEmail = 'admin@roomi.com';
-  const adminPassword = 'password123';
+  const adminPassword = crypto.randomUUID(); // Generate secure random password
 
   try {
     logger.info('Starting admin setup verification...');
