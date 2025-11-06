@@ -303,10 +303,10 @@ export const IntelligentPropertyRouter: React.FC<IntelligentPropertyRouterProps>
   const renderStep5 = () => {
     // ✅ FIX: Use useEffect to handle completion for non-agents instead of calling during render
     React.useEffect(() => {
-      if (currentStep === 5 && answers.userType !== 'agent') {
+      if (step === 5 && answers.userType !== 'agent') {
         handleComplete();
       }
-    }, [currentStep, answers.userType]);
+    }, [step, answers.userType]);
 
     if (answers.userType !== 'agent') {
       return null;
