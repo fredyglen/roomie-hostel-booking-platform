@@ -1,4 +1,5 @@
 import { logger } from './enhanced-logger';
+import * as Sentry from '@sentry/react';
 
 interface ErrorOptions {
   showUser?: boolean;
@@ -51,12 +52,15 @@ export class ErrorHandler {
   }
   
   private static reportToErrorService(error: Error, context: Record<string, unknown>) {
-    // This would be implemented with your error reporting service
-    // Example: Sentry.captureException(error, { extra: context });
-    if (import.meta.env.DEV) {
-      console.error('[Error Service] Would report:', error, context);
+    // Report to Sentry in production
+    if (import.meta.env.PROD && import.meta.env.VITE_SENTRY_DSN) {
+      Sentry.captureException(error, {
+        extra: context,
+        level: 'error',
+      });
+    } else if (import.meta.env.DEV) {
+      console.error('[Error Service] Would report to Sentry:', error, context);
     }
-    // In production, implement actual error reporting service
   }
   
   static getUserFriendlyMessage(error: unknown): string {
