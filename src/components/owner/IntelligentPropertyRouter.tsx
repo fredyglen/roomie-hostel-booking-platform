@@ -48,6 +48,13 @@ export const IntelligentPropertyRouter: React.FC<IntelligentPropertyRouterProps>
     hasDocumentation: ''
   });
 
+  // Handle auto-completion for non-agents at step 5
+  React.useEffect(() => {
+    if (step === 5 && answers.userType !== 'agent') {
+      handleComplete();
+    }
+  }, [step, answers.userType]);
+
   // Step 1: Are you an owner or agent?
   const renderStep1 = () => (
     <div className="space-y-6">
@@ -301,13 +308,6 @@ export const IntelligentPropertyRouter: React.FC<IntelligentPropertyRouterProps>
 
   // Step 5: Documentation (for agents)
   const renderStep5 = () => {
-    // ✅ FIX: Use useEffect to handle completion for non-agents instead of calling during render
-    React.useEffect(() => {
-      if (step === 5 && answers.userType !== 'agent') {
-        handleComplete();
-      }
-    }, [step, answers.userType]);
-
     if (answers.userType !== 'agent') {
       return null;
     }
