@@ -272,34 +272,27 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             {commission ? (
               <>
                 <div className="flex justify-between py-2">
-                  <p className="text-[#616e89] text-sm">Base Rent</p>
+                  <p className="text-[#616e89] text-sm">Property Rent</p>
                   <p className="text-[#111318] text-sm">{formatCurrency(commission.baseAmount)}</p>
                 </div>
                 <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-[#616e89] text-sm">Platform Commission</p>
-                  <p className="text-[#111318] text-sm">{formatCurrency(commission.platformCommission)}</p>
+                  <p className="text-[#616e89] text-sm">Platform Fee</p>
+                  <p className="text-[#111318] text-sm">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.platform || 80)}</p>
                 </div>
                 <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-[#616e89] text-sm">Platform Fixed Fee</p>
-                  <p className="text-[#111318] text-sm">{formatCurrency(commission.platformFixedFee)}</p>
-                </div>
-                {commission.agentCommission > 0 && (
-                  <div className="flex justify-between py-2 border-t border-gray-100">
-                    <p className="text-[#616e89] text-sm">Agent Commission</p>
-                    <p className="text-[#111318] text-sm">{formatCurrency(commission.agentCommission)}</p>
-                  </div>
-                )}
-                <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-[#616e89] text-sm">Paystack Fee</p>
-                  <p className="text-[#111318] text-sm">{formatCurrency(commission.paystackFee)}</p>
-                </div>
-                <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-[#616e89] text-sm">VAT</p>
-                  <p className="text-[#111318] text-sm">{formatCurrency(commission.vatAmount)}</p>
+                  <p className="text-[#616e89] text-sm">Processing Fee</p>
+                  <p className="text-[#111318] text-sm">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.processing || 20)}</p>
                 </div>
                 <div className="flex justify-between pt-3 mt-2 border-t-2 border-gray-200">
                   <p className="text-[#111318] text-base font-bold">Total</p>
                   <p className="text-[#111318] text-base font-bold">{formatCurrency(commission.totalAmount)}</p>
+                </div>
+
+                {/* Info note about owner commission */}
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-[#616e89] italic">
+                    Note: Property owner pays 10% platform commission separately
+                  </p>
                 </div>
               </>
             ) : (
@@ -410,34 +403,27 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             {commission ? (
               <>
                 <div className="flex justify-between py-2">
-                  <p className="text-gray-600 text-sm">Base Rent</p>
+                  <p className="text-gray-600 text-sm">Property Rent</p>
                   <p className="text-gray-900 text-sm">{formatCurrency(commission.baseAmount)}</p>
                 </div>
                 <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-gray-600 text-sm">Platform Commission</p>
-                  <p className="text-gray-900 text-sm">{formatCurrency(commission.platformCommission)}</p>
+                  <p className="text-gray-600 text-sm">Platform Fee</p>
+                  <p className="text-gray-900 text-sm">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.platform || 80)}</p>
                 </div>
                 <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-gray-600 text-sm">Platform Fixed Fee</p>
-                  <p className="text-gray-900 text-sm">{formatCurrency(commission.platformFixedFee)}</p>
-                </div>
-                {commission.agentCommission > 0 && (
-                  <div className="flex justify-between py-2 border-t border-gray-100">
-                    <p className="text-gray-600 text-sm">Agent Commission</p>
-                    <p className="text-gray-900 text-sm">{formatCurrency(commission.agentCommission)}</p>
-                  </div>
-                )}
-                <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-gray-600 text-sm">Paystack Fee</p>
-                  <p className="text-gray-900 text-sm">{formatCurrency(commission.paystackFee)}</p>
-                </div>
-                <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-gray-600 text-sm">VAT</p>
-                  <p className="text-gray-900 text-sm">{formatCurrency(commission.vatAmount)}</p>
+                  <p className="text-gray-600 text-sm">Processing Fee</p>
+                  <p className="text-gray-900 text-sm">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.processing || 20)}</p>
                 </div>
                 <div className="flex justify-between pt-3 mt-2 border-t-2 border-gray-200">
                   <p className="text-gray-900 text-base font-bold">Total</p>
                   <p className="text-gray-900 text-base font-bold">{formatCurrency(commission.totalAmount)}</p>
+                </div>
+
+                {/* Info note about owner commission */}
+                <div className="mt-3 pt-3 border-t border-gray-100">
+                  <p className="text-xs text-gray-600 italic">
+                    Note: Property owner pays 10% platform commission separately
+                  </p>
                 </div>
               </>
             ) : (
