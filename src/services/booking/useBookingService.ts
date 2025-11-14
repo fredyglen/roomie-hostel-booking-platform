@@ -54,7 +54,7 @@ export const useBookingService = () => {
       });
 
       // Apple-Grade: Use centralized commission calculation
-      const commissionData = centralizedCommissionEngine.calculateCommission(bookingData.total_amount);
+      const commissionData = centralizedCommissionEngine.calculateCommissions(bookingData.total_amount);
 
       const enhancedBookingData = {
         student_id: user.id,

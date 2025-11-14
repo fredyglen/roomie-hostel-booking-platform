@@ -150,8 +150,13 @@ const OwnerDashboard: React.FC = () => {
               <div className="flex items-center">
                 <DollarSign className="h-5 w-5 text-purple-600 flex-shrink-0" />
                 <div className="ml-3 min-w-0">
-                  <p className="text-xs font-medium text-gray-600 truncate">Monthly Earnings</p>
-                  <p className="text-xl font-bold">{formatCurrency(dashboardStats?.monthlyEarnings || 0)}</p>
+                  <p className="text-xs font-medium text-gray-600 truncate">Monthly Net Earnings</p>
+                  <p className="text-xl font-bold">{formatCurrency(dashboardStats?.monthlyNetEarnings || 0)}</p>
+                  {dashboardStats?.monthlyCommissionDeducted ? (
+                    <p className="text-xs text-gray-500">
+                      -{formatCurrency(dashboardStats.monthlyCommissionDeducted)} commission (10%)
+                    </p>
+                  ) : null}
                 </div>
               </div>
             </CardContent>

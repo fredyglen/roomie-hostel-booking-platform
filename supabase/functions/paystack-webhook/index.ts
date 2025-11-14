@@ -4,6 +4,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import type { SupabaseClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { ServerCommissionEngine } from '../_shared/commission-engine.ts'
 const ErrorHandler = { log: (...args: unknown[]) => console.log(...args) }
 
 interface MinimalSupabaseClient {
@@ -166,7 +167,7 @@ Deno.serve(async (req) => {
 
 async function handleChargeSuccess(supabase: MinimalSupabaseClient, event: PaystackWebhookEvent) {
   const { data: eventData } = event
-  
+
   // Update transaction status
   const { error: transactionError } = await supabase
     .from('transactions')
@@ -192,18 +193,87 @@ async function handleChargeSuccess(supabase: MinimalSupabaseClient, event: Payst
     .single()
 
   if (transaction?.metadata?.booking_id) {
-    // Update booking status
-    await supabase
+    // ✅ NEW BUSINESS MODEL: Extract commission breakdown from metadata or recalculate
+    const metadata = eventData.metadata || transaction.metadata || {}
+    const commissionBreakdown = (metadata as any)?.commission_breakdown
+
+    // Initialize commission engine
+    const commissionEngine = new ServerCommissionEngine()
+    await commissionEngine.loadRates(supabase as any)
+
+    let bookingUpdate: any = {
+      payment_status: 'paid',
+      status: 'confirmed',
+      transaction_reference: eventData.reference,
+      paystack_reference: eventData.id.toString(),
+      payment_method: eventData.authorization?.card_type || 'unknown',
+      updated_at: new Date().toISOString()
+    }
+
+    // If commission breakdown exists in metadata, use it to update booking
+    if (commissionBreakdown) {
+      ErrorHandler.log('✅ Using commission breakdown from webhook metadata', commissionBreakdown)
+
+      bookingUpdate = {
+        ...bookingUpdate,
+        total_amount: commissionBreakdown.totalAmount,
+        platform_commission: commissionBreakdown.platformCommission,
+        platform_fee: commissionBreakdown.platformFixedFee,
+        agent_commission: commissionBreakdown.agentCommission || 0,
+        paystack_fee: commissionBreakdown.paystackFee,
+        vat_amount: commissionBreakdown.vatAmount || 0,
+        owner_receives: commissionBreakdown.ownerReceives,
+        property_rent: commissionBreakdown.baseAmount
+      }
+    } else {
+      // Fallback: Recalculate from property_rent if available
+      const { data: booking } = await supabase
+        .from('bookings_enhanced')
+        .select('property_rent, agent_id')
+        .eq('id', transaction.metadata.booking_id)
+        .single()
+
+      if (booking?.property_rent) {
+        ErrorHandler.log('⚠️ No commission breakdown in metadata, recalculating from property_rent', {
+          property_rent: booking.property_rent,
+          has_agent: Boolean(booking.agent_id)
+        })
+
+        const includeAgent = Boolean(booking.agent_id)
+        const calculated = commissionEngine.calculateCommissions(booking.property_rent, includeAgent)
+
+        bookingUpdate = {
+          ...bookingUpdate,
+          total_amount: calculated.totalAmount,
+          platform_commission: calculated.platformCommission,
+          platform_fee: calculated.platformFixedFee,
+          agent_commission: calculated.agentCommission,
+          paystack_fee: calculated.paystackFee,
+          vat_amount: calculated.vatAmount,
+          owner_receives: calculated.ownerReceives
+        }
+      } else {
+        ErrorHandler.log('⚠️ Cannot calculate commissions: no breakdown in metadata and no property_rent in booking')
+      }
+    }
+
+    // Update booking with commission details
+    const { error: bookingError } = await supabase
       .from('bookings_enhanced')
-      .update({
-        payment_status: 'paid',
-        status: 'confirmed',
-        transaction_reference: eventData.reference,
-        paystack_reference: eventData.id.toString(),
-        payment_method: eventData.authorization?.card_type || 'unknown',
-        updated_at: new Date().toISOString()
-      })
+      .update(bookingUpdate)
       .eq('id', transaction.metadata.booking_id)
+
+    if (bookingError) {
+      console.error('Error updating booking:', bookingError)
+    } else {
+      ErrorHandler.log('✅ Booking updated with new commission structure', {
+        booking_id: transaction.metadata.booking_id,
+        total_amount: bookingUpdate.total_amount,
+        platform_commission: bookingUpdate.platform_commission,
+        platform_fee: bookingUpdate.platform_fee,
+        owner_receives: bookingUpdate.owner_receives
+      })
+    }
   }
 
   // Handle split payments if present

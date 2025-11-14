@@ -11,6 +11,8 @@ export interface OwnerDashboardStats {
   totalProperties: number;
   totalBookings: number;
   monthlyEarnings: number;
+  monthlyCommissionDeducted: number; // ✅ NEW: 10% platform commission deducted
+  monthlyNetEarnings: number; // ✅ NEW: Earnings after 10% commission
   occupancyRate: number;
   averageRating: number | null; // ✅ BE CONSCIOUS: null when no reviews exist
   totalReviews: number;
@@ -106,7 +108,7 @@ export class OwnerQueries {
 
       const { data: earningsData, error: earningsError } = await supabase
         .from('bookings_enhanced')
-        .select('total_amount')
+        .select('total_amount, owner_receives, platform_commission, property_rent')
         .eq('property_owner_id', ownerId)
         .eq('status', 'confirmed')
         .gte('created_at', firstDayOfMonth.toISOString())
@@ -114,7 +116,10 @@ export class OwnerQueries {
 
       if (earningsError) throw earningsError;
 
-      const monthlyEarnings = earningsData?.reduce((sum, booking) => sum + booking.total_amount, 0) || 0;
+      // ✅ NEW BUSINESS MODEL: Calculate gross earnings, commission deducted, and net earnings
+      const monthlyEarnings = earningsData?.reduce((sum, booking) => sum + (booking.property_rent || 0), 0) || 0;
+      const monthlyCommissionDeducted = earningsData?.reduce((sum, booking) => sum + (booking.platform_commission || 0), 0) || 0;
+      const monthlyNetEarnings = earningsData?.reduce((sum, booking) => sum + (booking.owner_receives || 0), 0) || 0;
 
       // Apple-grade occupancy rate calculation with proper type safety
       // Note: Using max_occupants and beds_available from actual Supabase schema
@@ -189,6 +194,8 @@ export class OwnerQueries {
         totalProperties: totalProperties || 0,
         totalBookings: totalBookings || 0,
         monthlyEarnings,
+        monthlyCommissionDeducted,
+        monthlyNetEarnings,
         occupancyRate,
         averageRating,
         totalReviews,

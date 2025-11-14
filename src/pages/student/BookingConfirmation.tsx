@@ -284,20 +284,23 @@ const BookingConfirmation: React.FC = () => {
                   <span className="font-semibold">₵{booking.property_rent?.toFixed(2) || '0.00'}</span>
                 </div>
                 <div className="flex justify-between items-center py-2">
-                  <span className="text-gray-700">Platform Fee:</span>
-                  <span className="font-semibold">₵{booking.platform_fee?.toFixed(2) || '0.00'}</span>
+                  <span className="text-gray-700">Platform Fee (80 GHS):</span>
+                  <span className="font-semibold">₵80.00</span>
                 </div>
-                {booking.agent_fee > 0 && (
-                  <div className="flex justify-between items-center py-2">
-                    <span className="text-gray-700">Agent Fee:</span>
-                    <span className="font-semibold">₵{booking.agent_fee?.toFixed(2) || '0.00'}</span>
-                  </div>
-                )}
+                <div className="flex justify-between items-center py-2">
+                  <span className="text-gray-700">Processing Fee (20 GHS):</span>
+                  <span className="font-semibold">₵20.00</span>
+                </div>
                 <div className="border-t border-green-200 pt-3">
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-bold text-gray-900">Total Paid:</span>
                     <span className="text-2xl font-bold text-green-600">₵{booking.total_amount.toFixed(2)}</span>
                   </div>
+                </div>
+                <div className="pt-2 border-t border-green-200">
+                  <p className="text-xs text-gray-600 italic">
+                    Note: Property owner pays 10% platform commission separately
+                  </p>
                 </div>
               </div>
 

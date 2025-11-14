@@ -97,47 +97,60 @@ const Finance: React.FC = () => {
   }, [data, props, selectedCampus, selectedProperty]);
 
   const metrics = useMemo(() => {
+    // ✅ NEW BUSINESS MODEL: Uses centralized commission engine (v2.0.0)
+    // - Students pay: Property rent + 100 GHS (80 platform + 20 processing)
+    // - Owners pay: 10% commission on property rent
+    // - Platform absorbs Paystack fees (1.95%)
     const rates = centralizedCommissionEngine.getCommissionRates();
+    const fees = centralizedCommissionEngine.getPlatformFees();
     const toNum = (v: unknown) => (typeof v === 'number' ? v : parseFloat(String(v || 0)) || 0);
 
-    let totalProcessed = 0; // Sum of total_amount for paid/completed
-    let platformRevenue = 0; // Variable% of base + fixed platform fees
-    let agentCommissions = 0;
-    let processorCosts = 0; // Paystack + VAT estimate
-    let ownerBase = 0; // Sum of property_rent
+    let totalProcessed = 0; // Sum of total_amount for paid/completed (students paid)
+    let platformRevenue = 0; // 10% owner commission + 100 GHS student fee
+    let platformFeeFromStudents = 0; // 100 GHS per booking from students
+    let platformCommissionFromOwners = 0; // 10% of property rent from owners
+    let agentCommissions = 0; // Should be 0 in new model
+    let processorCosts = 0; // Paystack fees (platform absorbs)
+    let ownerBase = 0; // Sum of property_rent (gross before commission)
+    let ownerPayouts = 0; // Sum of owner_receives (net after 10% commission)
 
     const paidStatuses = new Set(['paid', 'completed', 'success']);
 
     for (const b of filteredData) {
       const total = toNum(b.total_amount);
-      const fixedPlatform = toNum(b.platform_fee);
-      const agentFee = toNum(b.agent_fee);
-      const base = Number.isFinite(toNum(b.property_rent)) && toNum(b.property_rent) > 0
-        ? toNum(b.property_rent)
-        : Math.max(0, total - fixedPlatform - agentFee - (total * rates.paystack * (1 + rates.vat)));
+      const fixedPlatform = toNum(b.platform_fee) || fees.fixed; // 100 GHS
+      const platformCommission = toNum(b.platform_commission); // 10% of property rent
+      const agentFee = toNum(b.agent_commission) || 0; // Should be 0
+      const base = toNum(b.property_rent) || 0;
+      const ownerReceives = toNum(b.owner_receives) || 0;
 
-      const variablePlatform = base * rates.platform;
-      const bookingPlatformRevenue = variablePlatform + fixedPlatform;
-      const bookingProcessorCost = total * rates.paystack * (1 + rates.vat);
+      // Calculate processor cost (platform absorbs this)
+      const bookingProcessorCost = total * rates.paystack; // No VAT in new model
 
       if (paidStatuses.has((b.payment_status || '').toLowerCase())) {
         totalProcessed += total;
-        platformRevenue += bookingPlatformRevenue;
+        platformFeeFromStudents += fixedPlatform;
+        platformCommissionFromOwners += platformCommission;
+        platformRevenue += (fixedPlatform + platformCommission);
         agentCommissions += agentFee;
         processorCosts += bookingProcessorCost;
         ownerBase += base;
+        ownerPayouts += ownerReceives;
       }
     }
 
-    const netPlatform = platformRevenue - processorCosts; // Net of gateway costs
+    const netPlatform = platformRevenue - processorCosts; // Net after absorbing Paystack fees
 
     return {
       totalProcessed,
       platformRevenue,
+      platformFeeFromStudents,
+      platformCommissionFromOwners,
       agentCommissions,
       processorCosts,
       netPlatform,
       ownerBase,
+      ownerPayouts,
       count: filteredData.length,
     };
   }, [filteredData]);
@@ -352,8 +365,11 @@ const Finance: React.FC = () => {
               <p className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
                 {formatCurrency(metrics.platformRevenue || 0)}
               </p>
-              <p className="text-sm font-medium leading-normal text-green-600">
-                +{((metrics.platformRevenue / (metrics.totalProcessed || 1)) * 100).toFixed(1)}% of total
+              <p className="text-xs font-medium leading-normal text-blue-600">
+                {formatCurrency(metrics.platformFeeFromStudents || 0)} from students (100 GHS/booking)
+              </p>
+              <p className="text-xs font-medium leading-normal text-purple-600">
+                {formatCurrency(metrics.platformCommissionFromOwners || 0)} from owners (10%)
               </p>
             </CardContent>
           </Card>
@@ -382,10 +398,13 @@ const Finance: React.FC = () => {
             </CardHeader>
             <CardContent className="space-y-2">
               <p className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
-                {formatCurrency(metrics.ownerBase || 0)}
+                {formatCurrency(metrics.ownerPayouts || 0)}
               </p>
-              <p className="text-sm font-medium leading-normal text-gray-600">
-                Base rent total
+              <p className="text-xs font-medium leading-normal text-gray-600">
+                Net after 10% commission
+              </p>
+              <p className="text-xs font-medium leading-normal text-gray-500">
+                Gross: {formatCurrency(metrics.ownerBase || 0)}
               </p>
             </CardContent>
           </Card>
@@ -403,8 +422,8 @@ const Finance: React.FC = () => {
               <p className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
                 {formatCurrency(metrics.agentCommissions || 0)}
               </p>
-              <p className="text-sm font-medium leading-normal text-gray-600">
-                Total agent earnings
+              <p className="text-sm font-medium leading-normal text-orange-600">
+                ⚠️ Disabled in Phase 1 (should be 0)
               </p>
             </CardContent>
           </Card>
