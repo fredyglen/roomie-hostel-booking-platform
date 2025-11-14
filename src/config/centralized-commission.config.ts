@@ -62,18 +62,26 @@ interface ConfigurationChangeEvent {
 }
 
 // SINGLE SOURCE OF TRUTH FOR ALL COMMISSION CALCULATIONS
+// ✅ UPDATED BUSINESS MODEL (Phase 1 - No Agent Commissions)
+// Students pay: Property rent + 100 GHS (80 platform + 20 processing)
+// Owners pay: 10% commission on property rent
+// Agents: System preserved but commission set to 0 (will implement later)
 const AUTHORITATIVE_COMMISSION_CONFIG: CommissionConfiguration = {
   rates: {
-    platform: createCommissionRate(0.05),    // 5% - DEFINITIVE RATE
-    agent: createCommissionRate(0.037),      // 3.7% - DEFINITIVE RATE  
-    paystack: createCommissionRate(0.0195),  // 1.95% - Paystack standard
-    vat: createCommissionRate(0.125)         // 12.5% - Ghana VAT rate
+    platform: createCommissionRate(0.10),    // 10% - Owner pays (increased from 5%)
+    agent: createCommissionRate(0),          // 0% - DISABLED for Phase 1 (keep field for future)
+    paystack: createCommissionRate(0.0195),  // 1.95% - Platform absorbs
+    vat: createCommissionRate(0)             // 0% - REMOVED completely
   },
   fees: {
-    fixed: createPlatformFee(100),           // 100 GHS - DEFINITIVE FEE
-    agentMinimum: createPlatformFee(100)     // 100 GHS - DEFINITIVE MINIMUM
+    platform: createPlatformFee(80),         // 80 GHS - Student pays (platform fee)
+    processing: createPlatformFee(20),       // 20 GHS - Student pays (processing fee)
+    fixed: createPlatformFee(100),           // 100 GHS - TOTAL student fee (80 + 20)
+    agentMinimum: createPlatformFee(0)       // 0 GHS - DISABLED for Phase 1
   },
-  // Additional configuration...
+  version: '2.0.0',                          // Updated version for new business model
+  environment: (import.meta.env.MODE as 'development' | 'staging' | 'production') || 'development',
+  lastUpdated: new Date().toISOString()
 } as const;
 
 // ============================================================================
@@ -93,6 +101,12 @@ interface CommissionCalculationResult {
     readonly subtotal: number;
     readonly beforeVat: number;
     readonly totalFees: number;
+    readonly platformFeeBreakdown?: {
+      readonly platform: number;    // 80 GHS
+      readonly processing: number;  // 20 GHS
+    };
+    readonly platformGrossRevenue?: number;  // Total platform revenue
+    readonly platformNetRevenue?: number;    // After Paystack fees
   };
 }
 
@@ -315,50 +329,69 @@ class CentralizedCommissionEngine {
 
   /**
    * Calculate comprehensive commission breakdown
+   *
+   * ✅ NEW BUSINESS MODEL (Phase 1):
+   * - Students pay: baseAmount (property rent) + 100 GHS (80 platform + 20 processing)
+   * - Owners pay: 10% commission on baseAmount (deducted from payout)
+   * - Platform absorbs Paystack fees (1.95%)
+   * - VAT removed (0%)
+   * - Agent commission disabled (0%) but system preserved for future
    */
-  calculateCommissions(baseAmount: number, includeAgent: boolean = true): CommissionCalculationResult {
+  calculateCommissions(baseAmount: number, includeAgent: boolean = false): CommissionCalculationResult {
     if (baseAmount <= 0) {
       throw new Error('Base amount must be positive');
     }
 
-    // Core commission calculations
-    const platformCommission = baseAmount * this.config.rates.platform;
-    const platformFixedFee = this.config.fees.fixed;
-    const agentCommission = includeAgent ? Math.max(
-      baseAmount * this.config.rates.agent,
-      this.config.fees.agentMinimum
-    ) : 0;
+    // ✅ NEW MODEL: Owner commission (10% of property rent)
+    const platformCommission = baseAmount * this.config.rates.platform; // 10% from owner
 
-    // Subtotal before payment processing and VAT
-    const subtotal = baseAmount + platformCommission + platformFixedFee + agentCommission;
-    
-    // Payment processing fee (calculated on total)
-    const paystackFee = subtotal * this.config.rates.paystack;
-    
-    // Amount before VAT
-    const beforeVat = subtotal + paystackFee;
-    
-    // VAT calculation
-    const vatAmount = beforeVat * this.config.rates.vat;
-    
-    // Final totals
-    const totalAmount = beforeVat + vatAmount;
-    const totalFees = platformCommission + platformFixedFee + agentCommission + paystackFee + vatAmount;
-    const ownerReceives = baseAmount; // Owner gets the base amount, fees are additional
+    // ✅ NEW MODEL: Student fees (shown separately in UI)
+    const platformFixedFee = this.config.fees.fixed; // 100 GHS total (80 + 20)
+    const platformFeeBreakdown = {
+      platform: this.config.fees.platform,     // 80 GHS
+      processing: this.config.fees.processing  // 20 GHS
+    };
+
+    // ✅ Agent commission disabled for Phase 1 (includeAgent ignored for now)
+    const agentCommission = 0; // Will implement later
+
+    // ✅ Student's total payment
+    const totalAmount = baseAmount + platformFixedFee; // Property rent + 100 GHS
+
+    // ✅ Paystack fee (platform absorbs, calculated on student's total payment)
+    const paystackFee = totalAmount * this.config.rates.paystack; // ~1.95% of totalAmount
+
+    // ✅ VAT removed
+    const vatAmount = 0;
+
+    // ✅ Owner receives (property rent minus 10% commission)
+    const ownerReceives = baseAmount - platformCommission;
+
+    // ✅ Platform net revenue (after absorbing Paystack fee)
+    const platformGrossRevenue = platformFixedFee + platformCommission; // 100 + (10% of rent)
+    const platformNetRevenue = platformGrossRevenue - paystackFee;
+
+    // Breakdown for reporting
+    const subtotal = baseAmount + platformFixedFee;
+    const beforeVat = subtotal; // No VAT
+    const totalFees = platformCommission + platformFixedFee;
 
     return {
       baseAmount,
-      platformCommission,
-      platformFixedFee,
-      agentCommission,
-      paystackFee,
-      vatAmount,
-      totalAmount,
-      ownerReceives,
+      platformCommission,        // 10% from owner
+      platformFixedFee,          // 100 GHS from student
+      agentCommission,           // 0 (disabled)
+      paystackFee,               // Platform absorbs
+      vatAmount,                 // 0 (removed)
+      totalAmount,               // Student pays: baseAmount + 100
+      ownerReceives,             // Owner gets: baseAmount - 10%
       breakdown: {
         subtotal,
         beforeVat,
-        totalFees
+        totalFees,
+        platformFeeBreakdown,    // For UI display: 80 + 20
+        platformGrossRevenue,    // Total platform revenue
+        platformNetRevenue       // After Paystack fees
       }
     };
   }
