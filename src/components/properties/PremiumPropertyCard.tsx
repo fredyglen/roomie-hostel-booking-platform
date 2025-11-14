@@ -2,12 +2,13 @@ import React, { useEffect, useMemo, useState } from 'react';
 import type { PropertyCardProps as LegacyPropertyCardProps } from './PropertyCard';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import PropertyOwnerTags from '@/components/property/PropertyOwnerTags';
+
 import ViewingLimitOverlay from '@/components/properties/ViewingLimitOverlay';
 import { usePropertyViewingTracker, ViewingRestriction } from '@/hooks/usePropertyViewingTracker';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, Users, Video, Wifi, Coffee, Tv, Dumbbell, Wind, Car, ChevronDown, Lock } from 'lucide-react';
 import { getRealTimeBedAvailability, subscribeToRealTimeBedAvailability, type PropertyBedAvailability } from '@/services/realTimeBedAvailabilityService';
+import { usePropertyRoomTypes } from '@/hooks/usePropertyRoomTypes';
 
 export type PropertyCardProps = LegacyPropertyCardProps;
 
@@ -35,6 +36,9 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
   const propertyId = typeof id === 'string' ? id : String(id);
   const rentAmount = typeof rent === 'number' ? rent : Number(rent);
   const navigate = useNavigate();
+
+  // Load owner-configured room types and pricing when not passed via props
+  const { roomTypes: fetchedRoomTypes } = usePropertyRoomTypes({ propertyId, propertyCategory: propertyType });
 
   // Anonymous viewing limits and tracking
   const {
@@ -122,6 +126,9 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
   }, [propertyId]);
 
   const roomOptions = useMemo(() => {
+    const normalize = (s: string) => String(s).toLowerCase().replace(/\s+/g, '_');
+
+    // Prefer explicit prop-based room types when provided
     if (roomTypes && roomTypes.length > 0) {
       return roomTypes.map(rt => ({
         value: rt.type,
@@ -131,17 +138,28 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
         total: rt.totalBeds
       }));
     }
+
+    // Build a price map from owner-configured room types (service hook)
+    const priceMap = new Map<string, number>();
+    if (Array.isArray(fetchedRoomTypes) && fetchedRoomTypes.length > 0) {
+      fetchedRoomTypes.forEach(rt => priceMap.set(normalize(rt.value), Number(rt.price) || 0));
+    }
+
     if (availability?.byRoomType?.length) {
-      return availability.byRoomType.map(rt => ({
-        value: rt.roomType,
-        label: rt.roomType,
-        price: rentAmount,
-        available: rt.availableBeds,
-        total: rt.totalBeds
-      }));
+      return availability.byRoomType.map(rt => {
+        const key = normalize(rt.roomType);
+        const price = priceMap.has(key) ? (priceMap.get(key) as number) : rentAmount;
+        return {
+          value: rt.roomType,
+          label: rt.roomType,
+          price,
+          available: rt.availableBeds,
+          total: rt.totalBeds
+        };
+      });
     }
     return [] as Array<{ value: string; label: string; price: number; available: number; total: number }>;
-  }, [roomTypes, availability, rentAmount]);
+  }, [roomTypes, availability, rentAmount, fetchedRoomTypes]);
 
   const currentRoom = useMemo(() => {
     if (!roomOptions.length) {
@@ -235,7 +253,7 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
       <div className="h-1 bg-gradient-to-r from-blue-600 via-blue-500 to-blue-600" />
 
       {/* Media */}
-      <div className="relative h-32 overflow-hidden">
+      <div className="relative aspect-[3/2] overflow-hidden">
         <img
           src={primaryImage}
           alt={title}
@@ -293,7 +311,7 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
           </div>
           {/* Price Box */}
           <div className="bg-slate-50 px-3 py-2 ml-3 text-right">
-            <div className="text-xl font-bold text-blue-600">¢{rentAmount.toLocaleString()}</div>
+            <div className="text-xl font-bold text-blue-600">¢{Number(currentRoom.price ?? rentAmount).toLocaleString()}</div>
             <span className="text-xs text-slate-600">/{priceUnit}</span>
           </div>
         </div>
@@ -386,17 +404,7 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
           </div>
         )}
 
-        {/* Owner-provided tags (compact) */}
-        <div className="mt-1">
-          <PropertyOwnerTags
-            property={{
-              id: propertyId,
-              gender_restriction: genderRestriction,
-            } as any}
-            showTitle={false}
-            compact
-          />
-        </div>
+
       </div>
 
       {/* Viewing Limit Overlay */}

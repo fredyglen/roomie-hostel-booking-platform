@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/EnhancedAuthContext';
 
+import Logo from '@/components/common/Logo';
+
 // Material Symbols Icon Component
 const MaterialIcon = ({ name, className = "" }: { name: string; className?: string }) => (
   <span className={`material-symbols-outlined ${className}`}>{name}</span>
@@ -40,7 +42,7 @@ const Landing: React.FC = () => {
     <div className="relative flex min-h-screen w-full flex-col bg-white font-['Work_Sans'] font-light text-[#1C1C1E]">
       {/* Sticky Header */}
       <header className="sticky top-0 z-50 flex items-center justify-between border-b border-gray-200 bg-white/95 px-6 py-4 backdrop-blur-md shadow-sm transition-all duration-200">
-        <h2 className="flex-1 text-2xl font-['Manrope'] font-bold leading-tight tracking-tight text-[#007BFF]">ROOMie</h2>
+        <div className="flex-1"><Logo size="md" /></div>
         <div className="flex h-12 w-12 shrink-0 items-center justify-end text-[#007BFF] cursor-pointer hover:text-[#0056D6] transition-colors duration-200">
           <MaterialIcon name="menu" className="text-3xl" />
         </div>

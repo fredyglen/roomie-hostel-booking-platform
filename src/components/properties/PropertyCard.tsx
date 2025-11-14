@@ -10,7 +10,7 @@ import LazyImage from '@/components/common/LazyImage';
 import { usePropertyViewingTracker, ViewingRestriction } from '@/hooks/usePropertyViewingTracker';
 import ViewingLimitOverlay from './ViewingLimitOverlay';
 import { useNavigate } from 'react-router-dom';
-import PropertyOwnerTags from '@/components/property/PropertyOwnerTags';
+
 import RealTimeAvailabilityIndicator from '@/components/property/RealTimeAvailabilityIndicator';
 import PropertyCardOverlay from '@/components/property/PropertyCardOverlay';
 import {
@@ -365,32 +365,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           )}
         </div>
 
-        {/* ✅ PRODUCTION-GRADE: Owner-Provided Tags */}
-        <div className="mb-2">
-          <PropertyOwnerTags
-            property={{
-              id: propertyId,
-              internet_speed: undefined, // Add when available
-              pet_policy: undefined, // Add when available
-              has_accessibility_features: undefined, // Add when available
-              allows_rebooking: undefined, // Add when available
-              allows_shared_payment: undefined, // Add when available
-              campus_name: undefined, // Add when available
-              nearest_university: undefined, // Add when available
-              gender_restriction: genderRestriction,
-              utilities_included: undefined, // Add when available
-              has_bedframes: undefined, // Add when available
-              has_mattresses: undefined, // Add when available
-              has_wardrobes: undefined, // Add when available
-              has_fan: undefined, // Add when available
-              has_tiled_room: undefined, // Add when available
-              has_security: undefined, // Add when available
-              parking_available: undefined, // Add when available
-            } as any}
-            showTitle={false}
-            compact={true}
-          />
-        </div>
+
 
       </div>
 

@@ -39,11 +39,7 @@ const PropertyDetailsView: React.FC<PropertyDetailsViewProps> = ({
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <Button variant="outline" onClick={onGoBack}>
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Properties
-        </Button>
+      <div className="flex items-center justify-end mb-6">
         {property.rating ? (
           <div className="flex items-center space-x-2">
             <Star className="h-4 w-4 text-yellow-500 fill-current" />

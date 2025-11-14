@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
-import { PRICE_FILTER_DEFAULTS, DISTANCE_FILTER_DEFAULTS } from '@/config/constants';
+import { PRICE_FILTER_DEFAULTS } from '@/config/constants';
 
 interface PropertyFiltersProps {
   propertyType: string;
@@ -13,8 +13,6 @@ interface PropertyFiltersProps {
   onGenderTypeChange: (type: string) => void;
   priceRange: [number, number];
   onPriceRangeChange: (range: [number, number]) => void;
-  maxDistance: number;
-  onMaxDistanceChange: (distance: number) => void;
   onResetFilters: () => void;
 }
 
@@ -25,8 +23,6 @@ const PropertyFilters: React.FC<PropertyFiltersProps> = ({
   onGenderTypeChange,
   priceRange,
   onPriceRangeChange,
-  maxDistance,
-  onMaxDistanceChange,
   onResetFilters
 }) => {
   const handleAmenityToggle = (amenity: string) => {
@@ -58,21 +54,21 @@ const PropertyFilters: React.FC<PropertyFiltersProps> = ({
             <option value="">All Types</option>
             <option value="Hostel">Hostel</option>
             <option value="Homestel">Homestel</option>
-            <option value="Apartment">Apartment</option>
+
           </select>
         </div>
         
         <div>
-          <Label className="block text-sm font-medium text-gray-700 mb-1">Gender Type</Label>
+          <Label className="block text-sm font-medium text-gray-700 mb-1">Gender</Label>
           <select 
             className="w-full p-2 border rounded-md"
             value={genderType}
             onChange={(e) => onGenderTypeChange(e.target.value)}
           >
             <option value="">All</option>
-            <option value="Girls">Girls</option>
-            <option value="Boys">Boys</option>
-            <option value="Mixed">Mixed</option>
+            <option value="female">Female</option>
+            <option value="male">Male</option>
+            <option value="mixed">Mixed</option>
           </select>
         </div>
         
@@ -92,20 +88,7 @@ const PropertyFilters: React.FC<PropertyFiltersProps> = ({
           </div>
         </div>
         
-        <div>
-          <Label className="block text-sm font-medium text-gray-700 mb-1">Max Distance (min)</Label>
-          <div className="flex items-center gap-2">
-            <Slider
-              value={[maxDistance]}
-              min={DISTANCE_FILTER_DEFAULTS.MIN}
-              max={DISTANCE_FILTER_DEFAULTS.MAX}
-              step={1}
-              onValueChange={(values) => onMaxDistanceChange(values[0])}
-              className="flex-grow mx-2"
-            />
-            <div className="text-sm w-8">{maxDistance}</div>
-          </div>
-        </div>
+
       </div>
       
       <div className="flex justify-end">

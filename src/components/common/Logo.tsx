@@ -8,39 +8,26 @@ interface LogoProps {
   withText?: boolean;
 }
 
-const Logo: React.FC<LogoProps> = ({ 
-  variant = 'default', 
+const Logo: React.FC<LogoProps> = ({
+  variant = 'default',
   size = 'md',
-  withText = true 
+  withText = false
 }) => {
-  const getSize = () => {
+  const getHeight = () => {
     switch(size) {
-      case 'sm': return 'h-6 w-6';
-      case 'lg': return 'h-10 w-10';
-      default: return 'h-8 w-8';
+      case 'sm': return 'h-6';
+      case 'lg': return 'h-10';
+      default: return 'h-8';
     }
   };
-  
-  const getTextSize = () => {
-    switch(size) {
-      case 'sm': return 'text-lg';
-      case 'lg': return 'text-3xl';
-      default: return 'text-2xl';
-    }
-  };
-
-  const color = variant === 'white' ? 'text-white' : 'text-blue-600';
 
   return (
     <Link to="/" className="flex items-center">
-      <div className={`${getSize()} rounded-md bg-gradient-to-br from-blue-600 to-teal-600 flex items-center justify-center`}>
-        <span className="text-white font-bold text-xs">R</span>
-      </div>
-      {withText && (
-        <span className={`${color} ${getTextSize()} font-bold ml-2`}>
-          ROOMi
-        </span>
-      )}
+      <img
+        src="/assets/design-system/image-uploads/ROOMie.png"
+        alt="ROOMie"
+        className={`${getHeight()} w-auto object-contain`}
+      />
     </Link>
   );
 };

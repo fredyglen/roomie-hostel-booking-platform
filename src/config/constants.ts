@@ -1,6 +1,6 @@
 /**
  * ✅ PLATFORM CONSTANTS - Single Source of Truth
- * 
+ *
  * Centralized constants for the ROOMie platform
  * All hardcoded values should be defined here
  */
@@ -23,6 +23,16 @@ export const DISTANCE_FILTER_DEFAULTS = {
   MAX: 30,     // minutes
   DEFAULT: 15  // minutes
 } as const;
+
+/**
+ * Minutes-to-campus filter defaults (agent/owner-reported)
+ */
+export const MINUTES_TO_CAMPUS_FILTER_DEFAULTS = {
+  MIN: 0,
+  MAX: 60,   // minutes
+  STEP: 5    // minutes step
+} as const;
+
 
 /**
  * Pagination defaults

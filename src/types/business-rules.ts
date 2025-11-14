@@ -122,30 +122,19 @@ export function calculatePaymentBreakdown(
   hasAgent: boolean = false,
   commissionRules: CommissionRules = DEFAULT_COMMISSION_RULES
 ): PaymentBreakdown {
-  const platformCommission = baseAmount * commissionRules.platform_commission_rate;
-  const agentCommission = hasAgent 
-    ? Math.max(baseAmount * commissionRules.agent_commission_rate, commissionRules.agent_minimum_fee)
-    : 0;
-  
-  const subtotal = baseAmount + platformCommission + agentCommission;
-  const paystackFee = subtotal * commissionRules.paystack_fee_rate;
-  const vatAmount = (platformCommission + agentCommission) * commissionRules.vat_rate;
-  
-  const totalAmount = subtotal + paystackFee + vatAmount;
-  const ownerReceives = baseAmount;
-  const agentReceives = agentCommission;
-  const platformReceives = platformCommission + paystackFee + vatAmount;
+  // Route through centralized commission engine to avoid hardcoded values
+  const result = centralizedCommissionEngine.calculateCommissions(baseAmount, hasAgent);
 
   return {
-    base_amount: baseAmount,
-    platform_commission: platformCommission,
-    agent_commission: agentCommission,
-    paystack_fee: paystackFee,
-    vat_amount: vatAmount,
-    total_amount: totalAmount,
-    owner_receives: ownerReceives,
-    agent_receives: agentReceives,
-    platform_receives: platformReceives,
+    base_amount: result.baseAmount,
+    platform_commission: result.platformCommission,
+    agent_commission: result.agentCommission,
+    paystack_fee: result.paystackFee,
+    vat_amount: result.vatAmount,
+    total_amount: result.totalAmount,
+    owner_receives: result.ownerReceives,
+    agent_receives: result.agentCommission,
+    platform_receives: result.platformCommission + result.paystackFee + result.vatAmount,
     currency
   };
 }

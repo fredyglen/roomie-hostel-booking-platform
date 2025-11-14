@@ -280,8 +280,6 @@ export class BookingQueries {
         .from(TABLE_NAMES.BOOKINGS)
         .insert({
           ...bookingData,
-          platform_commission: bookingData.total_amount * 0.05, // 5% commission
-          platform_fee: 100, // 100 GHS platform fee
           status: 'pending',
           payment_status: 'pending'
         })

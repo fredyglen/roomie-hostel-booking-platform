@@ -334,6 +334,11 @@ class EnhancedPropertyService {
       is_available: data.is_available,
       status: data.is_available ? 'available' : 'unavailable',
       owner_id: data.owner_id,
+      // exact DB-driven fields needed for filters
+      gender_restriction: data.gender_restriction,
+      washroom_type: data.washroom_type,
+      internet_speed: data.internet_speed,
+      shared_washroom_count: data.shared_washroom_count,
       owner: data.owner ? {
         id: data.owner.id,
         name: `${data.owner.first_name || ''} ${data.owner.last_name || ''}`.trim(),
@@ -345,7 +350,10 @@ class EnhancedPropertyService {
       } : undefined,
       house_rules: data.house_rules || '',
       stories: [],
-      features: data.features || []
+      features: data.features || [],
+      room_types: data.room_types || null,
+      room_type_pricing: data.room_type_pricing || null,
+      base_price_per_semester: data.base_price_per_semester ?? null
     };
   }
 

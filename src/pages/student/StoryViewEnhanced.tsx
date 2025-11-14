@@ -1,8 +1,7 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
-import { Button } from '@/components/ui/button';
 import { Icon } from '@iconify/react';
 import StoryViewerEnhanced from '@/components/story/StoryViewerEnhanced';
 import StoryDetailsSheetEnhanced from '@/components/story/StoryDetailsSheetEnhanced';
@@ -11,10 +10,10 @@ import { useMobile } from '@/hooks/use-mobile';
 import { Property } from '@/lib/supabase';
 
 const StoryViewEnhanced: React.FC = () => {
-  const { 
+  const {
     property,
     isLoading,
-    currentStory, 
+    currentStory,
     activeIndex,
     stories,
     showDetails,
@@ -31,14 +30,58 @@ const StoryViewEnhanced: React.FC = () => {
   const isMobile = useMobile();
   const location = useLocation();
   const navigate = useNavigate();
-  
+
+
+
   // Custom close handler to respect navigation history
   const customHandleClose = () => {
     // Check if we have a stored previous path
     const previousPath = location.state?.from || `/student/property/${property?.id || ''}`;
     navigate(previousPath);
   };
-  
+
+  // Lock scroll and reduce pull-to-refresh while story viewer is open
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+    const prevBodyOverflow = body.style.overflow;
+
+    html.style.overscrollBehavior = 'none';
+    body.style.overscrollBehavior = 'none';
+    body.style.overflow = 'hidden';
+
+    return () => {
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+      body.style.overflow = prevBodyOverflow;
+    };
+  }, []);
+
+  // Pause/resume when details sheet opens/closes
+  useEffect(() => {
+    setIsPaused(showDetails);
+  }, [showDetails, setIsPaused]);
+
+  // Preload next 2 images for smoother swipes
+  useEffect(() => {
+    const preloadIndex = (idx: number) => {
+      if (idx >= 0 && idx < stories.length) {
+        const s = stories[idx];
+        if (s?.type === 'image' && s.url) {
+          const img = new Image();
+          img.src = s.url;
+        }
+      }
+    };
+    preloadIndex(activeIndex + 1);
+    preloadIndex(activeIndex + 2);
+  }, [activeIndex, stories]);
+
+  // Swipe-down-to-close disabled per user request
+
+
   if (isLoading || !property || !currentStory) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
@@ -58,7 +101,7 @@ const StoryViewEnhanced: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className="fixed inset-0 bg-black" style={{ overscrollBehavior: 'none', touchAction: 'none' }}>
       {/* Close button */}
       <button
         onClick={customHandleClose}
@@ -110,14 +153,14 @@ const StoryViewEnhanced: React.FC = () => {
           <div className="absolute top-2 left-0 right-0 flex justify-center">
             <div className="w-12 h-1.5 bg-gray-300 rounded-full"></div>
           </div>
-          <StoryDetailsSheetEnhanced 
-            property={propertyWithDefaults} 
-            onClose={handleSwipeDown} 
+          <StoryDetailsSheetEnhanced
+            property={propertyWithDefaults}
+            onClose={handleSwipeDown}
             onBookNow={() => {
               handleSwipeDown();
               setTimeout(() => {
-                navigate(`/student/property/${property.id}/book`, { 
-                  state: { from: `/student/property/${property.id}` } 
+                navigate(`/student/book/${property.id}`, {
+                  state: { from: `/student/property/${property.id}` }
                 });
               }, 300);
             }}

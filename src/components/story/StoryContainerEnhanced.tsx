@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Home } from 'lucide-react';
 import StoryHeader from '@/components/story/StoryHeader';
@@ -31,17 +31,26 @@ const StoryContainerEnhanced: React.FC = () => {
   const navigate = useNavigate();
   const [isMounted, setIsMounted] = useState(false);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
     setIsMounted(true);
     return () => setIsMounted(false);
   }, []);
-  
+
   const handleBookNow = () => {
     if (property) {
-      navigate(`/student/property/${property.id}/book`);
+      navigate(`/student/book/${property.id}`);
     }
   };
-  
+
+  // Swipe-down from viewer goes to property detail page
+  const handleSwipeDownToDetail = () => {
+    if (property) {
+      navigate(`/student/property/${property.id}`);
+    }
+  };
+
   // Handle navigation to home page
   const handleHomeClick = () => {
     navigate('/');
@@ -64,6 +73,46 @@ const StoryContainerEnhanced: React.FC = () => {
     owner_id: property.owner_id || '' // Ensure owner_id has a default value
   };
 
+  // Preload next story image to reduce lag
+  useEffect(() => {
+    const next = stories[activeIndex + 1];
+    if (next && (next as any).type === 'image' && (next as any).url) {
+      const img = new Image();
+      img.src = (next as any).url;
+    }
+  }, [activeIndex, stories]);
+
+  // Lock scroll and disable pull-to-refresh while stories are open
+  useEffect(() => {
+    const html = document.documentElement;
+    const body = document.body;
+    const prevHtmlOverscroll = html.style.overscrollBehavior;
+    const prevBodyOverscroll = body.style.overscrollBehavior;
+    const prevBodyOverflow = body.style.overflow;
+
+    html.style.overscrollBehavior = 'none';
+    body.style.overscrollBehavior = 'none';
+    body.style.overflow = 'hidden';
+
+    const el = containerRef.current;
+    const prevent = (e: TouchEvent) => {
+      e.preventDefault();
+    };
+    if (el) {
+      el.addEventListener('touchmove', prevent, { passive: false });
+    }
+
+    return () => {
+      html.style.overscrollBehavior = prevHtmlOverscroll;
+      body.style.overscrollBehavior = prevBodyOverscroll;
+      body.style.overflow = prevBodyOverflow;
+      if (el) {
+        el.removeEventListener('touchmove', prevent as any);
+      }
+    };
+  }, []);
+
+
   const storiesCount = stories.length;
 
   // Safely convert distance to string
@@ -74,7 +123,7 @@ const StoryContainerEnhanced: React.FC = () => {
   };
 
   return (
-    <div className="fixed inset-0 bg-black flex flex-col z-50">
+    <div ref={containerRef} className="fixed inset-0 bg-black flex flex-col z-50" style={{ overscrollBehavior: 'none', touchAction: 'none' }}>
       {/* Home icon for navigation */}
       <button
         onClick={handleHomeClick}
@@ -86,11 +135,11 @@ const StoryContainerEnhanced: React.FC = () => {
 
       {/* Header with progress bars */}
       <div className="z-40 fixed top-0 left-0 right-0">
-        <StoryHeader 
+        <StoryHeader
           title={propertyWithDefaults.title || ''}
           distanceToCampus={distanceToString()}
           imageUrl={(propertyWithDefaults.stories && propertyWithDefaults.stories[0] && propertyWithDefaults.stories[0].url) || ''}
-          onClose={handleClose} 
+          onClose={handleClose}
         />
         <div className="px-4 flex gap-1">
           {stories.map((_, index) => (
@@ -103,7 +152,7 @@ const StoryContainerEnhanced: React.FC = () => {
           ))}
         </div>
       </div>
-      
+
       {/* Main content */}
       <div className="flex-grow flex items-center justify-center">
         <StoryViewerEnhanced
@@ -116,12 +165,13 @@ const StoryContainerEnhanced: React.FC = () => {
           showPrevButton={activeIndex > 0}
           showNextButton={activeIndex < storiesCount - 1}
           onSwipeUp={handleSwipeUp}
+          onSwipeDown={handleSwipeDownToDetail}
           showDetails={showDetails}
           isMobile={isMobile}
           progressPercentage={progressPercentage}
         />
       </div>
-      
+
       {/* Property details sheet */}
       <StoryDetailsSheetEnhanced
         property={propertyWithDefaults}

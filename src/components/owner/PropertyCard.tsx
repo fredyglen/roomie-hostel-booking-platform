@@ -32,7 +32,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({ property, onDelete }) => {
 
   return (
     <Card className="overflow-hidden">
-      <div className="h-48 relative bg-gray-100">
+      <div className="h-40 relative bg-gray-100">
         {safeImageUrl && !imageError ? (
           <>
             {!imageLoaded && (

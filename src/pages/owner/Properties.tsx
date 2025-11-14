@@ -46,19 +46,24 @@ const Properties: React.FC = () => {
       if (error) throw error;
       
       // Map DB properties to our display type
-      return (data || []).map(prop => ({
-        id: prop.id,
-        title: prop.title,
-        type: prop.property_type,
-        address: prop.address,
-        price: prop.rent,
-        price_unit: 'month', // Default to month if not specified
-        status: prop.is_available ? 'Available' : 'Not Available',
-        occupancy: '0/1', // Default occupancy
-        image_url: (prop.images && prop.images.length > 0) ? prop.images[0] : prop.image_url || '',
-        created_at: prop.created_at,
-        owner_id: prop.owner_id,
-      })) as PropertyDisplay[];
+      return (data || []).map((prop: any) => {
+        const total = Number(prop.max_occupants ?? prop.max_occupancy ?? 0);
+        const available = Number(prop.beds_available ?? (total || 0));
+        const occupied = total ? Math.max(0, total - available) : 0;
+        return ({
+          id: prop.id,
+          title: prop.title,
+          type: prop.property_type,
+          address: prop.address,
+          price: prop.rent,
+          price_unit: 'month', // Default to month if not specified
+          status: prop.is_available ? 'Available' : 'Not Available',
+          occupancy: total ? `${occupied}/${total}` : '—',
+          image_url: (prop.images && prop.images.length > 0) ? prop.images[0] : prop.image_url || '',
+          created_at: prop.created_at,
+          owner_id: prop.owner_id,
+        }) as PropertyDisplay;
+      }) as PropertyDisplay[];
     },
     enabled: !!user?.id,
   });

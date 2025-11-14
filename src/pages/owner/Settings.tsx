@@ -38,6 +38,12 @@ const ownerSettingsSchema = z.object({
   cleaning_fee: z.number().min(0).default(0),
   utilities_included: z.boolean().default(true),
   wifi_included: z.boolean().default(true),
+  // New: minutes to campus fields (nullable)
+  minutes_to_campus: z.preprocess(
+    (v) => (v === '' || v === undefined ? null : typeof v === 'number' ? v : Number(v)),
+    z.number().int().min(0).max(60).nullable()
+  ).optional(),
+  minutes_to_campus_mode: z.enum(['walk', 'drive']).nullable().optional(),
   maintenance_contact_name: z.string().optional(),
   maintenance_contact_phone: z.string().optional(),
   emergency_contact_name: z.string().optional(),
@@ -67,7 +73,7 @@ const OwnerSettings: React.FC = () => {
     queryKey: ['owner-settings', user?.id],
     queryFn: async () => {
       if (!user?.id) throw new Error('User not authenticated');
-      
+
       const { data, error } = await supabase
         .from('owner_settings')
         .select('*')
@@ -101,6 +107,8 @@ const OwnerSettings: React.FC = () => {
         cleaning_fee: settings.cleaning_fee || 0,
         utilities_included: settings.utilities_included ?? true,
         wifi_included: settings.wifi_included ?? true,
+        minutes_to_campus: settings.minutes_to_campus ?? null,
+        minutes_to_campus_mode: settings.minutes_to_campus_mode ?? null,
         maintenance_contact_name: settings.maintenance_contact_name || '',
         maintenance_contact_phone: settings.maintenance_contact_phone || '',
         emergency_contact_name: settings.emergency_contact_name || '',
@@ -286,10 +294,10 @@ const OwnerSettings: React.FC = () => {
                         <FormItem>
                           <FormLabel>Terms and Conditions</FormLabel>
                           <FormControl>
-                            <Textarea 
+                            <Textarea
                               placeholder="Define your terms and conditions for property rentals..."
                               className="min-h-[100px]"
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -304,10 +312,10 @@ const OwnerSettings: React.FC = () => {
                         <FormItem>
                           <FormLabel>Privacy Policy</FormLabel>
                           <FormControl>
-                            <Textarea 
+                            <Textarea
                               placeholder="Your privacy policy for tenant data..."
                               className="min-h-[100px]"
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -322,10 +330,10 @@ const OwnerSettings: React.FC = () => {
                         <FormItem>
                           <FormLabel>Refund Policy</FormLabel>
                           <FormControl>
-                            <Textarea 
+                            <Textarea
                               placeholder="Define your refund policy..."
                               className="min-h-[100px]"
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -340,10 +348,10 @@ const OwnerSettings: React.FC = () => {
                         <FormItem>
                           <FormLabel>Cancellation Policy</FormLabel>
                           <FormControl>
-                            <Textarea 
+                            <Textarea
                               placeholder="Define your cancellation policy..."
                               className="min-h-[100px]"
-                              {...field} 
+                              {...field}
                             />
                           </FormControl>
                           <FormMessage />
@@ -396,9 +404,9 @@ const OwnerSettings: React.FC = () => {
                           <FormItem>
                             <FormLabel>Advance Notice (hours)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
-                                min="1" 
+                              <Input
+                                type="number"
+                                min="1"
                                 max="168"
                                 {...field}
                                 onChange={(e) => field.onChange(parseInt(e.target.value) || 24)}
@@ -416,8 +424,8 @@ const OwnerSettings: React.FC = () => {
                           <FormItem>
                             <FormLabel>Minimum Stay (days)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="1"
                                 {...field}
                                 onChange={(e) => field.onChange(parseInt(e.target.value) || 1)}
@@ -435,8 +443,8 @@ const OwnerSettings: React.FC = () => {
                           <FormItem>
                             <FormLabel>Maximum Stay (days)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="1"
                                 {...field}
                                 onChange={(e) => field.onChange(parseInt(e.target.value) || 365)}
@@ -515,8 +523,8 @@ const OwnerSettings: React.FC = () => {
                           <FormItem>
                             <FormLabel>Security Deposit (₵)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 {...field}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -534,8 +542,8 @@ const OwnerSettings: React.FC = () => {
                           <FormItem>
                             <FormLabel>Late Payment Fee (₵)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 {...field}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -553,8 +561,8 @@ const OwnerSettings: React.FC = () => {
                           <FormItem>
                             <FormLabel>Cleaning Fee (₵)</FormLabel>
                             <FormControl>
-                              <Input 
-                                type="number" 
+                              <Input
+                                type="number"
                                 min="0"
                                 {...field}
                                 onChange={(e) => field.onChange(parseFloat(e.target.value) || 0)}
@@ -630,6 +638,8 @@ const OwnerSettings: React.FC = () => {
                           <FormItem className="flex items-center justify-between p-3 border rounded-lg">
                             <div>
                               <FormLabel>WiFi Included</FormLabel>
+
+
                               <p className="text-sm text-gray-600">WiFi is included in rent</p>
                             </div>
                             <FormControl>
@@ -639,6 +649,52 @@ const OwnerSettings: React.FC = () => {
                         )}
                       />
                     </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="minutes_to_campus"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Minutes to campus</FormLabel>
+                              <FormControl>
+                                <Input
+                                  type="number"
+                                  min={0}
+                                  max={60}
+                                  value={field.value ?? ''}
+                                  onChange={(e) => field.onChange(e.target.value === '' ? null : Math.max(0, Math.min(60, parseInt(e.target.value) || 0)))}
+                                  placeholder="e.g., 15"
+                                />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="minutes_to_campus_mode"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Travel mode</FormLabel>
+                              <Select onValueChange={(v) => field.onChange(v)} value={field.value ?? undefined}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select mode" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="walk">Walk</SelectItem>
+                                  <SelectItem value="drive">Drive</SelectItem>
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -683,6 +739,8 @@ const OwnerSettings: React.FC = () => {
                         name="maintenance_contact_name"
                         render={({ field }) => (
                           <FormItem>
+
+
                             <FormLabel>Maintenance Contact Name</FormLabel>
                             <FormControl>
                               <Input placeholder="Full name" {...field} />

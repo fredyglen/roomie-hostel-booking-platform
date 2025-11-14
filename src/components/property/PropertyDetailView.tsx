@@ -114,14 +114,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
   return (
     <div className="max-w-6xl mx-auto p-3 sm:p-4">
       {/* Back Button */}
-      {onGoBack && (
-        <div className="mb-4">
-          <Button variant="outline" onClick={onGoBack} className="mb-4">
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Properties
-          </Button>
-        </div>
-      )}
+
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6 relative">
         {/* Main Content */}
@@ -164,6 +157,20 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
             propertyCategory={property.property_category}
             propertyTitle={property.title || (property as any).name}
             onRoomPriceChange={setSelectedRoomPrice}
+            // ✅ Transparency fields
+            advancePaymentMonths={(property as any).advance_payment_months}
+            washroomType={(property as any).washroom_type}
+            hasIndividualMeters={(property as any).has_individual_meters}
+            allowBillSharing={(property as any).allow_bill_sharing}
+            meterType={(property as any).meter_type}
+            waterReliability={(property as any).water_reliability}
+            waterReliabilityNotes={(property as any).water_reliability_notes}
+            parkingAvailable={(property as any).parking_available}
+            parkingCost={(property as any).parking_cost}
+            internetSpeed={(property as any).internet_speed}
+            securityFeatures={(property as any).security_features}
+            genderRestriction={(property as any).gender_restriction || (property as any).gender_type}
+            cancellationPolicy={(property as any).cancellation_policy}
           />
         </div>
 

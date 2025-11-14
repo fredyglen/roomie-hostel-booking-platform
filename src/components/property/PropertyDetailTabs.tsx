@@ -41,6 +41,10 @@ interface PropertyDetailData {
     bathrooms?: number;
     amenities?: string[];
   };
+  washroom_type?: string;
+  has_individual_meters?: boolean;
+  meter_type?: string;
+
 }
 
 interface PropertyDetailTabsProps {
@@ -221,6 +225,21 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
     return '';
   };
 
+  // Essentials one-liner builder (washroom + utilities)
+  const buildEssentials = (p: PropertyDetailData): string => {
+    const wt = p.washroom_type?.toLowerCase();
+    let washroom: string | undefined;
+    if (wt === 'private') washroom = 'Private washroom';
+    else if (wt === 'shared') washroom = 'Shared washroom';
+    else if (wt === 'outside' || wt === 'external') washroom = 'External washroom';
+
+    let utilities: string | undefined;
+    if (p.has_individual_meters === true || p.allow_bill_sharing === true) utilities = 'Utilities billed separately';
+    else if (p.has_individual_meters === false && p.allow_bill_sharing === false) utilities = 'Utilities included';
+
+    return [washroom, utilities].filter(Boolean).join(' • ');
+  };
+
   // Get amenity icon
   const getAmenityIcon = (amenity: string) => {
     const lowerAmenity = amenity.toLowerCase();
@@ -282,6 +301,13 @@ const PropertyDetailTabs: React.FC<PropertyDetailTabsProps> = ({
             {/* ✅ PHASE 2: Smart Description with Character Limit */}
             <div>
               <h3 className="text-xl font-bold mb-4 text-gray-900">About this property</h3>
+              {/* Essentials one-liner */}
+              {buildEssentials(property) && (
+                <p className="text-xs text-gray-600 -mt-2 mb-2">
+                  {buildEssentials(property)}
+                </p>
+              )}
+
               <SmartDescription
                 description={property.description || ''}
                 characterLimit={400}

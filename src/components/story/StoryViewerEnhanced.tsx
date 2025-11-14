@@ -4,6 +4,8 @@ import { Icon } from '@iconify/react';
 import { Story, Property } from '@/types/property';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import StorySummaryCard from '@/components/story/StorySummaryCard';
+
 
 interface StoryViewerEnhancedProps {
   story: Story;
@@ -15,6 +17,7 @@ interface StoryViewerEnhancedProps {
   showPrevButton: boolean;
   showNextButton: boolean;
   onSwipeUp?: () => void;
+  onSwipeDown?: () => void;
   showDetails?: boolean;
   isMobile?: boolean;
   progressPercentage: number;
@@ -30,6 +33,7 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
   showPrevButton,
   showNextButton,
   onSwipeUp,
+  onSwipeDown,
   showDetails,
   isMobile = true,
   progressPercentage
@@ -42,17 +46,21 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
   }, [onPause]);
 
   const handleTouchMove = useCallback((e: React.TouchEvent) => {
-    if (!touchStartY || !onSwipeUp) return;
+    // Prevent browser pull-to-refresh and scrolling during gestures
+    e.preventDefault();
+    if (!touchStartY) return;
 
     const currentY = e.touches[0].clientY;
     const diff = touchStartY - currentY;
 
-    // If swiping up significantly, trigger swipe up (reduced threshold for better responsiveness)
-    if (diff > 30) {
+    // Swipe up to show details
+    if (diff > 30 && onSwipeUp) {
       onSwipeUp();
-      setTouchStartY(0); // Reset to prevent multiple triggers
+      setTouchStartY(0);
+      return;
     }
-  }, [touchStartY, onSwipeUp]);
+    // Swipe-down-to-close disabled per user request
+  }, [touchStartY, onSwipeUp, onSwipeDown]);
 
   const handleTouchEnd = useCallback(() => {
     if (!showDetails) {
@@ -61,24 +69,22 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
     setTouchStartY(0);
   }, [onPause, showDetails]);
 
+  const bgUrl = story.type === 'summary' ? ((property.images && property.images[0]) || '') : story.url;
+
+
   if (!story) return null;
 
   return (
-    <div className="relative w-full h-full overflow-hidden">
-      {/* Background blur effect */}
-      <div 
-        className="absolute inset-0 bg-cover bg-center opacity-50 blur-xl scale-110"
-        style={{ backgroundImage: `url(${story.url})` }}
-      ></div>
-      
+    <div className="relative w-full h-full overflow-hidden" style={{ overscrollBehavior: 'none', touchAction: 'none' }}>
+
       {/* Progress bar */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-gray-300 z-20">
-        <div 
+        <div
           className="h-full bg-blue-500 transition-all duration-300 ease-linear"
           style={{ width: `${progressPercentage}%` }}
         ></div>
       </div>
-      
+
       {/* Main content */}
       <div
         className="w-full h-full touch-none relative z-10 flex items-center justify-center"
@@ -89,7 +95,9 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
         onMouseUp={(e) => !showDetails && onPause(false)}
       >
         <div className="story-content">
-          {story.type === 'image' ? (
+          {story.type === 'summary' ? (
+            <StorySummaryCard property={property} />
+          ) : story.type === 'image' ? (
             <img
               src={story.url}
               alt="Story content"
@@ -97,6 +105,10 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
                 "object-contain max-h-full max-w-full",
                 isMobile && "h-full w-full object-cover"
               )}
+              loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              draggable={false}
             />
           ) : (
             <video
@@ -104,6 +116,7 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
               autoPlay
               playsInline
               muted={isPaused}
+              preload="auto"
               className={cn(
                 "object-contain max-h-full max-w-full",
                 isMobile && "h-full w-full object-cover"
@@ -113,7 +126,7 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
           )}
         </div>
       </div>
-      
+
       {/* Property info overlay at bottom */}
       <div className="absolute bottom-0 left-0 right-0 p-4 z-20 bg-gradient-to-t from-black/70 to-transparent">
         <div className="flex justify-between items-center text-white">
@@ -130,7 +143,7 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* Caption */}
       {story.caption && (
         <div className="absolute bottom-24 left-0 right-0 px-4 z-10">
@@ -139,26 +152,26 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
           </p>
         </div>
       )}
-      
+
       {/* Navigation Controls - invisible buttons covering left/center/right */}
       <div className="absolute inset-0 flex z-10">
-        <button 
+        <button
           className="w-1/3 h-full focus:outline-none"
           onClick={onPrevious}
           aria-label="Previous"
         />
         <div className="w-1/3 h-full" onClick={() => onPause(!isPaused)} />
-        <button 
+        <button
           className="w-1/3 h-full focus:outline-none"
           onClick={onNext}
           aria-label="Next"
         />
       </div>
-      
+
       {/* Navigation Buttons (Visual indicators) */}
       <div className="absolute top-1/2 left-4 transform -translate-y-1/2 z-20">
         {showPrevButton && (
-          <button 
+          <button
             className="text-white bg-black/30 rounded-full p-2 hover:bg-black/50 transition-colors"
             onClick={onPrevious}
             aria-label="Previous"
@@ -167,10 +180,10 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
           </button>
         )}
       </div>
-      
+
       <div className="absolute top-1/2 right-4 transform -translate-y-1/2 z-20">
         {showNextButton && (
-          <button 
+          <button
             className="text-white bg-black/30 rounded-full p-2 hover:bg-black/50 transition-colors"
             onClick={onNext}
             aria-label="Next"
@@ -179,24 +192,13 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
           </button>
         )}
       </div>
-      
+
       {/* Enhanced Swipe Up Indicator with Book Now Option */}
       {onSwipeUp && !showDetails && (
         <div className="absolute bottom-16 left-0 right-0 flex flex-col items-center z-20">
           {/* Book Now Button - More Prominent */}
           <div className="mb-4 px-4">
-            <button
-              onClick={() => {
-                // Navigate directly to booking
-                const propertyId = property?.id;
-                if (propertyId) {
-                  window.location.href = `/student/book/${propertyId}`;
-                }
-              }}
-              className="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform transition-all duration-200 hover:scale-105"
-            >
-              Book Now
-            </button>
+
           </div>
 
           {/* Swipe Up for Details */}

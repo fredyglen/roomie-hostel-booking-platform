@@ -144,7 +144,27 @@ export const normalizePropertyData = (dbProperty: Record<string, unknown>): Prop
     } : undefined,
     house_rules: String(dbProperty.house_rules ?? ''),
     stories: [],
-    features: Array.isArray(dbProperty.features) ? dbProperty.features as string[] : []
+    features: Array.isArray(dbProperty.features) ? dbProperty.features as string[] : [],
+
+    // Forward important transparency fields for student view (rendered in About tab)
+    good_to_know: (dbProperty as any).good_to_know ? String((dbProperty as any).good_to_know) : undefined,
+    advance_payment_months: (dbProperty as any).advance_payment_months as any,
+    // Utilities/billing
+    has_individual_meters: (dbProperty as any).has_individual_meters === true,
+    allow_bill_sharing: (dbProperty as any).allow_bill_sharing === true,
+    meter_type: (dbProperty as any).meter_type ? String((dbProperty as any).meter_type) : undefined,
+    // Washroom + gender
+    washroom_type: (dbProperty as any).washroom_type ? String((dbProperty as any).washroom_type) : undefined,
+    gender_restriction: String((dbProperty as any).gender_restriction ?? (dbProperty as any).gender_type ?? ''),
+    // Parking, internet, security, cancellation
+    parking_available: (dbProperty as any).parking_available === true,
+    parking_cost: (dbProperty as any).parking_cost != null ? Number((dbProperty as any).parking_cost) : undefined,
+    internet_speed: (dbProperty as any).internet_speed ? String((dbProperty as any).internet_speed) : undefined,
+    security_features: Array.isArray((dbProperty as any).security_features) ? (dbProperty as any).security_features as string[] : undefined,
+    cancellation_policy: (dbProperty as any).cancellation_policy ? String((dbProperty as any).cancellation_policy) : undefined,
+    // Water reliability
+    water_reliability: (dbProperty as any).water_reliability ? String((dbProperty as any).water_reliability) : undefined,
+    water_reliability_notes: (dbProperty as any).water_reliability_notes ? String((dbProperty as any).water_reliability_notes) : undefined
   };
 };
 

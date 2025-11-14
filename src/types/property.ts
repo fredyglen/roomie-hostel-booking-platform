@@ -1,7 +1,7 @@
 
 /**
  * ✅ APPLE-GRADE PROPERTY TYPES - BE CONSCIOUS COMPLIANCE
- * 
+ *
  * Type-safe property definitions with branded types
  * Zero any types with complete type safety
  */
@@ -31,13 +31,13 @@ export type PropertyStatus =
   | 'archived';
 
 // Property type enum - ONLY these three types
-export type PropertyType = 
+export type PropertyType =
   | 'hostel'
   | 'homestel'
   | 'apartment';
 
 // Property category enum - ONLY these three categories
-export type PropertyCategory = 
+export type PropertyCategory =
   | 'Hostel'
   | 'Homestel'
   | 'Apartment';
@@ -179,6 +179,18 @@ export interface VerificationDetails {
   readonly rejectionReason?: string;
   readonly notes?: string;
 }
+
+// =====================================================
+// STORY TYPE (used by story viewer)
+// =====================================================
+export interface Story {
+  readonly id: string;
+  readonly type: 'image' | 'video' | 'summary';
+  readonly url: string;
+  readonly duration: number;
+  readonly caption?: string;
+}
+
 
 // =====================================================
 // PROPERTY FEATURES
@@ -484,7 +496,7 @@ export interface GhanaHostelProperty {
   isActive: boolean;
   features: string[];
   house_rules: string;
-  stories?: string[];
+  stories?: Story[];
 }
 
 export interface RoomOption {

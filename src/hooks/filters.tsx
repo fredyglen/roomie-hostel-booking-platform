@@ -1,7 +1,7 @@
 
 import { useState, useMemo } from 'react';
 import { Property } from '@/types/property';
-import { PRICE_FILTER_DEFAULTS, DISTANCE_FILTER_DEFAULTS } from '@/config/constants';
+import { PRICE_FILTER_DEFAULTS } from '@/config/constants';
 
 interface UsePropertiesFilterProps {
   properties: Property[];
@@ -12,7 +12,7 @@ export const usePropertiesFilter = ({ properties }: UsePropertiesFilterProps) =>
   const [selectedPropertyType, setSelectedPropertyType] = useState('');
   const [selectedGenderType, setSelectedGenderType] = useState('');
   const [priceRange, setPriceRange] = useState<[number, number]>([PRICE_FILTER_DEFAULTS.MIN, PRICE_FILTER_DEFAULTS.MAX]);
-  const [maxDistance, setMaxDistance] = useState(DISTANCE_FILTER_DEFAULTS.DEFAULT);
+
   const [showFilters, setShowFilters] = useState(false);
 
   const filteredProperties = useMemo(() => {
@@ -56,14 +56,13 @@ export const usePropertiesFilter = ({ properties }: UsePropertiesFilterProps) =>
 
       return true;
     });
-  }, [properties, searchQuery, selectedPropertyType, selectedGenderType, priceRange, maxDistance]);
+  }, [properties, searchQuery, selectedPropertyType, selectedGenderType, priceRange]);
 
   const resetFilters = () => {
     setSearchQuery('');
     setSelectedPropertyType('');
     setSelectedGenderType('');
     setPriceRange([PRICE_FILTER_DEFAULTS.MIN, PRICE_FILTER_DEFAULTS.MAX]);
-    setMaxDistance(DISTANCE_FILTER_DEFAULTS.DEFAULT);
   };
 
   return {
@@ -75,8 +74,6 @@ export const usePropertiesFilter = ({ properties }: UsePropertiesFilterProps) =>
     setSelectedGenderType,
     priceRange,
     setPriceRange,
-    maxDistance,
-    setMaxDistance,
     showFilters,
     setShowFilters,
     filteredProperties,

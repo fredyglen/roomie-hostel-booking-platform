@@ -7,10 +7,10 @@ import { Property, Story } from '@/types/property';
 export const useStoryViewModel = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  
-  const { data: property, isLoading, error } = usePropertyLoader({ 
-    propertyId: id || '', 
-    enabled: !!id 
+
+  const { data: property, isLoading, error } = usePropertyLoader({
+    propertyId: id || '',
+    enabled: !!id
   });
 
   const [activeIndex, setActiveIndex] = useState(0);
@@ -18,13 +18,18 @@ export const useStoryViewModel = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [progress, setProgress] = useState(0);
 
-  // Generate stories from property images
-  const stories: Story[] = property?.images ? property.images.map((image, index) => ({
+  // Generate stories from property images + summary card
+  const mediaStories: Story[] = property?.images ? property.images.map((image, index) => ({
     id: `story-${index}`,
     type: 'image' as const,
     url: image,
     duration: 5000
   })) : [];
+
+  const stories: Story[] = [
+    ...mediaStories,
+    { id: 'summary-card', type: 'summary' as const, url: '', duration: 10000 }
+  ];
 
   const currentStory = stories[activeIndex];
 
@@ -62,7 +67,7 @@ export const useStoryViewModel = () => {
 
   // Auto-advance timer
   useEffect(() => {
-    if (!isPaused && currentStory) {
+    if (!isPaused && !showDetails && currentStory) {
       const timer = setInterval(() => {
         setProgress(prev => {
           const newProgress = prev + 100;
@@ -76,7 +81,19 @@ export const useStoryViewModel = () => {
 
       return () => clearInterval(timer);
     }
-  }, [isPaused, currentStory, handleNext]);
+  }, [isPaused, showDetails, currentStory, handleNext]);
+
+  // Ensure pause state follows details visibility
+  useEffect(() => {
+    setIsPaused(showDetails);
+  }, [showDetails]);
+
+  // Pause when tab is hidden (backgrounded)
+  useEffect(() => {
+    const onVisibility = () => setIsPaused(document.hidden || showDetails);
+    document.addEventListener('visibilitychange', onVisibility);
+    return () => document.removeEventListener('visibilitychange', onVisibility);
+  }, [showDetails]);
 
   return {
     property,
