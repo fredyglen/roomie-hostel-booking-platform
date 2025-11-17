@@ -110,7 +110,7 @@ const BookingStepsContainer: React.FC = () => {
   }
   return (
     <div className="w-full min-h-screen bg-white">
-      <div className="mx-auto md:px-4 md:py-4 md:max-w-xl">
+      <div className="mx-auto md:px-4 md:py-4 md:max-w-7xl">
         <div className="mb-4">
           <button
             onClick={() => navigate('/student/properties')}

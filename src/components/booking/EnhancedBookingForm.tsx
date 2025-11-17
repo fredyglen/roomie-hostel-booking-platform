@@ -6,9 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Property } from '@/types/property';
 import { useEnhancedBooking } from '@/hooks/booking/useEnhancedBooking';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-
-import { Separator } from '@/components/ui/separator';
+import { Card, CardContent } from '@/components/ui/card';
 import { Calendar, Users, CreditCard, CheckCircle, ArrowLeft } from 'lucide-react';
 
 // Import step components (mobile-first)
@@ -18,7 +16,8 @@ import RoomAndPreferencesStep from './steps/mobile/RoomAndPreferencesStep';
 import VerificationStep from './steps/VerificationStep';
 import PaymentStep from './PaymentStep';
 import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
-import { useRealTimeCommissionConfig } from '@/hooks/useRealTimeCommissionConfig';
+import ResponsiveBookingLayout from './ResponsiveBookingLayout';
+import BookingSummarySidebar from './BookingSummarySidebar';
 
 
 interface EnhancedBookingFormProps {
@@ -58,8 +57,6 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
     createBooking,
     createBookingWithPayment
   } = useEnhancedBooking(property);
-  const { rates, config } = useRealTimeCommissionConfig({ portal: 'student' });
-
 
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -249,7 +246,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
   };
 
   return (
-    <div className="mx-auto md:px-4 md:py-4 md:max-w-xl">
+    <div className="mx-auto md:px-4 md:py-4">
       {/* Header (desktop only) */}
       <div className="hidden md:block mb-6">
         <div className="flex items-center gap-4 mb-4">
@@ -290,71 +287,30 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Main Form */}
-        <div className="lg:col-span-2">
-          {/* Mobile: render step edge-to-edge without Card */}
-          <div className="md:hidden">
-            {renderStep()}
-          </div>
-          {/* Desktop: render inside Card */}
-          <div className="hidden md:block">
-            <Card>
-              <CardContent className="p-6">
-                {renderStep()}
-              </CardContent>
-            </Card>
-          </div>
+      <ResponsiveBookingLayout
+        property={property}
+        sidebar={
+          <BookingSummarySidebar
+            property={property}
+            pricing={pricing}
+            formData={formData}
+            currentStep={currentStep}
+          />
+        }
+      >
+        {/* Mobile: render step edge-to-edge without Card */}
+        <div className="md:hidden">
+          {renderStep()}
         </div>
-
-        {/* Booking Summary (hidden on mobile) */}
-        <div className="hidden lg:block lg:col-span-1">
-          <Card className="sticky top-6">
-            <CardHeader>
-              <CardTitle>Booking Summary</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span>Property Rent</span>
-                  <span>₵{pricing.propertyRent.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>
-                    Platform Commission ({(((rates?.platform ?? centralizedCommissionEngine.getCommissionRates().platform) * 100).toFixed(2))}%)
-                  </span>
-                  <span>₵{pricing.platformCommission.toLocaleString()}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Service Fee (GHS {(config?.fees.fixed ?? centralizedCommissionEngine.getPlatformFees().fixed).toLocaleString()})</span>
-                  <span>₵{pricing.platformFixedFee.toLocaleString()}</span>
-                </div>
-                {pricing.agentFee > 0 && (
-                  <div className="flex justify-between">
-                    <span>Agent Fee</span>
-                    <span>₵{pricing.agentFee.toLocaleString()}</span>
-                  </div>
-                )}
-              </div>
-
-              <Separator />
-
-              <div className="flex justify-between font-bold text-lg">
-                <span>Total</span>
-                <span className="text-primary">₵{pricing.totalAmount.toLocaleString()}</span>
-              </div>
-
-              <div className="text-sm text-gray-600">
-                <p>Duration: {formData.duration}</p>
-                {formData.roomType && <p>Room: {formData.roomType}</p>}
-                {formData.roommates.length > 0 && (
-                  <p>Roommates: {formData.roommates.length}</p>
-                )}
-              </div>
+        {/* Desktop: render inside Card */}
+        <div className="hidden md:block">
+          <Card>
+            <CardContent className="p-6">
+              {renderStep()}
             </CardContent>
           </Card>
         </div>
-      </div>
+      </ResponsiveBookingLayout>
     </div>
   );
 };
