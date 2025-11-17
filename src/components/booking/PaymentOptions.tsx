@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getMobileMoneyProviders } from '@/utils/paystackIntegration';
 import { formatCurrency } from '@/utils/currency';
-import { CreditCard, Smartphone, Building2 } from 'lucide-react';
+import { Smartphone, Building2 } from 'lucide-react';
 
 interface PaymentOptionsProps {
   totalPrice: number;
@@ -55,26 +55,7 @@ const PaymentOptions: React.FC<PaymentOptionsProps> = ({
           onValueChange={onSelectPaymentMethod}
           className="space-y-4"
         >
-          {/* Card Payment */}
-          <div className={`border rounded-lg p-4 cursor-pointer transition-colors ${selectedPaymentMethod === 'card' ? 'border-[#9b87f5] bg-purple-50' : 'hover:bg-gray-50'}`}>
-            <div className="flex items-center space-x-3">
-              <RadioGroupItem value="card" id="card" />
-              <CreditCard className="h-5 w-5 text-blue-600" />
-              <Label htmlFor="card" className="flex-1 cursor-pointer">
-                <div>
-                  <p className="font-medium">Credit/Debit Card</p>
-                  <p className="text-sm text-gray-600">Visa, Mastercard, Verve</p>
-                </div>
-              </Label>
-              <div className="flex space-x-2">
-                <div className="w-8 h-5 bg-blue-600 rounded text-white text-xs flex items-center justify-center font-bold">V</div>
-                <div className="w-8 h-5 bg-red-500 rounded text-white text-xs flex items-center justify-center font-bold">M</div>
-                <div className="w-8 h-5 bg-green-600 rounded text-white text-xs flex items-center justify-center font-bold">V</div>
-              </div>
-            </div>
-          </div>
-          
-          {/* Mobile Money */}
+          {/* Mobile Money (Primary) */}
           <div className={`border rounded-lg p-4 cursor-pointer transition-colors ${selectedPaymentMethod === 'mobile_money' ? 'border-[#9b87f5] bg-purple-50' : 'hover:bg-gray-50'}`}>
             <div className="flex items-center space-x-3">
               <RadioGroupItem value="mobile_money" id="mobile_money" />

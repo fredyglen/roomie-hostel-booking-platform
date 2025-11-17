@@ -42,7 +42,7 @@ export const paystackConfig = {
   apiBaseUrl: config.paystack.baseUrl,
   publicKey: config.paystack.publicKey,
   currency: 'GHS',
-  channels: ['card', 'mobile_money', 'bank'],
+  channels: ['mobile_money', 'bank'],
 };
 
 // Load Paystack script

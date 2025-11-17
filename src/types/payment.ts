@@ -2,7 +2,7 @@ import { BaseEntity } from './common';
 import { PaymentStatus } from './booking';
 import { Property } from './property';
 
-export type PaymentMethod = 'card' | 'mobile_money' | 'bank' | 'ussd' | 'qr';
+export type PaymentMethod = 'mobile_money' | 'bank' | 'bank_transfer' | 'ussd' | 'qr';
 export type MobileMoneyNetwork = 'mtn' | 'vodafone' | 'airtel';
 export type Currency = 'GHS' | 'NGN' | 'USD' | 'ZAR' | 'KES';
 

@@ -9,7 +9,7 @@ interface PaymentData {
   amount: number;
   email: string;
   phone?: string;
-  method: 'card' | 'mobile_money' | 'bank';
+  method: 'mobile_money' | 'bank';
   network?: 'mtn' | 'vodafone' | 'airtel';
   metadata?: Record<string, unknown>;
   split_code?: string;

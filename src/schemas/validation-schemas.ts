@@ -199,7 +199,7 @@ export const bookingSchema = z.object({
 export const paymentSchema = z.object({
   amount: z.number().positive(messages.positive),
   currency: z.string().default('GHS'),
-  paymentMethod: z.enum(['card', 'mobile_money', 'bank_transfer']),
+  paymentMethod: z.enum(['mobile_money', 'bank_transfer']),
   mobileMoneyNetwork: z.enum(['mtn', 'vodafone', 'airtel']).optional(),
   phoneNumber: phoneSchema.optional(),
   email: emailSchema,

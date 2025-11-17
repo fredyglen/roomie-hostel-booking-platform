@@ -160,7 +160,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
         firstName: firstName,
         lastName: lastName,
         phone: phone,
-        channels: ['card', 'bank', 'ussd', 'mobile_money', 'bank_transfer'], // Ghana payment channels
+        channels: ['mobile_money', 'bank', 'ussd', 'bank_transfer'], // Ghana payment channels (no cards)
         metadata: {
           ...metadata,
           firstName,
@@ -264,7 +264,7 @@ export const ModernPaystackPayment: React.FC<ModernPaystackPaymentProps> = ({
       {/* Payment methods info for Ghana */}
       <div className="text-xs text-gray-500 text-center space-y-1">
         <p>Secure payment via Paystack</p>
-        <p>Supports: Cards • Mobile Money • Bank Transfer</p>
+        <p>Supports: Mobile Money • Bank Transfer</p>
         <p>Networks: MTN • Vodafone • AirtelTigo</p>
       </div>
     </div>

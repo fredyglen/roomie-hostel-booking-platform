@@ -12,7 +12,7 @@ import type { ModernPaymentSuccessResult } from '@/types/booking';
 import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 import { formatCurrency } from '@/utils/currency';
 
-import { ArrowLeft, CreditCard as CreditCardIcon, Smartphone as SmartphoneIcon, Lock } from 'lucide-react';
+import { ArrowLeft, Smartphone as SmartphoneIcon, Lock, Building2 as BuildingIcon } from 'lucide-react';
 
 
 // Derive the commission result type from the engine's calculateCommissions return type
@@ -81,7 +81,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     (typeof feeBreakdown !== 'undefined' && feeBreakdown) ||
     ((paystackMetadata as any)?.commission_breakdown as CommissionCalculationResult | undefined);
 
-  const [selectedMethod, setSelectedMethod] = useState<string>('card');
+  // Default to mobile money as the primary payment method
+  const [selectedMethod, setSelectedMethod] = useState<string>('mobile_money');
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
@@ -194,7 +195,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           has_agent: hasAgent,      // ✅ NEW API: Pass agent involvement flag
           currency: 'GHS',
           metadata: paystackMetadata,
-          channels: ['card', 'mobile_money', 'bank', 'ussd'],
+          // Restrict to mobile money + bank for this flow
+          channels: ['mobile_money', 'bank'],
           // Ensure Paystack redirects back to our frontend after payment
           callback_url: `${window.location.origin}/payment-success`,
         },
@@ -304,21 +306,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         {/* Payment Method */}
         <h3 className="text-[#111318] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-6">How would you like to pay?</h3>
         <div className="px-4 space-y-3">
-          <label className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-all ${selectedMethod === 'card' ? 'border-primary bg-primary/10' : 'border-gray-200 bg-white'}`}>
-            <input
-              type="radio"
-              name="payment-method"
-              className="h-5 w-5 border-gray-300 text-primary focus:ring-primary"
-              checked={selectedMethod === 'card'}
-              onChange={() => handleMethodSelect('card')}
-            />
-            <div className="flex-1">
-              <p className="font-bold text-gray-800">Card</p>
-              <p className="text-sm text-gray-600">Pay with your debit or credit card</p>
-            </div>
-            <CreditCardIcon className="h-6 w-6 text-gray-800" />
-          </label>
-
+          {/* Mobile Money (primary) */}
           <label className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-all ${selectedMethod === 'mobile_money' ? 'border-primary bg-primary/10' : 'border-gray-200 bg-white'}`}>
             <input
               type="radio"
@@ -328,11 +316,26 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
               onChange={() => handleMethodSelect('mobile_money')}
             />
             <div className="flex-1">
-
               <p className="font-bold text-gray-800">Mobile Money</p>
               <p className="text-sm text-gray-600">Pay with MTN, Vodafone, AirtelTigo</p>
             </div>
             <SmartphoneIcon className="h-6 w-6 text-gray-800" />
+          </label>
+
+          {/* Bank Transfer (secondary) */}
+          <label className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-all ${selectedMethod === 'bank' ? 'border-primary bg-primary/10' : 'border-gray-200 bg-white'}`}>
+            <input
+              type="radio"
+              name="payment-method"
+              className="h-5 w-5 border-gray-300 text-primary focus:ring-primary"
+              checked={selectedMethod === 'bank'}
+              onChange={() => handleMethodSelect('bank')}
+            />
+            <div className="flex-1">
+              <p className="font-bold text-gray-800">Bank Transfer</p>
+              <p className="text-sm text-gray-600">Pay directly from your bank account</p>
+            </div>
+            <BuildingIcon className="h-6 w-6 text-gray-800" />
           </label>
         </div>
 
@@ -435,21 +438,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         <div>
           <h3 className="text-lg font-bold leading-tight tracking-[-0.015em]">How would you like to pay?</h3>
           <div className="space-y-3">
-            <label className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-all ${selectedMethod === 'card' ? 'border-primary bg-primary/10' : 'border-gray-200 bg-white'}`}>
-              <input
-                type="radio"
-                name="payment-method-desktop"
-                className="h-5 w-5 border-gray-300 text-primary focus:ring-primary"
-                checked={selectedMethod === 'card'}
-                onChange={() => handleMethodSelect('card')}
-              />
-              <div className="flex-1">
-                <p className="font-bold text-gray-800">Card</p>
-                <p className="text-sm text-gray-600">Pay with your debit or credit card</p>
-              </div>
-              <CreditCardIcon className="h-6 w-6 text-gray-800" />
-            </label>
-
+            {/* Mobile Money (primary) */}
             <label className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-all ${selectedMethod === 'mobile_money' ? 'border-primary bg-primary/10' : 'border-gray-200 bg-white'}`}>
               <input
                 type="radio"
@@ -463,6 +452,22 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
                 <p className="text-sm text-gray-600">Pay with MTN, Vodafone, AirtelTigo</p>
               </div>
               <SmartphoneIcon className="h-6 w-6 text-gray-800" />
+            </label>
+
+            {/* Bank Transfer (secondary) */}
+            <label className={`flex cursor-pointer items-center gap-4 rounded-lg border-2 p-4 transition-all ${selectedMethod === 'bank' ? 'border-primary bg-primary/10' : 'border-gray-200 bg-white'}`}>
+              <input
+                type="radio"
+                name="payment-method-desktop"
+                className="h-5 w-5 border-gray-300 text-primary focus:ring-primary"
+                checked={selectedMethod === 'bank'}
+                onChange={() => handleMethodSelect('bank')}
+              />
+              <div className="flex-1">
+                <p className="font-bold text-gray-800">Bank Transfer</p>
+                <p className="text-sm text-gray-600">Pay directly from your bank account</p>
+              </div>
+              <BuildingIcon className="h-6 w-6 text-gray-800" />
             </label>
           </div>
         </div>

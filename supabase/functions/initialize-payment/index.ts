@@ -338,7 +338,7 @@ Deno.serve(async (req) => {
         // Mark legacy API usage for tracking
         isLegacyApi
       },
-      channels: paymentData.channels || ['card', 'mobile_money', 'bank']
+      channels: paymentData.channels || ['mobile_money', 'bank']
     };
 
     // Initialize transaction with Paystack

@@ -123,7 +123,7 @@ export const config: AppConfig = {
     publicKey: validateRequiredEnvVar('VITE_PAYSTACK_PUBLIC_KEY', import.meta.env.VITE_PAYSTACK_PUBLIC_KEY),
     baseUrl: import.meta.env.VITE_PAYSTACK_BASE_URL || 'https://api.paystack.co',
     currency: Currency.GHS,
-    channels: ['card', 'mobile_money', 'bank', 'ussd', 'qr'] as const,
+    channels: ['mobile_money', 'bank', 'ussd', 'qr'] as const,
     callbackUrl: import.meta.env.VITE_PAYSTACK_CALLBACK_URL || `${import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5173'}/payment/callback`,
   },
   app: {

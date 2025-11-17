@@ -14,7 +14,7 @@ interface PaymentData {
   amount: number;
   email: string;
   metadata?: Record<string, unknown>;
-  method: 'card' | 'mobile_money' | 'bank';
+  method: 'mobile_money' | 'bank';
   mobileMoneyNetwork?: 'mtn' | 'vodafone' | 'airtel';
   phoneNumber?: string;
   split_code?: string;
@@ -64,13 +64,13 @@ export const usePaystackIntegration = () => {
         
         await initializeMobileMoneyPayment(mobileMoneyConfig);
       } else {
-        // Card or bank payment
+        // Bank payment (cards disabled)
         const paystackConfig: PaystackConfig = {
           email: paymentData.email,
           amount: paymentData.amount,
           currency: 'GHS',
           metadata: paymentData.metadata,
-          channels: paymentData.method === 'card' ? ['card'] : ['bank'],
+          channels: ['bank'],
           split_code: paymentData.split_code,
           subaccount: paymentData.subaccount,
           onSuccess: (reference) => {
@@ -90,7 +90,7 @@ export const usePaystackIntegration = () => {
           },
           onError: (error) => {
             setProcessing(false);
-            handleError(error, "usePaystackIntegration: Card/Bank payment failed");
+            handleError(error, "usePaystackIntegration: Bank payment failed");
             if (onError) onError(error);
           }
         };

@@ -206,7 +206,6 @@ export enum GhanaMobileMoneyChannel {
  * Payment channels available in Ghana
  */
 export enum PaymentChannel {
-  CARD = 'card',
   MOBILE_MONEY = 'mobile_money',
   BANK = 'bank',
   USSD = 'ussd',
