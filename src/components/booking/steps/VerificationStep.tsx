@@ -85,8 +85,10 @@ const VerificationStep: React.FC<VerificationStepProps> = ({
       </div>
 
       <div className="space-y-6 px-4 md:px-0 pb-24 md:pb-0">
-        <h2 className="text-xl font-bold">Student Verification</h2>
-        <p className="text-gray-600">Please verify your student status to complete the booking.</p>
+        <h2 className="hidden md:block text-xl font-bold">Student Verification</h2>
+        <p className="text-sm text-gray-600">
+          Please verify your student status to complete the booking.
+        </p>
 
         <div>
           <Label htmlFor="idType">ID Type</Label>

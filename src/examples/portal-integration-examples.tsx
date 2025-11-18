@@ -157,6 +157,14 @@ export const OwnerPortalCommissionExample: React.FC<{ monthlyEarnings: number }>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
+        {/* Connection Status */}
+        <div className="flex items-center justify-between text-sm text-gray-600">
+          <span>Real-Time Status:</span>
+          <Badge variant={isConnected ? "default" : "destructive"}>
+            {isConnected ? "Connected" : "Disconnected"}
+          </Badge>
+        </div>
+
         {/* Current Commission Rates */}
         {portalRates && (
           <div className="space-y-2">
@@ -284,6 +292,17 @@ export const AdminPortalCommissionExample: React.FC = () => {
             Configuration last updated: {new Date(lastUpdated).toLocaleString()}
           </div>
         )}
+
+        {/* Manual Refresh Control */}
+        <div className="flex justify-end">
+          <button
+            type="button"
+            onClick={refreshConfig}
+            className="rounded-md border border-purple-200 px-3 py-1 text-xs font-medium text-purple-700 hover:bg-purple-50"
+          >
+            Refresh configuration
+          </button>
+        </div>
       </CardContent>
     </Card>
   );

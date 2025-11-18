@@ -150,52 +150,44 @@ const Register: React.FC = () => {
         onComplete={handleSuccessComplete}
         duration={3000}
       />
-    <div className="min-h-screen flex items-center justify-center" style={{
-      background: '#e8eaed',
-      padding: '16px'
-    }}>
-      <div className="bg-white shadow-lg" style={{
-        borderRadius: '12px',
-        width: '100%',
-        maxWidth: '400px',
-        padding: '32px 24px',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
-      }}>
-        {/* Logo */}
-        <div className="flex justify-center" style={{ marginBottom: '16px' }}>
-          <ROOMiLogo size={24} />
+    <div className="min-h-screen flex items-center justify-center bg-white md:bg-gray-50 px-4 py-8">
+      <div className="w-full max-w-5xl bg-white flex flex-col md:flex-row md:rounded-3xl md:shadow-lg md:border md:border-gray-100 overflow-hidden">
+        <div className="w-full md:w-1/2 px-4 py-6 md:px-10 md:py-12">
+          {/* Logo */}
+          <div className="mb-6 flex justify-center md:justify-start">
+            <ROOMiLogo size={28} />
+          </div>
+
+          {/* Title */}
+          <h2 className="mb-2 text-center text-xl font-semibold text-gray-900">
+            Create your account
+          </h2>
+
+          <p className="mb-6 text-center text-xs text-gray-500">
+            Or{" "}
+            <Link
+              to="/login"
+              className="font-medium text-primary hover:underline"
+            >
+              sign in to your existing account
+            </Link>
+          </p>
+
+          <SimpleRegistrationForm
+            form={form}
+            onSubmit={onSubmit}
+            isSubmitting={isSubmitting}
+          />
         </div>
-
-        {/* Title */}
-        <h2 style={{
-          textAlign: 'center',
-          fontSize: '20px',
-          fontWeight: '400',
-          color: '#202124',
-          marginBottom: '8px'
-        }}>Create your account</h2>
-
-        <p style={{
-          textAlign: 'center',
-          fontSize: '13px',
-          color: '#5f6368',
-          marginBottom: '24px'
-        }}>
-          Or{" "}
-          <Link to="/login" style={{
-            color: '#0f68fd',
-            textDecoration: 'none',
-            cursor: 'pointer'
-          }}>
-            sign in to your existing account
-          </Link>
-        </p>
-
-        <SimpleRegistrationForm
-          form={form}
-          onSubmit={onSubmit}
-          isSubmitting={isSubmitting}
-        />
+        <div className="hidden md:flex w-full md:w-1/2 items-center justify-center bg-primary text-white">
+          <div className="flex flex-col items-center gap-4 px-10">
+            <ROOMiLogo size={56} />
+            <p className="text-center text-sm leading-relaxed text-white/90">
+              Create a ROOMie account to save favourites, manage bookings,
+              and stay updated on your campus housing.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
     </>

@@ -62,8 +62,10 @@ const StudentInfoStep: React.FC<StudentInfoStepProps> = ({
 
       <div className="space-y-6 px-4 md:px-0 pb-24 md:pb-0">
         <div className="text-center md:text-left">
-          <h2 className="text-xl font-bold">Your Information</h2>
-          <p className="text-gray-600 mt-1">Tell us about yourself and an emergency contact.</p>
+          <h2 className="hidden md:block text-xl font-bold">Your Information</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Tell us about yourself and an emergency contact.
+          </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

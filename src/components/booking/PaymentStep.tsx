@@ -254,7 +254,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
       <main className="md:hidden flex-1">
         {/* Total Amount Card */}
         <div className="px-4 pt-4">
-          <div className="rounded-xl overflow-hidden bg-white shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+          <div className="overflow-hidden rounded-xl border border-gray-100 bg-white">
             <div
               className="w-full aspect-[2/1] bg-cover bg-center rounded-t-xl"
               style={{ backgroundImage: `url(${coverImageUrl})` }}
@@ -262,32 +262,32 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
             <div className="p-4">
               <p className="text-sm font-normal text-[#616e89]">Total Amount</p>
               <p className="text-3xl font-bold tracking-tight text-[#111318]">{formatCurrency(totalAmount)}</p>
-              <p className="text-base font-normal text-[#616e89] mt-1">{(paystackMetadata as any)?.propertyTitle || (paystackMetadata as any)?.listing_title || 'For your selected accommodation'}</p>
+              <p className="mt-1 text-base font-normal text-[#616e89]">{(paystackMetadata as any)?.propertyTitle || (paystackMetadata as any)?.listing_title || 'For your selected accommodation'}</p>
             </div>
           </div>
         </div>
 
         {/* Price Details */}
-        <h3 className="text-[#111318] text-lg font-bold leading-tight tracking-[-0.015em] px-4 pb-2 pt-4">Price Details</h3>
+        <h3 className="px-4 pb-2 pt-4 text-lg font-bold leading-tight tracking-[-0.015em] text-[#111318]">Price Details</h3>
         <div className="px-4">
-          <div className="rounded-lg bg-white p-4 shadow-[0_4px_12px_rgba(0,0,0,0.05)]">
+          <div className="rounded-lg border border-gray-100 bg-white p-4">
             {commission ? (
               <>
                 <div className="flex justify-between py-2">
-                  <p className="text-[#616e89] text-sm">Property Rent</p>
-                  <p className="text-[#111318] text-sm">{formatCurrency(commission.baseAmount)}</p>
+                  <p className="text-sm text-[#616e89]">Property Rent</p>
+                  <p className="text-sm text-[#111318]">{formatCurrency(commission.baseAmount)}</p>
                 </div>
-                <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-[#616e89] text-sm">Platform Fee</p>
-                  <p className="text-[#111318] text-sm">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.platform || 80)}</p>
+                <div className="flex justify-between border-t border-gray-100 py-2">
+                  <p className="text-sm text-[#616e89]">Platform Fee</p>
+                  <p className="text-sm text-[#111318]">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.platform || 80)}</p>
                 </div>
-                <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-[#616e89] text-sm">Processing Fee</p>
-                  <p className="text-[#111318] text-sm">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.processing || 20)}</p>
+                <div className="flex justify-between border-t border-gray-100 py-2">
+                  <p className="text-sm text-[#616e89]">Processing Fee</p>
+                  <p className="text-sm text-[#111318]">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.processing || 20)}</p>
                 </div>
-                <div className="flex justify-between pt-3 mt-2 border-t-2 border-gray-200">
-                  <p className="text-[#111318] text-base font-bold">Total</p>
-                  <p className="text-[#111318] text-base font-bold">{formatCurrency(commission.totalAmount)}</p>
+                <div className="mt-2 flex justify-between border-t-2 border-gray-200 pt-3">
+                  <p className="text-base font-bold text-[#111318]">Total</p>
+                  <p className="text-base font-bold text-[#111318]">{formatCurrency(commission.totalAmount)}</p>
                 </div>
 
                 {/* Info note about owner commission */}

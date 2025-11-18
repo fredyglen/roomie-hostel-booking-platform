@@ -33,7 +33,7 @@ const Login: React.FC = () => {
   const { signIn, user } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   // Error handling is done through form validation and toast notifications
-  
+
   // Initialize form with react-hook-form and zod validation
   const form = useForm<LoginFormValues>({
     resolver: zodResolver(formSchema),
@@ -132,62 +132,26 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center" style={{
-      background: '#e8eaed',
-      padding: '16px'
-    }}>
-      <div className="bg-white shadow-lg" style={{
-        borderRadius: '12px',
-        width: '100%',
-        maxWidth: '400px',
-        padding: '32px 24px',
-        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
-      }}>
+    <div className="min-h-screen flex items-center justify-center bg-white md:bg-gray-50 px-4 py-8">
+      <div className="w-full max-w-5xl bg-white flex flex-col md:flex-row md:rounded-3xl md:shadow-lg md:border md:border-gray-100 overflow-hidden">
+        <div className="w-full md:w-1/2 px-4 py-6 md:px-10 md:py-12">
         {/* Logo */}
-        <div className="flex justify-center" style={{ marginBottom: '24px' }}>
-          <ROOMiLogo size={24} />
+        <div className="mb-6 flex justify-center md:justify-start">
+          <ROOMiLogo size={28} />
         </div>
 
         {/* Social Login Buttons */}
-        <div className="flex" style={{ gap: '12px', marginBottom: '20px' }}>
-          <button style={{
-            flex: 1,
-            height: '44px',
-            border: '1px solid #dadce0',
-            borderRadius: '8px',
-            background: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'box-shadow 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+        <div className="mb-5 flex gap-3">
+          <button
+            type="button"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-800 transition-shadow hover:shadow-sm"
           >
             <GoogleIcon size={16} />
             Google
           </button>
-          <button style={{
-            flex: 1,
-            height: '44px',
-            border: '1px solid #dadce0',
-            borderRadius: '8px',
-            background: 'white',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '6px',
-            fontSize: '14px',
-            fontWeight: '500',
-            cursor: 'pointer',
-            transition: 'box-shadow 0.2s'
-          }}
-          onMouseEnter={(e) => e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.1)'}
-          onMouseLeave={(e) => e.currentTarget.style.boxShadow = 'none'}
+          <button
+            type="button"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-800 transition-shadow hover:shadow-sm"
           >
             <FacebookIcon size={16} />
             Facebook
@@ -195,51 +159,26 @@ const Login: React.FC = () => {
         </div>
 
         {/* Divider */}
-        <div style={{
-          textAlign: 'center',
-          color: '#5f6368',
-          fontSize: '13px',
-          margin: '20px 0',
-          position: 'relative'
-        }}>
-          <span style={{ background: 'white', padding: '0 10px' }}>or sign in with</span>
-          <div style={{
-            position: 'absolute',
-            top: '50%',
-            left: '0',
-            right: '0',
-            height: '1px',
-            background: '#dadce0',
-            zIndex: -1
-          }}></div>
+        <div className="mb-6 flex items-center gap-2 text-xs text-gray-500">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="bg-white px-2">or sign in with</span>
+          <div className="h-px flex-1 bg-gray-200" />
         </div>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} style={{ marginBottom: '20px' }}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem style={{ marginBottom: '20px' }}>
-                  <FormLabel style={{
-                    color: '#202124',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    marginBottom: '6px',
-                    display: 'block'
-                  }}>Username</FormLabel>
+                <FormItem className="space-y-1">
+                  <FormLabel className="block text-sm font-medium text-gray-900">
+                    Username
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="email"
-                      style={{
-                        width: '100%',
-                        height: '44px',
-                        border: '1px solid #dadce0',
-                        borderRadius: '8px',
-                        padding: '0 14px',
-                        fontSize: '16px',
-                        outline: 'none'
-                      }}
+                      className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
                       autoComplete="email"
                       {...field}
                       disabled={isSubmitting}
@@ -254,26 +193,14 @@ const Login: React.FC = () => {
               control={form.control}
               name="password"
               render={({ field }) => (
-                <FormItem style={{ marginBottom: '20px' }}>
-                  <FormLabel style={{
-                    color: '#202124',
-                    fontSize: '14px',
-                    fontWeight: '500',
-                    marginBottom: '6px',
-                    display: 'block'
-                  }}>Password</FormLabel>
+                <FormItem className="space-y-1">
+                  <FormLabel className="block text-sm font-medium text-gray-900">
+                    Password
+                  </FormLabel>
                   <FormControl>
                     <Input
                       type="password"
-                      style={{
-                        width: '100%',
-                        height: '44px',
-                        border: '1px solid #dadce0',
-                        borderRadius: '8px',
-                        padding: '0 14px',
-                        fontSize: '16px',
-                        outline: 'none'
-                      }}
+                      className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
                       autoComplete="current-password"
                       {...field}
                       disabled={isSubmitting}
@@ -285,56 +212,29 @@ const Login: React.FC = () => {
             />
 
             {/* Remember Device and Forgot Password */}
-            <div style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '20px',
-              flexWrap: 'wrap',
-              gap: '8px'
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                <input type="checkbox" style={{
-                  width: '14px',
-                  height: '14px',
-                  border: '1px solid #dadce0',
-                  borderRadius: '2px',
-                  background: 'white'
-                }} />
-                <span style={{ fontSize: '13px', color: '#5f6368' }}>Remember this Device</span>
-              </div>
-              <Link to="/forgot-password" style={{
-                color: '#0f68fd',
-                fontSize: '13px',
-                textDecoration: 'none',
-                cursor: 'pointer'
-              }}>
-                Forgot Password ?
+            <div className="mb-5 flex flex-wrap items-center justify-between gap-2 text-xs text-gray-600">
+              <label className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  className="h-4 w-4 rounded border border-gray-300 text-primary focus:ring-primary"
+                />
+                <span>Remember this device</span>
+              </label>
+              <Link
+                to="/forgot-password"
+                className="text-xs font-medium text-primary hover:underline"
+              >
+                Forgot password?
               </Link>
             </div>
 
             <Button
               type="submit"
-              style={{
-                width: '100%',
-                height: '44px',
-                background: isSubmitting ? '#6b7280' : '#0f68fd',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '22px',
-                fontSize: '14px',
-                fontWeight: '500',
-                cursor: isSubmitting ? 'not-allowed' : 'pointer',
-                marginBottom: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: '8px'
-              }}
+              className="mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-white hover:bg-primary/90"
               disabled={isSubmitting}
             >
               {isSubmitting && (
-                <Loader className="animate-spin" size={16} />
+                <Loader className="h-4 w-4 animate-spin" />
               )}
               {isSubmitting ? "Signing in..." : "Sign In"}
             </Button>
@@ -344,47 +244,37 @@ const Login: React.FC = () => {
 
 
         {/* Sign Up Link */}
-        <div style={{
-          textAlign: 'center',
-          fontSize: '13px',
-          color: '#5f6368',
-          marginTop: '20px'
-        }}>
-          New to ROOMi?{" "}
-          <Link to="/register" style={{
-            color: '#0f68fd',
-            textDecoration: 'none',
-            cursor: 'pointer'
-          }}>
+        <div className="mt-5 text-center text-xs text-gray-500">
+          New to ROOMie?{" "}
+          <Link
+            to="/register"
+            className="font-medium text-primary hover:underline"
+          >
             Create an account
           </Link>
         </div>
 
         {/* Admin Access Link */}
-        <div style={{
-          textAlign: 'center',
-          fontSize: '11px',
-          color: '#9aa0a6',
-          marginTop: '16px',
-          borderTop: '1px solid #f1f3f4',
-          paddingTop: '16px'
-        }}>
-          <Link to="/admin/login" style={{
-            color: '#9aa0a6',
-            textDecoration: 'none',
-            cursor: 'pointer',
-            opacity: 0.7,
-            transition: 'opacity 0.2s'
-          }}
-          onMouseEnter={(e) => e.target.style.opacity = '1'}
-          onMouseLeave={(e) => e.target.style.opacity = '0.7'}
+        <div className="mt-4 border-t border-gray-100 pt-4 text-center text-[11px] text-gray-400">
+          <Link
+            to="/admin/login"
+            className="text-gray-500 hover:text-gray-700"
           >
             Admin Portal
           </Link>
         </div>
-
+      </div>
+      <div className="hidden md:flex w-full md:w-1/2 items-center justify-center bg-primary text-white">
+        <div className="flex flex-col items-center gap-4 px-10">
+          <ROOMiLogo size={56} />
+          <p className="text-center text-sm leading-relaxed text-white/90">
+            ROOMie makes booking verified student housing simple,
+            transparent, and stress-free.
+          </p>
+        </div>
       </div>
     </div>
+  </div>
   );
 };
 

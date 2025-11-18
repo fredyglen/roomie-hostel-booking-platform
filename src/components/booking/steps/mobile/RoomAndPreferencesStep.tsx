@@ -101,8 +101,10 @@ const RoomAndPreferencesStep: React.FC<RoomAndPreferencesStepProps> = ({
 
       <div className="space-y-6 px-4 md:px-0 pb-24 md:pb-0">
         <div className="text-center md:text-left">
-          <h2 className="text-xl font-bold">Choose Your Room</h2>
-          <p className="text-gray-600 mt-1">Select your preferred room and optionally share your preferences.</p>
+          <h2 className="hidden md:block text-xl font-bold">Choose Your Room</h2>
+          <p className="mt-1 text-sm text-gray-600">
+            Select your preferred room and optionally share your preferences.
+          </p>
         </div>
 
         {/* Room type selection (Radio list) */}

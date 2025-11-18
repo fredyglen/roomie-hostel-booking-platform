@@ -110,18 +110,7 @@ const BookingStepsContainer: React.FC = () => {
   }
   return (
     <div className="w-full min-h-screen bg-white">
-      <div className="mx-auto md:px-4 md:py-4 md:max-w-7xl">
-        <div className="mb-4">
-          <button
-            onClick={() => navigate('/student/properties')}
-            className="hidden md:inline-flex text-primary hover:text-primary/80 items-center gap-2 mb-2"
-          >
-            ← Back to Properties
-          </button>
-          <h1 className="hidden md:block text-2xl font-bold text-gray-900">Book Property</h1>
-          <p className="hidden md:block text-gray-600 mt-1">Complete your booking for {property.name}</p>
-        </div>
-
+      <div className="mx-auto max-w-7xl px-4 py-4 md:px-6 md:py-8">
         <EnhancedBookingForm
           property={property}
           onSuccess={handleBookingSuccess}

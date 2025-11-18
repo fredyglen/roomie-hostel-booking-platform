@@ -246,7 +246,7 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
   };
 
   return (
-    <div className="mx-auto md:px-4 md:py-4">
+    <div className="w-full">
       {/* Header (desktop only) */}
       <div className="hidden md:block mb-6">
         <div className="flex items-center gap-4 mb-4">
@@ -264,26 +264,46 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
 
         {/* Progress Steps */}
         <div className="flex items-center justify-between mb-6">
-          {STEPS.map((step, index) => (
-            <div key={step.id} className="flex items-center">
-              <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 ${
-                currentStep >= step.id
-                  ? 'bg-primary border-primary text-white'
-                  : 'border-gray-300 text-gray-500'
-              }`}>
-                {currentStep > step.id ? (
-                  <CheckCircle size={20} />
-                ) : (
-                  <span className="text-sm font-medium">{step.id}</span>
-                )}
+          {STEPS.map((step, index) => {
+            const isCompleted = currentStep > step.id;
+            const isActiveOrCompleted = currentStep >= step.id;
+
+            return (
+              <div key={step.id} className="flex flex-1 flex-col items-center">
+                <div className="flex items-center w-full justify-center">
+                  <div
+                    aria-current={currentStep === step.id ? 'step' : undefined}
+                    aria-label={`Step ${step.id}: ${step.title}`}
+                    className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-colors duration-200 ${
+                      isActiveOrCompleted
+                        ? 'bg-primary border-primary text-white shadow-sm'
+                        : 'border-gray-300 text-gray-500 bg-white'
+                    }`}
+                  >
+                    {isCompleted ? (
+                      <CheckCircle size={20} aria-hidden="true" />
+                    ) : (
+                      <span className="text-sm font-medium">{step.id}</span>
+                    )}
+                  </div>
+                  {index < STEPS.length - 1 && (
+                    <div
+                      className={`flex-1 h-0.5 mx-2 transition-colors duration-200 ${
+                        isActiveOrCompleted ? 'bg-primary' : 'bg-gray-300'
+                      }`}
+                    />
+                  )}
+                </div>
+                <span
+                  className={`mt-2 text-xs font-medium tracking-tight transition-colors duration-200 ${
+                    isActiveOrCompleted ? 'text-gray-900' : 'text-gray-500'
+                  }`}
+                >
+                  {step.title}
+                </span>
               </div>
-              {index < STEPS.length - 1 && (
-                <div className={`w-16 h-0.5 mx-2 ${
-                  currentStep > step.id ? 'bg-primary' : 'bg-gray-300'
-                }`} />
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
