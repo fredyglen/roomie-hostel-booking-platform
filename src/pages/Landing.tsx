@@ -236,12 +236,12 @@ const Landing: React.FC = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/properties" className="hover:text-[#007BFF] transition-colors duration-200">
+                    <Link to="/student/properties" className="hover:text-[#007BFF] transition-colors duration-200">
                       Browse Properties
                     </Link>
                   </li>
                   <li>
-                    <Link to="/how-it-works" className="hover:text-[#007BFF] transition-colors duration-200">
+                    <Link to="/resources" className="hover:text-[#007BFF] transition-colors duration-200">
                       How It Works
                     </Link>
                   </li>
@@ -258,7 +258,7 @@ const Landing: React.FC = () => {
                 <h4 className="text-[#1C1C1E] font-['Manrope'] font-semibold mb-4">Owners</h4>
                 <ul className="space-y-3 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
                   <li>
-                    <Link to="/owner/register" className="hover:text-[#007BFF] transition-colors duration-200">
+                    <Link to="/owner-landing" className="hover:text-[#007BFF] transition-colors duration-200">
                       List Your Property
                     </Link>
                   </li>
@@ -291,7 +291,7 @@ const Landing: React.FC = () => {
                   </li>
                   <li>
                     <Link to="/trust-safety" className="hover:text-[#007BFF] transition-colors duration-200">
-                      Trust & Safety
+                      Trust &amp; Safety
                     </Link>
                   </li>
                   <li>
@@ -300,13 +300,8 @@ const Landing: React.FC = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/terms" className="hover:text-[#007BFF] transition-colors duration-200">
-                      Terms of Service
-                    </Link>
-                  </li>
-                  <li>
-                    <Link to="/privacy" className="hover:text-[#007BFF] transition-colors duration-200">
-                      Privacy Policy
+                    <Link to="/transparency" className="hover:text-[#007BFF] transition-colors duration-200">
+                      Transparency
                     </Link>
                   </li>
                 </ul>
@@ -318,17 +313,9 @@ const Landing: React.FC = () => {
               <p className="text-[#6B7280] font-['Work_Sans'] font-light text-sm">
                 © 2025 ROOMie. All rights reserved.
               </p>
-              <div className="flex justify-center gap-4 mt-4 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
-                <Link to="/terms" className="hover:text-[#007BFF] transition-colors duration-200">
-                  Terms
-                </Link>
-                <span>•</span>
-                <Link to="/privacy" className="hover:text-[#007BFF] transition-colors duration-200">
-                  Privacy
-                </Link>
-                <span>•</span>
-                <Link to="/cookies" className="hover:text-[#007BFF] transition-colors duration-200">
-                  Cookies
+              <div className="mt-4 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
+                <Link to="/transparency" className="hover:text-[#007BFF] transition-colors duration-200">
+                  Transparency
                 </Link>
               </div>
             </div>

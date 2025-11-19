@@ -1,5 +1,6 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import Logo from '@/components/common/Logo';
 
 // Material Symbols Icon Component
 const MaterialIcon = ({ name, className = "" }: { name: string; className?: string }) => (
@@ -7,138 +8,110 @@ const MaterialIcon = ({ name, className = "" }: { name: string; className?: stri
 );
 
 const AboutUs = () => {
-  const navigate = useNavigate();
-
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-[#FAFAFA]">
-      {/* Top App Bar */}
-      <div className="flex items-center bg-white/95 backdrop-blur-md px-4 py-4 justify-between sticky top-0 z-10 border-b border-gray-200 shadow-sm">
-        <div
-          className="text-[#1C1C1E] flex size-12 shrink-0 items-center justify-center cursor-pointer hover:text-[#007BFF] transition-colors duration-200 rounded-full hover:bg-gray-100"
-          onClick={() => navigate(-1)}
-        >
-          <MaterialIcon name="arrow_back" className="text-2xl" />
-        </div>
-        <h2 className="text-[#1C1C1E] text-xl font-['Manrope'] font-bold leading-tight tracking-tight flex-1 text-center pr-12">
-          About Us
-        </h2>
-      </div>
-
-      <main className="bg-[#FAFAFA]">
-        {/* Hero Section */}
-        <div className="px-6 py-6 bg-white">
-          <div
-            className="bg-cover bg-center flex flex-col justify-end overflow-hidden rounded-3xl min-h-96 shadow-xl"
-            style={{
-              backgroundImage: `linear-gradient(0deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0) 40%), url("https://lh3.googleusercontent.com/aida-public/AB6AXuAjT0wTxVdqIQr3zF2frwOK1EfLkAC3p_pyGkZem0Xk-gIL2g_7xMi3uVaYNDGj-mY76DHVpSjAyMxE_HPYEefCdNaYrfQ6hqE0Gh1VvMgBkIUfSnw6G3qigVzo_jKQbNzH4MH_d-vwB1NiIva_QKptJn5dHavPvAjqwB5wCKOqn7mj4KlX3hBI9JBpmv58wGu5QNQ5RSzNkCDTxGPF1l3MZw0SX6D5bgGgA6CVnmPPZD8dkqjaLpjIIAVzZFLZ46rIZDkxxRCG8rGr")`
-            }}
+    <div className="min-h-screen bg-white">
+      <header className="border-b border-gray-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 lg:px-0">
+          <Logo size="sm" />
+          <Link
+            to="/landing"
+            className="text-xs md:text-sm text-[#4B5563] hover:text-[#111827] transition-colors"
           >
-            <div className="flex p-8">
-              <p className="text-white tracking-tight text-5xl font-['Manrope'] font-bold leading-tight">
-                Student Housing, Reimagined.
-              </p>
-            </div>
-          </div>
+            Back to homepage
+          </Link>
         </div>
+      </header>
 
-        {/* Our Mission Section */}
-        <div className="bg-white py-20">
-          <h1 className="text-[#007BFF] tracking-tight text-4xl font-['Manrope'] font-bold leading-tight px-6 text-left pb-4">
-            Our Mission
-          </h1>
-          <p className="text-[#6B7280] text-lg font-['Work_Sans'] font-light leading-relaxed px-6 max-w-3xl">
-            Finding the right place to live shouldn't be the hardest part of university. We're here to solve the challenge of finding safe, verified, and convenient student housing, connecting students with trusted property owners.
-          </p>
-        </div>
+      <main className="mx-auto max-w-3xl px-4 lg:px-0 py-10 md:py-14">
+        <p className="text-[11px] font-semibold tracking-[0.25em] text-[#007BFF] uppercase">
+          About ROOMie
+        </p>
+        <h1 className="mt-3 text-3xl md:text-4xl font-semibold leading-tight text-[#111318]">
+          Student housing, reimagined from the student side.
+        </h1>
+        <p className="mt-4 text-sm md:text-base text-[#4B5563] leading-relaxed">
+          Finding a place to stay should not feel like a full-time job. ROOMie started after one too
+          many near-disasters with fake listings, last-minute cancellations and surprise fees.
+        </p>
+        <p className="mt-2 text-sm md:text-base text-[#4B5563] leading-relaxed">
+          Our goal is simple: make student accommodation feel organised, honest and calm for both
+          students and owners.
+        </p>
 
-        {/* Core Values Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 px-6 pb-20 bg-white max-w-4xl mx-auto">
-          {/* Verified Properties */}
-          <div className="flex flex-1 gap-4 rounded-2xl border border-gray-200 bg-white p-6 flex-col shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <div className="text-white flex items-center justify-center size-14 bg-[#007BFF] rounded-2xl shadow-lg">
-              <MaterialIcon name="verified_user" className="text-3xl" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <h2 className="text-[#1C1C1E] text-xl font-['Manrope'] font-semibold leading-tight">Verified Properties</h2>
-              <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light leading-relaxed">
-                Every listing is checked for quality and safety.
-              </p>
-            </div>
-          </div>
-
-          {/* Student Community */}
-          <div className="flex flex-1 gap-4 rounded-2xl border border-gray-200 bg-white p-6 flex-col shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <div className="text-white flex items-center justify-center size-14 bg-[#007BFF] rounded-2xl shadow-lg">
-              <MaterialIcon name="groups" className="text-3xl" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <h2 className="text-[#1C1C1E] text-xl font-['Manrope'] font-semibold leading-tight">Student Community</h2>
-              <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light leading-relaxed">
-                Connect with peers and find your new home.
-              </p>
-            </div>
-          </div>
-
-          {/* Simple & Secure */}
-          <div className="flex flex-1 gap-4 rounded-2xl border border-gray-200 bg-white p-6 flex-col sm:col-span-2 shadow-md hover:shadow-xl hover:-translate-y-1 transition-all duration-300">
-            <div className="text-white flex items-center justify-center size-14 bg-[#007BFF] rounded-2xl shadow-lg">
-              <MaterialIcon name="lock" className="text-3xl" />
-            </div>
-            <div className="flex flex-col gap-2">
-              <h2 className="text-[#1C1C1E] text-xl font-['Manrope'] font-semibold leading-tight">Simple & Secure</h2>
-              <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light leading-relaxed">
-                Easy booking and secure payments, all in one place.
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Meet the Founder Section */}
-        <div className="bg-[#FAFAFA] py-20">
-          <h1 className="text-[#007BFF] tracking-tight text-4xl font-['Manrope'] font-bold leading-tight px-6 text-left pb-8">
-            Meet the Founder
-          </h1>
-
-          {/* Founder Story - No Picture */}
-          <div className="px-6 max-w-3xl mx-auto">
-            <div className="flex flex-col gap-6 rounded-3xl border border-gray-200 bg-white p-8 shadow-lg">
-              <div className="flex items-center justify-center">
-                <div className="w-32 h-32 rounded-full bg-[#007BFF] flex items-center justify-center shadow-xl">
-                  <MaterialIcon name="person" className="text-white text-6xl" />
-                </div>
+        <section className="mt-8 grid gap-6 md:grid-cols-2">
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2FF]">
+                <MaterialIcon name="verified_user" className="text-lg text-[#007BFF]" />
               </div>
-              <div className="text-center">
-                <p className="font-['Manrope'] font-bold text-[#1C1C1E] text-2xl">Founder & CEO</p>
-                <p className="text-base text-[#6B7280] font-['Work_Sans'] font-light mt-2">ROOMie</p>
-              </div>
+              <h2 className="text-sm md:text-base font-semibold text-[#111318]">
+                Verified properties first
+              </h2>
             </div>
-          </div>
-
-          {/* Founder Story Text */}
-          <p className="text-[#6B7280] text-lg font-['Work_Sans'] font-light leading-relaxed px-6 pt-8 max-w-3xl mx-auto">
-            Right before his first semester, the old housing system frustrated him beyond belief. The endless WhatsApp messages, the uncertainty, the stress—it was all too much. But it wasn't just him. On campus, he kept hearing the same complaints from fellow students, over and over again. That's when he decided: enough is enough. He built ROOMie to fix what was broken. It's that simple.
-          </p>
-        </div>
-
-        {/* CTA Button */}
-        <div className="w-full px-6 py-20 bg-white">
-          <div className="max-w-md mx-auto">
-            <Link to="/student/properties">
-              <button className="w-full bg-[#007BFF] text-white font-['Manrope'] font-semibold py-5 px-6 rounded-2xl text-center text-lg hover:bg-[#0056D6] hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,123,255,0.25)] active:translate-y-0 transition-all duration-200 shadow-[0_8px_16px_rgba(0,123,255,0.2)]">
-                Find Your Room
-              </button>
-            </Link>
-          </div>
-        </div>
-
-        {/* Footer */}
-        <footer className="bg-white py-12 px-6 border-t border-gray-200">
-          <div className="max-w-6xl mx-auto text-center">
-            <p className="text-[#6B7280] font-['Work_Sans'] font-light text-sm">
-              © 2025 ROOMie. All rights reserved.
+            <p className="mt-2 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+              We focus on verified listings with clear photos, pricing and must-know details so you
+              are not guessing what you will meet on arrival.
             </p>
           </div>
-        </footer>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-5">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2FF]">
+                <MaterialIcon name="groups" className="text-lg text-[#007BFF]" />
+              </div>
+              <h2 className="text-sm md:text-base font-semibold text-[#111318]">
+                Built for real student life
+              </h2>
+            </div>
+            <p className="mt-2 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+              From washroom type to water reliability, we surface the details that actually matter
+              when you are living with roommates and juggling classes.
+            </p>
+          </div>
+
+          <div className="rounded-xl border border-gray-200 bg-white p-5 md:col-span-2">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2FF]">
+                <MaterialIcon name="lock" className="text-lg text-[#007BFF]" />
+              </div>
+              <h2 className="text-sm md:text-base font-semibold text-[#111318]">
+                Simple, transparent money flow
+              </h2>
+            </div>
+            <p className="mt-2 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+              Students see total costs upfront. Owners get a clear record of bookings and payouts.
+              No secret agent cuts or surprise extra charges.
+            </p>
+          </div>
+        </section>
+
+        <section className="mt-10 border-t border-gray-200 pt-6">
+          <h2 className="text-lg md:text-xl font-semibold text-[#111318]">Our story</h2>
+          <p className="mt-3 text-sm md:text-base text-[#4B5563] leading-relaxed">
+            For years, housing for students in Ghana has been controlled by screenshots, middlemen
+            and guesswork. ROOMie was created by someone who almost lost a semester because of it.
+          </p>
+          <p className="mt-2 text-sm md:text-base text-[#4B5563] leading-relaxed">
+            Instead of more chaos, we are building a calmer way to find a room – with verified
+            properties, student verification and a booking flow both sides can trust.
+          </p>
+        </section>
+
+        <section className="mt-10 border-t border-gray-200 pt-6">
+          <h2 className="text-lg md:text-xl font-semibold text-[#111318]">What happens next</h2>
+          <p className="mt-3 text-sm md:text-base text-[#4B5563] leading-relaxed">
+            As ROOMie grows, we are adding better tools for owners, deeper safety checks and a more
+            powerful dashboard for admin teams – without losing the simplicity students need.
+          </p>
+          <div className="mt-5">
+            <Link
+              to="/student/properties"
+              className="inline-flex items-center justify-center rounded-md bg-[#007BFF] px-5 py-2.5 text-sm font-semibold text-white hover:bg-[#0056D6] transition-colors"
+            >
+              Find your room
+            </Link>
+          </div>
+        </section>
       </main>
     </div>
   );

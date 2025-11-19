@@ -150,8 +150,8 @@ const Register: React.FC = () => {
         onComplete={handleSuccessComplete}
         duration={3000}
       />
-    <div className="min-h-screen flex items-center justify-center bg-white md:bg-gray-50 px-4 py-8">
-      <div className="w-full max-w-5xl bg-white flex flex-col md:flex-row md:rounded-3xl md:shadow-lg md:border md:border-gray-100 overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8">
+      <div className="w-full max-w-5xl bg-white flex flex-col md:flex-row md:rounded-xl md:shadow-lg md:border md:border-gray-100 overflow-hidden">
         <div className="w-full md:w-1/2 px-4 py-6 md:px-10 md:py-12">
           {/* Logo */}
           <div className="mb-6 flex justify-center md:justify-start">

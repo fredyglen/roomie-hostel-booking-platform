@@ -132,8 +132,8 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white md:bg-gray-50 px-4 py-8">
-      <div className="w-full max-w-5xl bg-white flex flex-col md:flex-row md:rounded-3xl md:shadow-lg md:border md:border-gray-100 overflow-hidden">
+    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8">
+      <div className="w-full max-w-5xl bg-white flex flex-col md:flex-row md:rounded-xl md:shadow-lg md:border md:border-gray-100 overflow-hidden">
         <div className="w-full md:w-1/2 px-4 py-6 md:px-10 md:py-12">
         {/* Logo */}
         <div className="mb-6 flex justify-center md:justify-start">
@@ -144,14 +144,14 @@ const Login: React.FC = () => {
         <div className="mb-5 flex gap-3">
           <button
             type="button"
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-800 transition-shadow hover:shadow-sm"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-800 transition-shadow hover:shadow-sm"
           >
             <GoogleIcon size={16} />
             Google
           </button>
           <button
             type="button"
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-full border border-gray-300 bg-white text-sm font-medium text-gray-800 transition-shadow hover:shadow-sm"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-800 transition-shadow hover:shadow-sm"
           >
             <FacebookIcon size={16} />
             Facebook
@@ -230,7 +230,7 @@ const Login: React.FC = () => {
 
             <Button
               type="submit"
-              className="mt-1 flex w-full items-center justify-center gap-2 rounded-full bg-primary text-sm font-medium text-white hover:bg-primary/90"
+              className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-white hover:bg-primary/90"
               disabled={isSubmitting}
             >
               {isSubmitting && (

@@ -20,13 +20,14 @@ const config: Config = {
     },
     extend: {
       fontFamily: {
-        'display': ['Lexend', 'system-ui', 'sans-serif'], // Primary display font
-        'sans': ['Lexend', 'system-ui', 'sans-serif'], // Body text
-        'heading': ['Lexend', 'system-ui', 'sans-serif'], // Headings
-        'body': ['Lexend', 'system-ui', 'sans-serif'], // Body text alternative
-        // Legacy fonts for backward compatibility
-        'bricolage': ['Lexend', 'system-ui', 'sans-serif'],
-        'space-grotesk': ['Lexend', 'system-ui', 'sans-serif'],
+        // ROOMie typography system: Manrope for headings/UI, Work Sans for body
+        display: ['Manrope', 'system-ui', 'sans-serif'], // Hero / prominent headings
+        sans: ['Work Sans', 'system-ui', 'sans-serif'], // Default body text
+        heading: ['Manrope', 'system-ui', 'sans-serif'], // Page and section headings
+        body: ['Work Sans', 'system-ui', 'sans-serif'], // Body text alternative
+        // Legacy font tokens mapped to current stack for backward compatibility
+        bricolage: ['Manrope', 'system-ui', 'sans-serif'],
+        'space-grotesk': ['Manrope', 'system-ui', 'sans-serif'],
       },
       spacing: {
         // Use standard Tailwind spacing scale for proper responsive design

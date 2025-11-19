@@ -2,6 +2,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import Logo from '../common/Logo';
+import { LegalModalTrigger } from '@/components/legal/LegalModal';
 
 const Footer: React.FC = () => {
   return (
@@ -22,10 +23,10 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-white text-sm font-bold mb-3 font-['Manrope']">For Students</h3>
             <ul className="space-y-2 font-['Work_Sans'] font-light text-sm">
-              <li><Link to="/student/properties" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Find Properties</Link></li>
-              <li><Link to="/ambassador" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Campus Ambassador</Link></li>
-              <li><Link to="/pricing" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Pricing</Link></li>
-              <li><Link to="/help-faq" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Help & FAQ</Link></li>
+              <li><Link to="/register" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Find a Room</Link></li>
+              <li><Link to="/student/properties" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Browse Properties</Link></li>
+              <li><Link to="/how-it-works" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">How It Works</Link></li>
+              <li><Link to="/support" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Support</Link></li>
             </ul>
           </div>
 
@@ -33,9 +34,10 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-white text-sm font-bold mb-3 font-['Manrope']">For Owners</h3>
             <ul className="space-y-2 font-['Work_Sans'] font-light text-sm">
-              <li><Link to="/owner-landing" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">List Property</Link></li>
-              <li><Link to="/owner/dashboard" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Owner Portal</Link></li>
+              <li><Link to="/owner-landing" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">List Your Property</Link></li>
+              <li><Link to="/owner/dashboard" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Owner Dashboard</Link></li>
               <li><Link to="/pricing" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Pricing</Link></li>
+              <li><Link to="/resources" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Resources</Link></li>
             </ul>
           </div>
 
@@ -53,8 +55,27 @@ const Footer: React.FC = () => {
           <div>
             <h3 className="text-white text-sm font-bold mb-3 font-['Manrope']">Legal</h3>
             <ul className="space-y-2 font-['Work_Sans'] font-light text-sm">
-              <li><Link to="/terms" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Privacy Policy</Link></li>
+              <li>
+                <LegalModalTrigger
+                  docType="terms"
+                  label="Terms of Service"
+                  className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors"
+                />
+              </li>
+              <li>
+                <LegalModalTrigger
+                  docType="privacy"
+                  label="Privacy Policy"
+                  className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors"
+                />
+              </li>
+              <li>
+                <LegalModalTrigger
+                  docType="cookies"
+                  label="Cookies"
+                  className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors"
+                />
+              </li>
             </ul>
           </div>
         </div>

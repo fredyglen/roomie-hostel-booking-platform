@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
+import Logo from '@/components/common/Logo';
 
 // Material Symbols Icon Component
 const MaterialIcon = ({ name, className = "" }: { name: string; className?: string }) => (
@@ -7,205 +8,295 @@ const MaterialIcon = ({ name, className = "" }: { name: string; className?: stri
 );
 
 const Pricing = () => {
-  const navigate = useNavigate();
   const [pricingType, setPricingType] = useState<'students' | 'owners'>('students');
 
   return (
-    <div className="relative flex min-h-screen w-full flex-col bg-[#FAFAFA]">
-      {/* Top App Bar */}
-      <div className="flex items-center bg-white/95 backdrop-blur-md px-4 py-4 justify-between sticky top-0 z-10 border-b border-gray-200 shadow-sm">
-        <div
-          className="flex size-12 shrink-0 items-center justify-center cursor-pointer hover:text-[#007BFF] transition-colors duration-200 rounded-full hover:bg-gray-100"
-          onClick={() => navigate(-1)}
-        >
-          <MaterialIcon name="arrow_back" className="text-[#1C1C1E] text-2xl" />
+    <div className="min-h-screen bg-white">
+      <header className="border-b border-gray-200 bg-white/90 backdrop-blur">
+        <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-4 lg:px-0">
+          <Logo size="sm" />
+          <Link
+            to="/landing"
+            className="text-xs md:text-sm text-[#4B5563] hover:text-[#111827] transition-colors"
+          >
+            Back to homepage
+          </Link>
         </div>
-        <h2 className="text-[#1C1C1E] text-xl font-['Manrope'] font-bold leading-tight tracking-tight flex-1 text-center pr-12">
+      </header>
+
+      <main className="mx-auto max-w-3xl px-4 lg:px-0 py-10 md:py-14 font-['Work_Sans'] font-light text-[#1C1C1E]">
+        <p className="text-[11px] font-semibold tracking-[0.25em] text-[#007BFF] uppercase">
           Pricing
-        </h2>
-      </div>
-
-      {/* Headline */}
-      <div className="px-6 py-16 bg-white">
-        <h1 className="text-[#007BFF] text-5xl font-['Manrope'] font-bold leading-tight text-center pb-6 tracking-tight">
-          Simple, Transparent Pricing
-        </h1>
-        <p className="text-[#6B7280] text-lg font-['Work_Sans'] font-light leading-relaxed text-center max-w-2xl mx-auto">
-          No hidden fees. What you see is what you pay. We believe in clarity and trust.
         </p>
-      </div>
+        <h1 className="mt-3 text-3xl md:text-4xl font-['Manrope'] font-bold leading-tight text-[#111318]">
+          Simple, transparent pricing for students and owners.
+        </h1>
+        <p className="mt-4 text-sm md:text-base text-[#4B5563] leading-relaxed">
+          No hidden fees. No surprise charges. Just a clear view of how money moves through
+          ROOMie.
+        </p>
+        <p className="mt-2 text-sm md:text-base text-[#4B5563] leading-relaxed">
+          Choose who you are to see exactly what you pay and what you get.
+        </p>
 
-      {/* Segmented Buttons */}
-      <div className="flex px-6 pb-10 bg-white border-b border-gray-200">
-        <div className="flex h-14 flex-1 items-center justify-center rounded-2xl bg-gray-100 p-1.5 max-w-md mx-auto">
-          <label
-            className={`flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-xl px-4 text-base font-['Manrope'] font-semibold leading-normal transition-all duration-200 ${
-              pricingType === 'students'
-                ? 'bg-[#007BFF] shadow-md text-white'
-                : 'text-[#6B7280] hover:text-[#1C1C1E]'
-            }`}
-          >
-            <span className="truncate">For Students</span>
-            <input
-              type="radio"
-              name="pricing-toggle"
-              value="students"
-              checked={pricingType === 'students'}
-              onChange={() => setPricingType('students')}
-              className="invisible w-0"
-            />
-          </label>
-          <label
-            className={`flex cursor-pointer h-full grow items-center justify-center overflow-hidden rounded-xl px-4 text-base font-['Manrope'] font-semibold leading-normal transition-all duration-200 ${
-              pricingType === 'owners'
-                ? 'bg-[#007BFF] shadow-md text-white'
-                : 'text-[#6B7280] hover:text-[#1C1C1E]'
-            }`}
-          >
-            <span className="truncate">For Property Owners</span>
-            <input
-              type="radio"
-              name="pricing-toggle"
-              value="owners"
-              checked={pricingType === 'owners'}
-              onChange={() => setPricingType('owners')}
-              className="invisible w-0"
-            />
-          </label>
-        </div>
-      </div>
-
-      {/* Student Pricing Section */}
-      {pricingType === 'students' && (
-        <div className="px-6 py-12 max-w-4xl mx-auto w-full">
-          {/* Rental Costs Card */}
-          <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 p-8 mb-6 border border-gray-200">
-            <div className="flex items-center gap-5 mb-6">
-              <div className="flex items-center justify-center size-16 bg-[#007BFF] rounded-2xl text-white shadow-lg">
-                <MaterialIcon name="real_estate_agent" className="text-3xl" />
-              </div>
-              <div>
-                <h3 className="text-[#1C1C1E] text-2xl font-['Manrope'] font-bold leading-tight tracking-tight">Rental Costs</h3>
-                <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light">Directly from the owner.</p>
-              </div>
-            </div>
-            <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light leading-relaxed">
-              The monthly rent is set by the property owner. You pay the first month's rent through our secure platform to confirm your booking. Subsequent payments are made directly to the owner.
-            </p>
+        {/* Segmented toggle */}
+        <div className="mt-6 flex justify-center">
+          <div className="flex h-11 flex-1 max-w-md items-center justify-center rounded-2xl bg-gray-100 p-1.5">
+            <label
+              className={`flex h-full grow cursor-pointer items-center justify-center overflow-hidden rounded-xl px-4 text-sm md:text-base font-['Manrope'] font-semibold leading-normal transition-all duration-200 ${
+                pricingType === 'students'
+                  ? 'bg-white text-[#007BFF]'
+                  : 'text-[#6B7280] hover:text-[#1C1C1E]'
+              }`}
+            >
+              <span className="truncate">For students</span>
+              <input
+                type="radio"
+                name="pricing-toggle"
+                value="students"
+                checked={pricingType === 'students'}
+                onChange={() => setPricingType('students')}
+                className="invisible w-0"
+              />
+            </label>
+            <label
+              className={`flex h-full grow cursor-pointer items-center justify-center overflow-hidden rounded-xl px-4 text-sm md:text-base font-['Manrope'] font-semibold leading-normal transition-all duration-200 ${
+                pricingType === 'owners'
+                  ? 'bg-white text-[#007BFF]'
+                  : 'text-[#6B7280] hover:text-[#1C1C1E]'
+              }`}
+            >
+              <span className="truncate">For property owners</span>
+              <input
+                type="radio"
+                name="pricing-toggle"
+                value="owners"
+                checked={pricingType === 'owners'}
+                onChange={() => setPricingType('owners')}
+                className="invisible w-0"
+              />
+            </label>
           </div>
+        </div>
 
-          {/* Platform Service Fee Card */}
-          <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 p-8 mb-6 border border-gray-200">
-            <div className="flex items-center gap-5 mb-6">
-              <div className="flex items-center justify-center size-16 bg-[#007BFF] rounded-2xl text-white shadow-lg">
-                <MaterialIcon name="verified_user" className="text-3xl" />
+        {pricingType === 'students' && (
+          <section className="mt-8 space-y-6">
+            <h2 className="text-lg md:text-xl font-['Manrope'] font-bold text-[#111318]">For students</h2>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2FF]">
+                  <MaterialIcon name="real_estate_agent" className="text-lg text-[#007BFF]" />
+                </div>
+                <h3 className="text-sm md:text-base font-['Manrope'] font-semibold text-[#111318]">Rental costs</h3>
               </div>
-              <div>
-                <h3 className="text-[#1C1C1E] text-2xl font-['Manrope'] font-bold leading-tight tracking-tight">Platform Service Fee</h3>
-                <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light">One-time booking fee.</p>
+              <ul className="mt-3 space-y-2 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                <li>
+                  <span className="font-semibold">Rent amount.</span> Set by the property owner for
+                  each room or bed.
+                </li>
+                <li>
+                  <span className="font-semibold">First payment.</span> Paid through ROOMie to
+                  officially secure your booking.
+                </li>
+                <li>
+                  <span className="font-semibold">After you move in.</span> Later payments are
+                  usually made directly to the owner.
+                </li>
+              </ul>
+            </div>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2FF]">
+                  <MaterialIcon name="verified_user" className="text-lg text-[#007BFF]" />
+                </div>
+                <h3 className="text-sm md:text-base font-['Manrope'] font-semibold text-[#111318]">
+                  ROOMie booking fee
+                </h3>
+              </div>
+              <p className="mt-3 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                When you successfully secure a room, ROOMie charges a one-time{' '}
+                <span className="font-semibold text-[#007BFF]">GHS 100 booking fee</span>. It does
+                not increase with the rent.
+              </p>
+              <ul className="mt-3 space-y-2 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                <li>
+                  <span className="font-semibold">Safety checks.</span> We verify properties and
+                  owners before they go live.
+                </li>
+                <li>
+                  <span className="font-semibold">Support.</span> Our team steps in if anything
+                  feels off before you move in.
+                </li>
+                <li>
+                  <span className="font-semibold">Payment handling.</span> Secure mobile money and
+                  bank transfer processing for your first payment.
+                </li>
+              </ul>
+              <div className="mt-4 rounded-lg border border-gray-200 bg-[#F9FAFB] p-4">
+                <p className="text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                  <span className="font-semibold text-[#111318]">Example:</span> For a room costing
+                  GHS 500 per month, your ROOMie booking fee is still{' '}
+                  <span className="font-semibold text-[#007BFF]">GHS 100</span>.
+                </p>
               </div>
             </div>
-            <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light leading-relaxed mb-6">
-              A one-time fee of <span className="font-bold text-[#007BFF]">5% of the first month's rent</span> is charged for our services. This covers:
-            </p>
-            <ul className="space-y-4 text-[#6B7280]">
-              <li className="flex items-start gap-4">
-                <MaterialIcon name="check_circle" className="text-[#00C853] text-2xl mt-0.5" />
-                <span className="font-['Work_Sans'] font-light text-base leading-relaxed">Property & owner verification for your safety.</span>
-              </li>
-              <li className="flex items-start gap-4">
-                <MaterialIcon name="support_agent" className="text-[#00C853] text-2xl mt-0.5" />
-                <span className="font-['Work_Sans'] font-light text-base leading-relaxed">24/7 customer support during your booking process.</span>
-              </li>
-              <li className="flex items-start gap-4">
-                <MaterialIcon name="credit_card" className="text-[#00C853] text-2xl mt-0.5" />
-                <span className="font-['Work_Sans'] font-light text-base leading-relaxed">Secure payment processing for your initial payment.</span>
-              </li>
-            </ul>
-            <div className="mt-6 p-6 rounded-xl bg-[#FAFAFA] border border-gray-200">
-              <p className="text-base text-[#6B7280] font-['Work_Sans'] font-light leading-relaxed">
-                <span className="font-semibold text-[#1C1C1E]">Example:</span> For a room costing GHS 500/month, the student service fee is just <span className="font-bold text-[#007BFF]">GHS 25</span>.
+
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2FF]">
+                  <MaterialIcon name="shield" className="text-lg text-[#007BFF]" />
+                </div>
+                <h3 className="text-sm md:text-base font-['Manrope'] font-semibold text-[#111318]">
+                  Security deposit
+                </h3>
+              </div>
+              <ul className="mt-3 space-y-2 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                <li>
+                  <span className="font-semibold">Set by owner.</span> Deposit amounts and rules are
+                  agreed directly between you and the owner.
+                </li>
+                <li>
+                  <span className="font-semibold">Paid to owner.</span> We recommend using a method
+                  where you can get a clear receipt.
+                </li>
+              </ul>
+            </div>
+
+            <div className="pt-2">
+              <Link
+                to="/student/properties"
+                className="inline-flex items-center justify-center rounded-md bg-[#007BFF] px-5 py-2.5 text-sm font-['Manrope'] font-semibold text-white hover:bg-[#0056D6] transition-colors"
+              >
+                <MaterialIcon name="search" className="mr-2 text-base" />
+                Find a room
+              </Link>
+            </div>
+          </section>
+        )}
+
+        {pricingType === 'owners' && (
+          <section className="mt-8 space-y-6">
+            <h2 className="text-lg md:text-xl font-['Manrope'] font-bold text-[#111318]">For property owners</h2>
+
+            <div className="rounded-xl border border-gray-200 bg-white p-5">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2FF]">
+                  <MaterialIcon name="payments" className="text-lg text-[#007BFF]" />
+                </div>
+                <h3 className="text-sm md:text-base font-['Manrope'] font-semibold text-[#111318]">
+                  Commission for owners
+                </h3>
+              </div>
+              <p className="mt-3 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                ROOMie charges a straightforward{' '}
+                <span className="font-semibold text-[#007BFF]">5% commission</span> on each
+                successful booking. There is no extra{' '}
+                <span className="font-semibold">GHS 100 fee for owners</span>, no subscription and
+                no setup cost.
               </p>
             </div>
-          </div>
 
-          {/* Security Deposit Card */}
-          <div className="bg-white rounded-2xl shadow-md hover:shadow-lg transition-all duration-200 p-8 mb-8 border border-gray-200">
-            <div className="flex items-center gap-5 mb-6">
-              <div className="flex items-center justify-center size-16 bg-[#007BFF] rounded-2xl text-white shadow-lg">
-                <MaterialIcon name="shield" className="text-3xl" />
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2FF]">
+                    <MaterialIcon name="event_available" className="text-lg text-[#007BFF]" />
+                  </div>
+                  <h3 className="text-sm md:text-base font-['Manrope'] font-semibold text-[#111318]">
+                    When is the 5% applied?
+                  </h3>
+                </div>
+                <p className="mt-3 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                  Commission is only applied when a student books and pays through ROOMie. If there
+                  is no booking, you do not pay anything.
+                </p>
               </div>
-              <div>
-                <h3 className="text-[#1C1C1E] text-2xl font-['Manrope'] font-bold leading-tight tracking-tight">Security Deposit</h3>
-                <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light">Handled by the property owner.</p>
+
+              <div className="rounded-xl border border-gray-200 bg-white p-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#EEF2FF]">
+                    <MaterialIcon name="stars" className="text-lg text-[#007BFF]" />
+                  </div>
+                  <h3 className="text-sm md:text-base font-['Manrope'] font-semibold text-[#111318]">
+                    What do owners get?
+                  </h3>
+                </div>
+                <ul className="mt-3 space-y-2 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                  <li>
+                    <span className="font-semibold">Verified students.</span> Fewer random
+                    WhatsApp messages and more serious tenants.
+                  </li>
+                  <li>
+                    <span className="font-semibold">Clear records.</span> A simple view of
+                    bookings and payouts.
+                  </li>
+                  <li>
+                    <span className="font-semibold">Better listings.</span> Professional photos and
+                    story-style showcases for your property.
+                  </li>
+                </ul>
               </div>
             </div>
-            <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light leading-relaxed">
-              The security deposit amount is set by the owner and is handled directly between you and them. We recommend clarifying the terms and getting a receipt for your records.
-            </p>
+
+            <div className="pt-2">
+              <Link
+                to="/owner-landing"
+                className="inline-flex items-center justify-center rounded-md bg-[#007BFF] px-5 py-2.5 text-sm font-['Manrope'] font-semibold text-white hover:bg-[#0056D6] transition-colors"
+              >
+                <MaterialIcon name="apartment" className="mr-2 text-base" />
+                List your property on ROOMie
+              </Link>
+            </div>
+          </section>
+        )}
+
+        <section className="mt-10 border-t border-gray-200 pt-6">
+          <h2 className="text-lg md:text-xl font-['Manrope'] font-bold text-[#111318]">Common questions</h2>
+          <div className="mt-4 space-y-3">
+            <details className="group rounded-xl border border-gray-200 bg-white p-4 hover:border-[#007BFF] transition-colors" open>
+              <summary className="flex cursor-pointer list-none items-center justify-between font-['Manrope'] font-semibold text-[#1C1C1E] text-sm md:text-base">
+                When do I pay the booking fee?
+                <span className="text-[#6B7280] transition-transform duration-200 group-open:rotate-180">
+                  <MaterialIcon name="expand_more" className="text-xl" />
+                </span>
+              </summary>
+              <p className="mt-3 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                The <span className="font-semibold text-[#007BFF]">GHS 100 booking fee</span> is
+                paid together with your first payment when you confirm your booking on ROOMie.
+              </p>
+            </details>
+
+            <details className="group rounded-xl border border-gray-200 bg-white p-4 hover:border-[#007BFF] transition-colors">
+              <summary className="flex cursor-pointer list-none items-center justify-between font-['Manrope'] font-semibold text-[#1C1C1E] text-sm md:text-base">
+                Is the booking fee refundable?
+                <span className="text-[#6B7280] transition-transform duration-200 group-open:rotate-180">
+                  <MaterialIcon name="expand_more" className="text-xl" />
+                </span>
+              </summary>
+              <p className="mt-3 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                Once the owner confirms your booking, the fee is non-refundable because it covers
+                verification, support and payment handling that have already been provided.
+              </p>
+            </details>
+
+            <details className="group rounded-xl border border-gray-200 bg-white p-4 hover:border-[#007BFF] transition-colors">
+              <summary className="flex cursor-pointer list-none items-center justify-between font-['Manrope'] font-semibold text-[#1C1C1E] text-sm md:text-base">
+                What if I have an issue with the property?
+                <span className="text-[#6B7280] transition-transform duration-200 group-open:rotate-180">
+                  <MaterialIcon name="expand_more" className="text-xl" />
+                </span>
+              </summary>
+              <p className="mt-3 text-xs md:text-sm text-[#4B5563] leading-relaxed">
+                If the property is very different from the listing, you have 24 hours after
+                check-in to report it. Our team will investigate and help you work towards a fair
+                outcome.
+              </p>
+            </details>
           </div>
-
-          {/* CTA Button */}
-          <button
-            onClick={() => navigate('/student/properties')}
-            className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#007BFF] px-8 py-5 text-lg font-['Manrope'] font-semibold text-white hover:bg-[#0056D6] hover:-translate-y-1 hover:shadow-[0_12px_24px_rgba(0,123,255,0.25)] active:translate-y-0 transition-all duration-200 shadow-[0_8px_16px_rgba(0,123,255,0.2)]"
-          >
-            <MaterialIcon name="search" className="text-2xl" />
-            Find a Room
-          </button>
-        </div>
-      )}
-
-      {/* FAQ Section */}
-      <div className="px-6 py-20 bg-[#FAFAFA]">
-        <h3 className="text-[#007BFF] text-4xl font-['Manrope'] font-bold leading-tight tracking-tight pb-10 text-center">
-          Frequently Asked Questions
-        </h3>
-        <div className="space-y-4 max-w-4xl mx-auto">
-          <details className="group rounded-2xl bg-white p-6 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-200" open>
-            <summary className="flex cursor-pointer list-none items-center justify-between font-['Manrope'] font-semibold text-[#1C1C1E] text-lg">
-              When do I pay the service fee?
-              <div className="text-[#6B7280]">
-                <MaterialIcon name="expand_more" className="text-2xl transition-transform duration-200 group-open:rotate-180" />
-              </div>
-            </summary>
-            <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light leading-relaxed mt-5">
-              The service fee is paid along with your first month's rent when you confirm your booking on our platform. This secures your room.
-            </p>
-          </details>
-          <details className="group rounded-2xl bg-white p-6 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-200">
-            <summary className="flex cursor-pointer list-none items-center justify-between font-['Manrope'] font-semibold text-[#1C1C1E] text-lg">
-              Is the service fee refundable?
-              <div className="text-[#6B7280]">
-                <MaterialIcon name="expand_more" className="text-2xl transition-transform duration-200 group-open:rotate-180" />
-              </div>
-            </summary>
-            <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light leading-relaxed mt-5">
-              The service fee is non-refundable once the booking is confirmed by the property owner, as it covers the costs of our services provided.
-            </p>
-          </details>
-          <details className="group rounded-2xl bg-white p-6 border border-gray-200 shadow-md hover:shadow-lg transition-all duration-200">
-            <summary className="flex cursor-pointer list-none items-center justify-between font-['Manrope'] font-semibold text-[#1C1C1E] text-lg">
-              What if I have an issue with the property?
-              <div className="text-[#6B7280]">
-                <MaterialIcon name="expand_more" className="text-2xl transition-transform duration-200 group-open:rotate-180" />
-              </div>
-            </summary>
-            <p className="text-[#6B7280] text-base font-['Work_Sans'] font-light leading-relaxed mt-5">
-              If the property is significantly different from the listing, you have 24 hours after check-in to report it to us. We will investigate and may provide a refund.
-            </p>
-          </details>
-        </div>
-      </div>
-
-      {/* Footer */}
-      <footer className="bg-white border-t border-gray-200 py-10 px-6 text-center mt-auto">
-        <div className="flex justify-center space-x-8 max-w-4xl mx-auto">
-          <a className="text-base font-['Work_Sans'] font-light text-[#6B7280] hover:text-[#007BFF] transition-colors duration-200" href="#">Terms of Service</a>
-          <a className="text-base font-['Work_Sans'] font-light text-[#6B7280] hover:text-[#007BFF] transition-colors duration-200" href="#">Contact Support</a>
-        </div>
-        <p className="text-sm text-[#6B7280] font-['Work_Sans'] font-light mt-6">© 2025 ROOMie. All Rights Reserved.</p>
-      </footer>
+        </section>
+      </main>
     </div>
   );
 };

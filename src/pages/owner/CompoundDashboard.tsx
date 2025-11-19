@@ -192,7 +192,7 @@ const CompoundDashboard: React.FC = () => {
         {/* Hero Section */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900" style={{ fontFamily: 'Lexend, sans-serif' }}>
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 font-['Manrope']">
               {compound.name}
             </h1>
             <p className="text-sm text-gray-600 mt-1">
@@ -289,7 +289,7 @@ const CompoundDashboard: React.FC = () => {
         {/* Revenue Chart */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold" style={{ fontFamily: 'Lexend, sans-serif' }}>
+            <CardTitle className="text-lg font-semibold font-['Manrope']">
               Revenue Trends (Last 6 Months)
             </CardTitle>
           </CardHeader>
@@ -345,7 +345,7 @@ const CompoundDashboard: React.FC = () => {
         {/* Property Comparison Table */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold" style={{ fontFamily: 'Lexend, sans-serif' }}>
+            <CardTitle className="text-lg font-semibold font-['Manrope']">
               Property Performance
             </CardTitle>
           </CardHeader>
@@ -416,7 +416,7 @@ const CompoundDashboard: React.FC = () => {
         {/* Recent Bookings */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-semibold" style={{ fontFamily: 'Lexend, sans-serif' }}>
+            <CardTitle className="text-lg font-semibold font-['Manrope']">
               Recent Bookings
             </CardTitle>
           </CardHeader>

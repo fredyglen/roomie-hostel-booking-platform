@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { MapPin, Users, Bed, Bath, Lock, Eye } from 'lucide-react';
 import { formatCurrency } from '@/utils/currency';
 import LazyImage from '@/components/common/LazyImage';
+import { getOptimizedPropertyImageUrl } from '@/utils/imageOptimization';
 
 import { usePropertyViewingTracker, ViewingRestriction } from '@/hooks/usePropertyViewingTracker';
 import ViewingLimitOverlay from './ViewingLimitOverlay';
@@ -131,6 +132,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     return 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
   })();
 
+  const optimizedPrimaryImage = getOptimizedPropertyImageUrl(primaryImage, {
+    width: 800,
+    quality: 80,
+    resize: 'cover',
+  });
+
   // Handle property card click - just navigate, no booking verification
   const handlePropertyClick = () => {
     onViewDetails();
@@ -241,18 +248,16 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
 
       {/* Enhanced Image Section with Production-Grade Overlay */}
       <div className="relative h-[70px] flex-shrink-0">
-        <img
-          src={primaryImage}
+        <LazyImage
+          src={optimizedPrimaryImage}
           alt={title}
           className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${
             isAnonymous && !canViewImage() ? 'blur-sm' : ''
           }`}
           width={400}
           height={70}
-          loading="eager"
-          onError={(e) => {
-            e.currentTarget.src = 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
-          }}
+          priority={false}
+          fallbackSrc="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800"
           onLoad={() => {
             if (isAnonymous) {
               handleImageView();

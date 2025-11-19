@@ -6,6 +6,7 @@ import { Icon } from '@iconify/react';
 import StoryViewerEnhanced from '@/components/story/StoryViewerEnhanced';
 import StoryDetailsSheetEnhanced from '@/components/story/StoryDetailsSheetEnhanced';
 import { useStoryViewModel } from '@/components/story/StoryViewModel';
+import { getOptimizedPropertyImageUrl } from '@/utils/imageOptimization';
 import { useMobile } from '@/hooks/use-mobile';
 import { Property } from '@/lib/supabase';
 
@@ -64,19 +65,24 @@ const StoryViewEnhanced: React.FC = () => {
     setIsPaused(showDetails);
   }, [showDetails, setIsPaused]);
 
-  // Preload next 2 images for smoother swipes
+  // Preload next image (optimized) for smoother swipes without overloading bandwidth
   useEffect(() => {
     const preloadIndex = (idx: number) => {
       if (idx >= 0 && idx < stories.length) {
         const s = stories[idx];
         if (s?.type === 'image' && s.url) {
+          const optimized = getOptimizedPropertyImageUrl(s.url, {
+            width: 1080,
+            height: 1920,
+            quality: 85,
+            resize: 'contain',
+          });
           const img = new Image();
-          img.src = s.url;
+          img.src = optimized;
         }
       }
     };
     preloadIndex(activeIndex + 1);
-    preloadIndex(activeIndex + 2);
   }, [activeIndex, stories]);
 
   // Swipe-down-to-close disabled per user request

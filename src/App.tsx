@@ -36,6 +36,13 @@ const Contact = React.lazy(() => import('@/pages/Contact'));
 const AmbassadorRegistration = React.lazy(() => import('@/pages/AmbassadorRegistration'));
 const Pricing = React.lazy(() => import('@/pages/Pricing'));
 const HelpFAQ = React.lazy(() => import('@/pages/HelpFAQ'));
+const HowItWorks = React.lazy(() => import('@/pages/HowItWorks'));
+const Support = React.lazy(() => import('@/pages/Support'));
+const Terms = React.lazy(() => import('@/pages/Terms'));
+const Privacy = React.lazy(() => import('@/pages/Privacy'));
+const Resources = React.lazy(() => import('@/pages/Resources'));
+const Cookies = React.lazy(() => import('@/pages/Cookies'));
+const Transparency = React.lazy(() => import('@/pages/Transparency'));
 
 // Auth Pages
 const Login = React.lazy(() => import('@/pages/auth/Login'));
@@ -195,6 +202,13 @@ function App() {
                 <Route path="/ambassador" element={<SafeRoute element={<AmbassadorRegistration />} />} />
                 <Route path="/pricing" element={<SafeRoute element={<Pricing />} />} />
                 <Route path="/help-faq" element={<SafeRoute element={<HelpFAQ />} />} />
+                <Route path="/how-it-works" element={<SafeRoute element={<HowItWorks />} />} />
+                <Route path="/support" element={<SafeRoute element={<Support />} />} />
+                <Route path="/terms" element={<SafeRoute element={<Terms />} />} />
+                <Route path="/privacy" element={<SafeRoute element={<Privacy />} />} />
+                <Route path="/resources" element={<SafeRoute element={<Resources />} />} />
+                <Route path="/cookies" element={<SafeRoute element={<Cookies />} />} />
+                <Route path="/transparency" element={<SafeRoute element={<Transparency />} />} />
 
                 {/* Test Route for Flow Verification */}
                 <Route path="/test-flow" element={

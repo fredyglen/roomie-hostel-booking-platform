@@ -286,7 +286,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
             background: isSubmitting ? '#6b7280' : '#0f68fd',
             color: '#ffffff',
             border: 'none',
-            borderRadius: '22px',
+            borderRadius: '8px',
             fontSize: '14px',
             fontWeight: '500',
             cursor: isSubmitting ? 'not-allowed' : 'pointer',

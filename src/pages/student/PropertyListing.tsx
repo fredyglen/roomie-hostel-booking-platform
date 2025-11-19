@@ -474,8 +474,7 @@ const PropertyListing: React.FC = () => {
         <div className="px-2 py-1 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
           {filteredProperties.length > 0 ? (
             filteredProperties.map((property) => (
-              // Temporarily bypass LazyPropertyCard to test if it's causing the issue
-              <div key={property.id} style={{ pointerEvents: 'auto' }}>
+              <LazyPropertyCard key={property.id}>
                 <PropertyCard
                   id={property.id.toString()}
                   title={property.title || property.name}
@@ -495,9 +494,8 @@ const PropertyListing: React.FC = () => {
                   priceUnit="semester"
                   onViewDetails={() => handleViewDetails(property.id)}
                   onViewStory={() => handleViewStory(property.id)}
-
                 />
-              </div>
+              </LazyPropertyCard>
             ))
         ) : (
           <div style={{

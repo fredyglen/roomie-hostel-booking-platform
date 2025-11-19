@@ -12,6 +12,7 @@ import React, { useState, useEffect, useMemo, useCallback, memo } from 'react';
 import { ErrorBoundary } from 'react-error-boundary';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
+import { getOptimizedPropertyImageUrl } from '@/utils/imageOptimization';
 
 import type { 
   HostelProperty, 
@@ -412,6 +413,10 @@ const HostelCard: React.FC<HostelCardProps> = memo(({
   }, [onSelect, hostel]);
 
   const primaryImage = hostel.images[0] || '/images/hostel-placeholder.jpg';
+  const optimizedPrimaryImage = useMemo(
+    () => getOptimizedPropertyImageUrl(primaryImage, { width: 800, quality: 80, resize: 'cover' }),
+    [primaryImage]
+  );
   const formattedPrice = new Intl.NumberFormat('en-GH', {
     style: 'currency',
     currency: 'GHS'
@@ -429,7 +434,7 @@ const HostelCard: React.FC<HostelCardProps> = memo(({
       <div className="relative h-48 bg-gray-200 rounded-t-lg overflow-hidden">
         {!imageError ? (
           <img
-            src={primaryImage}
+            src={optimizedPrimaryImage}
             alt={hostel.title}
             className={`w-full h-full object-cover transition-opacity duration-300 ${
               imageLoaded ? 'opacity-100' : 'opacity-0'

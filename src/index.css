@@ -157,14 +157,25 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Manrope', sans-serif;
-    font-weight: 400;
+    font-family: 'Work Sans', sans-serif;
+    font-weight: 300;
   }
 
-  /* Headings use Manrope Bold */
+  /* Headings use Manrope with semantic weights */
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Manrope', sans-serif;
+  }
+
+  h1, h2 {
     font-weight: 700;
+  }
+
+  h3, h4 {
+    font-weight: 600;
+  }
+
+  h5, h6 {
+    font-weight: 600;
   }
 }
 

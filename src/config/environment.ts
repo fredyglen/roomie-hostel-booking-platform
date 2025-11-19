@@ -153,7 +153,7 @@ function createEnvironmentConfig(): EnvironmentConfig {
   // Build configuration object
   const config: EnvironmentConfig = {
     app: {
-      name: import.meta.env.VITE_APP_NAME || 'ROOMi Campus Nest',
+      name: import.meta.env.VITE_APP_NAME || 'ROOMie',
       version: import.meta.env.VITE_APP_VERSION || '1.0.0',
       environment: (import.meta.env.MODE as 'development' | 'staging' | 'production') || 'development',
       baseUrl: import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5173'

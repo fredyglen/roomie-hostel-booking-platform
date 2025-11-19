@@ -127,7 +127,7 @@ export const config: AppConfig = {
     callbackUrl: import.meta.env.VITE_PAYSTACK_CALLBACK_URL || `${import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5173'}/payment/callback`,
   },
   app: {
-    name: import.meta.env.VITE_APP_NAME || 'ROOMi Campus Nest',
+    name: import.meta.env.VITE_APP_NAME || 'ROOMie',
     version: import.meta.env.VITE_APP_VERSION || '1.0.0',
     baseUrl: import.meta.env.VITE_APP_BASE_URL || 'http://localhost:5173',
     environment: import.meta.env.MODE as 'development' | 'staging' | 'production',

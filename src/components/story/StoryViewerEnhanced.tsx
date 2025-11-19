@@ -5,6 +5,7 @@ import { Story, Property } from '@/types/property';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import StorySummaryCard from '@/components/story/StorySummaryCard';
+import StoryOptimizedImage from '@/components/story/StoryOptimizedImage';
 
 
 interface StoryViewerEnhancedProps {
@@ -98,17 +99,14 @@ const StoryViewerEnhanced: React.FC<StoryViewerEnhancedProps> = ({
           {story.type === 'summary' ? (
             <StorySummaryCard property={property} />
           ) : story.type === 'image' ? (
-            <img
+            <StoryOptimizedImage
               src={story.url}
               alt="Story content"
               className={cn(
                 "object-contain max-h-full max-w-full",
                 isMobile && "h-full w-full object-cover"
               )}
-              loading="eager"
-              decoding="async"
-              fetchPriority="high"
-              draggable={false}
+              isMobile={isMobile}
             />
           ) : (
             <video

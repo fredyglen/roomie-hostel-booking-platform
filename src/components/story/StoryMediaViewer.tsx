@@ -2,6 +2,7 @@
 import React, { useState, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, ChevronUp } from 'lucide-react';
 import { Story } from '@/types/property';
+import StoryOptimizedImage from '@/components/story/StoryOptimizedImage';
 
 interface StoryMediaViewerProps {
   story: Story;
@@ -63,10 +64,11 @@ const StoryMediaViewer: React.FC<StoryMediaViewerProps> = ({
       onMouseUp={() => !showDetails && onPause(false)}
     >
       {story.type === 'image' ? (
-        <img
+        <StoryOptimizedImage
           src={story.url}
           alt="Story content"
-          className="h-full w-full object-cover"
+          className="h-full w-full"
+          isMobile
         />
       ) : (
         <video

@@ -9,6 +9,7 @@ import { useNavigate } from 'react-router-dom';
 import { MapPin, Users, Video, Wifi, Coffee, Tv, Dumbbell, Wind, Car, ChevronDown, Lock } from 'lucide-react';
 import { getRealTimeBedAvailability, subscribeToRealTimeBedAvailability, type PropertyBedAvailability } from '@/services/realTimeBedAvailabilityService';
 import { usePropertyRoomTypes } from '@/hooks/usePropertyRoomTypes';
+import { getOptimizedPropertyImageUrl } from '@/utils/imageOptimization';
 
 export type PropertyCardProps = LegacyPropertyCardProps;
 
@@ -74,6 +75,11 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
     }
     return 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
   }, [images]);
+
+  const optimizedPrimaryImage = useMemo(
+    () => getOptimizedPropertyImageUrl(primaryImage, { width: 1000, quality: 80, resize: 'cover' }),
+    [primaryImage]
+  );
 
   const handleImageView = () => {
     if (isAnonymous) {
@@ -255,7 +261,7 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
       {/* Media */}
       <div className="relative aspect-[3/2] overflow-hidden">
         <img
-          src={primaryImage}
+          src={optimizedPrimaryImage}
           alt={title}
           className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${
             isAnonymous && !canViewImage() ? 'blur-sm' : ''
