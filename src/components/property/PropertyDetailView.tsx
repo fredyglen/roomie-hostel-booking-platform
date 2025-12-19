@@ -3,7 +3,6 @@ import React from 'react';
 import { Property } from '@/types/property';
 import ImageWithFallback from '@/components/common/ImageWithFallback';
 import { deriveCoverImageFromProperty } from '@/utils/propertyPreviewCache';
-import { IMAGE_URLS } from '@/constants/images';
 import PropertyTabs from './PropertyTabs';
 import PropertyBookingCard from './PropertyBookingCard';
 import PropertyOwnerCard from './PropertyOwnerCard';
@@ -123,7 +122,7 @@ const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBoo
           <div className="relative">
             <div className="rounded-lg overflow-hidden h-48 sm:h-64 md:h-80 bg-gray-100">
               <ImageWithFallback
-                src={coverImage || IMAGE_URLS.DEFAULT}
+                src={coverImage}
                 alt={`${property.title} - Cover`}
                 className="w-full h-full object-cover"
               />

@@ -13,5 +13,5 @@ export const UI_CONSTANTS = {
   DEFAULT_PAGE_SIZE: unifiedConfigurationEngine.getAllConfig().ui.pagination.defaultPageSize,
   MAX_PAGE_SIZE: unifiedConfigurationEngine.getAllConfig().ui.pagination.maxPageSize,
   MAX_IMAGE_SIZE: unifiedConfigurationEngine.getAllConfig().upload.limits.maxImageSize,
-  DEFAULT_IMAGE_URL: 'https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&q=80&w=800&h=600',
+  DEFAULT_IMAGE_URL: '/placeholder.svg',
 };

@@ -31,7 +31,8 @@ const LazyImage: React.FC<LazyImageProps> = ({
   priority = false,
   onLoad,
   onError,
-  fallbackSrc = '/placeholder-property.jpg'
+  // ROOMie requirement: always fall back to local placeholder asset, never external stock URLs
+  fallbackSrc = '/placeholder.svg'
 }) => {
   const [isLoaded, setIsLoaded] = useState(false);
   const [isInView, setIsInView] = useState(priority);

@@ -65,15 +65,28 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
 
   const primaryImage = useMemo(() => {
     if (Array.isArray(images) && images.length > 0 && images[0]?.trim()) {
-      const validImage = images.find((img) =>
-        img && typeof img === 'string' && img.trim() && !img.includes('blob:') && !img.includes('localhost')
-      );
+      const validImage = images.find((img) => {
+        if (!img || typeof img !== 'string') return false;
+        const url = img.trim();
+        if (!url) return false;
+        if (url.startsWith('blob:')) return false;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+        return true;
+      });
       if (validImage) return validImage;
     }
-    if (typeof images === 'string' && images.trim() && !images.includes('blob:') && !images.includes('localhost')) {
-      return images;
+    if (typeof images === 'string') {
+      const url = images.trim();
+      if (
+        url &&
+        !url.startsWith('blob:') &&
+        (url.startsWith('http://') || url.startsWith('https://'))
+      ) {
+        return url;
+      }
     }
-    return 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
+    // No valid remote image; let the <img> element fall back to local placeholder
+    return '';
   }, [images]);
 
   const optimizedPrimaryImage = useMemo(
@@ -261,7 +274,7 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
       {/* Media */}
       <div className="relative aspect-[3/2] overflow-hidden">
         <img
-          src={optimizedPrimaryImage}
+          src={optimizedPrimaryImage || '/placeholder.svg'}
           alt={title}
           className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${
             isAnonymous && !canViewImage() ? 'blur-sm' : ''
@@ -270,8 +283,7 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
           height={70}
           loading="eager"
           onError={(e) => {
-            e.currentTarget.src =
-              'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
+            e.currentTarget.src = '/placeholder.svg';
           }}
           onLoad={() => {
             if (isAnonymous) handleImageView();

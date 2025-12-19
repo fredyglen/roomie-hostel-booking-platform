@@ -5,45 +5,64 @@ import { Helmet } from 'react-helmet-async';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import BookingWizard from '@/components/booking/BookingWizard';
-import { usePropertyData } from '@/hooks/property/usePropertyData';
 import LoadingSpinner from '@/components/common/LoadingSpinner';
 import ErrorDisplay from '@/components/common/ErrorDisplay';
+import { createPropertyId, Property } from '@/types/property';
+import { usePropertyById } from '@/hooks/property/useDynamicProperties';
 
 const BookProperty: React.FC = () => {
   const { id } = useParams<{ id: string }>();
-  const { getPropertyById } = usePropertyData();
-  
-  const [property, setProperty] = React.useState(null);
-  const [loading, setLoading] = React.useState(true);
-  const [error, setError] = React.useState(null);
+
+  const propertyId = React.useMemo(() => {
+    if (!id) return null;
+    try {
+      return createPropertyId(id);
+    } catch (e) {
+      console.error('Invalid property id param:', id, e);
+      return null;
+    }
+  }, [id]);
+
+  const {
+    property,
+    isLoading,
+    isError,
+    error,
+    refetch
+  } = usePropertyById(propertyId, { enabled: !!propertyId });
 
   React.useEffect(() => {
-    const loadProperty = async () => {
-      if (!id) {
-        setError('Property ID is required');
-        setLoading(false);
-        return;
-      }
+    const loadPropertyPreview = async () => {
+      if (!property) return;
 
       try {
-        setLoading(true);
-        const propertyData = await getPropertyById(id);
-        if (propertyData) {
-          setProperty(propertyData);
-        } else {
-          setError('Property not found');
-        }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : 'Failed to load property');
-      } finally {
-        setLoading(false);
+        const { setPropertyPreviewFromProperty } = await import('@/utils/propertyPreviewCache');
+        setPropertyPreviewFromProperty(property as Property);
+      } catch (e) {
+        console.warn('Preview cache set failed for booking page', e);
       }
     };
 
-    loadProperty();
-  }, [id, getPropertyById]);
+    loadPropertyPreview();
+  }, [property]);
 
-  if (loading) {
+  if (!propertyId) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow">
+          <ErrorDisplay
+            title="Invalid property reference"
+            error="Property ID is missing or invalid."
+            showRetry={false}
+          />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -55,14 +74,15 @@ const BookProperty: React.FC = () => {
     );
   }
 
-  if (error || !property) {
+  if (isError || !property) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
         <main className="flex-grow">
-          <ErrorDisplay 
-            error={error || 'Property not found'} 
+          <ErrorDisplay
+            error={error || 'Property not found'}
             title="Unable to load property"
+            onRetry={refetch}
           />
         </main>
         <Footer />

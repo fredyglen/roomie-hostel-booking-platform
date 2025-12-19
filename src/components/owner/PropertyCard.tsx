@@ -5,7 +5,6 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Eye, Edit, Trash2 } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { formatCurrency } from '@/utils/currency';
-import { IMAGE_URLS } from '@/constants/images';
 import { PropertyId, PropertyPrice } from '@/types/property';
 
 interface PropertyCardProps {

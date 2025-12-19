@@ -1,7 +1,6 @@
 import React from 'react';
 import ImageWithFallback from '@/components/common/ImageWithFallback';
 import { ErrorHandler } from '@/utils/ErrorHandler';
-import { IMAGE_URLS } from '@/constants/images';
 
 interface PropertyImageGalleryProps {
   images: string[];
@@ -10,8 +9,8 @@ interface PropertyImageGalleryProps {
 }
 
 const PropertyImageGallery: React.FC<PropertyImageGalleryProps> = ({ images, title, onError }) => {
-  // Ensure we always have at least one image
-  const validImages = images && images.length > 0 ? images : [IMAGE_URLS.DEFAULT];
+  // Ensure we always have at least one image; ImageWithFallback will handle local placeholder fallback
+  const validImages = images && images.length > 0 ? images : [];
 
   const handleImageError = () => {
     ErrorHandler.log('Image failed to load in PropertyImageGallery');

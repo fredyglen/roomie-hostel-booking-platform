@@ -11,6 +11,7 @@ import { Tabs, TabsContent } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 
 import { propertyFormSchema, PropertyFormValues } from './PropertyFormSchema';
+import { typeToCategory } from '@/config/property-types.config';
 // New restructured components
 import PropertyInfoFields from './PropertyInfoFields';
 import RoomConfigurationFields from './RoomConfigurationFields';
@@ -21,6 +22,7 @@ import FormSubmissionModal from './FormSubmissionModal';
 // Structure type is now determined by IntelligentPropertyRouter only
 // Intelligent Property Router
 import { IntelligentPropertyRouter } from '@/components/owner/IntelligentPropertyRouter';
+import type { PropertyRouterResult } from '@/components/owner/IntelligentPropertyRouter';
 // Enhanced toast utilities
 import { showValidationErrorToast, showPropertyFormToasts } from '@/utils/toast';
 
@@ -59,7 +61,7 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
 
   // ✅ INTELLIGENT ROUTER STATE
   const [showRouter, setShowRouter] = useState(!isEdit); // Show router for new properties only
-  const [routerResult, setRouterResult] = useState<any>(null);
+  const [routerResult, setRouterResult] = useState<PropertyRouterResult | null>(null);
 
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -340,8 +342,8 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     setShowPreview(false);
   };
 
-  // ✅ INTELLIGENT ROUTER HANDLER
-  const handleRouterComplete = (result: any) => {
+	  // ✅ INTELLIGENT ROUTER HANDLER
+	  const handleRouterComplete = (result: PropertyRouterResult) => {
     console.log('🧠 Router Result:', result);
 
     // Store router result
@@ -362,11 +364,11 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
     }
 
     // Auto-fill form based on router result
-    const propertyType = result.propertyType as 'hostel' | 'homestel' | 'apartment';
-    const propertyCategory = propertyType.charAt(0).toUpperCase() + propertyType.slice(1);
+	    const propertyType = result.propertyType as 'hostel' | 'homestel' | 'apartment';
+	    const propertyCategory = typeToCategory(propertyType);
 
-    form.setValue('type', propertyType);
-    form.setValue('propertyCategory', propertyCategory as any);
+	    form.setValue('type', propertyType);
+	    form.setValue('propertyCategory', propertyCategory);
 
     // ✅ SAVE STRUCTURE TYPE TO FORM (will be persisted to database)
     form.setValue('structure_type' as any, result.structureType);

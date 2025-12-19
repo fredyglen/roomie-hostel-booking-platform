@@ -295,9 +295,14 @@ export interface Owner {
 // =====================================================
 
 /**
- * Property form values for creation/editing
- */
-export interface PropertyFormValues {
+	 * Property form values for creation/editing.
+	 *
+	 * @deprecated For Owner Portal property creation/editing flows, use
+	 * `PropertyFormValues` from `@/components/owner/property-form/PropertyFormSchema`,
+	 * which is derived from the canonical Zod schema. This interface remains for
+	 * legacy/domain usage only.
+	 */
+	export interface PropertyFormValues {
   readonly name: string;
   readonly description: string;
   readonly type: PropertyType;

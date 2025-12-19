@@ -11,6 +11,7 @@ import { supabase } from '@/lib/supabase';
 import { logger as enhancedLogger } from '@/utils/enhanced-logger';
 import { Result, createSuccess, createError } from '@/types/result';
 import { Property, PropertyId, PropertyCategory, PropertyType } from '@/types/property';
+import { transformDbProperty } from '@/utils/propertyTransforms';
 
 // ============================================================================
 // BRANDED TYPES FOR COMPILE-TIME SAFETY
@@ -309,51 +310,45 @@ class EnhancedPropertyService {
 
   /**
    * Transform database property to application Property type
+   *
+   * IMPORTANT: This now delegates to transformDbProperty (canonical DB→Property
+   * transformer) and then layers in any DB-backed fields that aren't yet fully
+   * modeled on Property but are required by current UIs/filters.
    */
   private transformDatabaseProperty(data: any): any {
+    const transformed = transformDbProperty(data as any);
+
     return {
-      id: data.id,
-      name: data.title || data.name,
-      title: data.title,
-      description: data.description,
-      price: data.price,
-      rent: data.rent || data.price,
-      address: data.address,
-      city: data.city,
-      state: data.state,
-      zip: data.zip || '00000',
-      type: data.type,
-      property_category: data.property_category,
-      bedrooms: data.bedrooms,
-      bathrooms: data.bathrooms,
-      max_occupants: data.max_occupants,
-      images: data.images || [],
-      amenities: data.amenities || [],
-      verification_status: data.verification_status || 'pending',
-      available_from: data.available_from,
-      is_available: data.is_available,
-      status: data.is_available ? 'available' : 'unavailable',
-      owner_id: data.owner_id,
-      // exact DB-driven fields needed for filters
-      gender_restriction: data.gender_restriction,
-      washroom_type: data.washroom_type,
-      internet_speed: data.internet_speed,
-      shared_washroom_count: data.shared_washroom_count,
-      owner: data.owner ? {
-        id: data.owner.id,
-        name: `${data.owner.first_name || ''} ${data.owner.last_name || ''}`.trim(),
-        first_name: data.owner.first_name,
-        last_name: data.owner.last_name,
-        email: data.owner.email,
-        phone: data.owner.phone,
-        role: 'owner'
-      } : undefined,
-      house_rules: data.house_rules || '',
-      stories: [],
-      features: data.features || [],
-      room_types: data.room_types || null,
-      room_type_pricing: data.room_type_pricing || null,
-      base_price_per_semester: data.base_price_per_semester ?? null
+      ...transformed,
+      // Ensure verification / availability flags are always present
+      verification_status:
+        typeof data.verification_status === 'string'
+          ? data.verification_status
+          : transformed.verification_status ?? 'pending',
+      is_available:
+        typeof data.is_available === 'boolean'
+          ? data.is_available
+          : transformed.is_available ?? true,
+      status:
+        typeof (transformed as any).status === 'string'
+          ? (transformed as any).status
+          : (data.is_available ? 'available' : 'unavailable'),
+      // Preserve DB-driven filter fields where present
+      gender_restriction:
+        data.gender_restriction ?? transformed.gender_restriction,
+      washroom_type:
+        data.washroom_type ?? transformed.washroom_type,
+      internet_speed:
+        data.internet_speed ?? (transformed as any).internet_speed,
+      shared_washroom_count:
+        data.shared_washroom_count ?? (transformed as any).shared_washroom_count,
+      // Room-type pricing metadata used by booking/pricing UIs
+      room_types:
+        data.room_types ?? transformed.room_types ?? null,
+      room_type_pricing:
+        data.room_type_pricing ?? transformed.room_type_pricing ?? null,
+      base_price_per_semester:
+        data.base_price_per_semester ?? transformed.base_price_per_semester ?? null,
     };
   }
 

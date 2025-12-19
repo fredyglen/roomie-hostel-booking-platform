@@ -4,8 +4,9 @@
  */
 
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { PropertyFormValues } from '@/types/property';
-import { PropertyPipelineService, PropertyPipelineResult } from '@/services/propertyPipeline';
+// Use the canonical Owner Portal form type from the Zod schema
+import type { PropertyFormValues } from '@/components/owner/property-form/PropertyFormSchema';
+import { PropertyPipelineService, PropertyPipelineResult, type PropertyVisibilityResult } from '@/services/propertyPipeline';
 import { logger } from '@/utils/enhanced-logger';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -59,18 +60,44 @@ export const usePropertyCreation = (options: PropertyCreationOptions = {}) => {
           duration: 5000,
         });
 
-        // Verify visibility after a short delay
+        // Verify pipeline health and student visibility after a short delay
         if (result.propertyId) {
           setTimeout(async () => {
-            const isVisible = await PropertyPipelineService.verifyPropertyVisibility(result.propertyId!);
-            if (isVisible) {
-              logger.info('Property visibility confirmed', { propertyId: result.propertyId });
-            } else {
-              logger.warn('Property visibility issue detected', { propertyId: result.propertyId });
+            const visibility = await PropertyPipelineService.verifyPropertyVisibility(result.propertyId!);
+
+            if (!visibility.pipelineHealthy) {
+              logger.warn('Property pipeline health issue detected after creation', {
+                propertyId: result.propertyId,
+                visibility,
+              });
               toast({
                 title: "Visibility Check",
-                description: "Property created but visibility verification failed. Please contact support if students can't see your property.",
+                description: "Property was created but the visibility health check failed. Please contact support if this property does not appear in the Admin portal.",
                 variant: "destructive",
+              });
+              return;
+            }
+
+            if (visibility.studentVisible) {
+              logger.info('Property is now visible to students', {
+                propertyId: result.propertyId,
+                property: visibility.property,
+              });
+              toast({
+                title: "Property Visible to Students",
+                description: "Property is now live and visible to students.",
+                duration: 5000,
+              });
+            } else {
+              // Healthy pipeline, but property is not yet visible to students (likely pending verification)
+              logger.info('Property pending verification and not yet visible to students', {
+                propertyId: result.propertyId,
+                property: visibility.property,
+              });
+              toast({
+                title: "Pending Admin Review",
+                description: "Property created successfully and pending admin review. Not yet visible to students.",
+                duration: 5000,
               });
             }
           }, 2000);
@@ -196,7 +223,7 @@ async function createPropertySimple(
  * Hook for checking property visibility
  */
 export const usePropertyVisibility = () => {
-  const checkVisibility = async (propertyId: string): Promise<boolean> => {
+  const checkVisibility = async (propertyId: string): Promise<PropertyVisibilityResult> => {
     return await PropertyPipelineService.verifyPropertyVisibility(propertyId);
   };
 
@@ -209,19 +236,19 @@ export const usePropertyVisibility = () => {
 export const usePropertyPipelineStatus = () => {
   const getStatus = (result?: PropertyPipelineResult) => {
     if (!result) return { status: 'idle', message: 'Ready to create property' };
-    
+
     if (result.success) {
-      return { 
-        status: 'success', 
-        message: 'Property created and visible to students',
+      return {
+        status: 'success',
+        message: 'Property created successfully and submitted for review',
         completedSteps: Object.entries(result.steps).filter(([_, completed]) => completed).length,
         totalSteps: Object.keys(result.steps).length
       };
     }
-    
+
     const failedStep = Object.entries(result.steps).find(([_, completed]) => !completed)?.[0];
-    return { 
-      status: 'error', 
+    return {
+      status: 'error',
       message: `Failed at ${failedStep}: ${result.error}`,
       completedSteps: Object.entries(result.steps).filter(([_, completed]) => completed).length,
       totalSteps: Object.keys(result.steps).length

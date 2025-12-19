@@ -11,19 +11,45 @@ export interface PropertyPreview {
 
 const KEY = (id: string) => `booking:preview:${id}`;
 
-// Derive a single cover image URL from a heterogeneous property object
+/**
+ * Derive a single hero/cover image URL from a heterogeneous property-like object.
+ *
+ * Priority:
+ *  1. media[] entry where isCover === true and type === 'image'
+ *  2. image_url string field
+ *  3. first valid entry in images (array or string)
+ *
+ * In all branches we only accept remote http(s) URLs and explicitly reject
+ * blob: URLs and localhost references. When no valid remote URL is found,
+ * this function returns an empty string and callers are expected to render a
+ * local placeholder image instead.
+ */
 export const deriveCoverImageFromProperty = (property: any): string => {
   if (!property) return '';
   // Prefer media array with isCover
   const media = Array.isArray(property?.media) ? property.media : [];
-  const cover = media.find(
-    (m: any) => m && m.isCover && m.type === 'image' && typeof m.url === 'string' && m.url.trim()
-  );
+  const cover = media.find((m: any) => {
+    if (!m || !m.isCover || m.type !== 'image') return false;
+    if (typeof m.url !== 'string') return false;
+    const url = m.url.trim();
+    if (!url) return false;
+    if (url.startsWith('blob:')) return false;
+    if (url.includes('localhost')) return false;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+    return true;
+  });
   if (cover?.url) return cover.url as string;
 
-  // Direct image_url field
-  const direct = (property as any).image_url;
-  if (typeof direct === 'string' && direct.trim()) return direct;
+	  // Direct image_url field (apply the same URL safety rules)
+	  const direct = (property as any).image_url;
+	  if (typeof direct === 'string') {
+	    const url = direct.trim();
+	    if (url && !url.startsWith('blob:') && !url.includes('localhost')) {
+	      if (url.startsWith('http://') || url.startsWith('https://')) {
+	        return url;
+	      }
+	    }
+	  }
 
   // Fallback to first valid item in images (array or string)
   const imgs = Array.isArray(property?.images)
@@ -31,9 +57,15 @@ export const deriveCoverImageFromProperty = (property: any): string => {
     : typeof (property as any).images === 'string'
       ? [(property as any).images]
       : [];
-  const valid = imgs.find(
-    (img: any) => typeof img === 'string' && img.trim() && !img.includes('blob:') && !img.includes('localhost')
-  );
+  const valid = imgs.find((img: any) => {
+    if (typeof img !== 'string') return false;
+    const url = img.trim();
+    if (!url) return false;
+    if (url.startsWith('blob:')) return false;
+    if (url.includes('localhost')) return false;
+    if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+    return true;
+  });
   return valid || '';
 };
 

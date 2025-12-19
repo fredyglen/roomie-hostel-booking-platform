@@ -111,25 +111,35 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
     // First check images array
     if (Array.isArray(images) && images.length > 0 && images[0]?.trim()) {
       // Filter out blob URLs that won't work
-      const validImage = images.find(img =>
-        img &&
-        typeof img === 'string' &&
-        img.trim() &&
-        !img.includes('blob:') &&
-        !img.includes('localhost')
-      );
+      const validImage = images.find(img => {
+        if (!img || typeof img !== 'string') return false;
+        const url = img.trim();
+        if (!url) return false;
+        if (url.startsWith('blob:')) return false;
+        if (url.includes('localhost')) return false;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+        return true;
+      });
       if (validImage) {
         return validImage;
       }
     }
 
     // Check if images is a string
-    if (typeof images === 'string' && images.trim() && !images.includes('blob:') && !images.includes('localhost')) {
-      return images;
+    if (typeof images === 'string') {
+      const url = images.trim();
+      if (
+        url &&
+        !url.startsWith('blob:') &&
+        !url.includes('localhost') &&
+        (url.startsWith('http://') || url.startsWith('https://'))
+      ) {
+        return url;
+      }
     }
 
-    // Return a nice fallback image for properties
-    return 'https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800';
+    // No valid remote image; let LazyImage fall back to local placeholder
+    return '';
   })();
 
   const optimizedPrimaryImage = getOptimizedPropertyImageUrl(primaryImage, {
@@ -249,7 +259,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       {/* Enhanced Image Section with Production-Grade Overlay */}
       <div className="relative h-[70px] flex-shrink-0">
         <LazyImage
-          src={optimizedPrimaryImage}
+          src={optimizedPrimaryImage || '/placeholder.svg'}
           alt={title}
           className={`w-full h-full object-cover transition-transform duration-300 hover:scale-105 ${
             isAnonymous && !canViewImage() ? 'blur-sm' : ''
@@ -257,7 +267,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
           width={400}
           height={70}
           priority={false}
-          fallbackSrc="https://images.unsplash.com/photo-1555854877-bab0e564b8d5?auto=format&fit=crop&q=80&w=800"
           onLoad={() => {
             if (isAnonymous) {
               handleImageView();

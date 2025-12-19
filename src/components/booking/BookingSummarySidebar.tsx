@@ -5,6 +5,7 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 import { useRealTimeCommissionConfig } from '@/hooks/useRealTimeCommissionConfig';
+import { deriveCoverImageFromProperty } from '@/utils/propertyPreviewCache';
 
 // Re-use the pricing shape from the enhanced booking hook
 export type BookingPricing = BookingState['pricing'];
@@ -16,64 +17,31 @@ interface BookingSummarySidebarProps {
   currentStep: number;
 }
 
-// Extracted from the Paystack metadata cover image logic in EnhancedBookingForm/PaymentStep
-const getPropertyCoverImage = (property: Property): string => {
-  // Prefer cover media marked as cover
-  const media = Array.isArray((property as any).media) ? (property as any).media : [];
-  const cover = media.find(
-    (m: any) => m && m.isCover && m.type === 'image' && typeof m.url === 'string' && m.url.trim()
-  );
-  if (cover?.url) return cover.url as string;
-
-  // Then try a direct image_url field if present
-  const direct = (property as any).image_url;
-  if (typeof direct === 'string' && direct.trim()) return direct;
-
-  // Finally, fallback to first valid string in images array
-  const imgs = Array.isArray(property.images)
-    ? property.images
-    : typeof (property as any).images === 'string'
-      ? [(property as any).images]
-      : [];
-
-  const valid = imgs.find(
-    (img: any) =>
-      typeof img === 'string' &&
-      img.trim() &&
-      !img.includes('blob:') &&
-      !img.includes('localhost')
-  );
-
-  return valid || '';
-};
-
 const BookingSummarySidebar: React.FC<BookingSummarySidebarProps> = ({
   property,
   pricing,
   formData,
 }) => {
-  const { rates, config } = useRealTimeCommissionConfig({ portal: 'student' });
+	  const { rates, config } = useRealTimeCommissionConfig({ portal: 'student' });
 
-  const coverImageUrl = getPropertyCoverImage(property);
+	  const coverImageUrl = deriveCoverImageFromProperty(property);
   const commissionRate = (
     (rates?.platform ?? centralizedCommissionEngine.getCommissionRates().platform) * 100
   ).toFixed(2);
   const fixedFee = config?.fees.fixed ?? centralizedCommissionEngine.getPlatformFees().fixed;
 
   return (
-    <Card>
-      <CardHeader>
+	      <Card>
+	        <CardHeader>
         <CardTitle>Booking Summary</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-4">
-        {coverImageUrl && (
-          <div className="w-full overflow-hidden rounded-lg">
-            <div
-              className="aspect-[4/3] w-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${coverImageUrl})` }}
-            />
-          </div>
-        )}
+	        <CardContent className="space-y-4">
+	          <div className="w-full overflow-hidden rounded-lg">
+	            <div
+	              className="aspect-[4/3] w-full bg-cover bg-center"
+	              style={{ backgroundImage: `url(${coverImageUrl || '/placeholder.svg'})` }}
+	            />
+	          </div>
 
         <div className="space-y-1">
           <p className="font-semibold text-gray-900">{property.title || property.name}</p>

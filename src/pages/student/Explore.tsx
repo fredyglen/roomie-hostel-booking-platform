@@ -14,12 +14,18 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import PremiumPropertyCard from '@/components/properties/PremiumPropertyCard';
 import { createPropertyLimit } from '@/services/enhanced-property.service';
+import { deriveCoverImageFromProperty } from '@/utils/propertyPreviewCache';
 
 
 
 
 
 
+
+const getPropertyCoverImages = (property: any): string[] => {
+	  const coverImage = deriveCoverImageFromProperty(property);
+	  return coverImage ? [coverImage] : [];
+	};
 
 const Explore: React.FC = () => {
   const navigate = useNavigate();
@@ -234,7 +240,7 @@ const Explore: React.FC = () => {
                     bedrooms={property.bedrooms || 1}
                     bathrooms={property.bathrooms || 1}
                     maxOccupants={property.max_occupants || property.maxOccupants || 1}
-                    images={Array.isArray(property.images) ? property.images : []}
+                    images={getPropertyCoverImages(property)}
                     amenities={Array.isArray(property.amenities) ? property.amenities : []}
                     propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
                     genderRestriction={property.gender_restriction || property.gender_type}
@@ -287,7 +293,7 @@ const Explore: React.FC = () => {
                     bedrooms={property.bedrooms || 1}
                     bathrooms={property.bathrooms || 1}
                     maxOccupants={property.max_occupants || property.maxOccupants || 1}
-                    images={Array.isArray(property.images) ? property.images : []}
+                    images={getPropertyCoverImages(property)}
                     amenities={Array.isArray(property.amenities) ? property.amenities : []}
                     propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
                     genderRestriction={property.gender_restriction || property.gender_type}
@@ -340,7 +346,7 @@ const Explore: React.FC = () => {
                     bedrooms={property.bedrooms || 1}
                     bathrooms={property.bathrooms || 1}
                     maxOccupants={property.max_occupants || property.maxOccupants || 1}
-                    images={Array.isArray(property.images) ? property.images : []}
+                    images={getPropertyCoverImages(property)}
                     amenities={Array.isArray(property.amenities) ? property.amenities : []}
                     propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
                     genderRestriction={property.gender_restriction || property.gender_type}

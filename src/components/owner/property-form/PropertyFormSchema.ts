@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { PropertyType, PropertyCategory, PropertyStatus } from '@/types/property';
+import { typeToCategory } from '@/config/property-types.config';
 import {
   PropertyTitle,
   PropertyDescription,
@@ -32,6 +33,9 @@ const sanitizeString = (val: unknown) => typeof val === 'string' ? val.trim().re
 const propertyTypeSchema = z.enum(['hostel', 'homestel', 'apartment'] as const);
 const propertyCategorySchema = z.enum(['Hostel', 'Homestel', 'Apartment'] as const);
 
+// Structure type as determined by IntelligentPropertyRouter
+const structureTypeSchema = z.enum(['simple', 'building', 'compound'] as const);
+
 // Room types - Comprehensive for all property categories (Hostel & Homestel share the same X-in-a-Room taxonomy)
 const roomTypeSchema = z.enum([
   '1_in_a_room', '2_in_a_room', '3_in_a_room', '4_in_a_room', '5_in_a_room', '6_in_a_room',
@@ -63,6 +67,22 @@ const propertyStatusSchema = z.enum(['available', 'unavailable', 'active', 'inac
 
 // Verification status validation
 const verificationStatusSchema = z.enum(['pending', 'verified', 'rejected'] as const);
+
+// Canonical room-type groupings used for category-specific validation
+const HOSTEL_LIKE_ROOM_TYPES = [
+  '1_in_a_room',
+  '2_in_a_room',
+  '3_in_a_room',
+  '4_in_a_room',
+  '5_in_a_room',
+  '6_in_a_room',
+] as const;
+
+const APARTMENT_ROOM_TYPES = [
+  '1_bedroom_apartment',
+  '2_bedroom_apartment',
+  '3_bedroom_apartment',
+] as const;
 
 export const propertyFormSchema = z.object({
   // Core property identification - Apple-grade branded types
@@ -150,24 +170,27 @@ export const propertyFormSchema = z.object({
   image_url: z.preprocess(sanitizeString, z.string().optional()),
   images: z.array(z.preprocess(sanitizeString, z.string())).optional(),
 
-  // Enhanced fields for verification and features
-  verification_status: verificationStatusSchema.optional(),
-  emergency_contact_name: z.string().optional(),
-  emergency_contact_phone: z.string().optional(),
-  has_accessibility_features: z.boolean().optional(),
-  pet_policy: z.enum(['not_allowed', 'allowed', 'cats_only', 'small_pets']).optional(),
-  parking_available: z.boolean().optional(),
-  parking_cost: z.number().optional(),
-  security_features: z.array(z.string()).optional(),
-  internet_speed: z.enum(['basic', 'standard', 'high_speed', 'fiber']).optional(),
-  // BE CONSCIOUS: Critical fields restoration - Ghana university compliance
-  gender_restriction: genderTypeSchema.default('mixed'),
-  semester_availability: z.array(z.enum(['semester_1', 'semester_2', 'year_round'])).default(['semester_1', 'semester_2']),
-  cancellation_policy: z.enum(['flexible', 'moderate', 'strict']).optional(),
-  virtual_tour_url: z.string().optional(),
+	// Enhanced fields for verification and features
+	verification_status: verificationStatusSchema.optional(),
+	emergency_contact_name: z.string().optional(),
+	emergency_contact_phone: z.string().optional(),
+	has_accessibility_features: z.boolean().optional(),
+	pet_policy: z.enum(['not_allowed', 'allowed', 'cats_only', 'small_pets']).optional(),
+	parking_available: z.boolean().optional(),
+	parking_cost: z.number().optional(),
+	security_features: z.array(z.string()).optional(),
+	internet_speed: z.enum(['basic', 'standard', 'high_speed', 'fiber']).optional(),
+	// BE CONSCIOUS: Critical fields restoration - Ghana university compliance
+	gender_restriction: genderTypeSchema.default('mixed'),
+	semester_availability: z.array(z.enum(['semester_1', 'semester_2', 'year_round'])).default(['semester_1', 'semester_2']),
+	cancellation_policy: z.enum(['flexible', 'moderate', 'strict']).optional(),
+	virtual_tour_url: z.string().optional(),
 
-  // Building structure fields (optional for non-subscription users)
-  buildings: z.array(z.object({
+	// Structure metadata – driven by IntelligentPropertyRouter
+	structure_type: structureTypeSchema.optional(),
+
+	// Building structure fields (optional for non-subscription users)
+	buildings: z.array(z.object({
     id: z.string(),
     name: z.string(),
     description: z.string().optional(),
@@ -188,7 +211,64 @@ export const propertyFormSchema = z.object({
         description: z.string().optional()
       }))
     }))
-  })).optional()
-});
+	})).optional()
+})
+  // Category-aware invariants that were previously only enforced in UI
+  .superRefine((data, ctx) => {
+    // Keep propertyCategory consistent with type using centralized helper
+    try {
+	      const expectedCategory = typeToCategory(data.type as PropertyType) as PropertyCategory;
+      if (data.propertyCategory !== expectedCategory) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['propertyCategory'],
+          message: `Property category must match property type (${expectedCategory}).`,
+        });
+      }
+    } catch {
+      // If type is somehow invalid, let the base enum validation surface that error instead.
+    }
+
+    // Hostels: X-in-a-room only, semester/academic_year durations
+    if (data.type === 'hostel') {
+      if (!data.room_types.every((rt) => HOSTEL_LIKE_ROOM_TYPES.includes(rt as any))) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['room_types'],
+          message: 'Hostels can only use "1 in a Room" to "6 in a Room" room types.',
+        });
+      }
+
+      if (data.booking_duration !== 'semester' && data.booking_duration !== 'academic_year') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['booking_duration'],
+          message: 'Hostels must be priced per semester or academic year.',
+        });
+      }
+    }
+
+    // Homestels: also use X-in-a-room taxonomy
+    if (data.type === 'homestel') {
+      if (!data.room_types.every((rt) => HOSTEL_LIKE_ROOM_TYPES.includes(rt as any))) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['room_types'],
+          message: 'Homestels must use the standard "X in a Room" room types.',
+        });
+      }
+    }
+
+    // Apartments: restrict to apartment-style room types for now
+    if (data.type === 'apartment') {
+      if (!data.room_types.every((rt) => APARTMENT_ROOM_TYPES.includes(rt as any))) {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          path: ['room_types'],
+          message: 'Apartments must use apartment room types (e.g. 1/2/3 bedroom apartment).',
+        });
+      }
+    }
+  });
 
 export type PropertyFormValues = z.infer<typeof propertyFormSchema>;

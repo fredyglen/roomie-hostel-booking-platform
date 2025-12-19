@@ -208,6 +208,36 @@ const PropertyListing: React.FC = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="text-center text-gray-600">Loading properties...</div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <div className="max-w-md w-full px-4">
+            <ErrorDisplay
+              title="Unable to load properties"
+              error={error || 'An unexpected error occurred while loading properties.'}
+              onRetry={refetch}
+            />
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   return (
     <div
       ref={containerRef}

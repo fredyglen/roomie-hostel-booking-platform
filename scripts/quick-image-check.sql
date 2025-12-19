@@ -26,9 +26,8 @@ CROSS JOIN (
 WHERE is_available = true
 LIMIT 5;
 
--- 3. If image_url exists, show its values
--- (This will error if column doesn't exist, which tells us the column is missing)
-SELECT id, title, image_url, images
-FROM properties 
+-- 3. Show sample image data for available properties
+SELECT id, title, images
+FROM properties
 WHERE is_available = true
 LIMIT 5;

@@ -27,6 +27,29 @@ export interface PropertyPipelineResult {
   };
 }
 
+// Result of a visibility check for a single property
+export interface PropertyVisibilityResult {
+  /**
+   * True when the underlying property row exists and can be queried.
+   * This is a pipeline/health signal, not a business-visibility flag.
+   */
+  pipelineHealthy: boolean;
+  /**
+   * True only when the property satisfies the student visibility rule:
+   * is_available = true AND verification_status = 'verified'.
+   */
+  studentVisible: boolean;
+  /**
+   * Raw property snapshot used for diagnostics in Owner/Admin tools.
+   */
+  property?: {
+    id: string;
+    title: string;
+    is_available: boolean;
+    verification_status: string;
+  };
+}
+
 export class PropertyPipelineService {
   /**
    * Complete property creation pipeline
@@ -594,27 +617,61 @@ export class PropertyPipelineService {
   }
 
   /**
-   * Verify property is visible to students
+   * Verify property visibility and health against the student visibility rule.
+   *
+   * This does NOT change any database state; it only reports:
+   * - pipelineHealthy: whether the property row exists and can be queried
+   * - studentVisible: whether students should currently be able to see it
    */
-  static async verifyPropertyVisibility(propertyId: string): Promise<boolean> {
+  static async verifyPropertyVisibility(propertyId: string): Promise<PropertyVisibilityResult> {
     try {
       const { data, error } = await supabase
         .from('properties')
         .select('id, title, is_available, verification_status')
         .eq('id', propertyId)
-        .eq('is_available', true)
         .single();
 
       if (error || !data) {
-        logger.error('Property not visible to students', { propertyId, error });
-        return false;
+        logger.error('Property visibility check failed - property row not found', { propertyId, error });
+        return {
+          pipelineHealthy: false,
+          studentVisible: false,
+        };
       }
 
-      logger.info('Property visibility confirmed', { propertyId, title: data.title });
-      return true;
+      const raw = data as any;
+      const property = {
+        id: raw.id as string,
+        title: (raw.title ?? '') as string,
+        is_available: Boolean(raw.is_available),
+        verification_status: (raw.verification_status ?? 'pending') as string,
+      };
+
+      const studentVisible =
+        property.is_available === true && property.verification_status === 'verified';
+
+      if (studentVisible) {
+        logger.info('Property is visible to students', { propertyId, title: property.title });
+      } else {
+        logger.info('Property not yet visible to students', {
+          propertyId,
+          title: property.title,
+          is_available: property.is_available,
+          verification_status: property.verification_status,
+        });
+      }
+
+      return {
+        pipelineHealthy: true,
+        studentVisible,
+        property,
+      };
     } catch (error) {
       logger.error('Visibility check failed', error);
-      return false;
+      return {
+        pipelineHealthy: false,
+        studentVisible: false,
+      };
     }
   }
 }

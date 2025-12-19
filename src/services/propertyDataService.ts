@@ -62,160 +62,123 @@ interface SimpleDbProperty {
 }
 
 export async function fetchProperties(options: PropertyQueryOptions = {}): Promise<PropertyData> {
-  try {
-    // Simple, explicit query without problematic columns
-    const { data, error, count } = await supabase
-      .from('properties')
-      .select(`
+  // Fail-loud variant: any database or transform error will throw so callers
+  // (typically React Query hooks) can surface a clear error state instead of
+  // silently returning empty data.
+  const limit = options.limit ?? 10;
+  const offset = options.offset ?? 0;
+
+  const { data, error, count } = await supabase
+    .from('properties')
+    .select(`
+      id,
+      owner_id,
+      title,
+      description,
+      address,
+      city,
+      state,
+      zip,
+      rent,
+      property_type,
+      property_category,
+      is_available,
+      bedrooms,
+      bathrooms,
+      amenities,
+      images,
+      available_from,
+      available_to,
+      created_at,
+      updated_at,
+      profiles:owner_id (
         id,
-        owner_id,
-        title,
-        description,
-        address,
-        city,
-        state,
-        zip,
-        rent,
-        property_type,
-        property_category,
-        is_available,
-        bedrooms,
-        bathrooms,
-        amenities,
-        images,
-        available_from,
-        available_to,
-        created_at,
-        updated_at,
-        profiles:owner_id (
-          id,
-          first_name,
-          last_name,
-          email,
-          phone
-        )
-      `, { count: 'exact' })
-      .eq('is_available', true)
-      .eq('verification_status', 'verified')
-      .order('created_at', { ascending: false })
-      .limit(options.limit || 10);
+        first_name,
+        last_name,
+        email,
+        phone
+      )
+    `, { count: 'exact' })
+    .eq('is_available', true)
+    .eq('verification_status', 'verified')
+    .order('created_at', { ascending: false })
+    .range(offset, offset + limit - 1);
 
-    if (error) {
-      console.error('Database error:', error);
-      return {
-        properties: [],
-        totalCount: 0,
-        hasMore: false
-      };
-    }
-
-    const properties = (data || []).map((item: SimpleDbProperty) => {
-      try {
-        return transformDbProperty(item);
-      } catch (transformError) {
-        console.error('Transform error:', transformError);
-        // Return a basic property on transform error
-        return {
-          id: item.id || 'unknown',
-          owner_id: item.owner_id || 'unknown',
-          name: item.title || 'Unknown Property',
-          title: item.title || 'Unknown Property',
-          description: item.description || '',
-          type: 'hostel' as PropertyType,
-          status: 'available' as PropertyStatus,
-          price: item.rent || 0,
-          rent: item.rent || 0,
-          location: item.address || '',
-          address: item.address || '',
-          city: item.city || '',
-          state: item.state || '',
-          zip: item.zip || '',
-          propertyCategory: 'Hostel' as PropertyCategory,
-          verified: true,
-          is_available: true,
-          bedrooms: item.bedrooms || 1,
-          bathrooms: item.bathrooms || 1,
-          amenities: [],
-          images: [],
-          available_from: '',
-          created_at: item.created_at || '',
-          updated_at: item.updated_at || '',
-          house_rules: 'No smoking, no pets',
-          stories: [],
-          features: []
-        } as Property;
-      }
-    });
-
-    const totalCount = count || 0;
-    const limit = options.limit || 10;
-    const offset = options.offset || 0;
-    
-    return {
-      properties,
-      totalCount,
-      hasMore: properties.length === limit && totalCount > offset + properties.length
-    };
-  } catch (error) {
-    console.error('Fetch properties error:', error);
-    return {
-      properties: [],
-      totalCount: 0,
-      hasMore: false
-    };
+  if (error) {
+    console.error('Database error in fetchProperties:', error);
+    throw new Error(error.message || 'Failed to fetch properties');
   }
+
+  if (!data) {
+    throw new Error('No data returned from properties query');
+  }
+
+  const properties = data.map((item: SimpleDbProperty) => {
+    try {
+      return transformDbProperty(item);
+    } catch (transformError) {
+      console.error('Transform error in fetchProperties:', transformError, { item });
+      throw new Error('Failed to transform property data');
+    }
+  });
+
+  const totalCount = count ?? properties.length;
+
+  return {
+    properties,
+    totalCount,
+    hasMore: properties.length === limit && totalCount > offset + properties.length
+  };
 }
 
 export async function fetchPropertyById(id: string): Promise<Property | null> {
-  try {
-    console.log('fetchPropertyById called with ID:', id);
+  // Fail-loud variant: true "not found" returns null, all other
+  // database/transform issues throw so the caller can distinguish them.
+  const { data, error } = await supabase
+    .from('properties')
+    .select(`
+      id,
+      owner_id,
+      title,
+      description,
+      address,
+      city,
+      state,
+      zip,
+      rent,
+      property_type,
+      property_category,
+      is_available,
+      bedrooms,
+      bathrooms,
+      amenities,
+      images,
+      available_from,
+      available_to,
+      created_at,
+      updated_at
+    `)
+    .eq('id', id)
+    .maybeSingle();
 
-    const { data, error } = await supabase
-      .from('properties')
-      .select(`
-        id,
-        owner_id,
-        title,
-        description,
-        address,
-        city,
-        state,
-        zip,
-        rent,
-        property_type,
-        property_category,
-        is_available,
-        bedrooms,
-        bathrooms,
-        amenities,
-        images,
-        available_from,
-        available_to,
-        created_at,
-        updated_at
-      `)
-      .eq('id', id)
-      .single();
-
-    console.log('Supabase query result:', { data, error });
-
-    if (error) {
-      console.error('Database error:', error);
+  if (error) {
+    // If Supabase explicitly reports no rows, treat as not-found
+    if ((error as any).code === 'PGRST116' || error.message.includes('Results contain 0 rows')) {
       return null;
     }
 
-    if (!data) {
-      console.log('No data returned from query');
-      return null;
-    }
+    console.error('Database error in fetchPropertyById:', error);
+    throw new Error(error.message || 'Failed to fetch property');
+  }
 
-    console.log('Raw data before transform:', data);
-    const transformedProperty = transformDbProperty(data);
-    console.log('Transformed property:', transformedProperty);
-
-    return transformedProperty;
-  } catch (error) {
-    console.error('Fetch property by ID error:', error);
+  if (!data) {
     return null;
+  }
+
+  try {
+    return transformDbProperty(data as SimpleDbProperty);
+  } catch (transformError) {
+    console.error('Transform error in fetchPropertyById:', transformError, { data });
+    throw new Error('Failed to transform property data');
   }
 }

@@ -1,66 +1,57 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import StudentNavBar from '@/components/navigation/StudentNavBar';
 import PropertyDetailView from '@/components/property/PropertyDetailView';
-import { usePropertyData } from '@/hooks/property/usePropertyData';
 import { navigateToBooking, navigateBack } from '@/utils/navigation';
-import { Property } from '@/types/property';
+import { createPropertyId, Property } from '@/types/property';
 import { Loader2, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { usePropertyById } from '@/hooks/property/useDynamicProperties';
+import ErrorDisplay from '@/components/common/ErrorDisplay';
 
 const PropertyDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const { getPropertyById } = usePropertyData();
-  
-  const [property, setProperty] = useState<Property | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+
+  const propertyId = React.useMemo(() => {
+    if (!id) return null;
+    try {
+      return createPropertyId(id);
+    } catch (e) {
+      console.error('Invalid property id param:', id, e);
+      return null;
+    }
+  }, [id]);
+
+  const {
+    property,
+    isLoading,
+    isError,
+    error,
+    refetch
+  } = usePropertyById(propertyId, { enabled: !!propertyId });
 
   // No-flicker booking hydration: cache minimal preview for booking route
   // We import lazily to avoid SSR/lint issues when localStorage is unavailable
-  useEffect(() => {
-    const loadProperty = async () => {
-      if (!id) {
-        setError('Property ID is required');
-        setLoading(false);
-        return;
-      }
+  React.useEffect(() => {
+    if (!property) return;
 
+    // Cache preview for instant booking hydration whenever we have a
+    // successfully loaded property.
+    (async () => {
       try {
-        setLoading(true);
-        setError(null);
-
-        const propertyData = await getPropertyById(id);
-
-        if (!propertyData) {
-          setError('Property not found');
-        } else {
-          setProperty(propertyData);
-          // Cache preview for instant booking hydration
-          try {
-            const { setPropertyPreviewFromProperty } = await import('@/utils/propertyPreviewCache');
-            setPropertyPreviewFromProperty(propertyData);
-          } catch (e) {
-            // non-fatal
-            console.warn('Preview cache set failed', e);
-          }
-        }
-      } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : 'Failed to load property';
-        setError(errorMessage);
-      } finally {
-        setLoading(false);
+        const { setPropertyPreviewFromProperty } = await import('@/utils/propertyPreviewCache');
+        setPropertyPreviewFromProperty(property as Property);
+      } catch (e) {
+        console.warn('Preview cache set failed', e);
       }
-    };
-
-    loadProperty();
-  }, [id, getPropertyById]);
+    })();
+  }, [property]);
 
   const handleBookNow = () => {
     if (property?.id) {
@@ -81,7 +72,23 @@ const PropertyDetail: React.FC = () => {
     }
   };
 
-  if (loading) {
+  if (!propertyId) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-grow flex items-center justify-center">
+          <ErrorDisplay
+            title="Invalid property reference"
+            error="Property ID is missing or invalid."
+            showRetry={false}
+          />
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (isLoading) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
@@ -96,18 +103,22 @@ const PropertyDetail: React.FC = () => {
     );
   }
 
-  if (error || !property) {
+  if (isError || !property) {
+    const displayError = error || new Error('Property not found');
+
     return (
       <div className="min-h-screen flex flex-col">
         <Header />
-        <main className="flex-grow flex items-center justify-center">
-          <div className="text-center">
-            <p className="text-red-600 mb-4">{error || 'Property not found'}</p>
-            <Button onClick={handleGoBack} variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Go Back
-            </Button>
-          </div>
+        <main className="flex-grow flex flex-col items-center justify-center gap-4">
+          <ErrorDisplay
+            title="Unable to load property"
+            error={displayError}
+            onRetry={refetch}
+          />
+          <Button onClick={handleGoBack} variant="outline">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Go Back
+          </Button>
         </main>
         <Footer />
       </div>

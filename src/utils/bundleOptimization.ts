@@ -132,7 +132,6 @@ export const addResourceHints = () => {
   const externalDomains = [
     'fonts.googleapis.com',
     'fonts.gstatic.com',
-    'images.unsplash.com',
   ];
 
   externalDomains.forEach(domain => {

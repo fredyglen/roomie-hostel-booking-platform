@@ -18,7 +18,6 @@ import {
   X,
   Eye
 } from 'lucide-react';
-import { IMAGE_URLS } from '@/constants/images';
 
 interface MediaUploadTabsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -276,9 +275,9 @@ const MediaUploadTabs: React.FC<MediaUploadTabsProps> = ({ form }) => {
                 <FormItem>
                   <FormLabel>Virtual Tour URL</FormLabel>
                   <FormControl>
-                    <Input 
-                      placeholder={IMAGE_URLS.PLACEHOLDER} 
-                      {...field} 
+                    <Input
+                      placeholder="https://example.com/your-virtual-tour"
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />

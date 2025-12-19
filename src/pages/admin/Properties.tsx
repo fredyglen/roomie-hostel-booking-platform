@@ -225,6 +225,21 @@ const AdminProperties: React.FC = () => {
       </AdminLayout>
     );
   }
+  if (error) {
+    return (
+      <AdminLayout pageTitle="Properties Management">
+        <div className="flex flex-col items-center justify-center py-12 px-4">
+          <ErrorDisplay
+            title="Unable to load properties"
+            error={error}
+            onRetry={refetch}
+          />
+        </div>
+      </AdminLayout>
+    );
+  }
+
+
 
   if (properties.length === 0) {
     return (

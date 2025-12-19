@@ -10,7 +10,6 @@ import { Badge } from '@/components/ui/badge';
 import { UseFormReturn } from 'react-hook-form';
 import { PropertyFormValues } from './PropertyFormSchema';
 import { Shield, Wifi, Car, Users, Calendar, AlertTriangle } from 'lucide-react';
-import { IMAGE_URLS } from '@/constants/images';
 
 interface EnhancedPropertyFieldsProps {
   form: UseFormReturn<PropertyFormValues>;
@@ -320,9 +319,9 @@ const EnhancedPropertyFields: React.FC<EnhancedPropertyFieldsProps> = ({ form, p
               <FormItem>
                 <FormLabel>Virtual Tour URL</FormLabel>
                 <FormControl>
-                  <Input 
-                    placeholder={IMAGE_URLS.PLACEHOLDER} 
-                    {...field} 
+                  <Input
+                    placeholder="https://example.com/your-virtual-tour"
+                    {...field}
                   />
                 </FormControl>
                 <FormDescription>

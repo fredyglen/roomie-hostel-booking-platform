@@ -2,7 +2,6 @@ import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import Button from './common/Button';
 import { ErrorHandler } from '@/utils/ErrorHandler';
-import { IMAGE_URLS } from '@/constants/images';
 
 interface University {
   id: string;
@@ -17,28 +16,28 @@ const universities: University[] = [
     id: 'upsa',
     name: 'University of Professional Studies',
     abbreviation: 'UPSA',
-    image: IMAGE_URLS.SAMPLE_1,
+    image: '/placeholder.svg',
     location: 'Accra'
   },
   {
     id: 'knust',
     name: 'Kwame Nkrumah University of Science and Technology',
     abbreviation: 'KNUST',
-    image: IMAGE_URLS.SAMPLE_2,
+    image: '/placeholder.svg',
     location: 'Kumasi'
   },
   {
     id: 'legon',
     name: 'University of Ghana',
     abbreviation: 'Legon',
-    image: IMAGE_URLS.SAMPLE_3,
+    image: '/placeholder.svg',
     location: 'Accra'
   },
   {
     id: 'central',
     name: 'University of Cape Coast',
     abbreviation: 'UCC',
-    image: IMAGE_URLS.SAMPLE_4,
+    image: '/placeholder.svg',
     location: 'Cape Coast'
   }
 ];

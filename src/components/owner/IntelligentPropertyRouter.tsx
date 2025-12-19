@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Building2, Home, Users, FileText, CheckCircle2 } from 'lucide-react';
 
-interface PropertyRouterResult {
+export interface PropertyRouterResult {
   propertyType: 'hostel' | 'homestel' | 'apartment';
   structureType: 'simple' | 'building' | 'compound';
   userType: 'owner' | 'agent';

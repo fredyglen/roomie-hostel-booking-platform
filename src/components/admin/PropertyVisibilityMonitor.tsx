@@ -72,6 +72,7 @@ export const PropertyVisibilityMonitor: React.FC = () => {
               .select('id')
               .eq('id', property.id)
               .eq('is_available', true)
+              .eq('verification_status', 'verified')
               .single();
 
             if (studentError || !studentQuery) {
@@ -258,8 +259,8 @@ export const PropertyVisibilityMonitor: React.FC = () => {
 
         {/* Summary */}
         <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-          <strong>Visibility Check Summary:</strong> This tool verifies that properties created by owners 
-          are properly visible to students. Properties must be available and not rejected to appear in student searches.
+          <strong>Visibility Check Summary:</strong> This tool verifies that properties created by owners
+          are properly visible to students. Properties must be available and verified to appear in student searches.
         </div>
       </CardContent>
     </Card>

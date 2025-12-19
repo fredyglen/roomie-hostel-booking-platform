@@ -59,7 +59,7 @@ const Properties: React.FC = () => {
           price_unit: 'month', // Default to month if not specified
           status: prop.is_available ? 'Available' : 'Not Available',
           occupancy: total ? `${occupied}/${total}` : '—',
-          image_url: (prop.images && prop.images.length > 0) ? prop.images[0] : prop.image_url || '',
+          image_url: deriveCoverImageFromProperty(prop),
           created_at: prop.created_at,
           owner_id: prop.owner_id,
         }) as PropertyDisplay;

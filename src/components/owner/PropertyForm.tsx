@@ -13,7 +13,6 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { PropertyCategory } from '@/types/property';
 import { Upload, Bed, Building, Users, Home } from 'lucide-react';
-import { IMAGE_URLS } from '@/constants/images';
 
 // Import unified property form schema
 import { propertyFormSchema, PropertyFormValues } from './property-form/PropertyFormSchema';
@@ -882,9 +881,9 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                               />
                             </label>
                           </div>
-                          <Input 
-                            type="text" 
-                            placeholder={`Or enter image URL directly: ${IMAGE_URLS.DEFAULT}`}
+                          <Input
+                            type="text"
+                            placeholder="Or enter image URL directly (paste a valid image link from your own storage)"
                             {...field}
                             className="mt-2"
                           />
@@ -905,12 +904,12 @@ const PropertyForm: React.FC<PropertyFormProps> = ({
                     </FormDescription>
                     {form.getValues("image_url") ? (
                       <div className="aspect-video w-full rounded-md border overflow-hidden">
-                        <img 
-                          src={form.getValues("image_url")} 
-                          alt="Cover" 
+                        <img
+                          src={form.getValues("image_url")}
+                          alt="Cover"
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            e.currentTarget.src = IMAGE_URLS.PLACEHOLDER;
+                            e.currentTarget.src = '/placeholder.svg';
                           }}
                         />
                       </div>
