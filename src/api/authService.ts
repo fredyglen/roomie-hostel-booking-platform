@@ -1,6 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ApiResponse } from '@/types/CommonTypes';
-import { User } from '@/types/UserTypes';
+import { ApiResponse, User } from '@/types/core';
 import { logger } from '@/utils/enhanced-logger';
 import { Session } from '@supabase/supabase-js';
 

@@ -514,6 +514,7 @@ const PropertyListing: React.FC = () => {
                   bathrooms={property.bathrooms || 1}
                   maxOccupants={property.max_occupants || 1}
                   images={property.images || []}
+                  media={property.media}
                   amenities={property.amenities ? property.amenities.map(getAmenityLabel) : []}
                   propertyType={property.property_type || property.type || "hostel"}
                   genderRestriction={(property as any).gender_type || (property as any).gender_restriction}

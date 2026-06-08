@@ -7,6 +7,15 @@ import {
   DialogTrigger,
   DialogClose,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetDescription,
+  SheetTrigger,
+  SheetClose,
+} from '@/components/ui/sheet';
 
 export type LegalDocumentType = 'terms' | 'privacy' | 'cookies';
 
@@ -15,6 +24,22 @@ interface LegalModalTriggerProps {
   label: React.ReactNode;
   className?: string;
 }
+
+// Hook to detect mobile screen size
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return isMobile;
+};
 
 const TermsBody: React.FC = () => (
   <div className="space-y-6 text-sm leading-relaxed text-[#4B5563] font-['Work_Sans']">
@@ -194,7 +219,9 @@ export const LegalModalTrigger: React.FC<LegalModalTriggerProps> = ({
   className,
 }) => {
   const { title, Body } = getDocConfig(docType);
+  const isMobile = useIsMobile();
   const [hasScrolledToEnd, setHasScrolledToEnd] = React.useState(false);
+  const [open, setOpen] = React.useState(false);
   const contentRef = React.useRef<HTMLDivElement | null>(null);
 
   const evaluateScrollState = () => {
@@ -219,8 +246,9 @@ export const LegalModalTrigger: React.FC<LegalModalTriggerProps> = ({
     }
   };
 
-  const handleOpenChange = (open: boolean) => {
-    if (open) {
+  const handleOpenChange = (isOpen: boolean) => {
+    setOpen(isOpen);
+    if (isOpen) {
       if (typeof window !== 'undefined' && window.requestAnimationFrame) {
         window.requestAnimationFrame(evaluateScrollState);
       } else {
@@ -234,8 +262,60 @@ export const LegalModalTrigger: React.FC<LegalModalTriggerProps> = ({
     }
   };
 
+  const content = (
+    <>
+      <div className="border-b px-6 py-4">
+        <div className="text-lg font-semibold text-[#111827] font-['Manrope']">
+          {title}
+        </div>
+        <div className="mt-1 text-xs text-[#6B7280]">
+          If there&apos;s more to read, scroll to the end to enable the button.
+        </div>
+      </div>
+      <div
+        ref={contentRef}
+        onScroll={handleScroll}
+        className="flex-1 overflow-y-auto px-6 py-6"
+      >
+        <Body />
+        <div className="h-6" />
+      </div>
+      <div className="border-t border-gray-200 bg-white px-6 py-4 flex justify-end">
+        <button
+          type="button"
+          disabled={!hasScrolledToEnd}
+          onClick={() => setOpen(false)}
+          className={`inline-flex h-9 items-center px-4 text-sm font-medium transition-colors ${
+            hasScrolledToEnd
+              ? 'bg-[#007BFF] text-white hover:bg-[#0056D6]'
+              : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          Close
+        </button>
+      </div>
+    </>
+  );
+
+  if (isMobile) {
+    // Mobile: Use Sheet (bottom drawer)
+    return (
+      <Sheet open={open} onOpenChange={handleOpenChange}>
+        <SheetTrigger asChild>
+          <button type="button" className={className}>
+            {label}
+          </button>
+        </SheetTrigger>
+        <SheetContent side="bottom" className="h-[85vh] p-0 flex flex-col">
+          {content}
+        </SheetContent>
+      </Sheet>
+    );
+  }
+
+  // Desktop: Use Dialog (modal)
   return (
-    <Dialog onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger asChild>
         <button type="button" className={className}>
           {label}
@@ -243,37 +323,7 @@ export const LegalModalTrigger: React.FC<LegalModalTriggerProps> = ({
       </DialogTrigger>
       <DialogContentBare className="max-w-3xl p-0 sm:rounded-xl">
         <div className="flex max-h-[80vh] flex-col bg-white">
-          <div className="border-b px-6 py-4">
-            <DialogTitle className="text-lg font-semibold text-[#111827] font-['Manrope']">
-              {title}
-            </DialogTitle>
-            <DialogDescription className="mt-1 text-xs text-[#6B7280]">
-              If there&apos;s more to read, scroll to the end to enable the button.
-            </DialogDescription>
-          </div>
-          <div
-            ref={contentRef}
-            onScroll={handleScroll}
-            className="flex-1 overflow-y-auto px-6 py-6"
-          >
-            <Body />
-            <div className="h-6" />
-          </div>
-          <div className="border-t border-gray-200 bg-white px-6 py-4 flex justify-end">
-            <DialogClose asChild>
-              <button
-                type="button"
-                disabled={!hasScrolledToEnd}
-                className={`inline-flex h-9 items-center px-4 text-sm font-medium transition-colors ${
-                  hasScrolledToEnd
-                    ? 'bg-[#007BFF] text-white hover:bg-[#0056D6]'
-                    : 'bg-gray-300 text-gray-500 cursor-not-allowed'
-                }`}
-              >
-                Close
-              </button>
-            </DialogClose>
-          </div>
+          {content}
         </div>
       </DialogContentBare>
     </Dialog>

@@ -1,12 +1,14 @@
 import { supabase } from '@/integrations/supabase/client';
 import {
   User,
-  UserInsert,
-  UserUpdate,
   UserRole
-} from '@/types/UserTypes';
+} from '@/types/core';
 import { ApiResponse, PaginatedResponse, PaginationParams } from '@/types/CommonTypes';
 import type { Database } from '@/integrations/supabase/types';
+
+// Derived types for insert/update operations
+type UserInsert = Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'created_at' | 'updated_at'>;
+type UserUpdate = Partial<Omit<User, 'id' | 'createdAt' | 'updatedAt' | 'created_at' | 'updated_at'>>;
 
 /**
  * APPLE-GRADE TYPE SAFETY: Branded types for compile-time safety
@@ -46,10 +48,10 @@ const mapProfileToUser = (profile: ProfileRow): User => {
     email: profile.email,
     role: profile.role as UserRole,
     status: 'ACTIVE', // Default status - profiles table doesn't have status field
-    first_name: profile.first_name,
-    last_name: profile.last_name,
-    phone: profile.phone,
-    avatar_url: profile.avatar_url,
+    first_name: profile.first_name ?? undefined,
+    last_name: profile.last_name ?? undefined,
+    phone: profile.phone ?? undefined,
+    avatar_url: profile.avatar_url ?? undefined,
     created_at: profile.created_at,
     updated_at: profile.created_at, // Fallback - profiles table doesn't have updated_at
     profile: {

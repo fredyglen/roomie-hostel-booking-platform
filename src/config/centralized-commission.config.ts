@@ -1,32 +1,21 @@
 /**
- * ✅ ENHANCED CENTRALIZED COMMISSION CONFIGURATION SYSTEM - BE CONSCIOUS COMPLIANCE
- *
- * Apple-Grade Single Source of Truth with Real-Time Updates
- * "Phone Number Dial" Simplicity for Commission Rate Changes
+ * Centralized Commission Configuration
+ * Single source of truth for commission rates and fees
  */
 
 import { logger } from '@/utils/enhanced-logger';
 import { supabase } from '@/integrations/supabase/client';
 
-// BRANDED TYPES FOR COMPILE-TIME SAFETY
-type CommissionRate = number & { readonly __brand: 'CommissionRate' };
-type PlatformFee = number & { readonly __brand: 'PlatformFee' };
+type CommissionRate = number;
+type PlatformFee = number;
 
-const createCommissionRate = (rate: number): CommissionRate => {
-  if (rate < 0 || rate > 1) {
-    throw new Error(`Commission rate must be between 0 and 1, got: ${rate}`);
-  }
-  return rate as CommissionRate;
-};
+function createCommissionRate(rate: number): CommissionRate {
+  return rate;
+}
 
-const createPlatformFee = (fee: number): PlatformFee => {
-  if (fee < 0) {
-    throw new Error(`Platform fee must be non-negative, got: ${fee}`);
-  }
-  return fee as PlatformFee;
-};
-
-// APPLE-GRADE INTERFACE DEFINITIONS
+function createPlatformFee(fee: number): PlatformFee {
+  return fee;
+}
 interface CommissionConfiguration {
   readonly rates: {
     readonly platform: CommissionRate;

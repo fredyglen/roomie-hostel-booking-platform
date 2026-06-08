@@ -1,7 +1,5 @@
 /**
- * ✅ APPLE-GRADE FORMATTERS - BE CONSCIOUS COMPLIANCE
- * 
- * Type-safe formatting utilities with zero any types
+ * Formatting utilities for currency, dates, and numbers
  */
 
 /**

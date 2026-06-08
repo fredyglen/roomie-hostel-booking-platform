@@ -7,10 +7,10 @@ import { LegalModalTrigger } from '@/components/legal/LegalModal';
 const Footer: React.FC = () => {
   return (
     <footer className="bg-[#1C1C1E] text-white">
-      <div className="container mx-auto px-4 py-8">
+      <div className="container mx-auto px-4 py-6">
         {/* Top Section - Logo and Description */}
-        <div className="mb-8">
-          <Logo variant="white" />
+        <div className="mb-4">
+          <Logo variant="white" size="sm" />
           <p className="mt-3 text-[#C7C7CC] font-['Work_Sans'] font-light text-sm max-w-md">
             ROOMie helps students find safe, affordable housing near campus with verified listings,
             virtual tours, and hassle-free booking.
@@ -18,10 +18,10 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Links Grid - Clean 4-column layout */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
           {/* For Students */}
           <div>
-            <h3 className="text-white text-sm font-bold mb-3 font-['Manrope']">For Students</h3>
+            <h3 className="text-white text-sm font-bold mb-2 font-['Manrope']">For Students</h3>
             <ul className="space-y-2 font-['Work_Sans'] font-light text-sm">
               <li><Link to="/register" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Find a Room</Link></li>
               <li><Link to="/student/properties" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Browse Properties</Link></li>
@@ -32,7 +32,7 @@ const Footer: React.FC = () => {
 
           {/* For Owners */}
           <div>
-            <h3 className="text-white text-sm font-bold mb-3 font-['Manrope']">For Owners</h3>
+            <h3 className="text-white text-sm font-bold mb-2 font-['Manrope']">For Owners</h3>
             <ul className="space-y-2 font-['Work_Sans'] font-light text-sm">
               <li><Link to="/owner-landing" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">List Your Property</Link></li>
               <li><Link to="/owner/dashboard" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Owner Dashboard</Link></li>
@@ -43,7 +43,7 @@ const Footer: React.FC = () => {
 
           {/* Company */}
           <div>
-            <h3 className="text-white text-sm font-bold mb-3 font-['Manrope']">Company</h3>
+            <h3 className="text-white text-sm font-bold mb-2 font-['Manrope']">Company</h3>
             <ul className="space-y-2 font-['Work_Sans'] font-light text-sm">
               <li><Link to="/about" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">About Us</Link></li>
               <li><Link to="/trust-safety" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">Trust & Safety</Link></li>
@@ -53,7 +53,7 @@ const Footer: React.FC = () => {
 
           {/* Legal */}
           <div>
-            <h3 className="text-white text-sm font-bold mb-3 font-['Manrope']">Legal</h3>
+            <h3 className="text-white text-sm font-bold mb-2 font-['Manrope']">Legal</h3>
             <ul className="space-y-2 font-['Work_Sans'] font-light text-sm">
               <li>
                 <LegalModalTrigger
@@ -81,7 +81,7 @@ const Footer: React.FC = () => {
         </div>
 
         {/* Social Media Icons */}
-        <div className="flex justify-center space-x-4 mb-6">
+        <div className="flex justify-center space-x-4 mb-4">
           <a href="https://facebook.com/roomie" target="_blank" rel="noopener noreferrer" className="text-[#C7C7CC] hover:text-[#007BFF] transition-colors">
             <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
               <path fillRule="evenodd" d="M22 12c0-5.523-4.477-10-10-10S2 6.477 2 12c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54V12h2.54V9.797c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562V12h2.773l-.443 2.89h-2.33v6.988C18.343 21.128 22 16.991 22 12z" clipRule="evenodd" />

@@ -3,6 +3,12 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 import Logo from '@/components/common/Logo';
+import {
+  MobileDrawerTrigger,
+  PricingContent,
+  HelpFAQContent,
+  HowItWorksContent,
+} from '@/components/mobile-drawers/MobilePageDrawers';
 
 // Material Symbols Icon Component
 const MaterialIcon = ({ name, className = "" }: { name: string; className?: string }) => (
@@ -10,6 +16,19 @@ const MaterialIcon = ({ name, className = "" }: { name: string; className?: stri
 );
 
 const Landing: React.FC = () => {
+  const [scrollY, setScrollY] = React.useState(0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  React.useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const heroScale = Math.max(0.85, 1 - scrollY * 0.0005);
+
   return (
     <div className="relative flex min-h-screen w-full flex-col bg-white font-['Work_Sans'] font-light text-[#1C1C1E]">
       {/* Top navigation */}
@@ -39,14 +58,52 @@ const Landing: React.FC = () => {
             </Link>
             <button
               type="button"
-              aria-label="Open navigation menu"
+              aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
               className="inline-flex items-center justify-center rounded-full border border-gray-200 h-9 w-9 md:hidden text-[#4B5563] hover:bg-gray-50"
             >
-              <MaterialIcon name="menu" className="text-xl" />
+              <MaterialIcon name={isMobileMenuOpen ? "close" : "menu"} className="text-xl" />
             </button>
           </div>
         </div>
       </header>
+
+      {/* Mobile Navigation Menu */}
+      {isMobileMenuOpen && (
+        <div className="md:hidden fixed inset-x-0 top-16 z-30 bg-white border-b border-gray-200 shadow-lg">
+          <nav className="flex flex-col p-4 space-y-3">
+            <Link
+              to="/landing"
+              className="px-4 py-3 text-sm text-[#4B5563] hover:text-[#111318] hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Home
+            </Link>
+            <Link
+              to="/student/properties"
+              className="px-4 py-3 text-sm text-[#4B5563] hover:text-[#111318] hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              For students
+            </Link>
+            <Link
+              to="/owner-landing"
+              className="px-4 py-3 text-sm text-[#4B5563] hover:text-[#111318] hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              For owners
+            </Link>
+            <hr className="border-gray-200" />
+            <Link
+              to="/login"
+              className="px-4 py-3 text-sm text-[#4B5563] hover:text-[#111318] hover:bg-gray-50 rounded-lg transition-colors"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Sign in
+            </Link>
+          </nav>
+        </div>
+      )}
 
       <main className="flex-1">
         {/* Hero */}
@@ -79,11 +136,12 @@ const Landing: React.FC = () => {
               </Link>
             </div>
           </div>
-          <div className="w-full">
+          <div className="w-full overflow-hidden">
             <img
               src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5HUMxRFnIyAG8-e2Wu7i2G71CZFhEps38IGn9Ixi7OfXIi5Yd4SV_L9DbSBSJ69sEqt_qitn0zZj8rrZ14RFR2GC9VGsfkSEks5gQKXbb_kCZSj-IQi_yD5F2fpOLDwKII88LovtDC-c35UkflCrzp9CaefFDA2oIJPfKEsKrQLifHWMAHHZ3b4Hk6aKG7JIL5p-Il-VJTENvQmFjG2-cHt5Nlxi3mD1knlsIw__ZegtyGE7Qn3axSrVCVcc_UpPEWyBg8GQZWBKm"
               alt="Students standing outside a ROOMie property"
-              className="w-full h-[280px] md:h-[380px] lg:h-[440px] object-cover"
+              className="w-full h-[280px] md:h-[380px] lg:h-[440px] object-cover transition-transform duration-100 ease-out will-change-transform"
+              style={{ transform: `scale(${heroScale})` }}
             />
           </div>
         </section>
@@ -164,7 +222,7 @@ const Landing: React.FC = () => {
                 bookings and payouts.
               </p>
             </div>
-            <div className="rounded-2xl border border-gray-200 bg-[#F9FAFB] p-6 space-y-3 text-sm text-[#4B5563]">
+            <div className="border border-gray-200 bg-[#F9FAFB] p-6 space-y-3 text-sm text-[#4B5563]">
               <div className="flex items-start gap-3">
                 <MaterialIcon name="group" className="mt-0.5 text-[#007BFF]" />
                 <p>Reach students across campuses without dealing with middlemen.</p>
@@ -215,12 +273,12 @@ const Landing: React.FC = () => {
         </section>
 
         {/* Footer */}
-        <footer className="bg-white py-16 px-6 border-t border-gray-200">
+        <footer className="bg-white py-8 px-6 border-t border-gray-200">
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-10 mb-10">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-6">
               {/* ROOMie Column */}
               <div>
-                <h3 className="text-[#007BFF] text-xl font-['Manrope'] font-bold mb-4">ROOMie</h3>
+                <h3 className="text-[#007BFF] text-lg font-['Manrope'] font-bold mb-2">ROOMie</h3>
                 <p className="text-[#6B7280] font-['Work_Sans'] font-light text-sm leading-relaxed">
                   Student accommodation made easy. Find verified properties in minutes.
                 </p>
@@ -228,8 +286,8 @@ const Landing: React.FC = () => {
 
               {/* Students Column */}
               <div>
-                <h4 className="text-[#1C1C1E] font-['Manrope'] font-semibold mb-4">Students</h4>
-                <ul className="space-y-3 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
+                <h4 className="text-[#1C1C1E] font-['Manrope'] font-semibold mb-2 text-sm">Students</h4>
+                <ul className="space-y-2 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
                   <li>
                     <Link to="/register" className="hover:text-[#007BFF] transition-colors duration-200">
                       Find a Room
@@ -241,22 +299,34 @@ const Landing: React.FC = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/resources" className="hover:text-[#007BFF] transition-colors duration-200">
-                      How It Works
-                    </Link>
+                    <MobileDrawerTrigger
+                      content={<HowItWorksContent />}
+                      title="How It Works"
+                      fullPageLink="/how-it-works"
+                    >
+                      <span className="hover:text-[#007BFF] transition-colors duration-200 cursor-pointer">
+                        How It Works
+                      </span>
+                    </MobileDrawerTrigger>
                   </li>
                   <li>
-                    <Link to="/support" className="hover:text-[#007BFF] transition-colors duration-200">
-                      Support
-                    </Link>
+                    <MobileDrawerTrigger
+                      content={<HelpFAQContent />}
+                      title="Help & FAQ"
+                      fullPageLink="/help-faq"
+                    >
+                      <span className="hover:text-[#007BFF] transition-colors duration-200 cursor-pointer">
+                        Support
+                      </span>
+                    </MobileDrawerTrigger>
                   </li>
                 </ul>
               </div>
 
               {/* Owners Column */}
               <div>
-                <h4 className="text-[#1C1C1E] font-['Manrope'] font-semibold mb-4">Owners</h4>
-                <ul className="space-y-3 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
+                <h4 className="text-[#1C1C1E] font-['Manrope'] font-semibold mb-2 text-sm">Owners</h4>
+                <ul className="space-y-2 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
                   <li>
                     <Link to="/owner-landing" className="hover:text-[#007BFF] transition-colors duration-200">
                       List Your Property
@@ -268,9 +338,15 @@ const Landing: React.FC = () => {
                     </Link>
                   </li>
                   <li>
-                    <Link to="/pricing" className="hover:text-[#007BFF] transition-colors duration-200">
-                      Pricing
-                    </Link>
+                    <MobileDrawerTrigger
+                      content={<PricingContent />}
+                      title="Pricing"
+                      fullPageLink="/pricing"
+                    >
+                      <span className="hover:text-[#007BFF] transition-colors duration-200 cursor-pointer">
+                        Pricing
+                      </span>
+                    </MobileDrawerTrigger>
                   </li>
                   <li>
                     <Link to="/resources" className="hover:text-[#007BFF] transition-colors duration-200">
@@ -282,8 +358,8 @@ const Landing: React.FC = () => {
 
               {/* Company Column */}
               <div>
-                <h4 className="text-[#1C1C1E] font-['Manrope'] font-semibold mb-4">Company</h4>
-                <ul className="space-y-3 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
+                <h4 className="text-[#1C1C1E] font-['Manrope'] font-semibold mb-2 text-sm">Company</h4>
+                <ul className="space-y-2 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
                   <li>
                     <Link to="/about" className="hover:text-[#007BFF] transition-colors duration-200">
                       About Us
@@ -309,11 +385,11 @@ const Landing: React.FC = () => {
             </div>
 
             {/* Copyright */}
-            <div className="border-t border-gray-200 pt-8 text-center">
+            <div className="border-t border-gray-200 pt-4 text-center">
               <p className="text-[#6B7280] font-['Work_Sans'] font-light text-sm">
                 © 2025 ROOMie. All rights reserved.
               </p>
-              <div className="mt-4 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
+              <div className="mt-2 text-sm text-[#6B7280] font-['Work_Sans'] font-light">
                 <Link to="/transparency" className="hover:text-[#007BFF] transition-colors duration-200">
                   Transparency
                 </Link>

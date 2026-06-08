@@ -42,6 +42,7 @@ export interface PropertyCardProps {
   readonly bathrooms: WashroomCount | number;
   readonly maxOccupants: MaxOccupants | number;
   readonly images: string[];
+  readonly media?: { url: string; type: string; isCover?: boolean }[];
   readonly amenities: string[];
   readonly propertyType: string; // 'hostel', 'homestel', 'apartment'
   readonly genderRestriction?: string;
@@ -74,6 +75,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   bathrooms,
   maxOccupants,
   images,
+  media,
   amenities,
   propertyType,
   genderRestriction,
@@ -86,6 +88,12 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   onViewDetails,
   onViewStory
 }) => {
+  // DEBUG: Log what data we received
+  console.log(`[PropertyCard ${id}] images:`, images?.length || 0, "media:", media?.length || 0);
+  if (media && media.length > 0) {
+    console.log(`[PropertyCard ${id}] first media:`, media[0]);
+  }
+
   // Type-safe property ID handling
   const propertyId = typeof id === 'string' ? id : String(id);
 
@@ -106,23 +114,41 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const [viewingRestriction, setViewingRestriction] = useState<ViewingRestriction | null>(null);
   const [hasTrackedView, setHasTrackedView] = useState(false);
 
-  // Get primary image with fallback - handle both array and string formats
+  // Get primary image with fallback - check media array first (like detail page)
   const primaryImage = (() => {
-    // First check images array
+    // First check media array (proper database structure) - look for cover image
+    if (Array.isArray(media) && media.length > 0) {
+      const coverImage = media.find((m: { url?: string; type?: string; isCover?: boolean }) => m.isCover && m.type === 'image');
+      if (coverImage?.url) {
+        const url = coverImage.url.trim();
+        if (url && !url.startsWith('blob:') &&
+            (url.startsWith('http://') || url.startsWith('https://'))) {
+          return url;
+        }
+      }
+      // If no cover, use first valid image in media array
+      const validMedia = media.find((m: { url?: string; type?: string; isCover?: boolean }) => {
+        if (!m?.url || typeof m.url !== 'string') return false;
+        const url = m.url.trim();
+        if (!url) return false;
+        if (url.startsWith('blob:')) return false;
+        if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+        return true;
+      });
+      if (validMedia?.url) return validMedia.url;
+    }
+
+    // Fallback to images array (legacy format)
     if (Array.isArray(images) && images.length > 0 && images[0]?.trim()) {
-      // Filter out blob URLs that won't work
       const validImage = images.find(img => {
         if (!img || typeof img !== 'string') return false;
         const url = img.trim();
         if (!url) return false;
         if (url.startsWith('blob:')) return false;
-        if (url.includes('localhost')) return false;
         if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
         return true;
       });
-      if (validImage) {
-        return validImage;
-      }
+      if (validImage) return validImage;
     }
 
     // Check if images is a string
@@ -131,7 +157,6 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       if (
         url &&
         !url.startsWith('blob:') &&
-        !url.includes('localhost') &&
         (url.startsWith('http://') || url.startsWith('https://'))
       ) {
         return url;
@@ -145,8 +170,9 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
   const optimizedPrimaryImage = getOptimizedPropertyImageUrl(primaryImage, {
     width: 800,
     quality: 80,
-    resize: 'cover',
   });
+
+  console.log(`[PropertyCard ${id}] final image:`, primaryImage ? "YES" : "NO", primaryImage?.substring(0, 60));
 
   // Handle property card click - just navigate, no booking verification
   const handlePropertyClick = () => {
@@ -389,7 +415,7 @@ const PropertyCard: React.FC<PropertyCardProps> = ({
       {viewingRestriction && (
         <ViewingLimitOverlay
           isVisible={showViewingLimitOverlay}
-          restrictionType={viewingRestriction.restrictionType}
+          restrictionType={viewingRestriction.restrictionType || 'properties'}
           remainingViews={viewingRestriction.remainingViews}
           totalLimit={viewingRestriction.totalLimit}
           message={viewingRestriction.message}

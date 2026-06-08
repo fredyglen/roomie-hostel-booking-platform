@@ -1,27 +1,12 @@
 /**
- * ROOMi Platform - Centralized Content Validation Configuration
- * 
- * SINGLE SOURCE OF TRUTH FOR ALL CONTENT VALIDATION RULES
- * 
- * This file consolidates all scattered content validation rules from components
- * into a unified, type-safe configuration system following BE CONSCIOUS standards.
- * 
- * ZERO TOLERANCE POLICY: No validation rules should be defined outside this system.
- * 
- * @author ROOMi Platform Team
- * @version 1.0.0
- * @date 2025-01-09
- * @compliance BE CONSCIOUS Apple-Grade Standards
+ * Centralized Content Validation Configuration
+ * Single source of truth for all content validation rules
  */
 
-// ============================================================================
-// BRANDED TYPES FOR COMPILE-TIME SAFETY
-// ============================================================================
-
-type MinLength = number & { readonly __brand: 'MinLength' };
-type MaxLength = number & { readonly __brand: 'MaxLength' };
-type MaxCount = number & { readonly __brand: 'MaxCount' };
-type MinCount = number & { readonly __brand: 'MinCount' };
+type MinLength = number;
+type MaxLength = number;
+type MaxCount = number;
+type MinCount = number;
 
 const createMinLength = (value: number): MinLength => value as MinLength;
 const createMaxLength = (value: number): MaxLength => value as MaxLength;

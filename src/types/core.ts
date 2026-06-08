@@ -1,19 +1,7 @@
 /**
  * ROOMi Platform Core Type Definitions
- * Apple-Grade TypeScript interfaces with zero tolerance for 'any' types
- *
- * @version 2.0.0 - Technical Debt Elimination
- * @author ROOMi Platform Team
  */
 
-// =====================================================
-// USER TYPES - UNIFIED INTERFACE
-// =====================================================
-
-/**
- * Core User interface - unified from all legacy interfaces
- * Includes all properties needed across the platform
- */
 export interface User {
   readonly id: string;
   readonly email: string;

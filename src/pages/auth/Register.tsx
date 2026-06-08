@@ -150,43 +150,46 @@ const Register: React.FC = () => {
         onComplete={handleSuccessComplete}
         duration={3000}
       />
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8">
-      <div className="w-full max-w-5xl bg-white flex flex-col md:flex-row md:rounded-xl md:shadow-lg md:border md:border-gray-100 overflow-hidden">
-        <div className="w-full md:w-1/2 px-4 py-6 md:px-10 md:py-12">
-          {/* Logo */}
-          <div className="mb-6 flex justify-center md:justify-start">
-            <ROOMiLogo size={28} />
-          </div>
-
-          {/* Title */}
-          <h2 className="mb-2 text-center text-xl font-semibold text-gray-900">
-            Create your account
-          </h2>
-
-          <p className="mb-6 text-center text-xs text-gray-500">
-            Or{" "}
-            <Link
-              to="/login"
-              className="font-medium text-primary hover:underline"
-            >
-              sign in to your existing account
-            </Link>
-          </p>
-
-          <SimpleRegistrationForm
-            form={form}
-            onSubmit={onSubmit}
-            isSubmitting={isSubmitting}
-          />
+    <div className="min-h-screen flex bg-white">
+      {/* Form Panel — 2/5 on desktop, full width on mobile */}
+      <div className="w-full md:w-2/5 flex flex-col justify-center px-6 py-8 md:px-16 md:py-12">
+        <div className="w-full max-w-sm mx-auto">
+        {/* Logo */}
+        <div className="mb-6 flex justify-center">
+          <ROOMiLogo size={28} />
         </div>
-        <div className="hidden md:flex w-full md:w-1/2 items-center justify-center bg-primary text-white">
-          <div className="flex flex-col items-center gap-4 px-10">
-            <ROOMiLogo size={56} />
-            <p className="text-center text-sm leading-relaxed text-white/90">
-              Create a ROOMie account to save favourites, manage bookings,
-              and stay updated on your campus housing.
-            </p>
-          </div>
+
+        {/* Title */}
+        <h2 className="mb-2 text-center text-xl font-semibold text-gray-900">
+          Create your account
+        </h2>
+
+        <p className="mb-6 text-center text-xs text-gray-500">
+          Or{" "}
+          <Link
+            to="/login"
+            className="font-medium text-primary hover:underline"
+          >
+            sign in to your existing account
+          </Link>
+        </p>
+
+        <SimpleRegistrationForm
+          form={form}
+          onSubmit={onSubmit}
+          isSubmitting={isSubmitting}
+        />
+        </div>
+      </div>
+
+      {/* Image Panel — 3/5 on desktop, hidden on mobile */}
+      <div className="hidden md:flex w-3/5 items-center justify-center bg-primary text-white">
+        <div className="flex flex-col items-center gap-4 px-10">
+          <ROOMiLogo size={56} />
+          <p className="text-center text-sm leading-relaxed text-white/90">
+            Create a ROOMie account to save favourites, manage bookings,
+            and stay updated on your campus housing.
+          </p>
         </div>
       </div>
     </div>

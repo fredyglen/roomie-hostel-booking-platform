@@ -1,18 +1,6 @@
 import { User as SupabaseUser } from '@supabase/supabase-js';
 
-// ============================================================================
-// APPLE-GRADE ADMIN AUTHENTICATION TYPES
-// ============================================================================
-
-/**
- * Enhanced user roles supporting admin hierarchy
- * Following BE CONSCIOUS zero-tolerance standards with complete type safety
- */
 export type UserRole = 'student' | 'owner' | 'supreme_admin' | 'campus_admin';
-
-/**
- * Admin role types with branded typing for compile-time safety
- */
 export type AdminRoleType = 'supreme_admin' | 'campus_admin';
 
 /**

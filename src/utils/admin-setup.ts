@@ -1,7 +1,6 @@
 /**
  * Admin Setup Utility for ROOMi Platform
  * Ensures demo admin user exists with correct permissions
- * Following BE CONSCIOUS zero tolerance for missing admin access
  */
 
 import { supabase } from '@/integrations/supabase/client';
@@ -16,7 +15,6 @@ export interface AdminSetupResult {
 
 /**
  * Ensure demo admin user exists with correct role
- * Apple-grade error handling with comprehensive validation
  */
 export async function ensureDemoAdminExists(): Promise<AdminSetupResult> {
   const adminEmail = 'admin@roomi.com';

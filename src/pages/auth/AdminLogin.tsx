@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { ROOMiLogo } from '@/components/ui/SocialIcons';
 import { toast } from "@/components/ui/use-toast";
-import { Loader, Shield, Lock, User } from 'lucide-react';
+import { Loader } from 'lucide-react';
 import { logger } from '@/utils/enhanced-logger';
 
 // ============================================================================
@@ -153,40 +153,39 @@ const AdminLogin: React.FC = () => {
   // ============================================================================
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
-      <div className="bg-white shadow-xl rounded-2xl w-full max-w-md p-8 border border-gray-200">
+    <div className="min-h-screen flex bg-white">
+      {/* Form Panel — 2/5 on desktop, full width on mobile */}
+      <div className="w-full md:w-2/5 flex flex-col justify-center px-6 py-8 md:px-16 md:py-12">
+        <div className="w-full max-w-sm mx-auto">
+        {/* Logo */}
+        <div className="mb-6 flex justify-center">
+          <ROOMiLogo size={28} />
+        </div>
+
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="p-3 bg-blue-100 rounded-full">
-              <Shield className="h-8 w-8 text-blue-600" />
-            </div>
-          </div>
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Portal</h1>
-          <p className="text-gray-600">Sign in to access the ROOMi admin dashboard</p>
+        <div className="mb-6">
+          <h1 className="text-xl font-semibold text-gray-900 mb-1">Admin Portal</h1>
+          <p className="text-xs text-gray-500">Sign in to access the ROOMie admin dashboard</p>
         </div>
 
         {/* Admin Login Form */}
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5">
             {/* Email Field */}
             <FormField
               control={form.control}
               name="email"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Admin Email</FormLabel>
+                <FormItem className="space-y-1">
+                  <FormLabel className="block text-sm font-medium text-gray-900">Admin Email</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        {...field}
-                        type="email"
-                        placeholder="admin@roomi.com"
-                        className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        disabled={isSubmitting}
-                      />
-                    </div>
+                    <Input
+                      {...field}
+                      type="email"
+                      placeholder="admin@roomi.com"
+                      className="h-11 w-full rounded-sm border border-gray-300 px-3 text-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -198,19 +197,16 @@ const AdminLogin: React.FC = () => {
               control={form.control}
               name="password"
               render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-gray-700 font-medium">Password</FormLabel>
+                <FormItem className="space-y-1">
+                  <FormLabel className="block text-sm font-medium text-gray-900">Password</FormLabel>
                   <FormControl>
-                    <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                      <Input
-                        {...field}
-                        type="password"
-                        placeholder="Enter your admin password"
-                        className="pl-10 h-12 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
-                        disabled={isSubmitting}
-                      />
-                    </div>
+                    <Input
+                      {...field}
+                      type="password"
+                      placeholder="Enter your admin password"
+                      className="h-11 w-full rounded-sm border border-gray-300 px-3 text-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+                      disabled={isSubmitting}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -220,47 +216,44 @@ const AdminLogin: React.FC = () => {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              className="mt-1 flex w-full items-center justify-center gap-2 rounded-sm bg-primary text-sm font-medium text-white hover:bg-primary/90"
               disabled={isSubmitting}
             >
-              {isSubmitting ? (
-                <>
-                  <Loader className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                <>
-                  <Shield className="mr-2 h-4 w-4" />
-                  Sign in to Admin Portal
-                </>
+              {isSubmitting && (
+                <Loader className="h-4 w-4 animate-spin" />
               )}
+              {isSubmitting ? "Signing in..." : "Sign in to Admin Portal"}
             </Button>
           </form>
         </Form>
 
         {/* Error Display */}
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-sm">
             <p className="text-sm text-red-600">{error.message}</p>
           </div>
         )}
 
         {/* Footer */}
-        <div className="mt-8 pt-6 border-t border-gray-200">
-          <div className="text-center">
-            <p className="text-sm text-gray-500 mb-3">
-              Need help accessing your admin account?
-            </p>
-            <Link
-              to="/login"
-              className="text-sm text-blue-600 hover:text-blue-700 font-medium"
-            >
-              ← Back to regular login
-            </Link>
-          </div>
+        <div className="mt-6 border-t border-gray-100 pt-4 text-center text-[11px] text-gray-400">
+          <Link
+            to="/login"
+            className="text-gray-500 hover:text-gray-700"
+          >
+            ← Back to regular login
+          </Link>
         </div>
+        </div>
+      </div>
 
-
+      {/* Image Panel — 3/5 on desktop, hidden on mobile */}
+      <div className="hidden md:flex w-3/5 items-center justify-center bg-primary text-white">
+        <div className="flex flex-col items-center gap-4 px-10">
+          <ROOMiLogo size={56} />
+          <p className="text-center text-sm leading-relaxed text-white/90">
+            Manage properties, verify listings, and oversee the ROOMie platform from your admin dashboard.
+          </p>
+        </div>
       </div>
     </div>
   );

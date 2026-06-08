@@ -1,21 +1,10 @@
 /**
  * Centralized Content Suggestions Configuration
- * Apple-Grade Content Suggestions Engine for ROOMi Platform
- * 
- * Purpose: Single source of truth for all content suggestions across the platform
- * Compliance: BE CONSCIOUS zero tolerance for any types, Apple-Grade standards
- * 
- * @version 1.0.0
- * @author ROOMi Platform Team
- * @date 2025-01-09
+ * Single source of truth for all content suggestions across the platform
  */
 
-// ============================================================================
-// BRANDED TYPES FOR COMPILE-TIME SAFETY
-// ============================================================================
-
-type SuggestionCategory = string & { readonly __brand: 'SuggestionCategory' };
-type SuggestionText = string & { readonly __brand: 'SuggestionText' };
+type SuggestionCategory = string;
+type SuggestionText = string;
 type SuggestionPriority = 'high' | 'medium' | 'low';
 
 // ============================================================================

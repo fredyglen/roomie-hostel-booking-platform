@@ -132,11 +132,12 @@ const Login: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white px-4 py-8">
-      <div className="w-full max-w-5xl bg-white flex flex-col md:flex-row md:rounded-xl md:shadow-lg md:border md:border-gray-100 overflow-hidden">
-        <div className="w-full md:w-1/2 px-4 py-6 md:px-10 md:py-12">
+    <div className="min-h-screen flex bg-white">
+      {/* Form Panel — 2/5 on desktop, full width on mobile */}
+      <div className="w-full md:w-2/5 flex flex-col justify-center px-6 py-8 md:px-16 md:py-12">
+        <div className="w-full max-w-sm mx-auto">
         {/* Logo */}
-        <div className="mb-6 flex justify-center md:justify-start">
+        <div className="mb-6 flex justify-center">
           <ROOMiLogo size={28} />
         </div>
 
@@ -144,14 +145,14 @@ const Login: React.FC = () => {
         <div className="mb-5 flex gap-3">
           <button
             type="button"
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-800 transition-shadow hover:shadow-sm"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm border border-gray-300 bg-white text-sm font-medium text-gray-800"
           >
             <GoogleIcon size={16} />
             Google
           </button>
           <button
             type="button"
-            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white text-sm font-medium text-gray-800 transition-shadow hover:shadow-sm"
+            className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-sm border border-gray-300 bg-white text-sm font-medium text-gray-800"
           >
             <FacebookIcon size={16} />
             Facebook
@@ -178,7 +179,7 @@ const Login: React.FC = () => {
                   <FormControl>
                     <Input
                       type="email"
-                      className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+                      className="h-11 w-full rounded-sm border border-gray-300 px-3 text-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
                       autoComplete="email"
                       {...field}
                       disabled={isSubmitting}
@@ -200,7 +201,7 @@ const Login: React.FC = () => {
                   <FormControl>
                     <Input
                       type="password"
-                      className="h-11 w-full rounded-lg border border-gray-300 px-3 text-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
+                      className="h-11 w-full rounded-sm border border-gray-300 px-3 text-sm focus-visible:border-primary focus-visible:ring-2 focus-visible:ring-primary"
                       autoComplete="current-password"
                       {...field}
                       disabled={isSubmitting}
@@ -216,7 +217,7 @@ const Login: React.FC = () => {
               <label className="flex items-center gap-2">
                 <input
                   type="checkbox"
-                  className="h-4 w-4 rounded border border-gray-300 text-primary focus:ring-primary"
+                  className="h-4 w-4 rounded-sm border border-gray-300 text-primary focus:ring-primary"
                 />
                 <span>Remember this device</span>
               </label>
@@ -230,7 +231,7 @@ const Login: React.FC = () => {
 
             <Button
               type="submit"
-              className="mt-1 flex w-full items-center justify-center gap-2 rounded-lg bg-primary text-sm font-medium text-white hover:bg-primary/90"
+              className="mt-1 flex w-full items-center justify-center gap-2 rounded-sm bg-primary text-sm font-medium text-white hover:bg-primary/90"
               disabled={isSubmitting}
             >
               {isSubmitting && (
@@ -240,8 +241,6 @@ const Login: React.FC = () => {
             </Button>
           </form>
         </Form>
-
-
 
         {/* Sign Up Link */}
         <div className="mt-5 text-center text-xs text-gray-500">
@@ -263,8 +262,11 @@ const Login: React.FC = () => {
             Admin Portal
           </Link>
         </div>
+        </div>
       </div>
-      <div className="hidden md:flex w-full md:w-1/2 items-center justify-center bg-primary text-white">
+
+      {/* Image Panel — 3/5 on desktop, hidden on mobile */}
+      <div className="hidden md:flex w-3/5 items-center justify-center bg-primary text-white">
         <div className="flex flex-col items-center gap-4 px-10">
           <ROOMiLogo size={56} />
           <p className="text-center text-sm leading-relaxed text-white/90">
@@ -274,7 +276,6 @@ const Login: React.FC = () => {
         </div>
       </div>
     </div>
-  </div>
   );
 };
 

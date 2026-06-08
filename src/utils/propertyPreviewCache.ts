@@ -34,7 +34,6 @@ export const deriveCoverImageFromProperty = (property: any): string => {
     const url = m.url.trim();
     if (!url) return false;
     if (url.startsWith('blob:')) return false;
-    if (url.includes('localhost')) return false;
     if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
     return true;
   });
@@ -44,7 +43,7 @@ export const deriveCoverImageFromProperty = (property: any): string => {
 	  const direct = (property as any).image_url;
 	  if (typeof direct === 'string') {
 	    const url = direct.trim();
-	    if (url && !url.startsWith('blob:') && !url.includes('localhost')) {
+	    if (url && !url.startsWith('blob:')) {
 	      if (url.startsWith('http://') || url.startsWith('https://')) {
 	        return url;
 	      }
@@ -62,7 +61,6 @@ export const deriveCoverImageFromProperty = (property: any): string => {
     const url = img.trim();
     if (!url) return false;
     if (url.startsWith('blob:')) return false;
-    if (url.includes('localhost')) return false;
     if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
     return true;
   });

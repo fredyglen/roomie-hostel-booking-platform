@@ -19,6 +19,7 @@ interface PropertyDetailViewProps {
 }
 
 const PropertyDetailView: React.FC<PropertyDetailViewProps> = ({ property, onBookNow, onGoBack, onViewStory }) => {
+  console.log('DEBUG DetailView property:', property?.id, 'media:', property?.media, 'images:', (property as any)?.images, 'image_url:', (property as any)?.image_url);
   // Apple-grade error handling: Guard against undefined property
   if (!property) {
     return (

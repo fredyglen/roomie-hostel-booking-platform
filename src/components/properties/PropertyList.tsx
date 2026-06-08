@@ -63,6 +63,7 @@ const PropertyList: React.FC<PropertyListProps> = ({
             bathrooms={property.bathrooms || 1}
             maxOccupants={property.max_occupants || property.maxOccupants || 1}
             images={images}
+            media={property.media}
             amenities={Array.isArray(property.amenities) ? property.amenities : []}
             propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
             genderRestriction={property.gender_restriction}

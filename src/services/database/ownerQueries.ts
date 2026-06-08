@@ -14,11 +14,10 @@ export interface OwnerDashboardStats {
   monthlyCommissionDeducted: number; // ✅ NEW: 10% platform commission deducted
   monthlyNetEarnings: number; // ✅ NEW: Earnings after 10% commission
   occupancyRate: number;
-  averageRating: number | null; // ✅ BE CONSCIOUS: null when no reviews exist
+  averageRating: number | null;
   totalReviews: number;
   pendingBookings: number;
   confirmedBookings: number;
-  // ✅ BE CONSCIOUS: Real maintenance analytics
   maintenanceRequests: number;
   pendingMaintenance: number;
   completedMaintenance: number;
@@ -108,7 +107,7 @@ export class OwnerQueries {
 
       const { data: earningsData, error: earningsError } = await supabase
         .from('bookings_enhanced')
-        .select('total_amount, owner_receives, platform_commission, property_rent')
+        .select('total_amount, property_rent, platform_fee, agent_fee')
         .eq('property_owner_id', ownerId)
         .eq('status', 'confirmed')
         .gte('created_at', firstDayOfMonth.toISOString())
@@ -116,10 +115,13 @@ export class OwnerQueries {
 
       if (earningsError) throw earningsError;
 
-      // ✅ NEW BUSINESS MODEL: Calculate gross earnings, commission deducted, and net earnings
-      const monthlyEarnings = earningsData?.reduce((sum, booking) => sum + (booking.property_rent || 0), 0) || 0;
-      const monthlyCommissionDeducted = earningsData?.reduce((sum, booking) => sum + (booking.platform_commission || 0), 0) || 0;
-      const monthlyNetEarnings = earningsData?.reduce((sum, booking) => sum + (booking.owner_receives || 0), 0) || 0;
+      // Calculate earnings: owner_receives = total_amount - platform_fee - agent_fee
+      const monthlyEarnings = earningsData?.reduce((sum, booking) => sum + (booking.property_rent || booking.total_amount || 0), 0) || 0;
+      const monthlyCommissionDeducted = earningsData?.reduce((sum, booking) => sum + (booking.platform_fee || 0), 0) || 0;
+      const monthlyNetEarnings = earningsData?.reduce((sum, booking) => {
+        const ownerReceives = (booking.total_amount || 0) - (booking.platform_fee || 0) - (booking.agent_fee || 0);
+        return sum + ownerReceives;
+      }, 0) || 0;
 
       // Apple-grade occupancy rate calculation with proper type safety
       // Note: Using max_occupants and beds_available from actual Supabase schema

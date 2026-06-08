@@ -241,6 +241,7 @@ const Explore: React.FC = () => {
                     bathrooms={property.bathrooms || 1}
                     maxOccupants={property.max_occupants || property.maxOccupants || 1}
                     images={getPropertyCoverImages(property)}
+                    media={property.media}
                     amenities={Array.isArray(property.amenities) ? property.amenities : []}
                     propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
                     genderRestriction={property.gender_restriction || property.gender_type}
@@ -294,6 +295,7 @@ const Explore: React.FC = () => {
                     bathrooms={property.bathrooms || 1}
                     maxOccupants={property.max_occupants || property.maxOccupants || 1}
                     images={getPropertyCoverImages(property)}
+                    media={property.media}
                     amenities={Array.isArray(property.amenities) ? property.amenities : []}
                     propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
                     genderRestriction={property.gender_restriction || property.gender_type}
@@ -347,6 +349,7 @@ const Explore: React.FC = () => {
                     bathrooms={property.bathrooms || 1}
                     maxOccupants={property.max_occupants || property.maxOccupants || 1}
                     images={getPropertyCoverImages(property)}
+                    media={property.media}
                     amenities={Array.isArray(property.amenities) ? property.amenities : []}
                     propertyType={property.property_category || property.propertyCategory || property.type || 'Hostel'}
                     genderRestriction={property.gender_restriction || property.gender_type}

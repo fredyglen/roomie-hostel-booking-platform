@@ -1,8 +1,5 @@
 /**
- * ✅ REAL DATA SEEDER - BE CONSCIOUS COMPLIANCE
- *
  * Data Seeder for ROOMi Platform using real database queries.
- * No more hardcoded mock data - follows BE CONSCIOUS Apple-Grade standards.
  */
 
 import { supabase } from '@/config/supabase';

@@ -53,7 +53,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
                       width: '100%',
                       height: '44px',
                       border: '1px solid #dadce0',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       padding: '0 14px',
                       fontSize: '16px',
                       outline: 'none'
@@ -85,7 +85,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
                       width: '100%',
                       height: '44px',
                       border: '1px solid #dadce0',
-                      borderRadius: '8px',
+                      borderRadius: '2px',
                       padding: '0 14px',
                       fontSize: '16px',
                       outline: 'none'
@@ -118,7 +118,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
                     width: '100%',
                     height: '44px',
                     border: '1px solid #dadce0',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     padding: '0 14px',
                     fontSize: '16px',
                     outline: 'none'
@@ -150,7 +150,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
                     width: '100%',
                     height: '44px',
                     border: '1px solid #dadce0',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     padding: '0 14px',
                     fontSize: '16px',
                     outline: 'none'
@@ -183,7 +183,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
                     width: '100%',
                     height: '44px',
                     border: '1px solid #dadce0',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     padding: '0 14px',
                     fontSize: '16px',
                     outline: 'none'
@@ -216,7 +216,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
                     width: '100%',
                     height: '44px',
                     border: '1px solid #dadce0',
-                    borderRadius: '8px',
+                    borderRadius: '2px',
                     padding: '0 14px',
                     fontSize: '16px',
                     outline: 'none'
@@ -286,7 +286,7 @@ const SimpleRegistrationForm: React.FC<SimpleRegistrationFormProps> = ({
             background: isSubmitting ? '#6b7280' : '#0f68fd',
             color: '#ffffff',
             border: 'none',
-            borderRadius: '8px',
+            borderRadius: '2px',
             fontSize: '14px',
             fontWeight: '500',
             cursor: isSubmitting ? 'not-allowed' : 'pointer',

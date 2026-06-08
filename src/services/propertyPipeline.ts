@@ -260,18 +260,43 @@ export class PropertyPipelineService {
    */
   private static async processVerificationStatus(propertyId: string, ownerId: string): Promise<void> {
     try {
-      const { error } = await supabase
+      const now = new Date().toISOString();
+      
+      // Update properties table
+      const { error: propError } = await supabase
         .from('properties')
         .update({
           verification_status: 'pending',
-          updated_at: new Date().toISOString()
+          updated_at: now
         })
         .eq('id', propertyId);
 
-      if (error) {
-        logger.warn('Failed to persist pending verification status', { error, propertyId });
+      if (propError) {
+        logger.warn('Failed to persist pending verification status', { error: propError, propertyId });
       } else {
         logger.info('Property set to pending verification', { propertyId });
+      }
+
+      // Create verification entry for admin queue
+      try {
+        const { error: verifyError } = await supabase
+          .from('property_verifications')
+          .insert({
+            property_id: propertyId,
+            status: 'pending',
+            verification_type: 'standard',
+            priority_level: 'normal',
+            created_at: now,
+            updated_at: now
+          });
+
+        if (verifyError) {
+          logger.warn('Failed to create property_verifications entry', { error: verifyError, propertyId });
+        } else {
+          logger.info('Property verification entry created for admin queue', { propertyId });
+        }
+      } catch (verifyCatchError) {
+        logger.warn('Property verification entry creation failed', verifyCatchError);
       }
     } catch (error) {
       logger.warn('Verification status processing failed', error);

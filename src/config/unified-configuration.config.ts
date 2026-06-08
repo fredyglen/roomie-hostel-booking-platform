@@ -1,10 +1,6 @@
 /**
  * Unified Configuration Management System
- * Apple-Grade International Configuration with Role-Based Support
- * 
- * Purpose: Single source of truth for all platform configuration
- * Compliance: BE CONSCIOUS zero tolerance for scattered configuration
- * Architecture: International-ready, role-based, environment-aware
+ * Single source of truth for all platform configuration
  */
 
 import { logger as enhancedLogger } from '@/utils/enhanced-logger';

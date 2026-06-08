@@ -1,23 +1,15 @@
 /**
  * Centralized Business Rules Engine
- * Apple-Grade Single Source of Truth for All Business Logic
- * 
- * Purpose: Eliminate scattered business rules and provide unified rule enforcement
- * Compliance: BE CONSCIOUS zero tolerance for rule duplication
- * Architecture: Branded types, validation-first, extensible rule system
+ * Single source of truth for all business logic
  */
 
 import { logger as enhancedLogger } from '@/utils/enhanced-logger';
 
-// ============================================================================
-// BRANDED TYPES FOR COMPILE-TIME SAFETY
-// ============================================================================
-
-type DurationMonths = number & { readonly __brand: 'DurationMonths' };
-type AdvanceDays = number & { readonly __brand: 'AdvanceDays' };
-type MaxCount = number & { readonly __brand: 'MaxCount' };
-type MinLength = number & { readonly __brand: 'MinLength' };
-type MaxLength = number & { readonly __brand: 'MaxLength' };
+type DurationMonths = number;
+type AdvanceDays = number;
+type MaxCount = number;
+type MinLength = number;
+type MaxLength = number;
 
 const createDurationMonths = (months: number): DurationMonths => {
   if (months < 1 || months > 12) {

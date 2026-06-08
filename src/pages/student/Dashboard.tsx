@@ -60,7 +60,7 @@ const StudentDashboard: React.FC = () => {
             totalFavorites: favoritesCount,
             activeInquiries: bookings.filter(b => b.status === 'pending').length,
             upcomingBookings: bookings.filter(b =>
-              b.status === 'confirmed' && new Date(b.check_in_date) > new Date()
+              b.status === 'confirmed' && new Date(b.start_date || b.check_in_date || '') > new Date()
             ).length
           });
         }

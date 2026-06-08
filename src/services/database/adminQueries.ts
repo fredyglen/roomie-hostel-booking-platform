@@ -252,7 +252,7 @@ export class AdminQueries {
         id: property.id,
         property_id: property.id,
         owner_id: property.owner_id,
-        verification_status: property.verification_status,
+        verification_status: property.verification_status || 'pending',
         submitted_at: property.created_at,
         reviewed_at: null,
         reviewed_by: null,
@@ -288,15 +288,37 @@ export class AdminQueries {
     notes?: string
   ): Promise<void> {
     try {
-      const { error } = await supabase
+      const now = new Date().toISOString();
+      
+      // Update properties table
+      const { error: propError } = await supabase
         .from('properties')
         .update({ 
           verification_status: status,
-          // TODO: Add reviewed_by and reviewed_at fields to properties table
+          updated_at: now
         })
         .eq('id', propertyId);
 
-      if (error) throw error;
+      if (propError) throw propError;
+
+      // Update property_verifications table
+      try {
+        const { error: verifyError } = await supabase
+          .from('property_verifications')
+          .update({
+            status: status,
+            verification_date: now,
+            admin_notes: notes || null,
+            updated_at: now
+          })
+          .eq('property_id', propertyId);
+
+        if (verifyError) {
+          logger.warn('Failed to update property_verifications entry', { error: verifyError, propertyId });
+        }
+      } catch (verifyCatchError) {
+        logger.warn('Property verification table update failed', verifyCatchError);
+      }
 
       logger.info('Property verification updated successfully', { propertyId, status, adminId });
     } catch (error) {
