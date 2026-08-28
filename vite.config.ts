@@ -66,6 +66,11 @@ export default defineConfig(({ mode }) => ({
             if (id.includes('date-fns') || id.includes('moment')) {
               return 'date-vendor';
             }
+            // Loaded on demand by src/utils/imageCompression.ts (owner upload
+            // flow only). Kept out of `vendor` so students never download it.
+            if (id.includes('browser-image-compression')) {
+              return 'image-compression';
+            }
             // Other vendor libraries
             return 'vendor';
           }

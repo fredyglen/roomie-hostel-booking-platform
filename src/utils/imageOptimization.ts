@@ -3,10 +3,27 @@ import { supabase } from '@/integrations/supabase/client';
 /**
  * Central image optimization helper for Supabase Storage assets.
  *
- * We keep original, full-resolution files in the `property-images` bucket,
- * but generate **transformed** public URLs (resized + compressed) at read time
- * using Supabase's built-in image transformations.
+ * We keep original, full-resolution files in the `property-images` bucket and can
+ * generate **transformed** public URLs (resized + compressed) at read time using
+ * Supabase's built-in image transformations.
+ *
+ * IMPORTANT: Supabase image transformation is a PAID add-on. On a plan without it,
+ * every `/storage/v1/render/image/...` request returns:
+ *
+ *   403 {"error":"FeatureNotEnabled","message":"feature not enabled for this tenant"}
+ *
+ * which made every property card and story render its `onError` placeholder while
+ * detail pages (which use the raw URL) looked fine. Transformation is therefore
+ * OPT-IN via `VITE_SUPABASE_IMAGE_TRANSFORM=true`. When it is off we return the
+ * original public URL, which always serves.
  */
+
+/**
+ * Whether Supabase image transformation is enabled for this project.
+ * Defaults to false so a project without the add-on renders real images.
+ */
+export const isImageTransformEnabled = (): boolean =>
+  String(import.meta.env.VITE_SUPABASE_IMAGE_TRANSFORM ?? '').toLowerCase() === 'true';
 
 export type ImageTransformOptions = {
   /** Target width in pixels (defaults to 800 for cards, 1080 for stories). */
@@ -33,6 +50,9 @@ export function getOptimizedPropertyImageUrl(
   options: ImageTransformOptions = {}
 ): string {
   if (!url || typeof url !== 'string') return url;
+
+  // Without the paid add-on the transform endpoint 403s, so serve the original.
+  if (!isImageTransformEnabled()) return url;
 
   const {
     width = 800,

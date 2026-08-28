@@ -65,17 +65,13 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
   }, [isAnonymous, hasTrackedView, trackPropertyView]);
 
   const primaryImage = useMemo(() => {
-    console.log('DEBUG PremiumPropertyCard:', id, 'media:', media, 'images:', images);
     // First check media array (proper database structure) - look for cover image
     if (Array.isArray(media) && media.length > 0) {
       const coverImage = media.find((m: { url?: string; type?: string; isCover?: boolean }) => m.isCover && m.type === 'image');
-      console.log('DEBUG coverImage:', coverImage);
       if (coverImage?.url) {
         const url = coverImage.url.trim();
-        console.log('DEBUG cover URL:', url);
         if (url && !url.startsWith('blob:') &&
             (url.startsWith('http://') || url.startsWith('https://'))) {
-          console.log('DEBUG returning cover URL:', url);
           return url;
         }
       }
@@ -119,7 +115,6 @@ const PremiumPropertyCard: React.FC<PropertyCardProps> = ({
 
   const optimizedPrimaryImage = useMemo(() => {
     const result = getOptimizedPropertyImageUrl(primaryImage, { width: 1000, quality: 80, resize: 'cover' });
-    console.log('DEBUG optimizedPrimaryImage:', id, 'primary:', primaryImage, 'optimized:', result);
     return result;
   }, [primaryImage, id]);
 

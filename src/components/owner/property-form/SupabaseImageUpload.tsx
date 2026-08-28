@@ -6,6 +6,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Upload, X, Image as ImageIcon, Loader2 } from 'lucide-react';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { Progress } from '@/components/ui/progress';
+import { compressImageFile, formatBytes } from '@/utils/imageCompression';
+import { logger } from '@/utils/enhanced-logger';
 
 interface SupabaseImageUploadProps {
   images: string[];
@@ -47,25 +49,50 @@ export const SupabaseImageUpload: React.FC<SupabaseImageUploadProps> = ({
 
   const uploadImage = async (file: File): Promise<string | null> => {
     try {
-      // 1. Validate file type and size using provided constraints
+      // 1. Validate the type of what the user actually picked
       if (!allowedMimeTypes.includes(file.type)) {
         ErrorHandler.handle('Invalid file type', file.type);
         return null;
       }
-      if (file.size > maxFileSizeMB * 1024 * 1024) {
-        ErrorHandler.handle('File too large', file.size.toString());
+
+      // Covers compression as well as the network upload
+      setUploading(true);
+
+      // 2. Compress before anything leaves the browser. Supabase's on-the-fly
+      //    image transformation is a paid add-on this project does not have, so
+      //    the stored object has to already be serving-sized. Never throws --
+      //    it returns the original file if compression is not possible.
+      const { file: uploadFile, originalBytes, finalBytes, skipped, reason } =
+        await compressImageFile(file);
+
+      if (skipped) {
+        logger.debug('Skipped image compression', { name: file.name, reason });
+      } else {
+        logger.info('Compressed image before upload', {
+          name: file.name,
+          from: formatBytes(originalBytes),
+          to: formatBytes(finalBytes),
+          saved: `${Math.round((1 - finalBytes / originalBytes) * 100)}%`,
+        });
+      }
+
+      // 3. Enforce the size cap on what is actually being uploaded, so a large
+      //    phone photo is shrunk rather than rejected outright.
+      if (uploadFile.size > maxFileSizeMB * 1024 * 1024) {
+        setUploading(false);
+        ErrorHandler.handle('File too large', uploadFile.size.toString());
         return null;
       }
-      // 2. Sanitize file name
-      const fileExt = file.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'bin';
+
+      // 4. Sanitize file name (extension comes from the compressed file, which
+      //    may now be .webp even though the original was .jpg)
+      const fileExt = uploadFile.name.split('.').pop()?.replace(/[^a-zA-Z0-9]/g, '') || 'bin';
       const fileName = `${propertyId || 'temp'}_${Date.now()}.${fileExt}`;
       const filePath = `properties/${fileName}`;
 
-      // Show indeterminate progress during upload
-      setUploading(true);
       const { data, error } = await supabase.storage
         .from('property-images')
-        .upload(filePath, file, {
+        .upload(filePath, uploadFile, {
           cacheControl: '3600',
           upsert: false
         });

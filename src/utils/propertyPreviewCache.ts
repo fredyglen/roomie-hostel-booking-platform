@@ -24,47 +24,48 @@ const KEY = (id: string) => `booking:preview:${id}`;
  * this function returns an empty string and callers are expected to render a
  * local placeholder image instead.
  */
+const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '0.0.0.0', '::1']);
+
+/**
+ * A URL is usable as a cover image only if it is a remote http(s) address that
+ * will resolve for a real user. blob: URLs are session-scoped and localhost
+ * addresses are development artifacts; both render as broken images in production.
+ */
+const isSafeRemoteImageUrl = (value: unknown): value is string => {
+  if (typeof value !== 'string') return false;
+  const url = value.trim();
+  if (!url) return false;
+  if (url.startsWith('blob:')) return false;
+  if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
+  try {
+    return !LOCAL_HOSTNAMES.has(new URL(url).hostname);
+  } catch {
+    return false;
+  }
+};
+
 export const deriveCoverImageFromProperty = (property: any): string => {
   if (!property) return '';
-  // Prefer media array with isCover
-  const media = Array.isArray(property?.media) ? property.media : [];
-  const cover = media.find((m: any) => {
-    if (!m || !m.isCover || m.type !== 'image') return false;
-    if (typeof m.url !== 'string') return false;
-    const url = m.url.trim();
-    if (!url) return false;
-    if (url.startsWith('blob:')) return false;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
-    return true;
-  });
-  if (cover?.url) return cover.url as string;
 
-	  // Direct image_url field (apply the same URL safety rules)
-	  const direct = (property as any).image_url;
-	  if (typeof direct === 'string') {
-	    const url = direct.trim();
-	    if (url && !url.startsWith('blob:')) {
-	      if (url.startsWith('http://') || url.startsWith('https://')) {
-	        return url;
-	      }
-	    }
-	  }
+  // 1. media[] entry explicitly flagged as the cover
+  const media = Array.isArray(property.media) ? property.media : [];
+  const cover = media.find(
+    (m: any) => m?.isCover && m?.type === 'image' && isSafeRemoteImageUrl(m?.url)
+  );
+  if (cover) return String(cover.url).trim();
 
-  // Fallback to first valid item in images (array or string)
-  const imgs = Array.isArray(property?.images)
+  // 2. legacy direct image_url field
+  const direct = property.image_url;
+  if (isSafeRemoteImageUrl(direct)) return direct.trim();
+
+  // 3. first usable entry in images (array or single string)
+  const imgs = Array.isArray(property.images)
     ? property.images
-    : typeof (property as any).images === 'string'
-      ? [(property as any).images]
+    : typeof property.images === 'string'
+      ? [property.images]
       : [];
-  const valid = imgs.find((img: any) => {
-    if (typeof img !== 'string') return false;
-    const url = img.trim();
-    if (!url) return false;
-    if (url.startsWith('blob:')) return false;
-    if (!url.startsWith('http://') && !url.startsWith('https://')) return false;
-    return true;
-  });
-  return valid || '';
+  const valid = imgs.find(isSafeRemoteImageUrl);
+  return valid ? String(valid).trim() : '';
 };
 
 export const buildPreviewFromProperty = (property: any): PropertyPreview | null => {
