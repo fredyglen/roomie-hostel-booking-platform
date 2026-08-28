@@ -2,7 +2,7 @@
  * Data Seeder for ROOMi Platform using real database queries.
  */
 
-import { supabase } from '@/config/supabase';
+import { supabase } from '@/integrations/supabase/client';
 import { logger } from './enhanced-logger';
 
 export class DataSeeder {

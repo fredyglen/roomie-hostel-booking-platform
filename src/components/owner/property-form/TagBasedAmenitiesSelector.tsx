@@ -47,29 +47,6 @@ const TagBasedAmenitiesSelector: React.FC<TagBasedAmenitiesSelectorProps> = ({
     ]}
   ] as const;
 
-  // BE CONSCIOUS: Get all amenities for search
-  const getAllAmenities = () => {
-    return Object.values(amenityCategories).flatMap(category => 
-      category.amenities.map(amenity => ({
-        name: amenity,
-        category: Object.keys(amenityCategories).find(key => 
-          amenityCategories[key as keyof typeof amenityCategories].amenities.includes(amenity)
-        )!
-      }))
-    );
-  };
-
-  // BE CONSCIOUS: Filter amenities based on search and category
-  const getFilteredAmenities = () => {
-    const allAmenities = getAllAmenities();
-    
-    return allAmenities.filter(amenity => {
-      const matchesSearch = amenity.name.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = activeCategory === 'all' || amenity.category === activeCategory;
-      return matchesSearch && matchesCategory;
-    });
-  };
-
   // BE CONSCIOUS: Toggle amenity selection
   const toggleAmenity = (amenityName: string) => {
     const currentAmenities = Array.isArray(selectedAmenities) ? selectedAmenities : [];

@@ -4,7 +4,6 @@ import { FormField, FormItem, FormLabel, FormControl, FormDescription } from "@/
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Combobox } from "@/components/ui/combobox";
 import { FormSection } from "./FormSection";
 import { PropertyFormValues } from "./PropertyFormSchema";
 import { getPropertyTypeOptions } from '@/config/property-types.config';

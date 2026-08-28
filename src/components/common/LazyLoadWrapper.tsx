@@ -1,4 +1,4 @@
-import React, { Suspense, ComponentType } from 'react';
+import React, { Suspense, ComponentType, useState, useRef, useEffect } from 'react';
 import LoadingSpinner from './LoadingSpinner';
 import { ErrorHandler } from '@/utils/ErrorHandler';
 import { logger } from '@/utils/enhanced-logger';

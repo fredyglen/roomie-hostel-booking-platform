@@ -134,15 +134,6 @@ declare module '@testing-library/user-event' {
   export { setup };
 }
 
-/**
- * Supabase configuration module declaration
- * Used for database operations
- */
-declare module '@/config/supabase' {
-  import { SupabaseClient } from '@supabase/supabase-js';
-  
-  export const supabase: SupabaseClient;
-}
 
 /**
  * ✅ MOCK DATA DECLARATIONS REMOVED - BE CONSCIOUS COMPLIANCE
