@@ -459,6 +459,10 @@ class CentralizedCommissionEngine {
             vat: createCommissionRate(data.vat_rate)
           },
           fees: {
+            // Preserve platform (80) and processing (20): the DB has no columns
+            // for them, and replacing `fees` wholesale left both undefined,
+            // which emptied platformFeeBreakdown in the UI on every load.
+            ...this.config.fees,
             fixed: createPlatformFee(data.platform_fixed_fee),
             agentMinimum: createPlatformFee(data.agent_minimum_fee)
           },

@@ -20,14 +20,14 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 vi.mock('@/integrations/supabase/client', () => {
   const mockCommissionConfig = {
     id: 'config_test_1',
-    platform_rate: 0.05,
-    agent_rate: 0.037,
+    platform_rate: 0.10,
+    agent_rate: 0,
     paystack_rate: 0.0195,
-    vat_rate: 0.125,
+    vat_rate: 0,
     platform_fixed_fee: 100,
-    agent_minimum_fee: 100,
+    agent_minimum_fee: 0,
     currency: 'GHS',
-    version: '2.1.0',
+    version: '2.2.0',
     environment: 'test',
     is_active: true,
     change_event: 'initial_setup',
@@ -76,14 +76,14 @@ import { supabase } from '@/integrations/supabase/client';
 // Mock commission configuration from database (for test assertions)
 const mockCommissionConfig = {
   id: 'config_test_1',
-  platform_rate: 0.05,
-  agent_rate: 0.037,
+  platform_rate: 0.10,
+  agent_rate: 0,
   paystack_rate: 0.0195,
-  vat_rate: 0.125,
+  vat_rate: 0,
   platform_fixed_fee: 100,
-  agent_minimum_fee: 100,
+  agent_minimum_fee: 0,
   currency: 'GHS',
-  version: '2.1.0',
+  version: '2.2.0',
   environment: 'test',
   is_active: true,
   change_event: 'initial_setup',
@@ -110,91 +110,65 @@ describe('CentralizedCommissionEngine - Commission Calculation', () => {
       const baseAmount = 1000;
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, false);
 
-      // Verify base amount
       expect(result.baseAmount).toBe(1000);
 
-      // Verify platform commission (5% of 1000 = 50)
-      expect(result.platformCommission).toBeCloseTo(50, 2);
+      // Platform commission: 10% of 1000, paid by the owner
+      expect(result.platformCommission).toBeCloseTo(100, 2);
 
-      // Verify platform fixed fee
+      // Fixed fee: 100 GHS paid by the student (80 platform + 20 processing)
       expect(result.platformFixedFee).toBe(100);
 
-      // Verify no agent commission
+      // Agent commission is disabled in Phase 1
       expect(result.agentCommission).toBe(0);
 
-      // Verify subtotal (1000 + 50 + 100 + 0 = 1150)
-      expect(result.breakdown.subtotal).toBeCloseTo(1150, 2);
+      // Student pays rent + fixed fee (1000 + 100)
+      expect(result.totalAmount).toBeCloseTo(1100, 2);
+      expect(result.breakdown.subtotal).toBeCloseTo(1100, 2);
 
-      // Verify Paystack fee (1.95% of 1150 = 22.425)
-      expect(result.paystackFee).toBeCloseTo(22.425, 2);
+      // Paystack fee: 1.95% of the student total, absorbed by the platform
+      expect(result.paystackFee).toBeCloseTo(21.45, 2);
 
-      // Verify before VAT (1150 + 22.425 = 1172.425)
-      expect(result.breakdown.beforeVat).toBeCloseTo(1172.425, 2);
+      // VAT removed entirely in Phase 1, so beforeVat === subtotal
+      expect(result.vatAmount).toBe(0);
+      expect(result.breakdown.beforeVat).toBeCloseTo(1100, 2);
 
-      // Verify VAT (12.5% of 1172.425 = 146.553125)
-      expect(result.vatAmount).toBeCloseTo(146.553125, 2);
+      // Owner receives rent minus the 10% commission
+      expect(result.ownerReceives).toBeCloseTo(900, 2);
 
-      // Verify total amount (1172.425 + 146.553125 = 1318.978125)
-      expect(result.totalAmount).toBeCloseTo(1318.978125, 2);
+      // Total fees = platform commission + fixed fee
+      expect(result.breakdown.totalFees).toBeCloseTo(200, 2);
 
-      // Verify owner receives base amount only
-      expect(result.ownerReceives).toBe(1000);
-
-      // Verify total fees
-      const expectedTotalFees = 50 + 100 + 0 + 22.425 + 146.553125;
-      expect(result.breakdown.totalFees).toBeCloseTo(expectedTotalFees, 2);
+      // Platform revenue: 100 fixed + 100 commission, less the absorbed Paystack fee
+      expect(result.breakdown.platformGrossRevenue).toBeCloseTo(200, 2);
+      expect(result.breakdown.platformNetRevenue).toBeCloseTo(178.55, 2);
     });
 
-    it('should calculate commissions correctly with agent', () => {
+    it('should ignore includeAgent because agent commission is disabled in Phase 1', () => {
       const baseAmount = 1000;
-      const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
+      const withAgent = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
+      const withoutAgent = centralizedCommissionEngine.calculateCommissions(baseAmount, false);
 
-      // Verify base amount
-      expect(result.baseAmount).toBe(1000);
+      // calculateCommissions() hardcodes agentCommission to 0, so the flag has no effect
+      expect(withAgent.agentCommission).toBe(0);
+      expect(withAgent).toEqual(withoutAgent);
+    });
 
-      // Verify platform commission (5% of 1000 = 50)
+    it('should keep agent commission at zero for high-value properties', () => {
+      // Was 3.7% of 5000 = 185 under the old model. Agent is disabled in Phase 1.
+      const result = centralizedCommissionEngine.calculateCommissions(5000, true);
+
+      expect(result.agentCommission).toBe(0);
+      expect(result.platformCommission).toBeCloseTo(500, 2);
+      expect(result.ownerReceives).toBeCloseTo(4500, 2);
+    });
+
+    it('should keep agent commission at zero for low-value properties', () => {
+      // Was floored at the 100 GHS minimum under the old model. Agent is disabled in Phase 1.
+      const result = centralizedCommissionEngine.calculateCommissions(500, true);
+
+      expect(result.agentCommission).toBe(0);
       expect(result.platformCommission).toBeCloseTo(50, 2);
-
-      // Verify platform fixed fee
-      expect(result.platformFixedFee).toBe(100);
-
-      // Verify agent commission (max of 3.7% or 100 GHS)
-      // 3.7% of 1000 = 37, so should use minimum of 100
-      expect(result.agentCommission).toBe(100);
-
-      // Verify subtotal (1000 + 50 + 100 + 100 = 1250)
-      expect(result.breakdown.subtotal).toBeCloseTo(1250, 2);
-
-      // Verify Paystack fee (1.95% of 1250 = 24.375)
-      expect(result.paystackFee).toBeCloseTo(24.375, 2);
-
-      // Verify before VAT (1250 + 24.375 = 1274.375)
-      expect(result.breakdown.beforeVat).toBeCloseTo(1274.375, 2);
-
-      // Verify VAT (12.5% of 1274.375 = 159.296875)
-      expect(result.vatAmount).toBeCloseTo(159.296875, 2);
-
-      // Verify total amount (1274.375 + 159.296875 = 1433.671875)
-      expect(result.totalAmount).toBeCloseTo(1433.671875, 2);
-
-      // Verify owner receives base amount only
-      expect(result.ownerReceives).toBe(1000);
-    });
-
-    it('should calculate agent commission as percentage when above minimum', () => {
-      const baseAmount = 5000; // High value property
-      const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
-
-      // Agent commission: 3.7% of 5000 = 185 (above 100 minimum)
-      expect(result.agentCommission).toBeCloseTo(185, 2);
-    });
-
-    it('should calculate agent commission as minimum when below threshold', () => {
-      const baseAmount = 500; // Low value property
-      const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
-
-      // Agent commission: 3.7% of 500 = 18.5 (below 100 minimum, so use 100)
-      expect(result.agentCommission).toBe(100);
+      expect(result.ownerReceives).toBeCloseTo(450, 2);
     });
   });
 
@@ -231,21 +205,23 @@ describe('CentralizedCommissionEngine - Commission Calculation', () => {
       const baseAmount = 1000000; // 1 million GHS
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
 
-      // Verify calculations are still accurate
       expect(result.baseAmount).toBe(1000000);
-      expect(result.platformCommission).toBeCloseTo(50000, 2); // 5%
-      expect(result.agentCommission).toBeCloseTo(37000, 2); // 3.7%
-      expect(result.totalAmount).toBeGreaterThan(baseAmount);
+      expect(result.platformCommission).toBeCloseTo(100000, 2); // 10%
+      expect(result.agentCommission).toBe(0);                   // disabled in Phase 1
+      expect(result.ownerReceives).toBeCloseTo(900000, 2);
+      expect(result.totalAmount).toBeCloseTo(1000100, 2);       // rent + 100 fixed fee
     });
 
     it('should handle very small base amounts correctly', () => {
       const baseAmount = 10; // 10 GHS
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
 
-      // Verify calculations are still accurate
       expect(result.baseAmount).toBe(10);
-      expect(result.platformCommission).toBeCloseTo(0.5, 2); // 5%
-      expect(result.agentCommission).toBe(100); // Minimum
+      expect(result.platformCommission).toBeCloseTo(1, 2); // 10%
+      expect(result.agentCommission).toBe(0);
+      expect(result.ownerReceives).toBeCloseTo(9, 2);
+      // The flat 100 GHS fee dominates at small rents: student pays 110 for a 10 GHS room
+      expect(result.totalAmount).toBeCloseTo(110, 2);
       expect(result.totalAmount).toBeGreaterThan(baseAmount);
     });
 
@@ -253,20 +229,19 @@ describe('CentralizedCommissionEngine - Commission Calculation', () => {
       const baseAmount = 1234.56;
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, false);
 
-      // Verify base amount preserved
       expect(result.baseAmount).toBe(1234.56);
 
-      // Verify calculations maintain precision
-      // Base: 1234.56
-      // Platform commission (5%): 61.728
-      // Platform fixed fee: 100
-      // Subtotal: 1396.288
-      // Paystack fee (1.95%): 27.228
-      // Before VAT: 1423.516
-      // VAT (12.5%): 177.9395
-      // Total: 1601.4555
-      expect(result.platformCommission).toBeCloseTo(61.728, 2);
-      expect(result.totalAmount).toBeCloseTo(1601.46, 2);
+      // Base:                1234.56
+      // Platform commission:  123.456  (10%, owner pays)
+      // Fixed fee:            100      (student pays)
+      // Student total:       1334.56
+      // Paystack (1.95%):      26.024  (platform absorbs)
+      // VAT:                    0
+      // Owner receives:      1111.104
+      expect(result.platformCommission).toBeCloseTo(123.456, 2);
+      expect(result.totalAmount).toBeCloseTo(1334.56, 2);
+      expect(result.paystackFee).toBeCloseTo(26.024, 2);
+      expect(result.ownerReceives).toBeCloseTo(1111.104, 2);
     });
   });
 
@@ -275,11 +250,9 @@ describe('CentralizedCommissionEngine - Commission Calculation', () => {
       const baseAmount = 1000;
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
 
-      const expectedSubtotal = 
-        result.baseAmount + 
-        result.platformCommission + 
-        result.platformFixedFee + 
-        result.agentCommission;
+      // Subtotal is what the student pays: rent + the fixed fee.
+      // The platform commission is deducted from the owner, not added to the student.
+      const expectedSubtotal = result.baseAmount + result.platformFixedFee;
 
       expect(result.breakdown.subtotal).toBeCloseTo(expectedSubtotal, 2);
     });
@@ -288,23 +261,22 @@ describe('CentralizedCommissionEngine - Commission Calculation', () => {
       const baseAmount = 1000;
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
 
-      const expectedBeforeVat = result.breakdown.subtotal + result.paystackFee;
-
-      expect(result.breakdown.beforeVat).toBeCloseTo(expectedBeforeVat, 2);
+      // VAT is removed in Phase 1 and the Paystack fee is absorbed by the platform,
+      // so beforeVat is simply the subtotal.
+      expect(result.breakdown.beforeVat).toBeCloseTo(result.breakdown.subtotal, 2);
     });
 
     it('should provide correct totalFees breakdown', () => {
       const baseAmount = 1000;
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
 
-      const expectedTotalFees = 
-        result.platformCommission + 
-        result.platformFixedFee + 
-        result.agentCommission + 
-        result.paystackFee + 
-        result.vatAmount;
+      // totalFees is platform revenue before absorbing Paystack: commission + fixed fee.
+      // It excludes paystackFee (a platform cost) and vatAmount (zero in Phase 1).
+      const expectedTotalFees = result.platformCommission + result.platformFixedFee;
 
       expect(result.breakdown.totalFees).toBeCloseTo(expectedTotalFees, 2);
+      expect(result.breakdown.platformGrossRevenue).toBeCloseTo(expectedTotalFees, 2);
+      expect(result.breakdown.platformNetRevenue).toBeCloseTo(expectedTotalFees - result.paystackFee, 2);
     });
 
     it('should verify total amount equals beforeVat plus VAT', () => {
@@ -316,13 +288,14 @@ describe('CentralizedCommissionEngine - Commission Calculation', () => {
       expect(result.totalAmount).toBeCloseTo(expectedTotal, 2);
     });
 
-    it('should verify owner receives only base amount', () => {
+    it('should verify owner receives base amount minus the platform commission', () => {
       const baseAmount = 1500;
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
 
-      // Owner should receive exactly the base amount (rent)
-      // All fees are additional charges to the student
-      expect(result.ownerReceives).toBe(baseAmount);
+      // Phase 1: the owner pays the 10% commission out of the rent.
+      // 1500 - 150 = 1350
+      expect(result.ownerReceives).toBeCloseTo(baseAmount - result.platformCommission, 2);
+      expect(result.ownerReceives).toBeCloseTo(1350, 2);
     });
   });
 });
@@ -355,13 +328,13 @@ describe('CentralizedCommissionEngine - Rate and Fee Getters', () => {
       expect(rates.vat).toBeLessThanOrEqual(1);
     });
 
-    it('should return default rates (5%, 3.7%, 1.95%, 12.5%)', () => {
+    it('should return Phase 1 default rates (10%, 0%, 1.95%, 0%)', () => {
       const rates = centralizedCommissionEngine.getCommissionRates();
 
-      expect(rates.platform).toBeCloseTo(0.05, 4);
-      expect(rates.agent).toBeCloseTo(0.037, 4);
+      expect(rates.platform).toBeCloseTo(0.10, 4);  // owner pays 10%
+      expect(rates.agent).toBeCloseTo(0, 4);        // agent disabled
       expect(rates.paystack).toBeCloseTo(0.0195, 4);
-      expect(rates.vat).toBeCloseTo(0.125, 4);
+      expect(rates.vat).toBeCloseTo(0, 4);          // VAT removed
     });
   });
 
@@ -373,18 +346,19 @@ describe('CentralizedCommissionEngine - Rate and Fee Getters', () => {
       expect(fees).toHaveProperty('agentMinimum');
     });
 
-    it('should return positive fee values', () => {
+    it('should return non-negative fee values', () => {
       const fees = centralizedCommissionEngine.getPlatformFees();
 
       expect(fees.fixed).toBeGreaterThan(0);
-      expect(fees.agentMinimum).toBeGreaterThan(0);
+      // agentMinimum is 0 in Phase 1 because agent commission is disabled
+      expect(fees.agentMinimum).toBeGreaterThanOrEqual(0);
     });
 
-    it('should return default fees (100 GHS, 100 GHS)', () => {
+    it('should return Phase 1 default fees (100 GHS fixed, 0 GHS agent minimum)', () => {
       const fees = centralizedCommissionEngine.getPlatformFees();
 
       expect(fees.fixed).toBe(100);
-      expect(fees.agentMinimum).toBe(100);
+      expect(fees.agentMinimum).toBe(0);
     });
   });
 
@@ -685,8 +659,8 @@ describe('CentralizedCommissionEngine - Database Integration', () => {
 
       // Verify default rates still available
       const rates = centralizedCommissionEngine.getCommissionRates();
-      expect(rates.platform).toBeCloseTo(0.05, 4);
-      expect(rates.agent).toBeCloseTo(0.037, 4);
+      expect(rates.platform).toBeCloseTo(0.10, 4);
+      expect(rates.agent).toBeCloseTo(0, 4);
     });
 
     it('should handle database connection error (fallback to defaults)', async () => {
