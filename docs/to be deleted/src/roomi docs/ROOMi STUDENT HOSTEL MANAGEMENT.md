@@ -1,1 +1,0 @@
-Roomi will Partner with loan institutions and students financing organizations and scholarship foundations to introduce student hostel financing.
