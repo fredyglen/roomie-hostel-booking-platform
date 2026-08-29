@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { GoogleIcon, FacebookIcon, ROOMiLogo } from '@/components/ui/SocialIcons';
+import AuthImageSlideshow from '@/components/auth/AuthImageSlideshow';
 import { toast } from "@/components/ui/use-toast";
 import { Loader } from 'lucide-react';
 // Removed unused import
@@ -266,15 +267,7 @@ const Login: React.FC = () => {
       </div>
 
       {/* Image Panel — 3/5 on desktop, hidden on mobile */}
-      <div className="hidden md:flex w-3/5 items-center justify-center bg-primary text-white">
-        <div className="flex flex-col items-center gap-4 px-10">
-          <ROOMiLogo size={56} />
-          <p className="text-center text-sm leading-relaxed text-white/90">
-            ROOMie makes booking verified student housing simple,
-            transparent, and stress-free.
-          </p>
-        </div>
-      </div>
+      <AuthImageSlideshow className="hidden md:block w-3/5" />
     </div>
   );
 };

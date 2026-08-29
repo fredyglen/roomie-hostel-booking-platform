@@ -24,6 +24,8 @@ import { showAuthError } from './components/auth/AuthFeedback';
 // Lazy load all pages for better performance
 const Index = React.lazy(() => import('@/pages/Index'));
 const Landing = React.lazy(() => import('@/pages/Landing'));
+// Anonymous landing at "/" -- forwards signed-in users to their role dashboard.
+const StudentLanding = React.lazy(() => import('@/pages/StudentLanding'));
 const OwnerLanding = React.lazy(() => import('@/pages/OwnerLanding'));
 const Welcome = React.lazy(() => import('@/pages/Welcome'));
 const NotFound = React.lazy(() => import('@/pages/NotFound'));
@@ -186,7 +188,8 @@ function App() {
               <Suspense fallback={<LoadingSpinner />}>
                 <Routes>
                 {/* Public Routes */}
-                <Route path="/" element={<SafeRoute element={<AuthRedirect />} />} />
+                <Route path="/" element={<SafeRoute element={<StudentLanding />} />} />
+                <Route path="/auth-redirect" element={<SafeRoute element={<AuthRedirect />} />} />
                 <Route path="/landing" element={<SafeRoute element={<Landing />} />} />
                 <Route path="/owner-landing" element={<SafeRoute element={<OwnerLanding />} />} />
                 <Route path="/welcome" element={<SafeRoute element={<Welcome />} />} />
