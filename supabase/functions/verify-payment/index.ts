@@ -1,149 +1,122 @@
+// verify-payment — hardened 2026-08-29
+// Contract: POST/GET { reference } from an authenticated user who owns the
+// transaction. Verifies with Paystack, then confirms the booking ONLY if the
+// amount Paystack reports as paid matches the server-stored expected amount.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-import { ErrorHandler } from '../_shared/ErrorHandler.ts'
 
-const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? ''
-const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY') ?? ''
+const log = (msg: string, extra?: unknown) =>
+  console.log(`[verify-payment] ${msg}`, extra === undefined ? '' : JSON.stringify(extra))
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
 
   try {
-    const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response(JSON.stringify({ status: false, message: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      })
-    }
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!
+    const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
+    const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')!
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      global: { headers: { Authorization: authHeader } }
+    // Authenticate the caller with their own JWT
+    const authClient = createClient(supabaseUrl, Deno.env.get('SUPABASE_ANON_KEY')!, {
+      global: { headers: { Authorization: req.headers.get('Authorization') ?? '' } },
     })
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { data: { user }, error: authError } = await authClient.auth.getUser()
     if (authError || !user) {
       return new Response(JSON.stringify({ status: false, message: 'Unauthorized' }), {
-        status: 401,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
     let reference: string | null = null
-
-    if (req.method === 'GET') {
-      const url = new URL(req.url)
-      reference = url.searchParams.get('reference')
-    } else if (req.method === 'POST') {
-      const body = await req.json()
-      reference = body.reference
-    }
-    
+    if (req.method === 'GET') reference = new URL(req.url).searchParams.get('reference')
+    else if (req.method === 'POST') reference = (await req.json()).reference
     if (!reference || typeof reference !== 'string' || !/^[a-zA-Z0-9_-]+$/.test(reference)) {
-      return new Response(JSON.stringify({
-        status: false,
-        message: 'Valid reference is required'
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+      return new Response(JSON.stringify({ status: false, message: 'Valid reference is required' }), {
+        status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       })
     }
 
-    // Authorize: Ensure the authenticated user is associated with this transaction reference
-    const { count, error: authzError } = await supabase
+    // Service-role client for privileged reads/writes
+    const supabase = createClient(supabaseUrl, serviceKey)
+
+    // Ownership + expected amount in one read
+    const { data: txn, error: txnErr } = await supabase
       .from('transactions')
-      .select('id', { count: 'exact' })
+      .select('id, amount, currency, customer_id, metadata')
       .eq('reference', reference)
-      .eq('customer_id', user.id) // Check if the transaction belongs to the authenticated user
-    
-    if (authzError) {
-      ErrorHandler.log('Error during transaction authorization check:', authzError);
-      return new Response(JSON.stringify({ status: false, message: 'Authorization check failed' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+      .eq('customer_id', user.id)
+      .maybeSingle()
 
-    if (count === 0) {
-      // Transaction not found for this user, or user is not authorized
+    if (txnErr || !txn) {
       return new Response(JSON.stringify({ status: false, message: 'Transaction not found or unauthorized' }), {
-        status: 403, // Use 403 Forbidden as the user is authenticated but not authorized for this resource
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+        status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      })
     }
 
-    ErrorHandler.log(`Verifying payment reference: ${reference}`)
-
-    const paystackResponse = await fetch(`https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${paystackSecretKey}`,
-        'Content-Type': 'application/json'
-      }
-    })
-
+    log(`Verifying reference ${reference}`)
+    const paystackResponse = await fetch(
+      `https://api.paystack.co/transaction/verify/${encodeURIComponent(reference)}`,
+      { headers: { Authorization: `Bearer ${paystackSecretKey}` } },
+    )
     const paystackResult = await paystackResponse.json()
-
     if (!paystackResult.status) {
-      ErrorHandler.log('Paystack verification failed', paystackResult)
       throw new Error(paystackResult.message || 'Payment verification failed')
     }
 
-    ErrorHandler.log('Paystack verification successful', paystackResult)
+    const pd = paystackResult.data
+    const paidPesewas = Number(pd.amount)
+    const expectedPesewas = Math.round(Number(txn.amount) * 100)
+    const amountOk = Number.isFinite(paidPesewas) && paidPesewas === expectedPesewas
+    const currencyOk = (pd.currency || 'GHS') === (txn.currency || 'GHS')
+    const paid = pd.status === 'success'
 
-    const { error: updateError } = await supabase
-      .from('transactions')
-      .update({
-        status: paystackResult.data.status,
-        paystack_response: paystackResult.data,
-        gateway_response: paystackResult.data.gateway_response,
-        updated_at: new Date().toISOString()
+    // Record the verification outcome on the transaction either way
+    await supabase.from('transactions').update({
+      status: amountOk && currencyOk ? pd.status : 'amount_mismatch',
+      paystack_response: pd,
+      gateway_response: pd.gateway_response,
+      updated_at: new Date().toISOString(),
+    }).eq('id', txn.id)
+
+    if (paid && (!amountOk || !currencyOk)) {
+      console.error('[verify-payment] AMOUNT MISMATCH — booking NOT confirmed', {
+        reference, expectedPesewas, paidPesewas,
+        expectedCurrency: txn.currency, paidCurrency: pd.currency, userId: user.id,
       })
-      .eq('reference', reference)
-
-    if (updateError) {
-      ErrorHandler.log('Error updating transaction', updateError)
+      return new Response(JSON.stringify({
+        status: false,
+        message: 'Payment received but the amount does not match this booking. Our team has been notified.',
+        error_code: 'AMOUNT_MISMATCH',
+      }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    if (paystackResult.data.status === 'success' && paystackResult.data.metadata?.booking_id) {
+    // Confirm booking only on verified success with matching amount.
+    // booking_id is read from OUR stored transaction metadata (server-persisted
+    // at initialization), not from the Paystack echo of client metadata.
+    const bookingId = txn.metadata?.booking_id
+    if (paid && bookingId) {
       const { error: bookingError } = await supabase
         .from('bookings_enhanced')
         .update({
           payment_status: 'paid',
           status: 'confirmed',
           transaction_reference: reference,
-          paystack_reference: paystackResult.data.id?.toString(),
-          payment_method: paystackResult.data.channel,
-          updated_at: new Date().toISOString()
+          paystack_reference: pd.id?.toString(),
+          payment_method: pd.channel,
+          updated_at: new Date().toISOString(),
         })
-        .eq('id', paystackResult.data.metadata.booking_id)
-
-      if (bookingError) {
-        ErrorHandler.log('Error updating booking', bookingError)
-      } else {
-        ErrorHandler.log(`Booking updated successfully: ${paystackResult.data.metadata.booking_id}`)
-      }
+        .eq('id', bookingId)
+      if (bookingError) log('Error updating booking', bookingError)
+      else log(`Booking confirmed: ${bookingId}`)
     }
 
     return new Response(JSON.stringify({
-      status: true,
-      message: 'Payment verification successful',
-      data: paystackResult.data
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    })
-
+      status: true, message: 'Payment verification successful', data: pd,
+    }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   } catch (error) {
-    ErrorHandler.log('Payment verification error', error)
-    return new Response(JSON.stringify({
-      status: false,
-      message: error.message || 'Payment verification failed'
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
+    console.error('[verify-payment] error', error)
+    return new Response(JSON.stringify({ status: false, message: 'Payment verification failed' }), {
+      status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     })
   }
 })

@@ -159,49 +159,79 @@ Deno.serve(async (req) => {
     let hasAgent: boolean;
     let isLegacyApi = false;
 
+    if (paymentData.amount && !paymentData.base_amount) {
+      // Legacy API permanently removed: it charged a client-chosen total with no validation.
+      return new Response(JSON.stringify({
+        status: false,
+        message: 'This payment API version is no longer supported. Please refresh the app and try again.',
+        error_code: 'LEGACY_API_REMOVED'
+      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+
     if (paymentData.base_amount) {
-      // ✅ NEW API: Use base_amount from client
       baseAmount = paymentData.base_amount;
       hasAgent = paymentData.has_agent || false;
-      console.log('✅ Using new API: base_amount provided', {
-        baseAmount,
-        hasAgent,
-        userId: user.id
-      });
-    } else if (paymentData.amount) {
-      // ⚠️ LEGACY API: Client provided total amount
-      isLegacyApi = true;
 
-      // ✅ SECURITY: Block legacy API in production
-      if (!ALLOW_LEGACY_PAYMENTS) {
-        console.error('❌ Legacy payment API blocked in production', {
-          userId: user.id,
-          email: paymentData.email,
-          amount: paymentData.amount
+      // ========================================================================
+      // SERVER-SIDE PRICE VALIDATION (P0): base_amount must equal a real price
+      // attached to the property being booked. The client picks WHICH legitimate
+      // price applies (semester price, property rent, or a room's rent) but can
+      // never invent an amount.
+      // ========================================================================
+      const propertyId = paymentData.metadata?.property_id;
+      if (!propertyId) {
+        return new Response(JSON.stringify({
+          status: false,
+          message: 'Missing property reference for this payment. Please refresh and try again.',
+          error_code: 'PROPERTY_ID_REQUIRED'
+        }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const { data: prop, error: propErr } = await supabase
+        .from('properties')
+        .select('id, base_price_per_semester, rent, is_available')
+        .eq('id', propertyId)
+        .single();
+
+      if (propErr || !prop) {
+        return new Response(JSON.stringify({
+          status: false,
+          message: 'Property not found for this payment.',
+          error_code: 'PROPERTY_NOT_FOUND'
+        }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      }
+
+      const { data: propRooms } = await supabase
+        .from('rooms')
+        .select('rent_amount')
+        .eq('property_id', propertyId)
+        .not('rent_amount', 'is', null);
+
+      const legitimatePrices = new Set<number>();
+      if (prop.base_price_per_semester > 0) legitimatePrices.add(Number(prop.base_price_per_semester));
+      if (prop.rent > 0) legitimatePrices.add(Number(prop.rent));
+      for (const r of propRooms ?? []) {
+        if (r.rent_amount > 0) legitimatePrices.add(Number(r.rent_amount));
+      }
+
+      const matches = [...legitimatePrices].some(p => Math.abs(p - baseAmount) < 0.01);
+      if (legitimatePrices.size === 0 || !matches) {
+        console.error('PRICE VALIDATION FAILED', {
+          userId: user.id, propertyId, claimed: baseAmount,
+          legitimate: [...legitimatePrices]
         });
         return new Response(JSON.stringify({
           status: false,
-          message: 'Legacy payment API is deprecated. Please update your client to use base_amount + has_agent parameters.',
-          error_code: 'LEGACY_API_BLOCKED'
-        }), {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+          message: 'Payment amount does not match the price of this property. Please refresh and try again.',
+          error_code: 'AMOUNT_MISMATCH'
+        }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
       }
 
-      console.warn('⚠️  Using legacy API: amount provided without base_amount');
-      console.warn('   This bypasses server-side commission validation!');
-      console.warn('   User:', user.id, 'Email:', paymentData.email);
-      console.warn('   Set ALLOW_LEGACY_PAYMENTS=false to block this in production');
-
-      // For backward compatibility, treat amount as total and skip validation
-      // This maintains existing booking flow while we migrate clients
-      baseAmount = paymentData.amount;
-      hasAgent = false; // Cannot determine agent involvement from legacy API
+      console.log('Price validation passed', { propertyId, baseAmount });
     } else {
       return new Response(JSON.stringify({
         status: false,
-        message: 'Missing required field: base_amount or amount must be provided'
+        message: 'Missing required field: base_amount must be provided'
       }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -214,11 +244,7 @@ Deno.serve(async (req) => {
     let serverCommissions;
     let finalAmount: number;
 
-    if (isLegacyApi) {
-      // Legacy API: Use client-provided amount directly (no validation)
-      finalAmount = baseAmount;
-      console.log('⚠️  Legacy API: Using client amount without validation:', finalAmount);
-    } else {
+    if (false) { /* legacy path removed */ } else {
       // New API: Calculate server-side commissions
       try {
         serverCommissions = serverCommissionEngine.calculateCommissions(baseAmount, hasAgent);
@@ -391,7 +417,14 @@ Deno.serve(async (req) => {
     });
 
     if (dbError) {
-      console.warn('Transaction insert failed or table missing; continuing without persistence.', dbError);
+      // Without a stored expected amount, verification cannot prove the paid
+      // amount is right — refuse rather than charge unverifiably.
+      console.error('Transaction persistence failed; aborting initialization.', dbError);
+      return new Response(JSON.stringify({
+        status: false,
+        message: 'Could not record this payment attempt. No charge was made — please try again.',
+        error_code: 'PERSISTENCE_FAILED'
+      }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     return new Response(JSON.stringify({

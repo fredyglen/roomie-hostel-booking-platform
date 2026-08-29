@@ -20,7 +20,7 @@
 -- "is_active = true, newest created_at" selection
 -- (centralized-commission.config.ts:437-445).
 --
--- NOT YET APPLIED -- this rewrites live pricing and needs a human to run it.
+-- APPLIED TO PRODUCTION 2026-08-29 via MCP. Active row is now v2.2.0.
 -- =====================================================================
 
 begin;

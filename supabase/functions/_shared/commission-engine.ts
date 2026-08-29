@@ -115,12 +115,9 @@ export class ServerCommissionEngine {
           console.error('❌ Failed to load commission rates from database:', error);
         }
         
-        // Fall back to default rates
-        this.rates = DEFAULT_RATES;
-        this.fees = DEFAULT_FEES;
-        this.version = 'default-fallback';
-        this.lastLoaded = new Date();
-        return;
+        // FAIL CLOSED: never charge on guessed rates. A payment with wrong
+        // pricing is worse than a refused payment.
+        throw new Error('Commission configuration unavailable: refusing to compute charges without an active DB rate row');
       }
 
       // Successfully loaded from database
@@ -153,10 +150,7 @@ export class ServerCommissionEngine {
       console.error('❌ Unexpected error loading commission rates:', error);
       
       // Fall back to default rates
-      this.rates = DEFAULT_RATES;
-      this.fees = DEFAULT_FEES;
-      this.version = 'default-fallback';
-      this.lastLoaded = new Date();
+      throw new Error('Commission configuration unavailable: refusing to compute charges without an active DB rate row');
     }
   }
 
