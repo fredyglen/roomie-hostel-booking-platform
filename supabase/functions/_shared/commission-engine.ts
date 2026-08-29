@@ -144,7 +144,7 @@ export class ServerCommissionEngine {
       fixedFee: (data.fixed_fee_bearer ?? 'student') as Bearer,
       paystack: (data.paystack_bearer ?? 'platform') as Bearer,
     };
-    this.version = data.version;
+    this.version = (data.version as string | null) ?? null;
     this.lastLoaded = new Date();
 
     console.log('Commission configuration loaded', {

@@ -57,7 +57,6 @@ const createMockSupabaseClient = () => {
 import { 
   ServerCommissionEngine,
   type CommissionCalculationResult,
-  type ValidationResult,
   type RatesInfo
 } from '../../../supabase/functions/_shared/commission-engine.ts';
 
