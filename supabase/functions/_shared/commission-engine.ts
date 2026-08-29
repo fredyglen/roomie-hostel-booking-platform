@@ -101,16 +101,29 @@ export class ServerCommissionEngine {
       return;
     }
 
-    const { data, error } = await supabase
-      .from('commission_configurations')
-      .select('*')
-      .eq('is_active', true)
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .single();
+    // Any failure at all -- query error, no active row, or a thrown rejection
+    // from the client -- must surface as the same fail-closed error. A caller
+    // should never have to distinguish "database down" from "no rates set":
+    // in both cases the only safe action is to refuse to quote or charge.
+    let data: Record<string, unknown> | null = null;
+    try {
+      const res = await supabase
+        .from('commission_configurations')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (res.error) throw res.error;
+      data = res.data as Record<string, unknown> | null;
+    } catch (cause) {
+      console.error('Commission configuration unavailable', cause);
+      throw new Error(
+        'Commission configuration unavailable: refusing to compute charges without an active rate row'
+      );
+    }
 
-    if (error || !data) {
-      console.error('Commission configuration unavailable', error);
+    if (!data) {
       throw new Error(
         'Commission configuration unavailable: refusing to compute charges without an active rate row'
       );
@@ -154,8 +167,13 @@ export class ServerCommissionEngine {
     if (!this.rates || !this.fees || !this.bearers) {
       throw new Error('Commission rates not loaded. Call loadRates() first.');
     }
-    if (!Number.isFinite(baseAmount) || baseAmount <= 0) {
-      throw new Error(`Base amount must be a positive finite number, got: ${baseAmount}`);
+    // Two distinct messages: "not a number" and "not positive" are different
+    // faults and a caller should be able to tell them apart.
+    if (!Number.isFinite(baseAmount)) {
+      throw new Error(`Base amount must be a finite number, got: ${baseAmount}`);
+    }
+    if (baseAmount <= 0) {
+      throw new Error(`Base amount must be positive, got: ${baseAmount}`);
     }
 
     const { commission: cB, fixedFee: fB, paystack: pB } = this.bearers;

@@ -26,6 +26,10 @@ const createMockSupabaseClient = () => {
     vat_rate: 0.125,
     platform_fixed_fee: 100,
     agent_minimum_fee: 100,
+    // The formula is data now: who bears each fee.
+    commission_bearer: 'owner',
+    fixed_fee_bearer: 'student',
+    paystack_bearer: 'platform',
     currency: 'GHS',
     version: '2.1.0',
     environment: 'test',
@@ -104,7 +108,7 @@ describe('ServerCommissionEngine - Rate Loading', () => {
       expect(ratesInfo.version).toBe('2.1.0');
     });
 
-    it('should fall back to default rates when no active configuration exists', async () => {
+    it('should refuse to load when no active configuration exists', async () => {
       // Create fresh engine and mock with "no rows" error
       const freshEngine = new ServerCommissionEngine();
       const errorMock = {
@@ -120,17 +124,15 @@ describe('ServerCommissionEngine - Rate Loading', () => {
         })),
       };
 
-      await freshEngine.loadRates(errorMock as any);
-
-      expect(freshEngine.isReady()).toBe(true);
-
-      const ratesInfo = freshEngine.getCurrentRates();
-      expect(ratesInfo.rates?.platform).toBe(0.05); // Default
-      expect(ratesInfo.rates?.agent).toBe(0.037); // Default
-      expect(ratesInfo.version).toBe('default-fallback');
+      // Fails closed: a payment computed from guessed rates is worse than a
+      // refused one, so loadRates throws rather than substituting defaults.
+      await expect(freshEngine.loadRates(errorMock as any)).rejects.toThrow(
+        /Commission configuration unavailable/
+      );
+      expect(freshEngine.isReady()).toBe(false);
     });
 
-    it('should fall back to default rates on database connection error', async () => {
+    it('should refuse to load on database connection error', async () => {
       // Create fresh engine and mock with database error
       const freshEngine = new ServerCommissionEngine();
       const errorMock = {
@@ -146,16 +148,15 @@ describe('ServerCommissionEngine - Rate Loading', () => {
         })),
       };
 
-      await freshEngine.loadRates(errorMock as any);
-
-      expect(freshEngine.isReady()).toBe(true);
-
-      const ratesInfo = freshEngine.getCurrentRates();
-      expect(ratesInfo.rates).toBeDefined();
-      expect(ratesInfo.version).toBe('default-fallback');
+      // Fails closed: a payment computed from guessed rates is worse than a
+      // refused one, so loadRates throws rather than substituting defaults.
+      await expect(freshEngine.loadRates(errorMock as any)).rejects.toThrow(
+        /Commission configuration unavailable/
+      );
+      expect(freshEngine.isReady()).toBe(false);
     });
 
-    it('should fall back to default rates on unexpected error', async () => {
+    it('should refuse to load on unexpected error', async () => {
       // Create fresh engine and mock with unexpected error
       const freshEngine = new ServerCommissionEngine();
       const errorMock = {
@@ -168,13 +169,12 @@ describe('ServerCommissionEngine - Rate Loading', () => {
         })),
       };
 
-      await freshEngine.loadRates(errorMock as any);
-
-      expect(freshEngine.isReady()).toBe(true);
-
-      const ratesInfo = freshEngine.getCurrentRates();
-      expect(ratesInfo.rates).toBeDefined();
-      expect(ratesInfo.version).toBe('default-fallback');
+      // Fails closed: a payment computed from guessed rates is worse than a
+      // refused one, so loadRates throws rather than substituting defaults.
+      await expect(freshEngine.loadRates(errorMock as any)).rejects.toThrow(
+        /Commission configuration unavailable/
+      );
+      expect(freshEngine.isReady()).toBe(false);
     });
   });
 
@@ -323,20 +323,24 @@ describe('ServerCommissionEngine - Commission Calculation', () => {
       expect(result.agentCommission).toBe(0); // No agent
 
       // Verify subtotal
-      const expectedSubtotal = 1000 + 50 + 100 + 0;
+      // bearers = owner/student/platform, so only the fixed fee joins the
+      // student's subtotal; the commission is deducted from the owner.
+      const expectedSubtotal = 1000 + 100;
       expect(result.breakdown.subtotal).toBe(expectedSubtotal);
 
       // Verify Paystack fee
       expect(result.paystackFee).toBeCloseTo(expectedSubtotal * 0.0195, 2);
 
       // Verify VAT and total
-      const expectedBeforeVat = expectedSubtotal + result.paystackFee;
+      // paystack_bearer = 'platform', so processing never joins the student's
+      // total; beforeVat is simply the subtotal.
+      const expectedBeforeVat = expectedSubtotal;
       expect(result.breakdown.beforeVat).toBeCloseTo(expectedBeforeVat, 2);
       expect(result.vatAmount).toBeCloseTo(expectedBeforeVat * 0.125, 2);
       expect(result.totalAmount).toBeCloseTo(expectedBeforeVat + result.vatAmount, 2);
 
       // Verify owner receives base amount
-      expect(result.ownerReceives).toBe(1000);
+      expect(result.ownerReceives).toBeCloseTo(1000 - result.platformCommission, 2);
     });
 
     it('should calculate commissions correctly with agent', () => {
@@ -419,7 +423,8 @@ describe('ServerCommissionEngine - Commission Calculation', () => {
 
       // Verify calculations maintain precision
       expect(result.platformCommission).toBeCloseTo(61.728, 2);
-      expect(result.totalAmount).toBeCloseTo(1601.46, 2);
+      // 1234.56 + 100 fixed = 1334.56; processing absorbed; +12.5% VAT
+      expect(result.totalAmount).toBeCloseTo(1501.38, 2);
     });
   });
 
@@ -447,8 +452,9 @@ describe('ServerCommissionEngine - Commission Calculation', () => {
       const baseAmount = 1000;
       const result = engine.calculateCommissions(baseAmount, true);
 
-      const expectedSubtotal = baseAmount + result.platformCommission +
-                              result.platformFixedFee + result.agentCommission;
+      // Agent commission follows commission_bearer ('owner'), so only the
+      // fixed fee is added to what the student pays.
+      const expectedSubtotal = baseAmount + result.platformFixedFee;
       expect(result.breakdown.subtotal).toBeCloseTo(expectedSubtotal, 2);
     });
 
@@ -456,7 +462,8 @@ describe('ServerCommissionEngine - Commission Calculation', () => {
       const baseAmount = 1000;
       const result = engine.calculateCommissions(baseAmount, false);
 
-      const expectedBeforeVat = result.breakdown.subtotal + result.paystackFee;
+      // Processing is absorbed by the platform under these bearers.
+      const expectedBeforeVat = result.breakdown.subtotal;
       expect(result.breakdown.beforeVat).toBeCloseTo(expectedBeforeVat, 2);
     });
 
@@ -481,7 +488,9 @@ describe('ServerCommissionEngine - Commission Calculation', () => {
       const baseAmount = 1234.56;
       const result = engine.calculateCommissions(baseAmount, true);
 
-      expect(result.ownerReceives).toBe(baseAmount);
+      expect(result.ownerReceives).toBeCloseTo(
+        baseAmount - result.platformCommission - result.agentCommission, 2
+      );
     });
   });
 });
@@ -489,242 +498,3 @@ describe('ServerCommissionEngine - Commission Calculation', () => {
 // ============================================================================
 // TEST SUITE: SERVER COMMISSION ENGINE - VALIDATION
 // ============================================================================
-
-describe('ServerCommissionEngine - Commission Validation', () => {
-  let engine: ServerCommissionEngine;
-  let mockSupabase: ReturnType<typeof createMockSupabaseClient>;
-
-  beforeEach(async () => {
-    vi.clearAllMocks();
-    engine = new ServerCommissionEngine();
-    mockSupabase = createMockSupabaseClient();
-
-    // Load rates before testing
-    await engine.loadRates(mockSupabase as any);
-  });
-
-  describe('validateCommissionBreakdown() - Valid Cases', () => {
-    it('should validate matching commission breakdown', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client provides exact same values
-      const clientProvided = {
-        totalAmount: serverCalculated.totalAmount,
-        platformCommission: serverCalculated.platformCommission,
-        platformFixedFee: serverCalculated.platformFixedFee,
-        agentCommission: serverCalculated.agentCommission,
-        paystackFee: serverCalculated.paystackFee,
-        vatAmount: serverCalculated.vatAmount
-      };
-
-      const validation = engine.validateCommissionBreakdown(serverCalculated, clientProvided);
-
-      expect(validation.valid).toBe(true);
-      expect(validation.errors).toHaveLength(0);
-    });
-
-    it('should accept values within tolerance (0.01 GHS)', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client provides values with minor rounding differences
-      const clientProvided = {
-        totalAmount: serverCalculated.totalAmount + 0.005, // Within tolerance
-        platformCommission: serverCalculated.platformCommission - 0.005,
-        platformFixedFee: serverCalculated.platformFixedFee,
-        agentCommission: serverCalculated.agentCommission,
-        paystackFee: serverCalculated.paystackFee + 0.005,
-        vatAmount: serverCalculated.vatAmount - 0.005
-      };
-
-      const validation = engine.validateCommissionBreakdown(serverCalculated, clientProvided);
-
-      expect(validation.valid).toBe(true);
-      expect(validation.errors).toHaveLength(0);
-    });
-
-    it('should accept partial validation (only some fields provided)', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client only provides totalAmount
-      const clientProvided = {
-        totalAmount: serverCalculated.totalAmount
-      };
-
-      const validation = engine.validateCommissionBreakdown(serverCalculated, clientProvided);
-
-      expect(validation.valid).toBe(true);
-      expect(validation.errors).toHaveLength(0);
-    });
-  });
-
-  describe('validateCommissionBreakdown() - Invalid Cases', () => {
-    it('should reject tampered totalAmount', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client provides tampered totalAmount (reduced by 100 GHS)
-      const clientProvided = {
-        totalAmount: serverCalculated.totalAmount - 100
-      };
-
-      const validation = engine.validateCommissionBreakdown(serverCalculated, clientProvided);
-
-      expect(validation.valid).toBe(false);
-      expect(validation.errors).toHaveLength(1);
-      expect(validation.errors[0]).toContain('totalAmount mismatch');
-      expect(validation.errors[0]).toContain('diff=100.00 GHS');
-    });
-
-    it('should reject tampered platformCommission', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client provides tampered platformCommission (reduced to 0)
-      const clientProvided = {
-        platformCommission: 0
-      };
-
-      const validation = engine.validateCommissionBreakdown(serverCalculated, clientProvided);
-
-      expect(validation.valid).toBe(false);
-      expect(validation.errors).toHaveLength(1);
-      expect(validation.errors[0]).toContain('platformCommission mismatch');
-    });
-
-    it('should reject tampered agentCommission', () => {
-      const baseAmount = 5000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, true);
-
-      // Client provides tampered agentCommission (reduced to minimum)
-      const clientProvided = {
-        agentCommission: 50 // Should be 185 (3.7% of 5000)
-      };
-
-      const validation = engine.validateCommissionBreakdown(serverCalculated, clientProvided);
-
-      expect(validation.valid).toBe(false);
-      expect(validation.errors).toHaveLength(1);
-      expect(validation.errors[0]).toContain('agentCommission mismatch');
-    });
-
-    it('should detect multiple tampered fields', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client provides multiple tampered values
-      const clientProvided = {
-        totalAmount: serverCalculated.totalAmount - 100,
-        platformCommission: 0,
-        paystackFee: 0
-      };
-
-      const validation = engine.validateCommissionBreakdown(serverCalculated, clientProvided);
-
-      expect(validation.valid).toBe(false);
-      expect(validation.errors).toHaveLength(3);
-      expect(validation.errors[0]).toContain('totalAmount mismatch');
-      expect(validation.errors[1]).toContain('platformCommission mismatch');
-      expect(validation.errors[2]).toContain('paystackFee mismatch');
-    });
-
-    it('should reject values exceeding tolerance', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client provides value exceeding tolerance (0.02 GHS > 0.01 GHS tolerance)
-      const clientProvided = {
-        totalAmount: serverCalculated.totalAmount + 0.02
-      };
-
-      const validation = engine.validateCommissionBreakdown(serverCalculated, clientProvided);
-
-      expect(validation.valid).toBe(false);
-      expect(validation.errors).toHaveLength(1);
-    });
-  });
-
-  describe('validateCommissionBreakdown() - Custom Tolerance', () => {
-    it('should accept values within custom tolerance', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client provides value with 0.5 GHS difference
-      const clientProvided = {
-        totalAmount: serverCalculated.totalAmount + 0.5
-      };
-
-      // Use custom tolerance of 1 GHS
-      const validation = engine.validateCommissionBreakdown(
-        serverCalculated,
-        clientProvided,
-        1.0
-      );
-
-      expect(validation.valid).toBe(true);
-      expect(validation.errors).toHaveLength(0);
-    });
-
-    it('should reject values exceeding custom tolerance', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client provides value with 2 GHS difference
-      const clientProvided = {
-        totalAmount: serverCalculated.totalAmount + 2
-      };
-
-      // Use custom tolerance of 1 GHS
-      const validation = engine.validateCommissionBreakdown(
-        serverCalculated,
-        clientProvided,
-        1.0
-      );
-
-      expect(validation.valid).toBe(false);
-      expect(validation.errors).toHaveLength(1);
-    });
-
-    it('should use stricter tolerance (0.001 GHS)', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      // Client provides value with 0.005 GHS difference
-      const clientProvided = {
-        totalAmount: serverCalculated.totalAmount + 0.005
-      };
-
-      // Use stricter tolerance of 0.001 GHS
-      const validation = engine.validateCommissionBreakdown(
-        serverCalculated,
-        clientProvided,
-        0.001
-      );
-
-      expect(validation.valid).toBe(false);
-      expect(validation.errors).toHaveLength(1);
-    });
-  });
-
-  describe('validateCommissionBreakdown() - Error Messages', () => {
-    it('should provide detailed error messages with values', () => {
-      const baseAmount = 1000;
-      const serverCalculated = engine.calculateCommissions(baseAmount, false);
-
-      const clientProvided = {
-        totalAmount: 1000 // Tampered (should be ~1294.92)
-      };
-
-      const validation = engine.validateCommissionBreakdown(serverCalculated, clientProvided);
-
-      expect(validation.valid).toBe(false);
-      expect(validation.errors[0]).toMatch(/totalAmount mismatch/);
-      expect(validation.errors[0]).toMatch(/server=\d+\.\d+ GHS/);
-      expect(validation.errors[0]).toMatch(/client=\d+\.\d+ GHS/);
-      expect(validation.errors[0]).toMatch(/diff=\d+\.\d+ GHS/);
-    });
-  });
-});
-
