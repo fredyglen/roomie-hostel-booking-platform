@@ -13,6 +13,35 @@ and the actual live system, before you rely on it or act on it.**
 
 ---
 
+## What you actually have to test with — use these, don't rediscover them
+
+Three facts about this environment, verified directly, that make real end-to-end
+testing possible rather than theoretical. None of these are findings to verify —
+they are tools. Use them.
+
+- **Paystack is in TEST mode** (`pk_test_...`). A real checkout can be pushed all
+  the way through — card entry, OTP, webhook, booking confirmation — without moving
+  real money. There is no reason to stop short of a real transaction; "I traced the
+  code and it looks correct" is not the same claim as "I ran it and it worked," and
+  only the second one satisfies this mandate.
+- **Three demo accounts already exist** for exactly this purpose:
+  `student@roomi.com`, `owner@roomi.com`, `admin@roomi.com`, all password
+  `password123` (created via the `create-demo-users` edge function — if they don't
+  resolve, that function is how to (re)create them). Use these to test RLS and
+  portal behavior as each role actually experiences it, not by reading policy text
+  and reasoning about what should happen.
+- **Playwright is an installed devDependency.** Use it to actually click through the
+  student, owner, and admin UIs as each of the above accounts — search for a
+  property, open a listing, go through checkout, confirm what an owner sees after
+  publishing a property and what an admin sees when approving it. If a flow can be
+  driven through the UI, drive it through the UI at least once; don't rely solely on
+  hitting edge functions directly with curl, which proves the backend works but not
+  that a real user can reach it.
+
+If any of these three turns out not to work as described, that is itself a finding —
+say so, and fall back to the most direct alternative (e.g., calling edge functions
+directly with a demo account's JWT if Playwright turns out not to be viable).
+
 ## The mandate
 
 **Read the entire codebase. Read the entire Supabase backend — schema, every table,
