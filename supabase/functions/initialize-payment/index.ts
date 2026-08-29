@@ -49,6 +49,11 @@ const PaymentInitRequestSchema = z.object({
     }).optional(),
   }).passthrough().optional(), // Allow additional metadata fields
 
+  // Quote-only mode: run every validation and the full calculation, but do
+  // not contact Paystack or persist anything. The UI uses this to DISPLAY a
+  // breakdown, guaranteeing the figure shown is the figure charged.
+  dry_run: z.boolean().optional().default(false),
+
   callback_url: z.string().url('Invalid callback URL format').optional(),
   channels: z.array(z.string()).optional(),
 });
@@ -275,39 +280,25 @@ Deno.serve(async (req) => {
       // ============================================================================
       // ✅ STEP 4: VALIDATE CLIENT-PROVIDED COMMISSION BREAKDOWN (if present)
       // ============================================================================
-      if (paymentData.metadata?.commission_breakdown) {
-        const validation = serverCommissionEngine.validateCommissionBreakdown(
-          serverCommissions,
-          paymentData.metadata.commission_breakdown
-        );
+      // Client-supplied commission_breakdown is no longer validated because the
+      // client no longer calculates one. The server is the sole calculator; any
+      // breakdown in metadata is treated as advisory and ignored.
+    }
 
-        if (!validation.valid) {
-          console.error('❌ Commission validation FAILED:', validation.errors);
-
-          // 🚨 SECURITY ALERT: Log detailed mismatch for audit
-          console.error('🚨 SECURITY ALERT: Commission mismatch detected', {
-            userId: user.id,
-            userEmail: paymentData.email,
-            userRole: profile.role,
-            serverCalculated: serverCommissions,
-            clientProvided: paymentData.metadata.commission_breakdown,
-            errors: validation.errors,
-            timestamp: new Date().toISOString()
-          });
-
-          return new Response(JSON.stringify({
-            status: false,
-            message: 'Commission validation failed. Please refresh the page and try again.',
-            // Include errors in development for debugging (remove in production if needed)
-            errors: validation.errors
-          }), {
-            status: 400,
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-          });
+    // ========================================================================
+    // QUOTE-ONLY: return the authoritative breakdown and stop. Nothing has been
+    // charged and nothing persisted; the price validation above has already run,
+    // so a quote cannot be obtained for an amount that could not be charged.
+    // ========================================================================
+    if (paymentData.dry_run) {
+      return new Response(JSON.stringify({
+        status: true,
+        message: 'Quote generated',
+        data: {
+          quote: serverCommissions,
+          rates: serverCommissionEngine.getCurrentRates()
         }
-
-        console.log('✅ Commission validation PASSED');
-      }
+      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     // Generate unique reference with business context (ensure uniqueness in DB)

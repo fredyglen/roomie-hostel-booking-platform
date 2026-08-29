@@ -1,30 +1,49 @@
 /**
- * ✅ DENO-COMPATIBLE CENTRALIZED COMMISSION ENGINE
- * 
- * Server-side commission calculation for Supabase Edge Functions
- * Reads from commission_configurations table for real-time rates
- * 
- * @module commission-engine
- * @version 1.0.0
- * @security CRITICAL - Revenue integrity depends on this module
+ * SERVER-SIDE COMMISSION ENGINE — the only place money is calculated.
+ *
+ * @security CRITICAL — revenue integrity depends on this module.
+ *
+ * Design rules, learned the hard way:
+ *
+ *  1. ONE ENGINE. The browser must never compute a charge. A second engine
+ *     existed in src/config/centralized-commission.config.ts and drifted from
+ *     this one twice — first on VAT, then on who pays the platform commission —
+ *     which meant a student could be shown one price and charged another.
+ *
+ *  2. THE FORMULA IS DATA, NOT CODE. Who bears each fee is read from
+ *     commission_configurations (commission_bearer / fixed_fee_bearer /
+ *     paystack_bearer), so a pricing change is an admin edit, not a deploy.
+ *
+ *  3. FAIL CLOSED. No active rate row means refuse to quote or charge. A
+ *     refused payment is recoverable; a payment at guessed rates is not.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 // ============================================================================
-// TYPE DEFINITIONS
+// TYPES
 // ============================================================================
 
+/** Who absorbs a given fee. */
+export type Bearer = 'owner' | 'student' | 'platform';
+
 export interface CommissionRates {
-  platform: number;    // e.g., 0.05 for 5%
-  agent: number;       // e.g., 0.037 for 3.7%
-  paystack: number;    // e.g., 0.0195 for 1.95%
-  vat: number;         // e.g., 0.125 for 12.5%
+  platform: number;
+  agent: number;
+  paystack: number;
+  vat: number;
 }
 
 export interface PlatformFees {
-  fixed: number;           // e.g., 100 GHS
-  agentMinimum: number;    // e.g., 100 GHS
+  fixed: number;
+  agentMinimum: number;
+}
+
+/** Which side of the transaction each fee lands on. */
+export interface FeeBearers {
+  commission: Bearer;
+  fixedFee: Bearer;
+  paystack: Bearer;
 }
 
 export interface CommissionCalculationResult {
@@ -34,175 +53,152 @@ export interface CommissionCalculationResult {
   agentCommission: number;
   paystackFee: number;
   vatAmount: number;
+  /** What the student is charged. */
   totalAmount: number;
+  /** What the owner is paid out. */
   ownerReceives: number;
+  /** What the platform keeps after absorbing whatever it bears. */
+  platformNet: number;
+  bearers: FeeBearers;
   breakdown: {
     subtotal: number;
     beforeVat: number;
     totalFees: number;
+    /** Per-line attribution, for UI and for the audit trail. */
+    studentPays: { rent: number; commission: number; fixedFee: number; agent: number; processing: number; vat: number };
+    ownerPays: { commission: number; fixedFee: number; agent: number; processing: number };
+    platformAbsorbs: { commission: number; fixedFee: number; agent: number; processing: number };
   };
-}
-
-export interface ValidationResult {
-  valid: boolean;
-  errors: string[];
 }
 
 export interface RatesInfo {
   rates: CommissionRates | null;
   fees: PlatformFees | null;
+  bearers: FeeBearers | null;
   version?: string;
   lastLoaded?: Date;
 }
 
 // ============================================================================
-// DEFAULT CONFIGURATION (Fallback)
-// ============================================================================
-
-const DEFAULT_RATES: CommissionRates = {
-  platform: 0.05,      // 5%
-  agent: 0.037,        // 3.7%
-  paystack: 0.0195,    // 1.95%
-  vat: 0.125           // 12.5%
-};
-
-const DEFAULT_FEES: PlatformFees = {
-  fixed: 100,          // 100 GHS
-  agentMinimum: 100    // 100 GHS
-};
-
-// ============================================================================
-// SERVER COMMISSION ENGINE CLASS
+// ENGINE
 // ============================================================================
 
 export class ServerCommissionEngine {
   private rates: CommissionRates | null = null;
   private fees: PlatformFees | null = null;
+  private bearers: FeeBearers | null = null;
   private version: string | null = null;
   private lastLoaded: Date | null = null;
-  private cacheTimeout = 60000; // 1 minute cache
+  private cacheTimeout = 60000; // 1 min — an admin rate change goes live within this
 
   /**
-   * Load commission rates from database
-   * Uses 1-minute cache to minimize database queries
-   * Falls back to default rates on error
+   * Load the active configuration. Throws if there isn't exactly one usable
+   * row: see design rule 3. There are deliberately no default rates in this
+   * file — a constant here is a rate nobody approved.
    */
   async loadRates(supabase: ReturnType<typeof createClient>): Promise<void> {
-    // Check cache validity
-    if (this.rates && this.lastLoaded && 
-        (Date.now() - this.lastLoaded.getTime()) < this.cacheTimeout) {
-      console.log('✅ Using cached commission rates', {
-        age: `${Math.round((Date.now() - this.lastLoaded.getTime()) / 1000)}s`,
-        version: this.version
-      });
-      return; // Use cached rates
+    if (this.rates && this.lastLoaded && Date.now() - this.lastLoaded.getTime() < this.cacheTimeout) {
+      return;
     }
 
-    try {
-      const { data, error } = await supabase
-        .from('commission_configurations')
-        .select('*')
-        .eq('is_active', true)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
+    const { data, error } = await supabase
+      .from('commission_configurations')
+      .select('*')
+      .eq('is_active', true)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
 
-      if (error) {
-        // Check if it's a "no rows" error (PGRST116)
-        if (error.code === 'PGRST116') {
-          console.warn('⚠️  No active commission configuration found, using defaults');
-        } else {
-          console.error('❌ Failed to load commission rates from database:', error);
-        }
-        
-        // FAIL CLOSED: never charge on guessed rates. A payment with wrong
-        // pricing is worse than a refused payment.
-        throw new Error('Commission configuration unavailable: refusing to compute charges without an active DB rate row');
-      }
-
-      // Successfully loaded from database
-      this.rates = {
-        platform: data.platform_rate,
-        agent: data.agent_rate,
-        paystack: data.paystack_rate,
-        vat: data.vat_rate
-      };
-
-      this.fees = {
-        fixed: data.platform_fixed_fee,
-        agentMinimum: data.agent_minimum_fee
-      };
-
-      this.version = data.version;
-      this.lastLoaded = new Date();
-      
-      console.log('✅ Commission rates loaded from database:', {
-        version: this.version,
-        environment: data.environment,
-        platform: `${(this.rates.platform * 100).toFixed(2)}%`,
-        agent: `${(this.rates.agent * 100).toFixed(2)}%`,
-        paystack: `${(this.rates.paystack * 100).toFixed(2)}%`,
-        vat: `${(this.rates.vat * 100).toFixed(2)}%`,
-        fixedFee: `${this.fees.fixed} GHS`,
-        agentMinimum: `${this.fees.agentMinimum} GHS`
-      });
-    } catch (error) {
-      console.error('❌ Unexpected error loading commission rates:', error);
-      
-      // Fall back to default rates
-      throw new Error('Commission configuration unavailable: refusing to compute charges without an active DB rate row');
+    if (error || !data) {
+      console.error('Commission configuration unavailable', error);
+      throw new Error(
+        'Commission configuration unavailable: refusing to compute charges without an active rate row'
+      );
     }
+
+    this.rates = {
+      platform: Number(data.platform_rate),
+      agent: Number(data.agent_rate),
+      paystack: Number(data.paystack_rate),
+      vat: Number(data.vat_rate),
+    };
+    this.fees = {
+      fixed: Number(data.platform_fixed_fee),
+      agentMinimum: Number(data.agent_minimum_fee),
+    };
+    this.bearers = {
+      commission: (data.commission_bearer ?? 'owner') as Bearer,
+      fixedFee: (data.fixed_fee_bearer ?? 'student') as Bearer,
+      paystack: (data.paystack_bearer ?? 'platform') as Bearer,
+    };
+    this.version = data.version;
+    this.lastLoaded = new Date();
+
+    console.log('Commission configuration loaded', {
+      version: this.version,
+      platform: `${(this.rates.platform * 100).toFixed(2)}%`,
+      fixedFee: `${this.fees.fixed} GHS`,
+      bearers: this.bearers,
+    });
   }
 
   /**
-   * Calculate comprehensive commission breakdown
-   * 
-   * @param baseAmount - Property rent (base amount before commissions)
-   * @param includeAgent - Whether to include agent commission
-   * @returns Complete commission breakdown
-   * @throws Error if rates not loaded or invalid base amount
+   * Compute a full breakdown.
+   *
+   * Each fee is routed to whichever side bears it. The student's total is the
+   * rent plus only the fees they bear; the owner's payout is the rent minus
+   * only the fees they bear; the platform nets its revenue minus what it
+   * absorbs. Every fee is accounted for exactly once.
    */
-  calculateCommissions(
-    baseAmount: number,
-    includeAgent: boolean = false
-  ): CommissionCalculationResult {
-    // Validate rates are loaded
-    if (!this.rates || !this.fees) {
+  calculateCommissions(baseAmount: number, includeAgent = false): CommissionCalculationResult {
+    if (!this.rates || !this.fees || !this.bearers) {
       throw new Error('Commission rates not loaded. Call loadRates() first.');
     }
-
-    // Validate base amount
-    if (baseAmount <= 0) {
-      throw new Error(`Base amount must be positive, got: ${baseAmount}`);
+    if (!Number.isFinite(baseAmount) || baseAmount <= 0) {
+      throw new Error(`Base amount must be a positive finite number, got: ${baseAmount}`);
     }
 
-    if (!Number.isFinite(baseAmount)) {
-      throw new Error(`Base amount must be a finite number, got: ${baseAmount}`);
-    }
+    const { commission: cB, fixedFee: fB, paystack: pB } = this.bearers;
 
-    // Core commission calculations
     const platformCommission = baseAmount * this.rates.platform;
     const platformFixedFee = this.fees.fixed;
-    const agentCommission = includeAgent 
+    // Agent commission follows the same side as the platform commission.
+    const agentCommission = includeAgent
       ? Math.max(baseAmount * this.rates.agent, this.fees.agentMinimum)
       : 0;
 
-    // Subtotal before payment processing and VAT
-    const subtotal = baseAmount + platformCommission + platformFixedFee + agentCommission;
-    
-    // Payment processing fee (calculated on subtotal)
+    const to = (bearer: Bearer, side: Bearer, amount: number) => (bearer === side ? amount : 0);
+
+    // What the student is billed, before processing.
+    const subtotal =
+      baseAmount +
+      to(cB, 'student', platformCommission) +
+      to(fB, 'student', platformFixedFee) +
+      to(cB, 'student', agentCommission);
+
+    // Processing is charged on the amount actually moving through Paystack.
     const paystackFee = subtotal * this.rates.paystack;
-    
-    // Amount before VAT
-    const beforeVat = subtotal + paystackFee;
-    
-    // VAT calculation (applied to everything)
+    const studentProcessing = to(pB, 'student', paystackFee);
+
+    const beforeVat = subtotal + studentProcessing;
     const vatAmount = beforeVat * this.rates.vat;
-    
-    // Final totals
     const totalAmount = beforeVat + vatAmount;
-    const totalFees = platformCommission + platformFixedFee + agentCommission + paystackFee + vatAmount;
-    const ownerReceives = baseAmount; // Owner gets the base amount, fees are additional
+
+    const ownerReceives =
+      baseAmount -
+      to(cB, 'owner', platformCommission) -
+      to(fB, 'owner', platformFixedFee) -
+      to(cB, 'owner', agentCommission) -
+      to(pB, 'owner', paystackFee);
+
+    // Platform revenue is whatever it collects, less whatever it absorbs.
+    const platformNet =
+      platformCommission +
+      platformFixedFee -
+      to(cB, 'platform', platformCommission) -
+      to(fB, 'platform', platformFixedFee) -
+      to(pB, 'platform', paystackFee) -
+      agentCommission;
 
     return {
       baseAmount,
@@ -213,95 +209,53 @@ export class ServerCommissionEngine {
       vatAmount,
       totalAmount,
       ownerReceives,
+      platformNet,
+      bearers: this.bearers,
       breakdown: {
         subtotal,
         beforeVat,
-        totalFees
-      }
+        totalFees: platformCommission + platformFixedFee + agentCommission + paystackFee + vatAmount,
+        studentPays: {
+          rent: baseAmount,
+          commission: to(cB, 'student', platformCommission),
+          fixedFee: to(fB, 'student', platformFixedFee),
+          agent: to(cB, 'student', agentCommission),
+          processing: studentProcessing,
+          vat: vatAmount,
+        },
+        ownerPays: {
+          commission: to(cB, 'owner', platformCommission),
+          fixedFee: to(fB, 'owner', platformFixedFee),
+          agent: to(cB, 'owner', agentCommission),
+          processing: to(pB, 'owner', paystackFee),
+        },
+        platformAbsorbs: {
+          commission: to(cB, 'platform', platformCommission),
+          fixedFee: to(fB, 'platform', platformFixedFee),
+          agent: to(cB, 'platform', agentCommission),
+          processing: to(pB, 'platform', paystackFee),
+        },
+      },
     };
   }
 
-  /**
-   * Validate client-provided commission breakdown against server calculation
-   * 
-   * @param serverCalculated - Server-side calculated commissions
-   * @param clientProvided - Client-provided commission breakdown
-   * @param tolerance - Tolerance for rounding errors (default: 0.01 GHS = 1 pesewa)
-   * @returns Validation result with errors if any
-   */
-  validateCommissionBreakdown(
-    serverCalculated: CommissionCalculationResult,
-    clientProvided: Partial<CommissionCalculationResult>,
-    tolerance: number = 0.01
-  ): ValidationResult {
-    const errors: string[] = [];
-
-    // Helper function to check field
-    const checkField = (
-      fieldName: keyof CommissionCalculationResult,
-      serverValue: number,
-      clientValue: number | undefined
-    ) => {
-      if (clientValue !== undefined) {
-        const diff = Math.abs(serverValue - clientValue);
-        if (diff > tolerance) {
-          errors.push(
-            `${fieldName} mismatch: server=${serverValue.toFixed(2)} GHS, ` +
-            `client=${clientValue.toFixed(2)} GHS, diff=${diff.toFixed(2)} GHS`
-          );
-        }
-      }
-    };
-
-    // Validate critical fields
-    checkField('totalAmount', serverCalculated.totalAmount, clientProvided.totalAmount);
-    checkField('platformCommission', serverCalculated.platformCommission, clientProvided.platformCommission);
-    checkField('platformFixedFee', serverCalculated.platformFixedFee, clientProvided.platformFixedFee);
-    checkField('agentCommission', serverCalculated.agentCommission, clientProvided.agentCommission);
-    checkField('paystackFee', serverCalculated.paystackFee, clientProvided.paystackFee);
-    checkField('vatAmount', serverCalculated.vatAmount, clientProvided.vatAmount);
-
-    return {
-      valid: errors.length === 0,
-      errors
-    };
-  }
-
-  /**
-   * Get current rates and fees (for logging/debugging)
-   */
   getCurrentRates(): RatesInfo {
     return {
       rates: this.rates,
       fees: this.fees,
+      bearers: this.bearers,
       version: this.version || undefined,
-      lastLoaded: this.lastLoaded || undefined
+      lastLoaded: this.lastLoaded || undefined,
     };
   }
 
-  /**
-   * Check if rates are loaded and valid
-   */
   isReady(): boolean {
-    return this.rates !== null && this.fees !== null;
+    return this.rates !== null && this.fees !== null && this.bearers !== null;
   }
 
-  /**
-   * Force cache invalidation (for testing)
-   */
   invalidateCache(): void {
     this.lastLoaded = null;
-    console.log('🔄 Commission rates cache invalidated');
   }
 }
 
-// ============================================================================
-// SINGLETON EXPORT
-// ============================================================================
-
-/**
- * Singleton instance of ServerCommissionEngine
- * Use this instance across all Edge Function invocations
- */
 export const serverCommissionEngine = new ServerCommissionEngine();
-
