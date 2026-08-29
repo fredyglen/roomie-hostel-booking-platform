@@ -22,3 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Generated audit dump: 460 MB of UTF-16 grep output, far over GitHub's
+# 100 MB limit. Kept on disk, never committed.
+FORENSIC_AUDIT_INDEPENDENT.md
