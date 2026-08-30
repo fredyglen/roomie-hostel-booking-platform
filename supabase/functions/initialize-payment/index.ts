@@ -1,444 +1,275 @@
+// initialize-payment — v9 (booking-first + deposits), hardened 2026-08-30
+// Contract:
+//   PREFERRED: { booking_id, payment_kind: 'full'|'deposit'|'balance', email, dry_run? }
+//     The booking (created server-side via create_pending_booking) is the sole
+//     source of the price. The engine computes the student total from the
+//     bearer-aware commission configuration; the deposit split comes from the
+//     same configuration. dry_run returns the authoritative quote and charge
+//     without contacting Paystack or persisting anything.
+//   LEGACY: { base_amount, has_agent, metadata.property_id } — price validated
+//     against real property/room prices. Kept only until all clients migrate.
+// Money is computed HERE and only here. The browser displays what this returns.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
 import { serverCommissionEngine } from '../_shared/commission-engine.ts'
-// Using console-based logging within Edge Function; cannot import app-level utilities
-
-import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts';
+import { z } from 'https://deno.land/x/zod@v3.22.4/mod.ts'
 
 const supabaseUrl = Deno.env.get('SUPABASE_URL')!
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 const paystackSecretKey = Deno.env.get('PAYSTACK_SECRET_KEY')!
 
-// ✅ SECURITY: Block legacy payment API in production
-// Set ALLOW_LEGACY_PAYMENTS=true in development/testing only
-const ALLOW_LEGACY_PAYMENTS = Deno.env.get('ALLOW_LEGACY_PAYMENTS') === 'true';
+const round2 = (n: number) => Math.round(n * 100) / 100
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
 
-// Define schema for incoming payment initialization request
-// ✅ SUPPORTS BOTH NEW API (base_amount + has_agent) AND LEGACY API (amount)
-const PaymentInitRequestSchema = z.object({
-  email: z.string().email('Invalid email format'),
-
-  // ✅ NEW API: Base amount (property rent) - preferred
-  base_amount: z.number().positive('Base amount must be positive').optional(),
-
-  // ✅ NEW API: Agent involvement flag
+const RequestSchema = z.object({
+  email: z.string().email(),
+  booking_id: z.string().uuid().optional(),
+  payment_kind: z.enum(['full', 'deposit', 'balance']).optional().default('full'),
+  base_amount: z.number().positive().optional(),
   has_agent: z.boolean().optional().default(false),
-
-  // ⚠️ LEGACY API: Client-provided total (for backward compatibility)
-  amount: z.number().positive('Amount must be a positive number').optional(),
-
+  amount: z.number().positive().optional(), // legacy, rejected below
   currency: z.string().optional().default('GHS'),
-
-  // ✅ ENHANCED: Metadata with optional commission breakdown for validation
   metadata: z.object({
     booking_id: z.string().uuid().optional(),
     student_id: z.string().uuid().optional(),
     property_id: z.string().uuid().optional(),
     property_owner_id: z.string().uuid().optional(),
     agent_id: z.string().uuid().optional(),
-
-    // ✅ NEW: Client-calculated commission breakdown (for validation)
-    commission_breakdown: z.object({
-      baseAmount: z.number().optional(),
-      platformCommission: z.number().optional(),
-      platformFixedFee: z.number().optional(),
-      agentCommission: z.number().optional(),
-      paystackFee: z.number().optional(),
-      vatAmount: z.number().optional(),
-      totalAmount: z.number().optional(),
-    }).optional(),
-  }).passthrough().optional(), // Allow additional metadata fields
-
-  // Quote-only mode: run every validation and the full calculation, but do
-  // not contact Paystack or persist anything. The UI uses this to DISPLAY a
-  // breakdown, guaranteeing the figure shown is the figure charged.
+  }).passthrough().optional(),
   dry_run: z.boolean().optional().default(false),
-
-  callback_url: z.string().url('Invalid callback URL format').optional(),
+  callback_url: z.string().url().optional(),
   channels: z.array(z.string()).optional(),
-});
-
-type PaymentInitRequest = z.infer<typeof PaymentInitRequestSchema>;
+})
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
-  }
-
-  if (req.method !== 'POST') {
-    return new Response('Method not allowed', { 
-      status: 405,
-      headers: corsHeaders
-    })
-  }
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders })
+  if (req.method !== 'POST') return new Response('Method not allowed', { status: 405, headers: corsHeaders })
 
   try {
-    // Validate critical environment variables early with clear logging
-    const missingEnv: string[] = [];
-    if (!supabaseUrl) missingEnv.push('SUPABASE_URL');
-    if (!supabaseServiceKey) missingEnv.push('SUPABASE_SERVICE_ROLE_KEY');
-    if (!paystackSecretKey) missingEnv.push('PAYSTACK_SECRET_KEY');
-    if (missingEnv.length > 0) {
-      console.error('Initialize Payment: Missing environment variables', { missingEnv });
-      return new Response(
-        JSON.stringify({ status: false, message: `Server misconfiguration: missing ${missingEnv.join(', ')}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
+    const missing = [
+      !supabaseUrl && 'SUPABASE_URL',
+      !supabaseServiceKey && 'SUPABASE_SERVICE_ROLE_KEY',
+      !paystackSecretKey && 'PAYSTACK_SECRET_KEY',
+    ].filter(Boolean)
+    if (missing.length) return json({ status: false, message: `Server misconfiguration: missing ${missing.join(', ')}` }, 500)
 
     const authHeader = req.headers.get('Authorization')
-    if (!authHeader) {
-      return new Response('Unauthorized', { status: 401, headers: corsHeaders })
-    }
+    if (!authHeader) return json({ status: false, message: 'Unauthorized' }, 401)
 
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      global: {
-        headers: { Authorization: authHeader }
-      }
-    })
+    // Authenticate the caller with their own JWT; act with service role.
+    const authed = createClient(supabaseUrl, supabaseServiceKey, { global: { headers: { Authorization: authHeader } } })
+    const { data: { user }, error: authError } = await authed.auth.getUser()
+    if (authError || !user) return json({ status: false, message: 'Unauthorized' }, 401)
+    const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
-    if (authError || !user) {
-      return new Response('Unauthorized', { status: 401, headers: corsHeaders })
-    }
-
-    // Validate incoming request body
-    let paymentData: PaymentInitRequest;
+    let body: z.infer<typeof RequestSchema>
     try {
-      const body = await req.json();
-      paymentData = PaymentInitRequestSchema.parse(body);
-    } catch (error) {
-      console.error('Payment data validation error:', error);
-      return new Response(JSON.stringify({ status: false, message: 'Invalid request data' }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      body = RequestSchema.parse(await req.json())
+    } catch {
+      return json({ status: false, message: 'Invalid request data' }, 400)
     }
 
-    // Basic authorization check: ensure the user has a profile (can be expanded)
-    const { data: profile, error: profileError } = await supabase
-      .from('profiles')
-      .select('id, role')
-      .eq('id', user.id)
-      .single();
-
-    if (profileError || !profile) {
-      console.error('User profile not found or error fetching profile:', profileError);
-      return new Response(JSON.stringify({ status: false, message: 'User profile not found' }), {
-        status: 404,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+    if (body.amount && !body.base_amount && !body.booking_id) {
+      return json({ status: false, message: 'This payment API version is no longer supported. Please refresh the app and try again.', error_code: 'LEGACY_API_REMOVED' }, 400)
     }
 
-    // Example authorization: only allow certain roles to initiate payments
-    const allowedRoles = ['student', 'owner', 'admin']; // Define roles allowed to initiate payments
-    if (!allowedRoles.includes(profile.role)) {
-       console.error(`User ${user.id} with role ${profile.role} attempted to initiate payment.`);
-       return new Response(JSON.stringify({ status: false, message: 'Unauthorized to initiate payment' }), {
-         status: 403,
-         headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-       });
-    }
-
-    // ============================================================================
-    // ✅ STEP 1: LOAD COMMISSION RATES FROM DATABASE
-    // ============================================================================
+    // Fail-closed engine load (bearer-aware, DB-driven).
     try {
-      await serverCommissionEngine.loadRates(supabase);
-      console.log('✅ Commission rates loaded successfully');
-    } catch (error) {
-      console.error('❌ Failed to load commission rates:', error);
-      return new Response(JSON.stringify({
-        status: false,
-        message: 'Server configuration error: unable to load commission rates'
-      }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      await serverCommissionEngine.loadRates(supabase)
+    } catch {
+      return json({ status: false, message: 'Server configuration error: unable to load commission rates' }, 500)
     }
 
-    // ============================================================================
-    // ✅ STEP 2: DETERMINE BASE AMOUNT AND AGENT INVOLVEMENT
-    // ============================================================================
-    let baseAmount: number;
-    let hasAgent: boolean;
-    let isLegacyApi = false;
+    // Deposit config comes from the same active row the engine loaded.
+    const { data: cfg } = await supabase
+      .from('commission_configurations')
+      .select('deposit_enabled, deposit_type, deposit_value, deposit_balance_due_days, booking_hold_hours')
+      .eq('is_active', true).order('created_at', { ascending: false }).limit(1).maybeSingle()
 
-    if (paymentData.amount && !paymentData.base_amount) {
-      // Legacy API permanently removed: it charged a client-chosen total with no validation.
-      return new Response(JSON.stringify({
-        status: false,
-        message: 'This payment API version is no longer supported. Please refresh the app and try again.',
-        error_code: 'LEGACY_API_REMOVED'
-      }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-    }
+    let baseAmount: number
+    let hasAgent = false
+    let booking: any = null
+    let chargeAmount: number
+    let kind = body.payment_kind
 
-    if (paymentData.base_amount) {
-      baseAmount = paymentData.base_amount;
-      hasAgent = paymentData.has_agent || false;
-
-      // ========================================================================
-      // SERVER-SIDE PRICE VALIDATION (P0): base_amount must equal a real price
-      // attached to the property being booked. The client picks WHICH legitimate
-      // price applies (semester price, property rent, or a room's rent) but can
-      // never invent an amount.
-      // ========================================================================
-      const propertyId = paymentData.metadata?.property_id;
-      if (!propertyId) {
-        return new Response(JSON.stringify({
-          status: false,
-          message: 'Missing property reference for this payment. Please refresh and try again.',
-          error_code: 'PROPERTY_ID_REQUIRED'
-        }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    if (body.booking_id) {
+      // ---------- BOOKING-FIRST PATH (authoritative) ----------
+      const { data: b, error: bErr } = await supabase
+        .from('bookings_enhanced')
+        .select('id, student_id, property_id, property_owner_id, agent_id, status, payment_status, property_rent, total_amount, amount_paid, hold_expires_at')
+        .eq('id', body.booking_id).maybeSingle()
+      if (bErr || !b) return json({ status: false, message: 'Booking not found.', error_code: 'BOOKING_NOT_FOUND' }, 404)
+      if (b.student_id !== user.id) return json({ status: false, message: 'This booking belongs to another account.', error_code: 'NOT_YOUR_BOOKING' }, 403)
+      if (!['pending', 'reserved'].includes(b.status)) {
+        return json({ status: false, message: `This booking is ${b.status} and cannot be paid.`, error_code: 'BOOKING_NOT_PAYABLE' }, 409)
       }
-
+      if (b.hold_expires_at && new Date(b.hold_expires_at).getTime() < Date.now()) {
+        return json({ status: false, message: 'This booking hold has expired. Please start a new booking.', error_code: 'HOLD_EXPIRED' }, 409)
+      }
+      booking = b
+      baseAmount = Number(b.property_rent)
+      hasAgent = Boolean(b.agent_id)
+      if (!(baseAmount > 0)) return json({ status: false, message: 'Booking has no valid price.', error_code: 'PRICE_UNAVAILABLE' }, 409)
+    } else if (body.base_amount) {
+      // ---------- LEGACY PATH: validate against real prices ----------
+      const propertyId = body.metadata?.property_id
+      if (!propertyId) return json({ status: false, message: 'Missing property reference for this payment.', error_code: 'PROPERTY_ID_REQUIRED' }, 400)
       const { data: prop, error: propErr } = await supabase
-        .from('properties')
-        .select('id, base_price_per_semester, rent, is_available')
-        .eq('id', propertyId)
-        .single();
-
-      if (propErr || !prop) {
-        return new Response(JSON.stringify({
-          status: false,
-          message: 'Property not found for this payment.',
-          error_code: 'PROPERTY_NOT_FOUND'
-        }), { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-
+        .from('properties').select('id, base_price_per_semester, rent, is_available').eq('id', propertyId).single()
+      if (propErr || !prop) return json({ status: false, message: 'Property not found for this payment.', error_code: 'PROPERTY_NOT_FOUND' }, 404)
       const { data: propRooms } = await supabase
-        .from('rooms')
-        .select('rent_amount')
-        .eq('property_id', propertyId)
-        .not('rent_amount', 'is', null);
-
-      const legitimatePrices = new Set<number>();
-      if (prop.base_price_per_semester > 0) legitimatePrices.add(Number(prop.base_price_per_semester));
-      if (prop.rent > 0) legitimatePrices.add(Number(prop.rent));
-      for (const r of propRooms ?? []) {
-        if (r.rent_amount > 0) legitimatePrices.add(Number(r.rent_amount));
+        .from('rooms').select('rent_amount').eq('property_id', propertyId).not('rent_amount', 'is', null)
+      const legit = new Set<number>()
+      if (Number(prop.base_price_per_semester) > 0) legit.add(Number(prop.base_price_per_semester))
+      if (Number(prop.rent) > 0) legit.add(Number(prop.rent))
+      for (const r of propRooms ?? []) if (Number(r.rent_amount) > 0) legit.add(Number(r.rent_amount))
+      const matches = [...legit].some(p => Math.abs(p - body.base_amount!) < 0.01)
+      if (!legit.size || !matches) {
+        console.error('PRICE VALIDATION FAILED', { userId: user.id, propertyId, claimed: body.base_amount, legitimate: [...legit] })
+        return json({ status: false, message: 'Payment amount does not match the price of this property. Please refresh and try again.', error_code: 'AMOUNT_MISMATCH' }, 400)
       }
-
-      const matches = [...legitimatePrices].some(p => Math.abs(p - baseAmount) < 0.01);
-      if (legitimatePrices.size === 0 || !matches) {
-        console.error('PRICE VALIDATION FAILED', {
-          userId: user.id, propertyId, claimed: baseAmount,
-          legitimate: [...legitimatePrices]
-        });
-        return new Response(JSON.stringify({
-          status: false,
-          message: 'Payment amount does not match the price of this property. Please refresh and try again.',
-          error_code: 'AMOUNT_MISMATCH'
-        }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
-      }
-
-      console.log('Price validation passed', { propertyId, baseAmount });
+      baseAmount = body.base_amount
+      hasAgent = body.has_agent || false
+      kind = 'full' // deposits require the booking-first path
     } else {
-      return new Response(JSON.stringify({
-        status: false,
-        message: 'Missing required field: base_amount must be provided'
-      }), {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
+      return json({ status: false, message: 'Missing required field: booking_id or base_amount' }, 400)
     }
 
-    // ============================================================================
-    // ✅ STEP 3: CALCULATE SERVER-SIDE COMMISSIONS
-    // ============================================================================
-    let serverCommissions;
-    let finalAmount: number;
+    // ---------- Server-side money ----------
+    const calc = serverCommissionEngine.calculateCommissions(baseAmount, hasAgent)
+    const total = round2(calc.totalAmount)
+    const alreadyPaid = round2(Number(booking?.amount_paid ?? 0))
 
-    if (false) { /* legacy path removed */ } else {
-      // New API: Calculate server-side commissions
-      try {
-        serverCommissions = serverCommissionEngine.calculateCommissions(baseAmount, hasAgent);
-
-        console.log('✅ Server-side commission calculation:', {
-          baseAmount: serverCommissions.baseAmount,
-          platformCommission: serverCommissions.platformCommission,
-          platformFixedFee: serverCommissions.platformFixedFee,
-          agentCommission: serverCommissions.agentCommission,
-          paystackFee: serverCommissions.paystackFee,
-          vatAmount: serverCommissions.vatAmount,
-          totalAmount: serverCommissions.totalAmount,
-          ownerReceives: serverCommissions.ownerReceives
-        });
-
-        finalAmount = serverCommissions.totalAmount;
-      } catch (error) {
-        console.error('❌ Commission calculation failed:', error);
-        return new Response(JSON.stringify({
-          status: false,
-          message: error instanceof Error ? error.message : 'Failed to calculate commission breakdown'
-        }), {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-        });
+    if (kind === 'deposit') {
+      if (!cfg?.deposit_enabled) return json({ status: false, message: 'Deposits are not currently enabled.', error_code: 'DEPOSIT_DISABLED' }, 400)
+      if (alreadyPaid > 0) return json({ status: false, message: 'A payment has already been made on this booking — pay the balance instead.', error_code: 'DEPOSIT_ALREADY_PAID' }, 409)
+      chargeAmount = cfg.deposit_type === 'fixed'
+        ? round2(Math.min(Number(cfg.deposit_value), total))
+        : round2(total * Number(cfg.deposit_value))
+      if (!(chargeAmount > 0) || chargeAmount >= total) {
+        return json({ status: false, message: 'Deposit configuration is invalid.', error_code: 'DEPOSIT_CONFIG_INVALID' }, 500)
       }
-
-      // ============================================================================
-      // ✅ STEP 4: VALIDATE CLIENT-PROVIDED COMMISSION BREAKDOWN (if present)
-      // ============================================================================
-      // Client-supplied commission_breakdown is no longer validated because the
-      // client no longer calculates one. The server is the sole calculator; any
-      // breakdown in metadata is treated as advisory and ignored.
+    } else if (kind === 'balance') {
+      chargeAmount = round2(total - alreadyPaid)
+      if (!(chargeAmount > 0)) return json({ status: false, message: 'Nothing left to pay on this booking.', error_code: 'NOTHING_DUE' }, 409)
+    } else {
+      chargeAmount = round2(total - alreadyPaid)
+      if (!(chargeAmount > 0)) return json({ status: false, message: 'Nothing left to pay on this booking.', error_code: 'NOTHING_DUE' }, 409)
     }
 
-    // ========================================================================
-    // QUOTE-ONLY: return the authoritative breakdown and stop. Nothing has been
-    // charged and nothing persisted; the price validation above has already run,
-    // so a quote cannot be obtained for an amount that could not be charged.
-    // ========================================================================
-    if (paymentData.dry_run) {
-      return new Response(JSON.stringify({
-        status: true,
-        message: 'Quote generated',
-        data: {
-          quote: serverCommissions,
-          rates: serverCommissionEngine.getCurrentRates()
-        }
-      }), { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    const quote = {
+      breakdown: calc,
+      total_amount: total,
+      amount_paid: alreadyPaid,
+      charge_amount: chargeAmount,
+      payment_kind: kind,
+      deposit: cfg?.deposit_enabled ? {
+        enabled: true, type: cfg.deposit_type, value: Number(cfg.deposit_value),
+        deposit_amount: cfg.deposit_type === 'fixed'
+          ? round2(Math.min(Number(cfg.deposit_value), total))
+          : round2(total * Number(cfg.deposit_value)),
+        balance_due_days: Number(cfg.deposit_balance_due_days ?? 14),
+      } : { enabled: false },
+      rates: serverCommissionEngine.getCurrentRates(),
     }
 
-    // Generate unique reference with business context (ensure uniqueness in DB)
-    // Consider adding a check against existing references if collisions are a concern
-    const reference = `ROOMI_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+    if (body.dry_run) return json({ status: true, message: 'Quote generated', data: { quote } })
 
-    // Set callback URL to our payment success page
-    const callbackUrl = paymentData.callback_url ||
-      `${supabaseUrl.replace('/supabase', '')}/payment-success`;
+    // Persist the authoritative totals on the booking before charging.
+    if (booking) {
+      const { error: upErr } = await supabase.from('bookings_enhanced').update({
+        total_amount: total,
+        amount_due: round2(total - alreadyPaid),
+        payment_plan: kind === 'deposit' ? 'deposit' : (alreadyPaid > 0 ? 'deposit' : 'full'),
+        updated_at: new Date().toISOString(),
+      }).eq('id', booking.id)
+      if (upErr) {
+        console.error('Failed to persist booking totals; aborting initialization.', upErr)
+        return json({ status: false, message: 'Could not prepare this booking for payment. No charge was made — please try again.', error_code: 'PERSISTENCE_FAILED' }, 500)
+      }
+    }
 
-    console.log('Payment initialization requested:', JSON.stringify({
-      userId: user?.id,
-      baseAmount: isLegacyApi ? 'N/A (legacy)' : baseAmount,
-      totalAmount: finalAmount,
-      currency: paymentData.currency,
-      hasAgent: isLegacyApi ? 'N/A (legacy)' : hasAgent,
-      isLegacyApi,
-      commissionVersion: serverCommissionEngine.getCurrentRates().version
-    }));
-
-    // ============================================================================
-    // ✅ STEP 5: PREPARE PAYSTACK PAYLOAD WITH SERVER-CALCULATED AMOUNT
-    // ============================================================================
-    const paystackPayload = {
-      email: paymentData.email,
-      amount: Math.round(finalAmount * 100), // ✅ SERVER-CALCULATED OR LEGACY AMOUNT (in pesewas)
-      currency: paymentData.currency || 'GHS',
+    const reference = `ROOMI_${Date.now()}_${Math.random().toString(36).substring(7)}`
+    const callbackUrl = body.callback_url || `${supabaseUrl.replace('/supabase', '')}/payment-success`
+    const commissionSnapshot = {
+      baseAmount: calc.baseAmount,
+      platformCommission: calc.platformCommission,
+      platformFixedFee: calc.platformFixedFee,
+      agentCommission: calc.agentCommission,
+      paystackFee: calc.paystackFee,
+      vatAmount: calc.vatAmount,
+      totalAmount: total,
+      ownerReceives: calc.ownerReceives,
+      hasAgent,
+      calculatedAt: new Date().toISOString(),
+      rates: serverCommissionEngine.getCurrentRates(),
+    }
+    const metadata = {
+      ...(body.metadata ?? {}),
+      ...(booking ? { booking_id: booking.id, property_id: booking.property_id, property_owner_id: booking.property_owner_id } : {}),
+      student_id: user.id,
+      user_id: user.id,
       reference,
-      callback_url: callbackUrl,
-      metadata: {
-        ...paymentData.metadata,
-        user_id: user.id,
-        reference,
-        platform: 'roomi',
-        payment_type: 'booking',
+      platform: 'roomi',
+      payment_type: 'booking',
+      payment_kind: kind,
+      charge_amount: chargeAmount,
+      commission_snapshot: commissionSnapshot,
+    }
 
-        // ✅ NEW: Store server-calculated commission snapshot (if not legacy)
-        ...(serverCommissions && {
-          commission_snapshot: {
-            baseAmount: serverCommissions.baseAmount,
-            platformCommission: serverCommissions.platformCommission,
-            platformFixedFee: serverCommissions.platformFixedFee,
-            agentCommission: serverCommissions.agentCommission,
-            paystackFee: serverCommissions.paystackFee,
-            vatAmount: serverCommissions.vatAmount,
-            totalAmount: serverCommissions.totalAmount,
-            ownerReceives: serverCommissions.ownerReceives,
-            hasAgent,
-            calculatedAt: new Date().toISOString(),
-            rates: serverCommissionEngine.getCurrentRates()
-          }
-        }),
-
-        // Mark legacy API usage for tracking
-        isLegacyApi
-      },
-      channels: paymentData.channels || ['mobile_money', 'bank']
-    };
-
-    // Initialize transaction with Paystack
     const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
       method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${paystackSecretKey}`,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify(paystackPayload)
-    });
-
+      headers: { 'Authorization': `Bearer ${paystackSecretKey}`, 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        email: body.email,
+        amount: Math.round(chargeAmount * 100),
+        currency: body.currency || 'GHS',
+        reference,
+        callback_url: callbackUrl,
+        metadata,
+        channels: body.channels || ['mobile_money', 'bank', 'card'],
+      }),
+    })
     if (!paystackResponse.ok) {
-      const text = await paystackResponse.text();
-      console.error('Paystack HTTP error:', { status: paystackResponse.status, body: text });
-      throw new Error(`Paystack HTTP ${paystackResponse.status}: ${text}`);
+      const text = await paystackResponse.text()
+      console.error('Paystack HTTP error:', { status: paystackResponse.status, body: text })
+      throw new Error(`Paystack HTTP ${paystackResponse.status}`)
     }
+    const paystackResult = await paystackResponse.json()
+    if (!paystackResult?.status) throw new Error(paystackResult?.message || 'Payment initialization failed')
 
-    const paystackResult = await paystackResponse.json();
-
-    if (!paystackResult?.status) {
-      console.error('Paystack initialization failed (API status false):', paystackResult);
-      throw new Error(paystackResult?.message || 'Payment initialization failed');
-    }
-
-    console.log(`Paystack initialization successful: ${paystackResult.data?.reference}`);
-
-    // ============================================================================
-    // ✅ STEP 6: STORE TRANSACTION WITH COMMISSION SNAPSHOT
-    // ============================================================================
+    // Store the expected charge server-side; verification depends on it.
     const { error: dbError } = await supabase.from('transactions').insert({
       reference,
-      amount: finalAmount, // ✅ SERVER-CALCULATED OR LEGACY AMOUNT
-      currency: paymentData.currency || 'GHS',
+      amount: chargeAmount,
+      currency: body.currency || 'GHS',
       status: 'pending',
-      customer_email: paymentData.email,
+      customer_email: body.email,
       customer_id: user.id,
-      metadata: {
-        ...paymentData.metadata,
-        // ✅ Include commission snapshot for audit trail
-        ...(serverCommissions && {
-          commission_snapshot: paystackPayload.metadata.commission_snapshot
-        }),
-        isLegacyApi
-      },
+      metadata,
       paystack_reference: paystackResult.data?.reference,
       paystack_response: paystackResult,
-      created_at: new Date().toISOString()
-    });
-
+      created_at: new Date().toISOString(),
+    })
     if (dbError) {
-      // Without a stored expected amount, verification cannot prove the paid
-      // amount is right — refuse rather than charge unverifiably.
-      console.error('Transaction persistence failed; aborting initialization.', dbError);
-      return new Response(JSON.stringify({
-        status: false,
-        message: 'Could not record this payment attempt. No charge was made — please try again.',
-        error_code: 'PERSISTENCE_FAILED'
-      }), { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+      console.error('Transaction persistence failed; aborting initialization.', dbError)
+      return json({ status: false, message: 'Could not record this payment attempt. No charge was made — please try again.', error_code: 'PERSISTENCE_FAILED' }, 500)
     }
 
-    return new Response(JSON.stringify({
+    console.log('[initialize-payment] initialized', { reference, kind, chargeAmount, total, bookingId: booking?.id ?? null, version: serverCommissionEngine.getCurrentRates().version })
+    return json({
       status: true,
       message: 'Payment initialized successfully',
       data: {
         reference,
         access_code: paystackResult.data.access_code,
-        authorization_url: paystackResult.data.authorization_url
-      }
-    }), {
-      status: 200,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
-
+        authorization_url: paystackResult.data.authorization_url,
+        quote,
+      },
+    })
   } catch (error) {
-    console.error('Payment initialization error:', error);
-    return new Response(JSON.stringify({
-      status: false,
-      message: error instanceof Error ? error.message : 'Payment initialization failed'
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-    });
+    console.error('Payment initialization error:', error)
+    return json({ status: false, message: error instanceof Error ? error.message : 'Payment initialization failed' }, 500)
   }
 })

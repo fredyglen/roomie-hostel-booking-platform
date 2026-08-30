@@ -4,6 +4,7 @@
 // amount Paystack reports as paid matches the server-stored expected amount.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
+import { applyPaymentToBooking } from '../_shared/booking-settlement.ts'
 
 const log = (msg: string, extra?: unknown) =>
   console.log(`[verify-payment] ${msg}`, extra === undefined ? '' : JSON.stringify(extra))
@@ -90,24 +91,12 @@ Deno.serve(async (req) => {
       }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
     }
 
-    // Confirm booking only on verified success with matching amount.
-    // booking_id is read from OUR stored transaction metadata (server-persisted
-    // at initialization), not from the Paystack echo of client metadata.
-    const bookingId = txn.metadata?.booking_id
-    if (paid && bookingId) {
-      const { error: bookingError } = await supabase
-        .from('bookings_enhanced')
-        .update({
-          payment_status: 'paid',
-          status: 'confirmed',
-          transaction_reference: reference,
-          paystack_reference: pd.id?.toString(),
-          payment_method: pd.channel,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', bookingId)
-      if (bookingError) log('Error updating booking', bookingError)
-      else log(`Booking confirmed: ${bookingId}`)
+    // Confirm/settle the booking only on verified success with matching
+    // amount — via the same shared settlement used by the webhook (kind-aware:
+    // deposits reserve, completion confirms).
+    if (paid) {
+      const result = await applyPaymentToBooking(supabase, txn, pd)
+      log('settlement', result)
     }
 
     return new Response(JSON.stringify({

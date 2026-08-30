@@ -21,6 +21,10 @@ type CommissionCalculationResult = ReturnType<typeof centralizedCommissionEngine
 
 interface PaymentStepProps {
   totalAmount: number;
+  /** Server-held pending booking id — REQUIRED for the booking-first payment flow. */
+  bookingId?: string;
+  /** Authoritative quote from initialize-payment dry_run. */
+  serverQuote?: import('@/services/payment/serverPricing').ServerQuote;
   onPaymentMethodSelect: (method: string) => void;
   termsAgreed: boolean;
   onTermsChange: (agreed: boolean) => void;
@@ -59,6 +63,8 @@ const extractErrorMessage = (err: unknown): string | undefined => {
 
 const PaymentStep: React.FC<PaymentStepProps> = ({
   totalAmount,
+  bookingId,
+  serverQuote,
   onPaymentMethodSelect,
   termsAgreed,
   onTermsChange,
@@ -83,6 +89,13 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
 
   // Default to mobile money as the primary payment method
   const [selectedMethod, setSelectedMethod] = useState<string>('mobile_money');
+  // Pay in full or reserve with a deposit (server decides availability/amounts)
+  const depositOffer = serverQuote?.deposit?.enabled && serverQuote?.amount_paid === 0
+    ? serverQuote.deposit : undefined;
+  const [paymentKind, setPaymentKind] = useState<'full' | 'deposit'>('full');
+  const chargeNow = paymentKind === 'deposit' && depositOffer?.deposit_amount
+    ? depositOffer.deposit_amount
+    : (serverQuote?.charge_amount ?? totalAmount);
   const [termsDialogOpen, setTermsDialogOpen] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
@@ -184,22 +197,30 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
     try {
       setInitializingPayment(true);
 
-      // ✅ NEW API: Extract base amount and agent status from commission breakdown
-      const baseAmount = commission?.baseAmount || totalAmount;
-      const hasAgent = Boolean((paystackMetadata as any)?.agent_id);
+      // BOOKING-FIRST FLOW: the server-held booking is the sole price source.
+      // The legacy base_amount path remains only as a fallback for safety.
+      const body = bookingId
+        ? {
+            email: user?.email || '',
+            booking_id: bookingId,
+            payment_kind: paymentKind,
+            currency: 'GHS',
+            metadata: paystackMetadata,
+            channels: ['mobile_money', 'bank'],
+            callback_url: `${window.location.origin}/payment-success`,
+          }
+        : {
+            email: user?.email || '',
+            base_amount: commission?.baseAmount || totalAmount,
+            has_agent: Boolean((paystackMetadata as any)?.agent_id),
+            currency: 'GHS',
+            metadata: paystackMetadata,
+            channels: ['mobile_money', 'bank'],
+            callback_url: `${window.location.origin}/payment-success`,
+          };
 
       const { data, error } = await supabase.functions.invoke<InitPaymentResponse>('initialize-payment', {
-        body: {
-          email: user?.email || '',
-          base_amount: baseAmount, // ✅ NEW API: Use base_amount instead of amount
-          has_agent: hasAgent,      // ✅ NEW API: Pass agent involvement flag
-          currency: 'GHS',
-          metadata: paystackMetadata,
-          // Restrict to mobile money + bank for this flow
-          channels: ['mobile_money', 'bank'],
-          // Ensure Paystack redirects back to our frontend after payment
-          callback_url: `${window.location.origin}/payment-success`,
-        },
+        body,
       });
 
       if (error || !data?.status) {
@@ -339,6 +360,34 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           </label>
         </div>
 
+        {/* Pay in full or reserve with a deposit (server-configured) */}
+        {depositOffer && bookingId && (
+          <div className="px-4 pt-4">
+            <p className="mb-2 text-sm font-semibold text-gray-800">How would you like to pay?</p>
+            <div className="space-y-2">
+              <label className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 ${paymentKind === 'full' ? 'border-primary bg-primary/5' : 'border-gray-200'}`}>
+                <span className="text-sm font-medium text-gray-800">Pay in full</span>
+                <span className="flex items-center gap-2">
+                  <span className="text-sm font-bold">{formatCurrency(serverQuote?.total_amount ?? totalAmount)}</span>
+                  <input type="radio" name="paymentKind" checked={paymentKind === 'full'} onChange={() => setPaymentKind('full')} />
+                </span>
+              </label>
+              <label className={`flex cursor-pointer items-center justify-between rounded-xl border p-3 ${paymentKind === 'deposit' ? 'border-primary bg-primary/5' : 'border-gray-200'}`}>
+                <span className="text-sm font-medium text-gray-800">
+                  Reserve with deposit
+                  <span className="block text-xs font-normal text-gray-500">
+                    Balance of {formatCurrency(Math.max(0, (serverQuote?.total_amount ?? totalAmount) - (depositOffer.deposit_amount ?? 0)))} due within {depositOffer.balance_due_days ?? 14} days
+                  </span>
+                </span>
+                <span className="flex items-center gap-2">
+                  <span className="text-sm font-bold">{formatCurrency(depositOffer.deposit_amount ?? 0)}</span>
+                  <input type="radio" name="paymentKind" checked={paymentKind === 'deposit'} onChange={() => setPaymentKind('deposit')} />
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+
         {/* Terms & Conditions (Mobile) */}
         <div className="px-4 pt-4">
           <div className="flex items-start space-x-2">
@@ -380,7 +429,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary px-6 py-4 text-base font-bold text-white"
         >
           <Lock className="h-5 w-5" />
-          Proceed to Pay {formatCurrency(totalAmount)}
+          Proceed to Pay {formatCurrency(chargeNow)}
         </Button>
       </footer>
 
@@ -516,7 +565,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           disabled={!termsAgreed || !selectedMethod || initializingPayment}
           onClick={handleProceedToPayment}
         >
-          {initializingPayment ? 'Starting payment...' : 'Proceed to Payment'}
+          {initializingPayment ? 'Starting payment...' : `Proceed to Pay ${formatCurrency(chargeNow)}`}
         </Button>
       </div>
 

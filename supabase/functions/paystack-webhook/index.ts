@@ -8,7 +8,7 @@
 // server-side recomputation — never from client-authored metadata.
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 import { corsHeaders } from '../_shared/cors.ts'
-import { ServerCommissionEngine } from '../_shared/commission-engine.ts'
+import { applyPaymentToBooking } from '../_shared/booking-settlement.ts'
 
 const log = (msg: string, extra?: unknown) =>
   console.log(`[paystack-webhook] ${msg}`, extra === undefined ? '' : JSON.stringify(extra))
@@ -134,57 +134,9 @@ async function handleChargeSuccess(supabase: any, event: any) {
     return
   }
 
-  const bookingId = txn.metadata?.booking_id
-  if (!bookingId) return
-
-  const bookingUpdate: Record<string, unknown> = {
-    payment_status: 'paid',
-    status: 'confirmed',
-    transaction_reference: ed.reference,
-    paystack_reference: ed.id?.toString(),
-    payment_method: ed.authorization?.card_type || ed.channel || 'unknown',
-    updated_at: new Date().toISOString(),
-  }
-
-  // Financial breakdown: prefer the SERVER-authored snapshot persisted at
-  // initialization; otherwise recompute server-side (fail-closed engine).
-  const snapshot = txn.metadata?.commission_snapshot
-  if (snapshot?.totalAmount) {
-    Object.assign(bookingUpdate, {
-      total_amount: snapshot.totalAmount,
-      platform_commission: snapshot.platformCommission,
-      platform_fee: snapshot.platformFixedFee,
-      agent_commission: snapshot.agentCommission || 0,
-      paystack_fee: snapshot.paystackFee,
-      vat_amount: snapshot.vatAmount || 0,
-      owner_receives: snapshot.ownerReceives,
-      property_rent: snapshot.baseAmount,
-    })
-  } else {
-    const { data: booking } = await supabase
-      .from('bookings_enhanced')
-      .select('property_rent, agent_id')
-      .eq('id', bookingId)
-      .maybeSingle()
-    if (booking?.property_rent) {
-      const engine = new ServerCommissionEngine()
-      await engine.loadRates(supabase)
-      const calc = engine.calculateCommissions(booking.property_rent, Boolean(booking.agent_id))
-      Object.assign(bookingUpdate, {
-        total_amount: calc.totalAmount,
-        platform_commission: calc.platformCommission,
-        platform_fee: calc.platformFixedFee,
-        agent_commission: calc.agentCommission,
-        paystack_fee: calc.paystackFee,
-        vat_amount: calc.vatAmount,
-        owner_receives: calc.ownerReceives,
-      })
-    }
-  }
-
-  const { error } = await supabase.from('bookings_enhanced').update(bookingUpdate).eq('id', bookingId)
-  if (error) console.error('[paystack-webhook] booking update failed', error)
-  else log('booking confirmed', { bookingId, total: bookingUpdate.total_amount })
+  const result = await applyPaymentToBooking(supabase, txn, ed)
+  if (!result.applied) log('settlement not applied', result)
+  else log('settlement applied', result)
 }
 
 async function handleRefundProcessed(supabase: any, event: any) {
@@ -206,6 +158,8 @@ async function handleRefundProcessed(supabase: any, event: any) {
       status: 'cancelled',
       updated_at: new Date().toISOString(),
     }).eq('id', txn.metadata.booking_id)
+    const { error: relErr } = await supabase.rpc('release_booking_bed', { p_booking_id: txn.metadata.booking_id })
+    if (relErr) console.error('[paystack-webhook] bed release failed', relErr)
     log('booking cancelled after refund', { bookingId: txn.metadata.booking_id })
   }
 }

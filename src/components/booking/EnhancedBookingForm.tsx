@@ -1,7 +1,7 @@
 // Enhanced Booking Form for ROOMi Ghana Hostel Bookings
 // Integrates with BookingService and Paystack payment processing
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Property } from '@/types/property';
 import { useEnhancedBooking } from '@/hooks/booking/useEnhancedBooking';
@@ -15,7 +15,7 @@ import DateSelectionStep from './steps/DateSelectionStep';
 import RoomAndPreferencesStep from './steps/mobile/RoomAndPreferencesStep';
 import VerificationStep from './steps/VerificationStep';
 import PaymentStep from './PaymentStep';
-import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
+
 import ResponsiveBookingLayout from './ResponsiveBookingLayout';
 import BookingSummarySidebar from './BookingSummarySidebar';
 
@@ -55,8 +55,21 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
     previousStep,
     validateStep,
     createBooking,
-    createBookingWithPayment
+    createBookingWithPayment,
+    ensurePendingBooking,
+    bookingId,
+    serverQuote
   } = useEnhancedBooking(property);
+
+  // Server-authoritative booking: the pending hold (and its quote) is created
+  // the moment the student reaches the payment step. All amounts shown from
+  // here on come from the server.
+  useEffect(() => {
+    if (currentStep === 5 && !bookingId) {
+      void ensurePendingBooking();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, bookingId]);
 
   const [isVerifying, setIsVerifying] = useState(false);
 
@@ -203,7 +216,9 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
       case 5:
         return (
           <PaymentStep
-            totalAmount={pricing.totalAmount}
+            totalAmount={serverQuote?.total_amount ?? pricing.totalAmount}
+            bookingId={bookingId ?? undefined}
+            serverQuote={serverQuote ?? undefined}
             onPaymentMethodSelect={(method) => updateFormData('paymentMethod', method)}
             termsAgreed={formData.termsAgreed}
             onTermsChange={(agreed) => updateFormData('termsAgreed', agreed)}
@@ -211,15 +226,8 @@ const EnhancedBookingForm: React.FC<EnhancedBookingFormProps> = ({
             onPaymentVerified={handlePaymentVerified}
             onPrevious={handlePrevious}
             paystackMetadata={{
-              commission_breakdown: centralizedCommissionEngine.calculateCommissions(
-                pricing.propertyRent,
-                Boolean(property.agent_id)
-              ),
-              base_amount_ghs: pricing.propertyRent,
-              total_amount_ghs: pricing.totalAmount,
-              platform_fee_ghs: pricing.platformCommission + pricing.platformFixedFee,
-              agent_fee_ghs: pricing.agentFee,
-              commission_version: centralizedCommissionEngine.getConfigurationInfo().version,
+              // Money is computed server-side; only display/reference
+              // metadata travels from the browser.
               property_id: property.id,
               propertyTitle: property.title || property.name,
               propertyCoverImage: (() => {

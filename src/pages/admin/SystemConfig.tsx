@@ -41,6 +41,7 @@ import {
 } from 'lucide-react';
 import { createAdminPermission } from '@/types/auth';
 import { CommissionConfigManager } from '@/components/admin/CommissionConfigManager';
+import BearerAndDepositSettings from '@/components/admin/BearerAndDepositSettings';
 
 /**
  * Supreme Admin System Configuration Component

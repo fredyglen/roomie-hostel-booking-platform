@@ -501,8 +501,11 @@ describe('Admin Rate Change Propagation - Commission Calculations', () => {
       // Calculate commissions with agent
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, true);
 
-      // Agent commission should be 5% of 5000 = 250 GHS
-      expect(result.agentCommission).toBeCloseTo(250, 2);
+      // Phase-1 client engine: agent costs are borne by the platform and
+      // never added to the student total. Authoritative money (including any
+      // future agent pass-through) is computed server-side in
+      // initialize-payment; the client engine is a display estimate only.
+      expect(result.agentCommission).toBe(0);
     });
 
     it('should use new VAT rate in calculations', async () => {
@@ -520,9 +523,10 @@ describe('Admin Rate Change Propagation - Commission Calculations', () => {
       // Calculate commissions
       const result = centralizedCommissionEngine.calculateCommissions(baseAmount, false);
 
-      // VAT should be 15% of beforeVat amount
-      const expectedVat = result.breakdown.beforeVat * 0.15;
-      expect(result.vatAmount).toBeCloseTo(expectedVat, 2);
+      // Phase-1 client engine: VAT is not itemized to students (rate 0 in
+      // the display model). Server-side calculations apply whatever VAT the
+      // active commission_configurations row specifies.
+      expect(result.vatAmount).toBe(0);
     });
 
     it('should use new fixed fee in calculations', async () => {
@@ -563,8 +567,12 @@ describe('Admin Rate Change Propagation - Commission Calculations', () => {
       const resultAfter = centralizedCommissionEngine.calculateCommissions(baseAmount, false);
       const totalAfter = resultAfter.totalAmount;
 
-      // Total should be higher after rate increase
-      expect(totalAfter).toBeGreaterThan(totalBefore);
+      // Phase-1: the platform commission is owner-borne, so the STUDENT
+      // total is unchanged by a platform-rate change — the OWNER payout is
+      // what moves. (Server-side, bearers are admin-configurable and the
+      // authoritative totals come from initialize-payment.)
+      expect(totalAfter).toBe(totalBefore);
+      expect(resultAfter.ownerReceives).toBeLessThan(resultBefore.ownerReceives);
     });
   });
 
@@ -595,8 +603,10 @@ describe('Admin Rate Change Propagation - Commission Calculations', () => {
       // Verify breakdown
       expect(result.baseAmount).toBe(baseAmount);
       expect(result.platformCommission).toBeCloseTo(210, 2); // 7% of 3000
-      expect(result.agentCommission).toBeCloseTo(150, 2); // 5% of 3000 = 150 (above minimum)
-      expect(result.ownerReceives).toBe(baseAmount);
+      // Phase-1: agent costs never hit the student or the owner statement.
+      expect(result.agentCommission).toBe(0);
+      // Owner payout = rent minus the (owner-borne) platform commission.
+      expect(result.ownerReceives).toBeCloseTo(baseAmount - result.platformCommission, 2);
     });
 
     it('should include breakdown details in result', async () => {
@@ -613,7 +623,8 @@ describe('Admin Rate Change Propagation - Commission Calculations', () => {
 
       expect(result.breakdown).toBeDefined();
       expect(result.breakdown.subtotal).toBeGreaterThan(baseAmount);
-      expect(result.breakdown.beforeVat).toBeGreaterThan(result.breakdown.subtotal);
+      // Phase-1 itemizes no VAT: beforeVat === subtotal.
+      expect(result.breakdown.beforeVat).toBe(result.breakdown.subtotal);
       expect(result.breakdown.totalFees).toBeGreaterThan(0);
     });
   });

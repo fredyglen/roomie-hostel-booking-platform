@@ -4,6 +4,7 @@
 import { useState, useCallback } from 'react';
 import { useAuth } from '@/context/EnhancedAuthContext';
 import { useToast } from '@/hooks/use-toast';
+import { createPendingBooking, getServerQuote, waitForBookingSettlement, type ServerQuote } from '@/services/payment/serverPricing';
 import { BookingService, CreateBookingData, RoommateData } from '@/services/bookingService';
 import { Property } from '@/types/property';
 
@@ -62,6 +63,7 @@ export interface BookingState {
   loading: boolean;
   error: string | null;
   bookingId: string | null;
+  serverQuote: ServerQuote | null;
   pricing: {
     propertyRent: number;
     platformCommission: number;
@@ -116,6 +118,7 @@ export const useEnhancedBooking = (property: Property) => {
     loading: false,
     error: null,
     bookingId: null,
+    serverQuote: null,
     pricing: BookingService.calculateBookingPricing(property.rent || 0, !!property.agent_id)
   });
 
@@ -247,199 +250,112 @@ export const useEnhancedBooking = (property: Property) => {
     }
   }, [state]);
 
-  // Create booking
-  const createBooking = useCallback(async (): Promise<string | null> => {
+  // ---------------------------------------------------------------------------
+  // SERVER-AUTHORITATIVE BOOKING LIFECYCLE
+  // The browser no longer inserts bookings or writes payment state.
+  //  1. ensurePendingBooking(): a server RPC creates the booking as a
+  //     'pending' hold (one bed atomically reserved, price captured
+  //     server-side) and the server quote becomes the ONLY pricing shown.
+  //  2. PaymentStep initializes the charge with booking_id; Paystack charges.
+  //  3. The SERVER (webhook / verify-payment settlement) confirms the
+  //     booking. createBookingWithPayment() only waits to observe that.
+  // ---------------------------------------------------------------------------
+
+  const ensurePendingBooking = useCallback(async (): Promise<string | null> => {
     if (!user) {
-      toast({
-        title: "Authentication Required",
-        description: "Please log in to complete your booking.",
-        variant: "destructive",
-      });
+      toast({ title: 'Authentication Required', description: 'Please log in to complete your booking.', variant: 'destructive' });
       return null;
     }
+    if (state.bookingId) return state.bookingId;
 
     setState(prev => ({ ...prev, loading: true, error: null }));
-
     try {
-      const { formData, pricing } = state;
-
-      const bookingData: CreateBookingData = {
-        property_id: property.id,
-        student_id: user.id,
-        property_owner_id: property.owner_id,
-        agent_id: property.agent_id,
-        check_in_date: formData.startDate.toISOString().split('T')[0],
-        check_out_date: formData.endDate.toISOString().split('T')[0],
-        semester_period: formData.duration,
-        room_type: formData.roomType,
-        roommates_count: formData.roommates.length + 1,
-        total_amount: pricing.totalAmount,
-        property_rent: pricing.propertyRent,
-        platform_fee: pricing.totalPlatformFee,
-        agent_fee: pricing.agentFee,
-        emergency_contact_name: formData.emergencyName,
-        emergency_contact_phone: formData.emergencyPhone,
-        emergency_contact_relationship: formData.emergencyRelationship,
-        student_id_number: formData.studentId,
-        university: formData.university,
-        program: formData.program,
-        payment_method: formData.paymentMethod,
-        special_requests: formData.extraRequests,
+      const { formData } = state;
+      const created = await createPendingBooking({
+        propertyId: property.id,
+        checkIn: formData.startDate.toISOString().split('T')[0],
+        checkOut: formData.endDate.toISOString().split('T')[0],
+        roomType: formData.roomType || null,
+        semesterPeriod: formData.duration || null,
+        roommatesCount: formData.roommates.length + 1,
+        specialRequests: formData.extraRequests || null,
+        emergencyContactName: formData.emergencyName || null,
+        emergencyContactPhone: formData.emergencyPhone || null,
+        emergencyContactRelationship: formData.emergencyRelationship || null,
+        studentIdNumber: formData.studentId || null,
+        university: formData.university || null,
+        program: formData.program || null,
         metadata: {
           booking_source: 'web',
           property_title: property.title,
           student_verification_status: formData.verified ? 'verified' : 'pending',
           furnishing: formData.furnishing,
           floor: formData.floor,
-          preferences: {
-            studyHabits: formData.studyHabits,
-            sleepSchedule: formData.sleepSchedule,
-            cleanliness: formData.cleanliness,
-            socialPreference: formData.socialPreference,
-            hobbies: formData.hobbies,
-            dietary: formData.dietary,
-            smoking: formData.smoking,
-            noiseSensitivity: formData.noiseSensitivity
-          }
-        }
-      };
+        },
+      });
 
-      const { booking_id } = await BookingService.createBooking(bookingData, formData.roommates);
+      const quote = await getServerQuote({
+        email: formData.email || user.email || '',
+        bookingId: created.booking_id,
+        kind: 'full',
+      });
 
       setState(prev => ({
         ...prev,
         loading: false,
-        bookingId: booking_id
+        bookingId: created.booking_id,
+        serverQuote: quote,
+        // Display pricing is now the server quote — the client engine result
+        // it replaces was only ever an estimate.
+        pricing: {
+          propertyRent: quote.breakdown.baseAmount,
+          platformCommission: quote.breakdown.platformCommission,
+          platformFixedFee: quote.breakdown.platformFixedFee,
+          agentFee: quote.breakdown.agentCommission,
+          totalPlatformFee: Math.max(0, Math.round((quote.total_amount - quote.breakdown.baseAmount) * 100) / 100),
+          totalAmount: quote.total_amount,
+          ownerReceives: quote.breakdown.ownerReceives,
+        },
       }));
-
-      toast({
-        title: "Booking Created",
-        description: "Your booking has been created successfully!",
-      });
-
-      return booking_id;
+      return created.booking_id;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create booking';
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: errorMessage
-      }));
-
-      toast({
-        title: "Booking Failed",
-        description: errorMessage,
-        variant: "destructive",
-      });
-
+      const message = error instanceof Error ? error.message : 'Could not start your booking.';
+      setState(prev => ({ ...prev, loading: false, error: message }));
+      toast({ title: 'Booking Unavailable', description: message, variant: 'destructive' });
       return null;
     }
   }, [user, state, property, toast]);
-  // Create booking AFTER successful payment verification
+
+  // Back-compat: older call sites used createBooking() to insert a booking.
+  const createBooking = ensurePendingBooking;
+
   const createBookingWithPayment = useCallback(async (
-    payment: { reference: string; channel?: string; id?: number | string; metadata?: Record<string, unknown> }
+    payment: { reference: string; amount?: number; channel?: string; id?: number; metadata?: Record<string, unknown> }
   ): Promise<string | null> => {
-    if (!user) {
+    const bookingId = state.bookingId
+      ?? ((payment.metadata?.booking_id as string | undefined) ?? null);
+    if (!bookingId) {
       toast({
-        title: "Authentication Required",
-        description: "Please log in to complete your booking.",
-        variant: "destructive",
-      });
-      return null;
-    }
-
-    setState(prev => ({ ...prev, loading: true, error: null }));
-
-    try {
-      const { formData, pricing } = state;
-
-      const bookingData: CreateBookingData = {
-        property_id: property.id,
-        student_id: user.id,
-        property_owner_id: property.owner_id,
-        agent_id: property.agent_id,
-        check_in_date: formData.startDate.toISOString().split('T')[0],
-        check_out_date: formData.endDate.toISOString().split('T')[0],
-        semester_period: formData.duration,
-        room_type: formData.roomType,
-        roommates_count: formData.roommates.length + 1,
-        total_amount: pricing.totalAmount,
-        property_rent: pricing.propertyRent,
-        platform_fee: pricing.totalPlatformFee,
-        agent_fee: pricing.agentFee,
-        emergency_contact_name: formData.emergencyName,
-        emergency_contact_phone: formData.emergencyPhone,
-        emergency_contact_relationship: formData.emergencyRelationship,
-        student_id_number: formData.studentId,
-        university: formData.university,
-        program: formData.program,
-        payment_method: formData.paymentMethod || payment.channel || 'paystack',
-        special_requests: formData.extraRequests,
-        metadata: {
-          booking_source: 'web',
-          property_title: property.title,
-          student_verification_status: formData.verified ? 'verified' : 'pending',
-          furnishing: formData.furnishing,
-          floor: formData.floor,
-          preferences: {
-            studyHabits: formData.studyHabits,
-            sleepSchedule: formData.sleepSchedule,
-            cleanliness: formData.cleanliness,
-            socialPreference: formData.socialPreference,
-            hobbies: formData.hobbies,
-            dietary: formData.dietary,
-            smoking: formData.smoking,
-            noiseSensitivity: formData.noiseSensitivity
-          },
-          payment_reference: payment.reference
-        }
-      };
-
-      const { booking_id } = await BookingService.createBooking(bookingData, formData.roommates);
-
-      // Immediately mark as paid and confirmed using payment reference
-      await BookingService.updateBookingPayment(booking_id, {
-        payment_status: 'paid',
-        status: 'confirmed',
-        transaction_reference: payment.reference,
-        paystack_reference: payment.id ? String(payment.id) : undefined,
-        payment_reference: payment.reference,
-        metadata: {
-          ...(bookingData.metadata || {}),
-          paystack_verification: payment.metadata || {}
-        }
-      });
-
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        bookingId: booking_id
-      }));
-
-      toast({
-        title: 'Booking Confirmed',
-        description: 'Your booking has been created and payment verified.',
-      });
-
-      return booking_id;
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Failed to create booking after payment';
-      setState(prev => ({
-        ...prev,
-        loading: false,
-        error: errorMessage
-      }));
-
-      toast({
-        title: 'Booking Failed',
-        description: errorMessage,
+        title: 'Booking Error',
+        description: 'Payment received but no booking is attached. Please contact support with reference ' + payment.reference,
         variant: 'destructive',
       });
-
       return null;
     }
-  }, [user, state, property, toast]);
 
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    const result = await waitForBookingSettlement(bookingId);
+    setState(prev => ({ ...prev, loading: false, bookingId }));
+
+    if (result.settled && result.payment_status === 'partially_paid') {
+      toast({ title: 'Deposit Received', description: 'Your room is reserved. Pay the balance before the deadline to confirm your booking.' });
+    } else if (result.settled) {
+      toast({ title: 'Booking Confirmed', description: 'Your payment has been verified and your booking is confirmed.' });
+    } else {
+      toast({ title: 'Payment Received', description: 'Your booking is being confirmed — this can take a moment. You can check its status in My Bookings.' });
+    }
+    return bookingId;
+  }, [state, toast]);
 
   // Reset form
   const resetForm = useCallback(() => {
@@ -507,6 +423,9 @@ export const useEnhancedBooking = (property: Property) => {
 
     // Validation
     validateStep,
+
+    // Server-authoritative booking
+    ensurePendingBooking,
 
     // Actions
     createBooking,
