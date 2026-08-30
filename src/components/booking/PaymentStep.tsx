@@ -11,6 +11,7 @@ import useBookingAccess from '@/hooks/useBookingAccess';
 import type { ModernPaymentSuccessResult } from '@/types/booking';
 import { centralizedCommissionEngine } from '@/config/centralized-commission.config';
 import { formatCurrency } from '@/utils/currency';
+import type { ServerQuote } from '@/services/payment/serverPricing';
 
 import { ArrowLeft, Smartphone as SmartphoneIcon, Lock, Building2 as BuildingIcon } from 'lucide-react';
 
@@ -18,13 +19,52 @@ import { ArrowLeft, Smartphone as SmartphoneIcon, Lock, Building2 as BuildingIco
 // Derive the commission result type from the engine's calculateCommissions return type
 type CommissionCalculationResult = ReturnType<typeof centralizedCommissionEngine.calculateCommissions>;
 
+/**
+ * Renders the student-facing price lines from a server quote's
+ * `breakdown.studentPays`. Bearer-agnostic by design: which fees the
+ * student is even shown depends on commission_configurations
+ * (commission_bearer/fixed_fee_bearer/paystack_bearer), which an admin can
+ * change live. Hardcoding a fixed set of lines (as the pre-migration
+ * version of this component did) goes stale the moment that config changes.
+ */
+const PriceBreakdownLines: React.FC<{ quote: ServerQuote; textClass: string; valueClass: string }> = ({
+  quote,
+  textClass,
+  valueClass,
+}) => {
+  const sp = quote.breakdown.studentPays;
+  const lines: Array<[string, number | undefined]> = [
+    ['Property Rent', quote.breakdown.baseAmount],
+    ['Booking Fee', sp?.fixedFee],
+    ['Platform Commission', sp?.commission],
+    ['Agent Fee', sp?.agent],
+    ['Processing Fee', sp?.processing],
+    ['VAT', sp?.vat],
+  ];
+  return (
+    <>
+      {lines.map(([label, amount], i) =>
+        amount !== undefined && (i === 0 || amount > 0) ? (
+          <div key={label} className={`flex justify-between py-2 ${i > 0 ? 'border-t border-gray-100' : ''}`}>
+            <p className={`text-sm ${textClass}`}>{label}</p>
+            <p className={`text-sm ${valueClass}`}>{formatCurrency(amount)}</p>
+          </div>
+        ) : null
+      )}
+      <div className="mt-2 flex justify-between border-t-2 border-gray-200 pt-3">
+        <p className={`text-base font-bold ${valueClass}`}>Total</p>
+        <p className={`text-base font-bold ${valueClass}`}>{formatCurrency(quote.total_amount)}</p>
+      </div>
+    </>
+  );
+};
 
 interface PaymentStepProps {
   totalAmount: number;
   /** Server-held pending booking id — REQUIRED for the booking-first payment flow. */
   bookingId?: string;
   /** Authoritative quote from initialize-payment dry_run. */
-  serverQuote?: import('@/services/payment/serverPricing').ServerQuote;
+  serverQuote?: ServerQuote;
   onPaymentMethodSelect: (method: string) => void;
   termsAgreed: boolean;
   onTermsChange: (agreed: boolean) => void;
@@ -82,8 +122,14 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
   const [paymentReference, setPaymentReference] = useState<string | null>(null);
 
 
-  // Prefer explicit prop; fall back to metadata provided by parent
-  const commission: CommissionCalculationResult | undefined =
+  // `feeBreakdown`/`paystackMetadata.commission_breakdown` are pre-migration
+  // props: no current caller populates them (the booking-first hook only
+  // sets `serverQuote`), so a `commission` derived from them was always
+  // undefined and every "Price Details" block below it was permanently
+  // stuck on "Loading price details...". `serverQuote` is the one real
+  // source of price data now -- see serverPricing.ts / README "the server
+  // owns the money".
+  const legacyCommission: CommissionCalculationResult | undefined =
     (typeof feeBreakdown !== 'undefined' && feeBreakdown) ||
     ((paystackMetadata as any)?.commission_breakdown as CommissionCalculationResult | undefined);
 
@@ -211,7 +257,7 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
           }
         : {
             email: user?.email || '',
-            base_amount: commission?.baseAmount || totalAmount,
+            base_amount: legacyCommission?.baseAmount || totalAmount,
             has_agent: Boolean((paystackMetadata as any)?.agent_id),
             currency: 'GHS',
             metadata: paystackMetadata,
@@ -292,32 +338,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         <h3 className="px-4 pb-2 pt-4 text-lg font-bold leading-tight tracking-[-0.015em] text-[#111318]">Price Details</h3>
         <div className="px-4">
           <div className="rounded-lg border border-gray-100 bg-white p-4">
-            {commission ? (
-              <>
-                <div className="flex justify-between py-2">
-                  <p className="text-sm text-[#616e89]">Property Rent</p>
-                  <p className="text-sm text-[#111318]">{formatCurrency(commission.baseAmount)}</p>
-                </div>
-                <div className="flex justify-between border-t border-gray-100 py-2">
-                  <p className="text-sm text-[#616e89]">Platform Fee</p>
-                  <p className="text-sm text-[#111318]">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.platform || 80)}</p>
-                </div>
-                <div className="flex justify-between border-t border-gray-100 py-2">
-                  <p className="text-sm text-[#616e89]">Processing Fee</p>
-                  <p className="text-sm text-[#111318]">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.processing || 20)}</p>
-                </div>
-                <div className="mt-2 flex justify-between border-t-2 border-gray-200 pt-3">
-                  <p className="text-base font-bold text-[#111318]">Total</p>
-                  <p className="text-base font-bold text-[#111318]">{formatCurrency(commission.totalAmount)}</p>
-                </div>
-
-                {/* Info note about owner commission */}
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <p className="text-xs text-[#616e89] italic">
-                    Note: Property owner pays 10% platform commission separately
-                  </p>
-                </div>
-              </>
+            {serverQuote ? (
+              <PriceBreakdownLines quote={serverQuote} textClass="text-[#616e89]" valueClass="text-[#111318]" />
             ) : (
               <p className="text-sm text-gray-500">Loading price details...</p>
             )}
@@ -452,32 +474,8 @@ const PaymentStep: React.FC<PaymentStepProps> = ({
         <div>
           <h3 className="text-lg font-bold leading-tight tracking-[-0.015em]">Price Details</h3>
           <div className="rounded-lg bg-white">
-            {commission ? (
-              <>
-                <div className="flex justify-between py-2">
-                  <p className="text-gray-600 text-sm">Property Rent</p>
-                  <p className="text-gray-900 text-sm">{formatCurrency(commission.baseAmount)}</p>
-                </div>
-                <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-gray-600 text-sm">Platform Fee</p>
-                  <p className="text-gray-900 text-sm">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.platform || 80)}</p>
-                </div>
-                <div className="flex justify-between py-2 border-t border-gray-100">
-                  <p className="text-gray-600 text-sm">Processing Fee</p>
-                  <p className="text-gray-900 text-sm">{formatCurrency(commission.breakdown?.platformFeeBreakdown?.processing || 20)}</p>
-                </div>
-                <div className="flex justify-between pt-3 mt-2 border-t-2 border-gray-200">
-                  <p className="text-gray-900 text-base font-bold">Total</p>
-                  <p className="text-gray-900 text-base font-bold">{formatCurrency(commission.totalAmount)}</p>
-                </div>
-
-                {/* Info note about owner commission */}
-                <div className="mt-3 pt-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-600 italic">
-                    Note: Property owner pays 10% platform commission separately
-                  </p>
-                </div>
-              </>
+            {serverQuote ? (
+              <PriceBreakdownLines quote={serverQuote} textClass="text-gray-600" valueClass="text-gray-900" />
             ) : (
               <p className="text-sm text-gray-500">Loading price details...</p>
             )}
